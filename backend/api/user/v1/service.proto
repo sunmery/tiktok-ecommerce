@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package user.service.v1;
+
+import "validate/validate.proto";
+import "google/api/annotations.proto";
+
+option go_package = "/user";
+
+service UserService {
+  rpc Register(RegisterReq) returns (RegisterResp) {
+    option (google.api.http) = {
+      post: "/v1/user",
+      body: "*"
+    };
+  }
+  rpc Login(LoginReq) returns (LoginResp) {
+    option (google.api.http) = {
+      post: "/v1/user/login",
+      body: "*"
+    };
+  }
+}
+
+message RegisterReq {
+  string email = 1;
+  string password = 2 [(validate.rules).string.min_len = 6];
+  string confirm_password = 3 [(validate.rules).string.min_len = 6];
+}
+
+message RegisterResp {
+  int32 user_id = 1;
+}
+
+message LoginReq {
+  string email = 1;
+  string password = 2 [(validate.rules).string.min_len = 6];
+}
+
+message LoginResp {
+  int32 user_id = 1;
+}

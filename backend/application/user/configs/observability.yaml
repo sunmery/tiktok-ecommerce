@@ -1,0 +1,9 @@
+# 可观测性
+jaeger:
+  service_name: ecommerce-user-service-v1
+  grpc:
+    # endpoint: localhost:4317
+    endpoint: 192.168.3.128:4317
+  http:
+    # endpoint: localhost:4318
+    endpoint: 192.168.3.128:4318
