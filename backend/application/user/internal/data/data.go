@@ -2,26 +2,32 @@ package data
 
 import (
 	"backend/application/user/internal/conf"
+	"backend/application/user/internal/data/models"
+	"context"
 	"fmt"
+	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewGreeterRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewUserRepo, NewCasdoor)
 
 type Data struct {
 	db  *models.Queries
 	rdb *redis.Client
+	cs  *casdoorsdk.Client
 }
 
 // NewData .
 func NewData(
-	logger log.Logger,
 	pgx *pgxpool.Pool,
 	rdb *redis.Client,
+	cs *casdoorsdk.Client,
+	logger log.Logger,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -29,6 +35,7 @@ func NewData(
 	return &Data{
 		db:  models.New(pgx),
 		rdb: rdb,
+		cs:  cs,
 	}, cleanup, nil
 }
 
@@ -54,4 +61,17 @@ func NewCache(c *conf.Data) *redis.Client {
 	})
 
 	return rdb
+}
+
+func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
+	client := casdoorsdk.NewClient(
+		cc.Casdoor.Server.Endpoint,
+		cc.Casdoor.Server.ClientId,
+		cc.Casdoor.Server.ClientSecret,
+		cc.Casdoor.Certificate,
+		cc.Casdoor.Server.Organization,
+		cc.Casdoor.Server.Application,
+	)
+
+	return client
 }

@@ -69,17 +69,24 @@ func main() {
 		panic(err)
 	}
 
+	// 认证和授权
+	var ac conf.Auth
+	if err := c.Scan(&ac); err != nil {
+		panic(err)
+	}
+
 	var bc conf.Bootstrap
 	if err := c.Scan(&bc); err != nil {
 		panic(err)
 	}
 
+	// 链路追踪
 	var tc conf.Trace
 	if err := c.Scan(&tc); err != nil {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &tc, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &tc, logger)
 	if err != nil {
 		panic(err)
 	}

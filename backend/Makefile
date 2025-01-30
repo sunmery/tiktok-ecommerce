@@ -108,7 +108,6 @@ api: grpc http swagger errors
 # generate all
 all: grpc http proto generate
 
-
 # 生成迁移文件
 # 使用: make new-migrate name=verify_emails
 migrate-new:
@@ -116,7 +115,7 @@ migrate-new:
 
 # 升级全部的迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
 migrate-up:
-	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/simple_bank?sslmode=disable"
+	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/tiktok?sslmode=disable"
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up
 
 # 向上迁移一个版本, 根据数据库的表schema_migrations的version来决定
@@ -137,11 +136,15 @@ migrate-down1:
 # simple_bank/worker TaskDistributor
 # 最后参数: 包路径与要生成的interface接口的名称
 mock:
-	#mockgen -package mockdb -destination mock/store.go simple_bank/sqlc Store
+	#mockgen -package mockdb -destination mock/store.go example/sqlc Store
 
 # grpc的命令行测试工具
 evans:
 	evans -r repl --host localhost -p 30002
+
+# 生成sql代码
+sqlc:
+	sqlc generate
 
 # show help
 help:

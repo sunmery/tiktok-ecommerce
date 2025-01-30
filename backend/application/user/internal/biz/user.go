@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
 
 	// "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -12,47 +13,46 @@ import (
 // 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 // )
 
-type RegisterReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type SigninRequest struct {
+	Code  string `json:"code,omitempty"`
+	State string `json:"state,omitempty"`
+}
+type SigninReply struct {
+	State string `json:"state,omitempty"`
+	Data  string `json:"data,omitempty"`
+}
+type GetUserInfoRequest struct {
+	Authorization string
 }
 
-type RegisterResp struct {
-	UserId int32 `json:"user_id"`
+type GetUserInfoReply struct {
+	State string          `json:"state,omitempty"`
+	Data  casdoorsdk.User `json:"data"`
 }
 
-type LoginReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type LoginResp struct {
-	UserId int32 `json:"user_id"`
-}
-
-// UserRepo is a Greater repo.
 type UserRepo interface {
-	Register(context.Context, *RegisterReq) (*RegisterResp, error)
-	Login(context.Context, *LoginReq) (*LoginResp, error)
+	Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error)
+	GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error)
 }
 
-// UserUsecase is a User usecase.
 type UserUsecase struct {
 	repo UserRepo
 	log  *log.Helper
 }
 
-// NewUserUsecase new a User usecase.
 func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{repo: repo, log: log.NewHelper(logger)}
+	return &UserUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
 }
 
-func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*RegisterResp, error) {
-	uc.log.WithContext(ctx).Infof("Register: %v", req)
-	return uc.repo.Register(ctx, req)
+func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
+	cc.log.WithContext(ctx).Infof("Signin request: %+v", req)
+	return cc.repo.Signin(ctx, req)
 }
 
-func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginResp, error) {
-	uc.log.WithContext(ctx).Infof("ctx: %v", req)
-	return uc.repo.Login(ctx, req)
+func (cc *UserUsecase) GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error) {
+	cc.log.WithContext(ctx).Infof("GetUserInfo request: %+v", req)
+	return cc.repo.GetUserInfo(ctx, req)
 }

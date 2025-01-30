@@ -40,6 +40,28 @@ message Data {
   Redis redis = 2;
 }
 
+// 授权/认证
+message Auth {
+  message JWT {
+    string service_key = 1;
+    string api_key = 2;
+  }
+  message Casdoor {
+    message Server {
+      string endpoint = 1;
+      string client_id = 2 [json_name = "client_id"];
+      string client_secret = 3 [json_name = "client_secret"];
+      string organization = 4;
+      string application = 5;
+      string frontend_url = 6 [json_name = "frontend_url"];
+    }
+    string certificate = 1;
+    Server server = 2;
+  }
+  JWT jwt = 1;
+  Casdoor casdoor = 2;
+}
+
 // 分布式链路追踪
 message Trace {
   message Jaeger {
