@@ -7,15 +7,11 @@ import (
 )
 
 // ProviderSet is service providers.
-var ProviderSet = wire.NewSet(NewUserService,NewAddressService)
+var ProviderSet = wire.NewSet(NewUserService)
 
 type UserService struct {
 	userV1.UnimplementedUserServiceServer
 
 	uc *biz.UserUsecase
-}
-type AddressService struct {
-	userV1.UnimplementedUserServiceServer
-
 	ac *biz.AddressesUsecase
 }

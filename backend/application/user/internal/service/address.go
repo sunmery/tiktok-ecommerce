@@ -7,13 +7,9 @@ import (
 	"context"
 	"errors"
 )
-// NewAddressService new a User service.
-func NewAddressService(ac *biz.AddressesUsecase) *AddressService {
-	return &AddressService{ac: ac}
-}
 
-func (a *AddressService) CreateAddresses(ctx context.Context, req *pb.Address) (*pb.Address, error) {
-	address, err := a.ac.CreateAddress(ctx, &biz.Address{
+func (s *UserService) CreateAddresses(ctx context.Context, req *pb.Address) (*pb.Address, error) {
+	address, err := s.ac.CreateAddress(ctx, &biz.Address{
 		Owner:         req.Owner,
 		Name:          req.Name,
 		StreetAddress: req.StreetAddress,
@@ -37,7 +33,7 @@ func (a *AddressService) CreateAddresses(ctx context.Context, req *pb.Address) (
 	}, nil
 
 }
-func (a *AddressService) UpdateAddresses(ctx context.Context, req *pb.Address) (*pb.Address, error) {
+func (s *UserService) UpdateAddresses(ctx context.Context, req *pb.Address) (*pb.Address, error) {
 	payload, err := token.ExtractPayload(ctx)
 	if err != nil {
 		return nil, err
@@ -47,7 +43,7 @@ func (a *AddressService) UpdateAddresses(ctx context.Context, req *pb.Address) (
 		return nil, errors.New("invalid token")
 	}
 
-	address, err := a.ac.UpdateAddress(ctx, &biz.Address{
+	address, err := s.ac.UpdateAddress(ctx, &biz.Address{
 		Id:            req.Id,
 		Owner:         payload.Owner,
 		Name:          payload.Name,
@@ -72,8 +68,8 @@ func (a *AddressService) UpdateAddresses(ctx context.Context, req *pb.Address) (
 	}, nil
 
 }
-func (a *AddressService) DeleteAddresses(ctx context.Context, req *pb.DeleteAddressesRequest) (*pb.DeleteAddressesReply, error) {
-	reply, err := a.ac.DeleteAddress(ctx, &biz.DeleteAddressesRequest{
+func (s *UserService) DeleteAddresses(ctx context.Context, req *pb.DeleteAddressesRequest) (*pb.DeleteAddressesReply, error) {
+	reply, err := s.ac.DeleteAddress(ctx, &biz.DeleteAddressesRequest{
 		AddressId: uint32(req.AddressesId),
 		Owner:     req.Owner,
 		Name:      req.Name,
@@ -87,7 +83,7 @@ func (a *AddressService) DeleteAddresses(ctx context.Context, req *pb.DeleteAddr
 		Code:    reply.Code,
 	}, nil
 }
-func (a *AddressService) GetAddresses(ctx context.Context, req *pb.GetAddressesRequest) (*pb.GetAddressesReply, error) {
+func (s *UserService) GetAddresses(ctx context.Context, req *pb.GetAddressesRequest) (*pb.GetAddressesReply, error) {
 	payload, err := token.ExtractPayload(ctx)
 	if err != nil {
 		return nil, err
@@ -97,7 +93,7 @@ func (a *AddressService) GetAddresses(ctx context.Context, req *pb.GetAddressesR
 		return nil, errors.New("invalid token")
 	}
 
-	addresses, err := a.ac.GetAddresses(ctx, &biz.Request{
+	addresses, err := s.ac.GetAddresses(ctx, &biz.Request{
 		Owner: payload.Owner,
 		Name:  payload.Name,
 	})

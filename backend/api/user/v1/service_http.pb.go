@@ -19,12 +19,12 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationUserServiceCreateAddresses = "/user.service.v1.UserService/CreateAddresses"
-const OperationUserServiceDeleteAddresses = "/user.service.v1.UserService/DeleteAddresses"
-const OperationUserServiceGetAddresses = "/user.service.v1.UserService/GetAddresses"
-const OperationUserServiceGetUserInfo = "/user.service.v1.UserService/GetUserInfo"
-const OperationUserServiceSignin = "/user.service.v1.UserService/Signin"
-const OperationUserServiceUpdateAddresses = "/user.service.v1.UserService/UpdateAddresses"
+const OperationUserServiceCreateAddresses = "/api.user.v1.UserService/CreateAddresses"
+const OperationUserServiceDeleteAddresses = "/api.user.v1.UserService/DeleteAddresses"
+const OperationUserServiceGetAddresses = "/api.user.v1.UserService/GetAddresses"
+const OperationUserServiceGetUserInfo = "/api.user.v1.UserService/GetUserInfo"
+const OperationUserServiceSignin = "/api.user.v1.UserService/Signin"
+const OperationUserServiceUpdateAddresses = "/api.user.v1.UserService/UpdateAddresses"
 
 type UserServiceHTTPServer interface {
 	CreateAddresses(context.Context, *Address) (*Address, error)

@@ -19,12 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Signin_FullMethodName          = "/user.service.v1.UserService/Signin"
-	UserService_GetUserInfo_FullMethodName     = "/user.service.v1.UserService/GetUserInfo"
-	UserService_CreateAddresses_FullMethodName = "/user.service.v1.UserService/CreateAddresses"
-	UserService_UpdateAddresses_FullMethodName = "/user.service.v1.UserService/UpdateAddresses"
-	UserService_DeleteAddresses_FullMethodName = "/user.service.v1.UserService/DeleteAddresses"
-	UserService_GetAddresses_FullMethodName    = "/user.service.v1.UserService/GetAddresses"
+	UserService_Signin_FullMethodName          = "/api.user.v1.UserService/Signin"
+	UserService_GetUserInfo_FullMethodName     = "/api.user.v1.UserService/GetUserInfo"
+	UserService_CreateAddresses_FullMethodName = "/api.user.v1.UserService/CreateAddresses"
+	UserService_UpdateAddresses_FullMethodName = "/api.user.v1.UserService/UpdateAddresses"
+	UserService_DeleteAddresses_FullMethodName = "/api.user.v1.UserService/DeleteAddresses"
+	UserService_GetAddresses_FullMethodName    = "/api.user.v1.UserService/GetAddresses"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -278,7 +278,7 @@ func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "user.service.v1.UserService",
+	ServiceName: "api.user.v1.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

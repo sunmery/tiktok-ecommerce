@@ -1,24 +1,12 @@
 GOPATH:=$(shell go env GOPATH)
 VERSION=$(shell git describe --tags --always)
-# 修改：直接获取当前微服务目录名（如 application/user 下的 user）
 APP_RELATIVE_PATH=$(shell basename $$PWD)
-# 修改：API 路径调整为从 application/微服务目录 到根目录 api 的相对路径
 API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
-
 INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
 KRATOS_VERSION=$(shell go mod graph |grep go-kratos/kratos/v2 |head -n 1 |awk -F '@' '{print $$2}')
 KRATOS=$(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
-# 修改：APP_NAME 直接使用微服务名（无需路径转换）
 APP_NAME=$(APP_RELATIVE_PATH)
 DOCKER_IMAGE=go-kratos/beer-$(APP_NAME):0.1.0
-
-.PHONY: init
-init:
-	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	go get -u github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2
-	go get -u github.com/google/wire/cmd/wire
-	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
 
 .PHONY: grpc
 grpc:
