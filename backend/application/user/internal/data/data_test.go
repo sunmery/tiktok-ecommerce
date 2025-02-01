@@ -11,6 +11,13 @@ import (
 )
 
 func TestData(t *testing.T) {
+	// 设置环境变量为实际的值:
+	// export DB_SOURCE="postgresql://postgres:postgres@192.168.3.121:5432/ecommence?sslmode=disable&timezone=Asia/Shanghai"
+	// export REDIS_ADDRESS="192.168.3.132:6379"
+	// export REDIS_USERNAME="default"
+	// export REDIS_PASSWORD="msdnmm"
+	// 在外部的终端工具执行. 在IDE内点击运行可能无法直接读取该环境变量
+
 	// 初始化 Viper 以读取环境变量
 	viper.AutomaticEnv()
 
