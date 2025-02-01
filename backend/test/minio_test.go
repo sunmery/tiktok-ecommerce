@@ -13,7 +13,7 @@ import (
 const (
 	filePath         = "example_video.mp4"
 	objectName       = "example_video.mp4"
-	downloadFilePath = "example_video.mp4"
+	downloadFilePath = "download_example_video.mp4"
 )
 
 type MinioKeys struct {
