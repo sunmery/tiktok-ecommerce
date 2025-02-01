@@ -80,3 +80,17 @@ message Trace {
   }
   Jaeger jaeger = 1;
 }
+
+// 注册/配置中心
+message Consul {
+  message RegistryCenter {
+    string address = 1;
+    string scheme = 2;
+    bool health_check = 3;
+  }
+  message ConfigCenter {
+    string addr = 1;
+  }
+  RegistryCenter registry_center = 1;
+  ConfigCenter config_center = 2;
+}

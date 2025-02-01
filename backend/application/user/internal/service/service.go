@@ -13,5 +13,9 @@ type UserService struct {
 	userV1.UnimplementedUserServiceServer
 
 	uc *biz.UserUsecase
-	ac *biz.AddressesUsecase
+}
+
+// NewUserService new a User service.
+func NewUserService(uc *biz.UserUsecase) *UserService {
+	return &UserService{uc: uc}
 }

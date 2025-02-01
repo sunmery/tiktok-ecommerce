@@ -6,6 +6,8 @@ require (
 	github.com/casdoor/casdoor-go-sdk v1.3.0
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/gin-gonic/gin v1.4.0
+	github.com/go-kratos/kratos/contrib/config/consul/v2 v2.0.0-20250127095200-20970020a5ef
+	github.com/go-kratos/kratos/contrib/registry/consul/v2 v2.0.0-20250127095200-20970020a5ef
 	github.com/go-kratos/kratos/v2 v2.8.3
 	github.com/go-kratos/sentry v0.0.0-20211021071616-de3a2011c4e4
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -60,7 +62,7 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect

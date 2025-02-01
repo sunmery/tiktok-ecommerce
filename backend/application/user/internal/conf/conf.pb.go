@@ -276,6 +276,59 @@ func (x *Trace) GetJaeger() *Trace_Jaeger {
 	return nil
 }
 
+// 注册/配置中心
+type Consul struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	RegistryCenter *Consul_RegistryCenter `protobuf:"bytes,1,opt,name=registry_center,json=registryCenter,proto3" json:"registry_center,omitempty"`
+	ConfigCenter   *Consul_ConfigCenter   `protobuf:"bytes,2,opt,name=config_center,json=configCenter,proto3" json:"config_center,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Consul) Reset() {
+	*x = Consul{}
+	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Consul) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Consul) ProtoMessage() {}
+
+func (x *Consul) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Consul.ProtoReflect.Descriptor instead.
+func (*Consul) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Consul) GetRegistryCenter() *Consul_RegistryCenter {
+	if x != nil {
+		return x.RegistryCenter
+	}
+	return nil
+}
+
+func (x *Consul) GetConfigCenter() *Consul_ConfigCenter {
+	if x != nil {
+		return x.ConfigCenter
+	}
+	return nil
+}
+
 type Server_HTTP struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Network       string                 `protobuf:"bytes,1,opt,name=network,proto3" json:"network,omitempty"`
@@ -287,7 +340,7 @@ type Server_HTTP struct {
 
 func (x *Server_HTTP) Reset() {
 	*x = Server_HTTP{}
-	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	mi := &file_internal_conf_conf_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -299,7 +352,7 @@ func (x *Server_HTTP) String() string {
 func (*Server_HTTP) ProtoMessage() {}
 
 func (x *Server_HTTP) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	mi := &file_internal_conf_conf_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -347,7 +400,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_internal_conf_conf_proto_msgTypes[6]
+	mi := &file_internal_conf_conf_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -359,7 +412,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[6]
+	mi := &file_internal_conf_conf_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -406,7 +459,7 @@ type Data_Database struct {
 
 func (x *Data_Database) Reset() {
 	*x = Data_Database{}
-	mi := &file_internal_conf_conf_proto_msgTypes[7]
+	mi := &file_internal_conf_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -418,7 +471,7 @@ func (x *Data_Database) String() string {
 func (*Data_Database) ProtoMessage() {}
 
 func (x *Data_Database) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[7]
+	mi := &file_internal_conf_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -463,7 +516,7 @@ type Data_Redis struct {
 
 func (x *Data_Redis) Reset() {
 	*x = Data_Redis{}
-	mi := &file_internal_conf_conf_proto_msgTypes[8]
+	mi := &file_internal_conf_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +528,7 @@ func (x *Data_Redis) String() string {
 func (*Data_Redis) ProtoMessage() {}
 
 func (x *Data_Redis) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[8]
+	mi := &file_internal_conf_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -550,7 +603,7 @@ type Auth_JWT struct {
 
 func (x *Auth_JWT) Reset() {
 	*x = Auth_JWT{}
-	mi := &file_internal_conf_conf_proto_msgTypes[9]
+	mi := &file_internal_conf_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +615,7 @@ func (x *Auth_JWT) String() string {
 func (*Auth_JWT) ProtoMessage() {}
 
 func (x *Auth_JWT) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[9]
+	mi := &file_internal_conf_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -602,7 +655,7 @@ type Auth_Casdoor struct {
 
 func (x *Auth_Casdoor) Reset() {
 	*x = Auth_Casdoor{}
-	mi := &file_internal_conf_conf_proto_msgTypes[10]
+	mi := &file_internal_conf_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +667,7 @@ func (x *Auth_Casdoor) String() string {
 func (*Auth_Casdoor) ProtoMessage() {}
 
 func (x *Auth_Casdoor) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[10]
+	mi := &file_internal_conf_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -658,7 +711,7 @@ type Auth_Casdoor_Server struct {
 
 func (x *Auth_Casdoor_Server) Reset() {
 	*x = Auth_Casdoor_Server{}
-	mi := &file_internal_conf_conf_proto_msgTypes[11]
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -670,7 +723,7 @@ func (x *Auth_Casdoor_Server) String() string {
 func (*Auth_Casdoor_Server) ProtoMessage() {}
 
 func (x *Auth_Casdoor_Server) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[11]
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -739,7 +792,7 @@ type Trace_Jaeger struct {
 
 func (x *Trace_Jaeger) Reset() {
 	*x = Trace_Jaeger{}
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -751,7 +804,7 @@ func (x *Trace_Jaeger) String() string {
 func (*Trace_Jaeger) ProtoMessage() {}
 
 func (x *Trace_Jaeger) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -797,7 +850,7 @@ type Trace_Jaeger_GRPC struct {
 
 func (x *Trace_Jaeger_GRPC) Reset() {
 	*x = Trace_Jaeger_GRPC{}
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -809,7 +862,7 @@ func (x *Trace_Jaeger_GRPC) String() string {
 func (*Trace_Jaeger_GRPC) ProtoMessage() {}
 
 func (x *Trace_Jaeger_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -841,7 +894,7 @@ type Trace_Jaeger_HTTP struct {
 
 func (x *Trace_Jaeger_HTTP) Reset() {
 	*x = Trace_Jaeger_HTTP{}
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -853,7 +906,7 @@ func (x *Trace_Jaeger_HTTP) String() string {
 func (*Trace_Jaeger_HTTP) ProtoMessage() {}
 
 func (x *Trace_Jaeger_HTTP) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,6 +925,110 @@ func (*Trace_Jaeger_HTTP) Descriptor() ([]byte, []int) {
 func (x *Trace_Jaeger_HTTP) GetEndpoint() string {
 	if x != nil {
 		return x.Endpoint
+	}
+	return ""
+}
+
+type Consul_RegistryCenter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Scheme        string                 `protobuf:"bytes,2,opt,name=scheme,proto3" json:"scheme,omitempty"`
+	HealthCheck   bool                   `protobuf:"varint,3,opt,name=health_check,json=healthCheck,proto3" json:"health_check,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Consul_RegistryCenter) Reset() {
+	*x = Consul_RegistryCenter{}
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Consul_RegistryCenter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Consul_RegistryCenter) ProtoMessage() {}
+
+func (x *Consul_RegistryCenter) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Consul_RegistryCenter.ProtoReflect.Descriptor instead.
+func (*Consul_RegistryCenter) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 0}
+}
+
+func (x *Consul_RegistryCenter) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *Consul_RegistryCenter) GetScheme() string {
+	if x != nil {
+		return x.Scheme
+	}
+	return ""
+}
+
+func (x *Consul_RegistryCenter) GetHealthCheck() bool {
+	if x != nil {
+		return x.HealthCheck
+	}
+	return false
+}
+
+type Consul_ConfigCenter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Addr          string                 `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Consul_ConfigCenter) Reset() {
+	*x = Consul_ConfigCenter{}
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Consul_ConfigCenter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Consul_ConfigCenter) ProtoMessage() {}
+
+func (x *Consul_ConfigCenter) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Consul_ConfigCenter.ProtoReflect.Descriptor instead.
+func (*Consul_ConfigCenter) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 1}
+}
+
+func (x *Consul_ConfigCenter) GetAddr() string {
+	if x != nil {
+		return x.Addr
 	}
 	return ""
 }
@@ -986,10 +1143,28 @@ var file_internal_conf_conf_proto_rawDesc = string([]byte{
 	0x28, 0x09, 0x52, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x1a, 0x22, 0x0a, 0x04,
 	0x48, 0x54, 0x54, 0x50, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x42, 0x2d, 0x5a, 0x2b, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x2f, 0x61, 0x70, 0x70, 0x6c,
-	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x2f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x3b, 0x63, 0x6f, 0x6e, 0x66, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0xa5, 0x02, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x12, 0x4a, 0x0a, 0x0f, 0x72,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x5f, 0x63, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70,
+	0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x52, 0x0e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x44, 0x0a, 0x0d, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x5f, 0x63, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f,
+	0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x73,
+	0x75, 0x6c, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x52,
+	0x0c, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x1a, 0x65, 0x0a,
+	0x0e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12,
+	0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x63, 0x68,
+	0x65, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d,
+	0x65, 0x12, 0x21, 0x0a, 0x0c, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x5f, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0b, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x43,
+	0x68, 0x65, 0x63, 0x6b, 0x1a, 0x22, 0x0a, 0x0c, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65,
+	0x6e, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x42, 0x2d, 0x5a, 0x2b, 0x62, 0x61, 0x63, 0x6b,
+	0x65, 0x6e, 0x64, 0x2f, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f,
+	0x75, 0x73, 0x65, 0x72, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x63, 0x6f,
+	0x6e, 0x66, 0x3b, 0x63, 0x6f, 0x6e, 0x66, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1004,48 +1179,53 @@ func file_internal_conf_conf_proto_rawDescGZIP() []byte {
 	return file_internal_conf_conf_proto_rawDescData
 }
 
-var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_internal_conf_conf_proto_goTypes = []any{
-	(*Bootstrap)(nil),           // 0: kratos.api.Bootstrap
-	(*Server)(nil),              // 1: kratos.api.Server
-	(*Data)(nil),                // 2: kratos.api.Data
-	(*Auth)(nil),                // 3: kratos.api.Auth
-	(*Trace)(nil),               // 4: kratos.api.Trace
-	(*Server_HTTP)(nil),         // 5: kratos.api.Server.HTTP
-	(*Server_GRPC)(nil),         // 6: kratos.api.Server.GRPC
-	(*Data_Database)(nil),       // 7: kratos.api.Data.Database
-	(*Data_Redis)(nil),          // 8: kratos.api.Data.Redis
-	(*Auth_JWT)(nil),            // 9: kratos.api.Auth.JWT
-	(*Auth_Casdoor)(nil),        // 10: kratos.api.Auth.Casdoor
-	(*Auth_Casdoor_Server)(nil), // 11: kratos.api.Auth.Casdoor.Server
-	(*Trace_Jaeger)(nil),        // 12: kratos.api.Trace.Jaeger
-	(*Trace_Jaeger_GRPC)(nil),   // 13: kratos.api.Trace.Jaeger.GRPC
-	(*Trace_Jaeger_HTTP)(nil),   // 14: kratos.api.Trace.Jaeger.HTTP
-	(*durationpb.Duration)(nil), // 15: google.protobuf.Duration
+	(*Bootstrap)(nil),             // 0: kratos.api.Bootstrap
+	(*Server)(nil),                // 1: kratos.api.Server
+	(*Data)(nil),                  // 2: kratos.api.Data
+	(*Auth)(nil),                  // 3: kratos.api.Auth
+	(*Trace)(nil),                 // 4: kratos.api.Trace
+	(*Consul)(nil),                // 5: kratos.api.Consul
+	(*Server_HTTP)(nil),           // 6: kratos.api.Server.HTTP
+	(*Server_GRPC)(nil),           // 7: kratos.api.Server.GRPC
+	(*Data_Database)(nil),         // 8: kratos.api.Data.Database
+	(*Data_Redis)(nil),            // 9: kratos.api.Data.Redis
+	(*Auth_JWT)(nil),              // 10: kratos.api.Auth.JWT
+	(*Auth_Casdoor)(nil),          // 11: kratos.api.Auth.Casdoor
+	(*Auth_Casdoor_Server)(nil),   // 12: kratos.api.Auth.Casdoor.Server
+	(*Trace_Jaeger)(nil),          // 13: kratos.api.Trace.Jaeger
+	(*Trace_Jaeger_GRPC)(nil),     // 14: kratos.api.Trace.Jaeger.GRPC
+	(*Trace_Jaeger_HTTP)(nil),     // 15: kratos.api.Trace.Jaeger.HTTP
+	(*Consul_RegistryCenter)(nil), // 16: kratos.api.Consul.RegistryCenter
+	(*Consul_ConfigCenter)(nil),   // 17: kratos.api.Consul.ConfigCenter
+	(*durationpb.Duration)(nil),   // 18: google.protobuf.Duration
 }
 var file_internal_conf_conf_proto_depIdxs = []int32{
 	1,  // 0: kratos.api.Bootstrap.server:type_name -> kratos.api.Server
 	2,  // 1: kratos.api.Bootstrap.data:type_name -> kratos.api.Data
-	5,  // 2: kratos.api.Server.http:type_name -> kratos.api.Server.HTTP
-	6,  // 3: kratos.api.Server.grpc:type_name -> kratos.api.Server.GRPC
-	7,  // 4: kratos.api.Data.database:type_name -> kratos.api.Data.Database
-	8,  // 5: kratos.api.Data.redis:type_name -> kratos.api.Data.Redis
-	9,  // 6: kratos.api.Auth.jwt:type_name -> kratos.api.Auth.JWT
-	10, // 7: kratos.api.Auth.casdoor:type_name -> kratos.api.Auth.Casdoor
-	12, // 8: kratos.api.Trace.jaeger:type_name -> kratos.api.Trace.Jaeger
-	15, // 9: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
-	15, // 10: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	15, // 11: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
-	15, // 12: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
-	15, // 13: kratos.api.Data.Redis.dial_timeout:type_name -> google.protobuf.Duration
-	11, // 14: kratos.api.Auth.Casdoor.server:type_name -> kratos.api.Auth.Casdoor.Server
-	13, // 15: kratos.api.Trace.Jaeger.grpc:type_name -> kratos.api.Trace.Jaeger.GRPC
-	14, // 16: kratos.api.Trace.Jaeger.http:type_name -> kratos.api.Trace.Jaeger.HTTP
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	6,  // 2: kratos.api.Server.http:type_name -> kratos.api.Server.HTTP
+	7,  // 3: kratos.api.Server.grpc:type_name -> kratos.api.Server.GRPC
+	8,  // 4: kratos.api.Data.database:type_name -> kratos.api.Data.Database
+	9,  // 5: kratos.api.Data.redis:type_name -> kratos.api.Data.Redis
+	10, // 6: kratos.api.Auth.jwt:type_name -> kratos.api.Auth.JWT
+	11, // 7: kratos.api.Auth.casdoor:type_name -> kratos.api.Auth.Casdoor
+	13, // 8: kratos.api.Trace.jaeger:type_name -> kratos.api.Trace.Jaeger
+	16, // 9: kratos.api.Consul.registry_center:type_name -> kratos.api.Consul.RegistryCenter
+	17, // 10: kratos.api.Consul.config_center:type_name -> kratos.api.Consul.ConfigCenter
+	18, // 11: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
+	18, // 12: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	18, // 13: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
+	18, // 14: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
+	18, // 15: kratos.api.Data.Redis.dial_timeout:type_name -> google.protobuf.Duration
+	12, // 16: kratos.api.Auth.Casdoor.server:type_name -> kratos.api.Auth.Casdoor.Server
+	14, // 17: kratos.api.Trace.Jaeger.grpc:type_name -> kratos.api.Trace.Jaeger.GRPC
+	15, // 18: kratos.api.Trace.Jaeger.http:type_name -> kratos.api.Trace.Jaeger.HTTP
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_internal_conf_conf_proto_init() }
@@ -1059,7 +1239,7 @@ func file_internal_conf_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_conf_conf_proto_rawDesc), len(file_internal_conf_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

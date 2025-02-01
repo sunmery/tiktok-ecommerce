@@ -8,17 +8,10 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"net/http"
-
-	"github.com/go-kratos/kratos/v2/log"
 )
 
-type addressesRepo struct {
-	data *Data
-	log  *log.Helper
-}
-
-func (a *addressesRepo) CreateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
-	address, err := a.data.db.CreatAddress(ctx, models.CreatAddressParams{
+func (u *userRepo) CreateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
+	address, err := u.data.db.CreatAddress(ctx, models.CreatAddressParams{
 		Owner:         req.Owner,
 		Name:          req.Name,
 		StreetAddress: req.StreetAddress,
@@ -43,8 +36,8 @@ func (a *addressesRepo) CreateAddress(ctx context.Context, req *biz.Address) (*b
 	}, nil
 }
 
-func (a *addressesRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
-	address, err := a.data.db.UpdateAddress(ctx, models.UpdateAddressParams{
+func (u *userRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
+	address, err := u.data.db.UpdateAddress(ctx, models.UpdateAddressParams{
 		StreetAddress: &req.StreetAddress,
 		City:          &req.City,
 		State:         &req.State,
@@ -69,7 +62,7 @@ func (a *addressesRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*b
 	}, err
 }
 
-func (a *addressesRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRequest) (*biz.DeleteAddressesReply, error) {
+func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRequest) (*biz.DeleteAddressesReply, error) {
 	payload, err := token.ExtractPayload(ctx)
 	if err != nil {
 		return nil, err
@@ -78,7 +71,7 @@ func (a *addressesRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddres
 	if req.Owner != payload.Owner || req.Name != payload.Name {
 		return nil, errors.New("invalid token")
 	}
-	reply, err := a.data.db.DeleteAddress(ctx, models.DeleteAddressParams{
+	reply, err := u.data.db.DeleteAddress(ctx, models.DeleteAddressParams{
 		Owner: payload.Owner,
 		Name:  payload.Name,
 		ID:    int32(req.AddressId),
@@ -93,9 +86,9 @@ func (a *addressesRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddres
 	}, nil
 }
 
-func (a *addressesRepo) GetAddresses(ctx context.Context, req *biz.Request) (*biz.Addresses, error) {
+func (u *userRepo) GetAddresses(ctx context.Context, req *biz.Request) (*biz.Addresses, error) {
 
-	addresses, aErr := a.data.db.GetAddresses(ctx, models.GetAddressesParams{
+	addresses, aErr := u.data.db.GetAddresses(ctx, models.GetAddressesParams{
 		Owner: req.Owner,
 		Name:  req.Name,
 	})
@@ -123,12 +116,4 @@ func (a *addressesRepo) GetAddresses(ctx context.Context, req *biz.Request) (*bi
 	return &biz.Addresses{
 		Addresses: addressList,
 	}, nil
-}
-
-// NewAddressesRepo .
-func NewAddressesRepo(data *Data, logger log.Logger) biz.AddressesRepo {
-	return &addressesRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }

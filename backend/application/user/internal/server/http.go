@@ -79,7 +79,7 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr 
 			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
 			handlers.AllowCredentials(),
 		)),
-		// http.RequestDecoder(MultipartFormDataDecoder),
+		http.RequestDecoder(MultipartFormDataDecoder),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))

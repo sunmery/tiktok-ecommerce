@@ -10,7 +10,7 @@ data:
     driver: postgres
     source: postgresql://postgres:postgres@192.168.3.121:5432/ecommence?sslmode=disable&timezone=Asia/Shanghai
   redis:
-    addr: 192.168.3.121:6379
+    addr: 192.168.3.132:6379
     username: default
     password: msdnmm
     read_timeout: 3.0s

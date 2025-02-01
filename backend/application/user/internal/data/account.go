@@ -1,21 +1,14 @@
 package data
 
 import (
+	"backend/application/user/internal/biz"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
-	"strings"
-
-	"backend/application/user/internal/biz"
-
 	"github.com/go-kratos/kratos/v2/log"
+	"strings"
 )
-
-type userRepo struct {
-	data *Data
-	log  *log.Helper
-}
 
 func (u *userRepo) Signin(ctx context.Context, req *biz.SigninRequest) (*biz.SigninReply, error) {
 	code := req.Code
