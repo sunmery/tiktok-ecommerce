@@ -51,11 +51,11 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 
 func NewCache(c *conf.Data) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Protocol: 3,
-		Addr:     c.Redis.Addr,
-		// Username:     c.Redis.Username,
-		// Password:     c.Redis.Password,
-		// DialTimeout:  c.Redis.DialTimeout.AsDuration(),
+		Protocol:     3,
+		Addr:         c.Redis.Addr,
+		Username:     c.Redis.Username,
+		Password:     c.Redis.Password,
+		DialTimeout:  c.Redis.DialTimeout.AsDuration(),
 		ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
 		WriteTimeout: c.Redis.WriteTimeout.AsDuration(),
 	})
