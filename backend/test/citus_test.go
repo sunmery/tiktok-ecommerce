@@ -27,5 +27,4 @@ func TestCitus(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to ping database: %v", err)
 	}
-
 }
