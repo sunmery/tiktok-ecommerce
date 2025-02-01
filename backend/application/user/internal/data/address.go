@@ -18,18 +18,9 @@ type addressesRepo struct {
 }
 
 func (a *addressesRepo) CreateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Owner != payload.Owner || req.Name != payload.Name {
-		return nil, errors.New("invalid token")
-	}
-
 	address, err := a.data.db.CreatAddress(ctx, models.CreatAddressParams{
-		Owner:         payload.Owner,
-		Name:          payload.Name,
+		Owner:         req.Owner,
+		Name:          req.Name,
 		StreetAddress: req.StreetAddress,
 		City:          req.City,
 		State:         req.State,

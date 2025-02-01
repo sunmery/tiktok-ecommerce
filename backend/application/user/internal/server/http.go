@@ -7,10 +7,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
-	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
-	"github.com/go-kratos/kratos/v2/middleware/validate"
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -50,7 +48,7 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr 
 	// trace end
 	var opts = []http.ServerOption{
 		http.Middleware(
-			validate.Validator(),  // 参数校验
+			// validate.Validator(), // 参数校验
 			tracing.Server(),
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
 			// recovery.Recovery(
@@ -60,7 +58,7 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr 
 			// 		return nil
 			// 	}),
 			// ),
-			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
+			// logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 			selector.Server(
 				jwt.Server(
 					func(token *jwtV5.Token) (interface{}, error) {
@@ -81,7 +79,7 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr 
 			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
 			handlers.AllowCredentials(),
 		)),
-		http.RequestDecoder(MultipartFormDataDecoder),
+		// http.RequestDecoder(MultipartFormDataDecoder),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))
@@ -118,4 +116,3 @@ func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 
 	return nil
 }
-

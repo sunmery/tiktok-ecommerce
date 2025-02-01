@@ -6,7 +6,6 @@ import (
 	"backend/application/user/internal/service"
 	"context"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
-	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	sentrykratos "github.com/go-kratos/sentry"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -18,7 +17,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, greeter *service.UserService,tr *conf.Trace, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, greeter *service.UserService, tr *conf.Trace, logger log.Logger) *grpc.Server {
 	// trace start
 	ctx := context.Background()
 
@@ -51,10 +50,10 @@ func NewGRPCServer(c *conf.Server, greeter *service.UserService,tr *conf.Trace, 
 				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
 					// do someting
 					return nil
-				}),),
-			sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
+				})),
+			sentrykratos.Server(),  // must after Recovery middleware, because of the exiting order will be reversed
 			logging.Server(logger), // 在 grpc.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
-			tracing.Server(), // trace 链路追踪
+			// tracing.Server(), // trace 链路追踪
 		),
 	}
 	if c.Grpc.Network != "" {

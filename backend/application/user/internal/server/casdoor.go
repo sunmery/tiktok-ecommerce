@@ -13,7 +13,7 @@ import (
 func NewWhiteListMatcher() selector.MatchFunc {
 	whiteList := make(map[string]struct{})
 	// whiteList["/admin.v1.AdminService/Login"] = struct{}{}
-	whiteList["/user.service.v1.UserService/Signin"] = struct{}{}
+	whiteList["/api.user.v1.UserService/Signin"] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {
 			return false
@@ -32,7 +32,6 @@ func parseRSAPublicKeyFromPEM(pemBytes []byte) (*rsa.PublicKey, error) {
 }
 
 func InitJwtKey(ac *conf.Auth) *rsa.PublicKey {
-	fmt.Printf("InitJwtKey %vln:", ac)
 	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.ApiKey))
 	if err != nil {
 		panic("failed to parse public key")
