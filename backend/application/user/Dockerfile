@@ -1,22 +1,22 @@
-# syntax=docker/dockerfile:1
 # https://docs.docker.com/go/dockerfile-reference/
 
 
 # 定义基础镜像的 Golang 版本
 ARG GOIMAGE=golang:1.23.3-alpine3.20
+ARG GOOS=
+ARG GOARCH=amd64
 
-FROM --platform=$BUILDPLATFORM ${GOIMAGE} AS build
+FROM ${GOIMAGE} AS build
 WORKDIR /src
 
 # 服务名
 ARG SERVICE
 
 # 版本号
-ARG VERSION=latest
+ARG VERSION=dev
 
 # Go的环境变量, 例如alpine镜像不内置gcc,则关闭CGO很有效
-ARG GOOS=linux
-ARG GOARCH=amd64
+
 ARG CGOENABLED=0
 
 # Go的环境变量, 例如alpine镜像不内置gcc,则关闭CGO很有效
@@ -59,7 +59,8 @@ ARG HTTP_PORT=30001
 ARG GRPC_PORT=30002
 
 # 修改镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+# RUN echo "https://mirrors.ustc.edu.cn/alpine/latest-stable/main" > /etc/apk/repositories && \
+#     echo "https://mirrors.ustc.edu.cn/alpine/latest-stable/community" >> /etc/apk/repositories
 
 # 安装应用运行必需的系统证书和时区数据包
 # RUN --mount=type=cache,target=/var/cache/apk \
@@ -70,8 +71,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
 # RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser
 
 # 设置时区为上海
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN echo 'Asia/Shanghai' >/etc/timezone
+# RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+# RUN echo 'Asia/Shanghai' >/etc/timezone
 
 # USER appuser
 
@@ -79,13 +80,13 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 EXPOSE $HTTP_PORT
 EXPOSE $GRPC_PORT
 
-RUN mkdir -p /data/conf
+# RUN mkdir -p /data/conf
 
-# 设置容器启动时执行的命令
-# 服务名
+# 定义服务名
 ARG SERVICE
 ENV SERVICE=$SERVICE
 
+# 设置容器启动时执行的命令
 ENTRYPOINT ["/bin/sh", "-c", "/bin/$SERVICE -conf /data/conf"]
 CMD ["/bin/sh", "-c", "/bin/$SERVICE"]
 
@@ -94,42 +95,40 @@ CMD ["/bin/sh", "-c", "/bin/$SERVICE"]
 # 如果使用docker构建时传递 GOOS=darwin 会导致构建的二进制文件不兼容于 Linux 环境，从而出现 exec format error
 # 所以在使用docker构建时的目标平台的GOOS应该为 linux，而非 darwin。
 # SERVICE=user
-# REPOSITORY="ecommence/user"
+# REPOSITORY="e-commence/user"
 # VERSION=dev
-# docker build . \
+# GOOS=linux
+# GOARCH=amd64
+# docker buildx build . \
 #   -f application/user/Dockerfile \
 #   --progress=plain \
 #   -t $REPOSITORY:$VERSION \
 #   --build-arg SERVICE=$SERVICE \
 #   --build-arg CGOENABLED=0 \
 #   --build-arg GOIMAGE=golang:1.23.3-alpine3.20 \
-#   --build-arg GOOS=linux \
-#   --build-arg GOARCH=arm64 \
+#   --build-arg GOOS=$GOOS \
 
 # 构建多架构的二进制文件, 需要在Docker Desktop 启用 containerd 映像存储
 # https://docs.docker.com/desktop/containerd/#enable-the-containerd-image-store
 # SERVICE=user
-# VERSION=v1.0.0
-# REPOSITORY="tiktok/users"
+# REPOSITORY="e-commence/user"
+# VERSION=dev
 # GOOS=linux
 # GOARCH=amd64
-# HTTP_PORT=30001
-# GRPC_PORT=30002
-# PLATFORM_1=linux/amd64
-# PLATFORM_2=linux/arm64
 # docker buildx build . \
+#   -f application/user/Dockerfile \
 #   --progress=plain \
-#   --build-arg SERVICE=$SERVICE \
 #   -t $REPOSITORY:$VERSION \
+#   --build-arg SERVICE=$SERVICE \
 #   --build-arg CGOENABLED=0 \
 #   --build-arg GOIMAGE=golang:1.23.3-alpine3.20 \
-#   --build-arg VERSION=$VERSION \
-#   --build-arg HTTP_PORT=$HTTP_PORT \
-#   --build-arg GRPC_PORT=$GRPC_PORT \
 #   --build-arg GOOS=$GOOS \
 #   --build-arg GOARCH=$GOARCH \
-#   --platform $PLATFORM_1,$PLATFORM_2 \
-#   --load
+#   --build-arg VERSION=$VERSION \
+#   --build-arg HTTP_PORT=30001 \
+#   --build-arg GRPC_PORT=30002 \
+#   --platform linux/amd64 \
+#  --load
 
 # 推送
 # register="ccr.ccs.tencentyun.com"
