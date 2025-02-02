@@ -1,0 +1,243 @@
+name: Test Microservices
+
+on:
+  push:
+    branches:
+      - pre
+      - main
+    tags:
+      - 'v*.*.*'
+env:
+  # 微服务所在目录
+  SERVICE_DIR: user
+  # 仓库
+  REGISTER_NAMESPACE: e-commence
+  # 版本号, git tag的标签名
+  # https://docs.github.com/zh/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context
+  #VERSION: ${{ github.ref_name }}
+  VERSION: v1.0.0
+  # 目标的操作系统
+  GOOS: linux
+  # 目标的架构
+  GOARCH: amd64
+  # golang的镜像
+  GO_IMAGE: golang:1.23.3-alpine3.20
+  # 代理
+  GO_PROXY: https://proxy.golang.org
+  # golang环境变量
+  CGO_ENABLED: 0
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [addresses, balances, cart, checkout, credit_cards, order, payment, product, user]  # 并行执行多个服务
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ matrix.service }}
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - '5432:5432'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          check-latest: true
+          cache-dependency-path: '**/go.sum'
+
+      - name: Install migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin/
+          which migrate
+
+      - name: Run database migration
+        run: |
+          export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+          if [ -d ${{ matrix.service }} ]; then
+            echo "Running migrations..."
+            make migrate-up
+          else
+            echo "Skipping migrations."
+          fi
+
+      - name: Run Go tests
+        run: |
+          go test -short -coverprofile=coverage.out ./...
+          go tool cover -html=coverage.out -o coverage.html
+
+  backend-build:
+    if: github.ref != 'refs/heads/pre'  # 如果不是 pre 分支，则运行 build 任务
+    needs: backend-test
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service_config:
+          - { service: addresses, http_port: 30015, grpc_port: 30016 }
+          - { service: balances, http_port: 30017, grpc_port: 30018 }
+          - { service: cart, http_port: 30003, grpc_port: 30004 }
+          - { service: checkout, http_port: 30005, grpc_port: 30006 }
+          - { service: credit_cards, http_port: 30007, grpc_port: 30008 }
+          - { service: order, http_port: 30009, grpc_port: 30010 }
+          - { service: payment, http_port: 30011, grpc_port: 30012 }
+          - { service: product, http_port: 30013, grpc_port: 30014 }
+          - { service: user, http_port: 30001, grpc_port: 30002 }
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ matrix.service_config.service }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for cross-platform builds
+        uses: docker/setup-qemu-action@v3
+
+      - name: Cache Go dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-modules-
+
+      - name: Login to Docker Registry
+        run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY }} --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+      - name: Build, Tag, and Push Docker Image
+        run: |
+          docker build . \
+            -t actions/${{ matrix.service_config.service }} \
+            --build-arg GO_PROXY=$GO_PROXY \
+            --build-arg GOIMAGE=$GO_IMAGE \
+            --build-arg CGOENABLED=$CGO_ENABLED \
+            --build-arg VERSION=$VERSION \
+            --build-arg HTTP_PORT=${{ matrix.service_config.http_port }} \
+            --build-arg GRPC_PORT=${{ matrix.service_config.grpc_port }} \
+            --build-arg GOOS=$GOOS \
+            --build-arg GOARCH=$GOARCH
+
+          docker tag actions/${{ matrix.service_config.service }} ${{ secrets.REGISTRY }}/${REGISTER_NAMESPACE}/${{ matrix.service_config.service }}:$VERSION
+          docker push ${{ secrets.REGISTRY }}/${REGISTER_NAMESPACE}/${{ matrix.service_config.service }}:$VERSION
+
+  create-secrets:
+    needs: backend-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl{,.sha256}"
+          echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+          chmod +x ./kubectl
+          cp ./kubectl /usr/local/bin
+
+      - name: Write Kubernetes config file
+        run: |
+          mkdir -pv ~/.kube/
+          echo "${{secrets.KUBE_CONF}}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Set Context
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 15
+          max_attempts: 3
+          retry_on: error
+          command: |
+            if kubectl get ns $BACKEND_NAMESPACE; then
+            echo "namespaces $BACKEND_NAMESPACE already exists, skip create"
+            else
+            kubectl create ns $BACKEND_NAMESPACE
+            fi
+
+            kubectl config set-context --current --namespace $BACKEND_NAMESPACE
+
+      - name: Create secret
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 15
+          max_attempts: 3
+          retry_on: error
+          command: |
+            kubectl delete secret db-source-secret --ignore-not-found
+            kubectl delete secret redis-address-secret --ignore-not-found
+            kubectl delete secret redis-username-secret --ignore-not-found
+            kubectl delete secret redis-password-secret --ignore-not-found
+
+            kubectl create secret generic db-source-secret --from-literal='DB_SOURCE=${{ secrets.DB_SOURCE }}'
+            kubectl create secret generic redis-address-secret --from-literal='REDIS_ADDRESS=${{ secrets.REDIS_ADDRESS }}'
+            kubectl create secret generic redis-username-secret --from-literal='REDIS_USERNAME=${{ secrets.REDIS_USERNAME }}'
+            kubectl create secret generic redis-password-secret --from-literal='REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}'
+
+  backend-deploy:
+    needs: backend-build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [addresses, balances, cart, checkout, credit_cards, order, payment, product, user]  # 并行执行多个服务
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ArgoCD CLI
+        run: |
+          curl -LO https://github.com/argoproj/argo-cd/releases/download/v2.13.3/argocd-linux-amd64
+          mv argocd-linux-amd64 argocd
+          chmod +x ./argocd
+          cp ./argocd /usr/local/bin
+
+      - name: Connect to ArgoCD Server
+        run: |
+          argocd login ${{ secrets.ARGOCD_SERVER_ADDR }} \
+            --username ${{ secrets.ARGOCD_SERVER_USER }} \
+            --password ${{ secrets.ARGOCD_SERVER_PASS }} \
+            --insecure
+          argocd version
+
+      - name: Connect to Kubernetes Cluster
+        run: |
+          mkdir -pv ~/.kube/
+          echo "${{secrets.KUBE_CONF}}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Set Kubernetes Context
+        run: |
+          if kubectl get ns $BACKEND_NAMESPACE; then
+            echo "Namespace $BACKEND_NAMESPACE already exists, skipping creation."
+          else
+            kubectl create ns $BACKEND_NAMESPACE
+          fi
+          kubectl config set-context --current --namespace $BACKEND_NAMESPACE
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f ${{ matrix.service_config.service }}/application.yaml
+          
+          argocd app set argocd/${REGISTER_NAMESPACE}-${{ matrix.service_config.service }} \
+            --kustomize-image example=${{ secrets.REGISTRY }}/${REGISTER_NAMESPACE}/${{ matrix.service_config.service }}:$VERSION
+          
+          argocd app sync ${REGISTER_NAMESPACE}-${{ matrix.service_config.service }}
+
+      - name: Monitor Deployment
+        run: |
+          kubectl rollout status deploy/${{ matrix.service_config.service }} || kubectl rollout undo deploy/${{ matrix.service_config.service }}

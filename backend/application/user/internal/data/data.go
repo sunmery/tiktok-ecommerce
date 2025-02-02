@@ -40,7 +40,7 @@ func NewData(
 }
 
 func NewDB(c *conf.Data) *pgxpool.Pool {
-
+	fmt.Printf("connecting to the database: %s\n", c.Database)
 	conn, err := pgxpool.New(context.Background(), c.Database.Source)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
