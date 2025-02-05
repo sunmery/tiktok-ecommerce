@@ -139,7 +139,7 @@ api: grpc http swagger errors
 
 .PHONY: all
 # generate all
-all: grpc http proto generate
+all: grpc http config generate
 
 # 生成迁移文件
 # 使用: make new-migrate name=verify_emails
