@@ -1,15 +1,18 @@
 server:
   http:
-    addr: 0.0.0.0:8000
-    timeout: 1s
+    addr: 0.0.0.0:30003
+    timeout: 3s
   grpc:
-    addr: 0.0.0.0:9000
-    timeout: 1s
+    addr: 0.0.0.0:30004
+    timeout: 3s
 data:
   database:
-    driver: mysql
-    source: root:root@tcp(127.0.0.1:3306)/test?parseTime=True&loc=Local
+    driver: postgres
+    source: postgresql://postgres:postgres@192.168.3.121:5432/ecommence?sslmode=disable&timezone=Asia/Shanghai
   redis:
-    addr: 127.0.0.1:6379
-    read_timeout: 0.2s
-    write_timeout: 0.2s
+    addr: 192.168.3.132:6379
+    username: default
+    password: msdnmm
+    read_timeout: 3.0s
+    write_timeout: 3.0s
+    dial_timeout: 5s

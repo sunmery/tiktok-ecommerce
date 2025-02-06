@@ -1,13 +1,13 @@
 package service
 
 import (
-	pb "backend/api/assistant/v1"
+	"backend/api/assistant/v1"
 	"backend/application/assistant/internal/biz"
 	"context"
 )
 
 type AssistantServiceService struct {
-	pb.UnimplementedAssistantServiceServer
+	v1.UnimplementedAssistantServiceServer
 	ac *biz.AssistantUseCase
 }
 
@@ -15,17 +15,12 @@ func NewAssistantServiceService(ac *biz.AssistantUseCase) *AssistantServiceServi
 	return &AssistantServiceService{ac: ac}
 }
 
-func (s *AssistantServiceService) Query(req *pb.QueryRequest, conn pb.AssistantService_QueryServer) error {
+func (s *AssistantServiceService) Query(ctx context.Context, req *v1.QueryRequest) (*v1.QueryReply, error) {
 	result, err := s.ac.QueryQuestion(context.Background(), &biz.QueryQuestion{Question: req.GetQuestion()})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for {
-		err := conn.Send(&pb.QueryReply{
-			Message: result.Message,
-		})
-		if err != nil {
-			return err
-		}
-	}
+	return &v1.QueryReply{
+		Message: result.Message,
+	}, nil
 }

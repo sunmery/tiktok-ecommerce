@@ -7,8 +7,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
+	"github.com/go-kratos/kratos/v2/middleware/validate"
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -19,7 +22,12 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr *conf.Trace, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server,
+	user *service.UserService,
+	ac *conf.Auth,
+	tr *conf.Trace,
+	logger log.Logger,
+) *http.Server {
 	// InitSentry()
 	publicKey := InitJwtKey(ac)
 
@@ -48,17 +56,17 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, ac *conf.Auth, tr 
 	// trace end
 	var opts = []http.ServerOption{
 		http.Middleware(
-			// validate.Validator(), // 参数校验
+			validate.Validator(), // 参数校验
 			tracing.Server(),
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
-			// recovery.Recovery(
-			// 	// recovery.WithLogger(log.DefaultLogger),
-			// 	recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
-			// 		// do someting
-			// 		return nil
-			// 	}),
-			// ),
-			// logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
+			recovery.Recovery(
+				// recovery.WithLogger(log.DefaultLogger),
+				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+					// do someting
+					return nil
+				}),
+			),
+			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 			selector.Server(
 				jwt.Server(
 					func(token *jwtV5.Token) (interface{}, error) {

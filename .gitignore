@@ -8,7 +8,7 @@ frontend/pnpm-debug.log*
 frontend/lerna-debug.log*
 
 .env.prod
-./backend/configs/production.yaml
+backend/configs/production.yaml
 frontend/dist.tar.gz
 frontend/dist
 dist.tar.gz
@@ -22,6 +22,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+*/.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
