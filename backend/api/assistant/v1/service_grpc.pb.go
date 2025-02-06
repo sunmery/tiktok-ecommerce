@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssistantService_Query_FullMethodName = "/api.assistant.v1.AssistantService/Query"
+	AssistantService_Query_FullMethodName = "/assistant.service.v1.AssistantService/Query"
 )
 
 // AssistantServiceClient is the client API for AssistantService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AssistantServiceClient interface {
-	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryReply], error)
+	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryReply, error)
 }
 
 type assistantServiceClient struct {
@@ -37,30 +37,21 @@ func NewAssistantServiceClient(cc grpc.ClientConnInterface) AssistantServiceClie
 	return &assistantServiceClient{cc}
 }
 
-func (c *assistantServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryReply], error) {
+func (c *assistantServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &AssistantService_ServiceDesc.Streams[0], AssistantService_Query_FullMethodName, cOpts...)
+	out := new(QueryReply)
+	err := c.cc.Invoke(ctx, AssistantService_Query_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[QueryRequest, QueryReply]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AssistantService_QueryClient = grpc.ServerStreamingClient[QueryReply]
 
 // AssistantServiceServer is the server API for AssistantService service.
 // All implementations must embed UnimplementedAssistantServiceServer
 // for forward compatibility.
 type AssistantServiceServer interface {
-	Query(*QueryRequest, grpc.ServerStreamingServer[QueryReply]) error
+	Query(context.Context, *QueryRequest) (*QueryReply, error)
 	mustEmbedUnimplementedAssistantServiceServer()
 }
 
@@ -71,8 +62,8 @@ type AssistantServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAssistantServiceServer struct{}
 
-func (UnimplementedAssistantServiceServer) Query(*QueryRequest, grpc.ServerStreamingServer[QueryReply]) error {
-	return status.Errorf(codes.Unimplemented, "method Query not implemented")
+func (UnimplementedAssistantServiceServer) Query(context.Context, *QueryRequest) (*QueryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
 }
 func (UnimplementedAssistantServiceServer) mustEmbedUnimplementedAssistantServiceServer() {}
 func (UnimplementedAssistantServiceServer) testEmbeddedByValue()                          {}
@@ -95,30 +86,36 @@ func RegisterAssistantServiceServer(s grpc.ServiceRegistrar, srv AssistantServic
 	s.RegisterService(&AssistantService_ServiceDesc, srv)
 }
 
-func _AssistantService_Query_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(QueryRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _AssistantService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(AssistantServiceServer).Query(m, &grpc.GenericServerStream[QueryRequest, QueryReply]{ServerStream: stream})
+	if interceptor == nil {
+		return srv.(AssistantServiceServer).Query(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssistantService_Query_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssistantServiceServer).Query(ctx, req.(*QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AssistantService_QueryServer = grpc.ServerStreamingServer[QueryReply]
 
 // AssistantService_ServiceDesc is the grpc.ServiceDesc for AssistantService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AssistantService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.assistant.v1.AssistantService",
+	ServiceName: "assistant.service.v1.AssistantService",
 	HandlerType: (*AssistantServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "Query",
-			Handler:       _AssistantService_Query_Handler,
-			ServerStreams: true,
+			MethodName: "Query",
+			Handler:    _AssistantService_Query_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "v1/service.proto",
 }

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package product.service.v1;
 
-option go_package = "/product";
+option go_package = "api/product/v1;v1";
 
 service ProductCatalogService {
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {}

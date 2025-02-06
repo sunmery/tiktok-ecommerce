@@ -21,18 +21,9 @@
         "operationId": "AssistantService_Query",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1QueryReply"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1QueryReply"
+              "$ref": "#/definitions/v1QueryReply"
             }
           },
           "default": {

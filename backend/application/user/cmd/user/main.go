@@ -1,15 +1,12 @@
 package main
 
 import (
+	"backend/application/user/internal/conf"
+	"backend/pkg"
 	"flag"
 	"fmt"
-	"github.com/go-kratos/kratos/contrib/config/consul/v2"
 	"github.com/go-kratos/kratos/v2/registry"
-	"github.com/hashicorp/consul/api"
 	"os"
-	"time"
-
-	"backend/application/user/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -23,7 +20,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "ecommerce-user-account-v1"
+	Name = "ecommerce-user-v1"
 	// Version 通过环境变量来替换
 	Version      string
 	flagconf     string
@@ -35,13 +32,13 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/user/account/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
+	flag.StringVar(&configPath, "config_path", "ecommerce/user/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Registrar) *kratos.App {
 	return kratos.New(
-		kratos.ID(id),
+		kratos.ID(fmt.Sprintf("%s-%s", id, Name)),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{
@@ -57,40 +54,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Regi
 	)
 }
 
-func InitConsul(filePath string) config.Source {
-	consulClient, err := api.NewClient(&api.Config{
-		Address:  configCenter,
-		Scheme:   "http",
-		WaitTime: time.Second * 15,
-	})
-	if err != nil {
-		log.Fatal(fmt.Errorf("create consul client failed:%w", err))
-	}
-	cs, err := consul.New(consulClient, consul.WithPath(filePath))
-	if err != nil {
-		log.Fatal(fmt.Errorf("create kratos config Source failed:%w", err))
-	}
-	return cs
-}
-
-func InitConfig() {
-	flag.Parse()
-
-	// 如果环境变量存在，覆盖默认值
-	if envConfigCenter := os.Getenv("config_center"); envConfigCenter != "" {
-		configCenter = envConfigCenter
-	}
-	if envConfigPath := os.Getenv("config_path"); envConfigPath != "" {
-		configPath = envConfigPath
-	}
-
-	fmt.Printf("configPath:%s\n", configPath)
-	fmt.Printf("configCenter:%s\n", configCenter)
-}
-
 func main() {
-	InitConfig()
-
 	logger := log.With(log.NewStdLogger(os.Stdout),
 		"ts", log.DefaultTimestamp,
 		"caller", log.DefaultCaller,
@@ -100,7 +64,7 @@ func main() {
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
-	cs := InitConsul(configPath)
+	cs := pkg.InitConsul(configCenter, configPath)
 
 	c := config.New(
 		config.WithSource(cs),

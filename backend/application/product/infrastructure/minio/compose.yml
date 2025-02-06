@@ -1,0 +1,14 @@
+services:
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /home/docker/minio/data:/data
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=msdnmmi,.
+    # 不需要修最后一个参数的端口:9001
+    command: server /data --console-address ":9001"
