@@ -8,11 +8,11 @@ server:
 data:
   database:
     driver: postgres
-    source: postgresql://postgres:postgres@192.168.3.121:5432/ecommence?sslmode=disable&timezone=Asia/Shanghai
+    source: postgresql://postgres:postgres@localhost:5432/ecommence?sslmode=disable&timezone=Asia/Shanghai
   redis:
-    addr: 192.168.3.132:6379
-    username: default
-    password: msdnmm
+    addr: localhost:6379
+    username:
+    password:
     read_timeout: 3.0s
     write_timeout: 3.0s
     dial_timeout: 5s

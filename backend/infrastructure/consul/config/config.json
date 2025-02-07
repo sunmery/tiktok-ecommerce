@@ -1,0 +1,15 @@
+{
+  "datacenter": "dc1",
+  "acl": {
+    "enabled": true,
+    "default_policy": "deny",
+    "enable_token_persistence": true,
+    "tokens": {
+      "master": "NdwlopdywhQbaEeUPGBQpgH73X1KjCz6wUPjEqMpU",
+      "agent": "UHoTv8ymVxRgWmeDxPlcCkTrbVHeswrq9"
+    }
+  },
+  "server": true,
+  "bootstrap_expect": 1,
+  "ui": true
+}
