@@ -30,7 +30,7 @@ message Data {
     string driver = 1;
     string source = 2;
   }
-  message Redis {
+  message Cache {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration read_timeout = 3;
@@ -40,14 +40,13 @@ message Data {
     string password = 7;
   }
   Database database = 1;
-  Redis redis = 2;
+  Cache cache = 2;
 }
 
 // 授权/认证
 message Auth {
   message JWT {
-    string service_key = 1 [json_name = "service_key"];
-    string api_key = 2 [json_name = "api_key"];
+    string certificate = 1 [json_name = "service_key"];
   }
   message Casdoor {
     message Server {
@@ -56,18 +55,16 @@ message Auth {
       string client_secret = 3 [json_name = "client_secret"];
       string organization = 4;
       string application = 5;
-      string frontend_url = 6 [json_name = "frontend_url"];
     }
-    string certificate = 1;
     Server server = 2;
   }
   JWT jwt = 1;
   Casdoor casdoor = 2;
 }
 
-// 分布式链路追踪
-message Trace {
-  message Jaeger {
+// 可观测性
+message Observability {
+  message Trace {
     message GRPC {
       string endpoint = 1;
     }
@@ -78,7 +75,15 @@ message Trace {
     GRPC grpc = 2;
     HTTP http = 3;
   }
-  Jaeger jaeger = 1;
+  message Logging {
+
+  }
+  message Metrics {
+
+  }
+  Trace trace = 1;
+  Metrics metrics = 2;
+  Logging logging = 3;
 }
 
 // 注册/配置中心

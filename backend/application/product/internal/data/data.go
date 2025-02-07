@@ -1,6 +1,8 @@
 package data
 
 import (
+	"backend/application/product/internal/conf"
+	"backend/application/product/internal/data/models"
 	"context"
 	"fmt"
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
@@ -8,12 +10,10 @@ import (
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	"backend/application/product/internal/conf"
-	"backend/application/product/internal/data/models"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor, NewUserRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor, NewProductRepo)
 
 type Data struct {
 	db  *models.Queries
@@ -50,13 +50,13 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 
 func NewCache(c *conf.Data) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Protocol:     3,
-		Addr:         c.Redis.Addr,
-		Username:     c.Redis.Username,
-		Password:     c.Redis.Password,
-		DialTimeout:  c.Redis.DialTimeout.AsDuration(),
-		ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
-		WriteTimeout: c.Redis.WriteTimeout.AsDuration(),
+		Protocol: 3,
+		Addr:     c.Cache.Addr,
+		// Username:     c.Cache.Username,
+		// Password:     c.Cache.Password,
+		DialTimeout:  c.Cache.DialTimeout.AsDuration(),
+		ReadTimeout:  c.Cache.ReadTimeout.AsDuration(),
+		WriteTimeout: c.Cache.WriteTimeout.AsDuration(),
 	})
 
 	return rdb
@@ -67,7 +67,7 @@ func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 		cc.Casdoor.Server.Endpoint,
 		cc.Casdoor.Server.ClientId,
 		cc.Casdoor.Server.ClientSecret,
-		cc.Casdoor.Certificate,
+		cc.Jwt.Certificate,
 		cc.Casdoor.Server.Organization,
 		cc.Casdoor.Server.Application,
 	)

@@ -4,13 +4,11 @@
 
 package models
 
-type UsersAddresses struct {
-	ID            int32  `json:"id"`
-	Owner         string `json:"owner"`
-	Name          string `json:"name"`
-	StreetAddress string `json:"streetAddress"`
-	City          string `json:"city"`
-	State         string `json:"state"`
-	Country       string `json:"country"`
-	ZipCode       string `json:"zipCode"`
+type ProductsProducts struct {
+	ID          int32    `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Picture     string   `json:"picture"`
+	Price       float32  `json:"price"`
+	Categories  []string `json:"categories"`
 }

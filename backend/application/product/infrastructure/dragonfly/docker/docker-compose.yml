@@ -1,0 +1,15 @@
+services:
+
+  dragonfly:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    #  使用host 模式可以减少 Docker NAT 带来的网络开销, 性能自然更好
+    # https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
+    network_mode: "host"
+#     volumes:
+#       - dragonflydata:/data
+# volumes:
+#   dragonflydata:

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"backend/application/product/internal/conf"
-	"backend/application/product/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
+	"backend/application/product/internal/conf"
+	"backend/application/product/pkg"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
@@ -21,7 +21,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "ecommerce-product-v1"
+	Name = "organization-application-version"
 	// Version 通过环境变量来替换
 	Version      string
 	flagconf     string
@@ -33,7 +33,7 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/product/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
+	flag.StringVar(&configPath, "config_path", "ecommerce/user/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 
@@ -87,27 +87,27 @@ func main() {
 	// 认证和授权
 	var ac conf.Auth
 	if err := c.Scan(&ac); err != nil {
-		log.Fatal(fmt.Errorf("load config failed:%w", err))
+		log.Fatal(fmt.Errorf("load auth config failed:%w", err))
 	}
 
 	var bc conf.Bootstrap
 	if err := c.Scan(&bc); err != nil {
-		log.Fatal(fmt.Errorf("load config failed:%w", err))
+		log.Fatal(fmt.Errorf("load bootstrap config failed:%w", err))
 	}
 
 	// 注册中心和配置中心
 	var cc conf.Consul
 	if err := c.Scan(&cc); err != nil {
-		log.Fatal(fmt.Errorf("load config failed:%w", err))
+		log.Fatal(fmt.Errorf("load consul config failed:%w", err))
 	}
 
-	// 链路追踪
-	var tc conf.Trace
-	if err := c.Scan(&tc); err != nil {
-		log.Fatal(fmt.Errorf("load config failed:%w", err))
+	// 可观测性
+	var obs conf.Observability
+	if err := c.Scan(&obs); err != nil {
+		log.Fatal(fmt.Errorf("load observability config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &tc, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &obs, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
@@ -115,6 +115,6 @@ func main() {
 
 	// start and wait for stop signal
 	if err := app.Run(); err != nil {
-		log.Fatal(fmt.Errorf("load config failed:%w", err))
+		log.Fatal(fmt.Errorf("app run failed:%w", err))
 	}
 }

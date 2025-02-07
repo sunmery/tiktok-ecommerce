@@ -9,41 +9,32 @@ import (
 )
 
 type Querier interface {
-	//CreatAddress
+	//CreateProduct
 	//
-	//  INSERT INTO users.addresses(owner, name, street_address, city, state, country, zip_code)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
-	CreatAddress(ctx context.Context, arg CreatAddressParams) (UsersAddresses, error)
-	//DeleteAddress
+	//  INSERT INTO products.products(name, description, picture, price, categories)
+	//  VALUES ($1, $2, $3, $4, $5)
+	//  RETURNING id, name, description, picture, price, categories
+	CreateProduct(ctx context.Context, arg CreateProductParams) (ProductsProducts, error)
+	//GetProduct
 	//
-	//  DELETE
-	//  FROM users.addresses
+	//  SELECT id, name, description, picture, price, categories
+	//  FROM products.products
 	//  WHERE id = $1
-	//    AND owner = $2
-	//    AND name = $3
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
-	DeleteAddress(ctx context.Context, arg DeleteAddressParams) (UsersAddresses, error)
-	//GetAddresses
+	//  LIMIT 1
+	GetProduct(ctx context.Context, id int32) (ProductsProducts, error)
+	//ListProducts
 	//
-	//  SELECT id, owner, name, street_address, city, state, country, zip_code
-	//  FROM users.addresses
-	//  WHERE owner = $1
-	//    AND name = $2
-	GetAddresses(ctx context.Context, arg GetAddressesParams) ([]UsersAddresses, error)
-	//UpdateAddress
+	//  SELECT id, name, description, picture, price, categories
+	//  FROM products.products
+	//  ORDER BY id
+	//  OFFSET $1 LIMIT $2
+	ListProducts(ctx context.Context, arg ListProductsParams) ([]ProductsProducts, error)
+	//SearchProducts
 	//
-	//  UPDATE users.addresses
-	//  SET street_address = coalesce($1, street_address),
-	//      city           = coalesce($2, city),
-	//      state          = coalesce($3, state),
-	//      country        = coalesce($4, country),
-	//      zip_code       = coalesce($5, zip_code)
-	//  WHERE id = $6
-	//    AND owner = $7
-	//    AND name = $8
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
-	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (UsersAddresses, error)
+	//  SELECT id, name, description, picture, price, categories
+	//  FROM products.products
+	//  WHERE name ILIKE '%' || $1 || '%'
+	SearchProducts(ctx context.Context, name *string) ([]ProductsProducts, error)
 }
 
 var _ Querier = (*Queries)(nil)

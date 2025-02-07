@@ -7,60 +7,70 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewUserUsecase)
+var ProviderSet = wire.NewSet(NewProductUsecase)
 
 // var (
 // 	// ErrUserNotFound is user not found.
 // 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 // )
 
-type UserRepo interface {
-	Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error)
-	GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error)
-	CreateAddress(ctx context.Context, req *Address) (*Address, error)
-	UpdateAddress(ctx context.Context, req *Address) (*Address, error)
-	DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error)
-	GetAddresses(ctx context.Context, req *Request) (*Addresses, error)
+type Product struct {
+	Id          uint32
+	Name        string
+	Description string
+	Picture     string
+	Price       float32
+	Categories  []string
+}
+type ListProductsResp struct {
+	Products []Product
 }
 
-type UserUsecase struct {
-	repo UserRepo
+type GetProductReq struct {
+}
+
+type GetProductResp struct {
+}
+
+type SearchProductsReq struct {
+}
+
+type SearchProductsResp struct {
+}
+
+type ProductRepo interface {
+	ListProducts(ctx context.Context, req ListProductsReq) (*ListProductsResp, error)
+	GetProduct(ctx context.Context, req GetProductReq) (*GetProductResp, error)
+	SearchProducts(ctx context.Context, req SearchProductsReq) (*SearchProductsResp, error)
+}
+
+type ProductUsecase struct {
+	repo ProductRepo
 	log  *log.Helper
 }
 
-func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{
+func NewProductUsecase(repo ProductRepo, logger log.Logger) *ProductUsecase {
+	return &ProductUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
 }
 
-func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
-	cc.log.WithContext(ctx).Infof("Signin request: %+v", req)
-	return cc.repo.Signin(ctx, req)
+type ListProductsReq struct {
+	Page         int32
+	PageSize     int64
+	CategoryName string
 }
 
-func (cc *UserUsecase) GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error) {
-	cc.log.WithContext(ctx).Infof("GetUserInfo request: %+v", req)
-	return cc.repo.GetUserInfo(ctx, req)
+func (s *ProductUsecase) ListProducts(ctx context.Context, req ListProductsReq) (*ListProductsResp, error) {
+	s.log.WithContext(ctx).Debugf("ListProducts %v", req)
+	return s.repo.ListProducts(ctx, req)
 }
-
-func (cc *UserUsecase) CreateAddress(ctx context.Context, req *Address) (*Address, error) {
-	cc.log.WithContext(ctx).Infof("CreateAddress: %+v", req)
-	return cc.repo.CreateAddress(ctx, req)
+func (s *ProductUsecase) GetProduct(ctx context.Context, req GetProductReq) (*GetProductResp, error) {
+	s.log.WithContext(ctx).Debugf("GetProduct %v", req)
+	return s.repo.GetProduct(ctx, req)
 }
-
-func (cc *UserUsecase) UpdateAddress(ctx context.Context, req *Address) (*Address, error) {
-	cc.log.WithContext(ctx).Infof("UpdateAddress: %+v", req)
-	return cc.repo.UpdateAddress(ctx, req)
-}
-
-func (cc *UserUsecase) DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
-	cc.log.WithContext(ctx).Infof("DeleteAddress: %+v", req)
-	return cc.repo.DeleteAddress(ctx, req)
-}
-
-func (cc *UserUsecase) GetAddresses(ctx context.Context, req *Request) (*Addresses, error) {
-	cc.log.WithContext(ctx).Infof("GetAddresses: %+v", req)
-	return cc.repo.GetAddresses(ctx, req)
+func (s *ProductUsecase) SearchProducts(ctx context.Context, req SearchProductsReq) (*SearchProductsResp, error) {
+	s.log.WithContext(ctx).Debugf("SearchProducts %v", req)
+	return s.repo.SearchProducts(ctx, req)
 }
