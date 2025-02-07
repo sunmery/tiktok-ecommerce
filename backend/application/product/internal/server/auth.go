@@ -32,7 +32,7 @@ func parseRSAPublicKeyFromPEM(pemBytes []byte) (*rsa.PublicKey, error) {
 }
 
 func InitJwtKey(ac *conf.Auth) *rsa.PublicKey {
-	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.ApiKey))
+	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.Certificate))
 	if err != nil {
 		panic("failed to parse public key")
 	}

@@ -2,22 +2,22 @@ package server
 
 import (
 	"context"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
-	v1 "backend/api/user/v1"
-	"backend/application/product/internal/conf"
-	"backend/application/product/internal/service"
-
+	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
-
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/recovery"
-	"github.com/go-kratos/kratos/v2/transport/grpc"
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, user *service.UserService, tr *conf.Trace, logger log.Logger) *grpc.Server {
+func NewGRPCServer(
+
+	c *conf.Server,
+	obs *conf.Observability,
+	logger log.Logger,
+) *grpc.Server {
 	// trace start
 	ctx := context.Background()
 
@@ -25,7 +25,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, tr *conf.Trace, lo
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			semconv.ServiceNameKey.String(tr.Jaeger.ServiceName),
+			semconv.ServiceNameKey.String(obs.Trace.ServiceName),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),
@@ -36,7 +36,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, tr *conf.Trace, lo
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
+	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
@@ -66,6 +66,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, tr *conf.Trace, lo
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterUserServiceServer(srv, user)
+	// v1.RegisterUserServiceServer(srv, user)
+
 	return srv
 }
