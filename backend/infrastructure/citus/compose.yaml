@@ -1,11 +1,23 @@
 services:
 
   citus:
-    image: citusdata/citus:postgres_15
+    image: citusdata/citus:postgres_16
     container_name: citus
     platform: linux/amd64
     restart: on-failure:5
     ports:
       - "5432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: citus
+      POSTGRES_DB: ecommence
+    networks:
+      app-network:
+
+volumes:
+  data:
+
+networks:
+  app-network:
+     : true

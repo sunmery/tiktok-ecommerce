@@ -9,6 +9,9 @@ services:
       - "8500:8500"
       - "8600:8600"
     container_name: consul
+    volumes:
+      - data:/consul/data
+      - ./config:/consul/config
     command:
       - agent
       - -server
@@ -16,6 +19,6 @@ services:
       - -node=n1
       - -bootstrap-expect=1
       - -client=0.0.0.0
-#networks:
-#  app-network:
-#    external: true
+
+volumes:
+  data:

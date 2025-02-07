@@ -64,7 +64,12 @@ func main() {
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
-	cs := pkg.InitConsul(configCenter, configPath)
+
+	consulConfig := pkg.ConfigCenter{
+		Addr: configCenter,
+		Path: configPath,
+	}
+	cs := pkg.InitConsul(consulConfig)
 
 	c := config.New(
 		config.WithSource(cs),

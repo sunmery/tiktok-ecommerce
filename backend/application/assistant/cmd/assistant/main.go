@@ -64,6 +64,7 @@ func main() {
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
+
 	consulConfig := pkg.ConfigCenter{
 		Addr: configCenter,
 		Path: configPath,

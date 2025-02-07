@@ -1,0 +1,19 @@
+services:
+
+  casdoor:
+    image: casbin/casdoor:latest
+    container_name: casdoor
+    ports:
+      - "8000:8000"
+    environment:
+      driverName: postgres
+      dbName: casdoor
+      dataSourceName: "user=postgres password=citus host=citus port=5432 sslmode=disable dbname=casdoor"
+    volumes:
+      - ./:/conf
+    networks:
+      app-network:
+
+networks:
+  app-network:
+    external: true

@@ -20,6 +20,13 @@ SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = e-commence/$(SERVICE)
 REGISTER="ccr.ccs.tencentyun.com"
 
+.PHONY: infra
+infra:
+	docker compose -f infrastructure/consul/compose.yaml up -d
+	docker compose -f infrastructure/citus/compose.yaml up -d
+	docker compose -f infrastructure/dragonflydb/compose.yaml up -d
+	docker compose -f infrastructure/minio/compose.yaml up -d
+
 .PHONY: grpc
 grpc:
 	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
