@@ -8,7 +8,6 @@ casdoor:
     application: "e-commence"
 
 jwt:
-  service_key: service_key
   certificate: |
     -----BEGIN CERTIFICATE-----
     MIIE2TCCAsGgAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMCYxDjAMBgNVBAoTBWFk
@@ -38,4 +37,3 @@ jwt:
     2wK+D7YYFCcEkMpql2KaSi7vAb21kzfspVndQQgkBzOHR297wiXiAoMITWslUwUl
     NdIltWymNqg14GpTHUPIPD97HyjIejSybNkpNRjeXKGcgnOxri9dS1bJ18Tv
     -----END CERTIFICATE-----
-  

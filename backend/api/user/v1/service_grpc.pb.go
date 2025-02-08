@@ -19,12 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Signin_FullMethodName          = "/api.user.v1.UserService/Signin"
-	UserService_GetUserInfo_FullMethodName     = "/api.user.v1.UserService/GetUserInfo"
-	UserService_CreateAddresses_FullMethodName = "/api.user.v1.UserService/CreateAddresses"
-	UserService_UpdateAddresses_FullMethodName = "/api.user.v1.UserService/UpdateAddresses"
-	UserService_DeleteAddresses_FullMethodName = "/api.user.v1.UserService/DeleteAddresses"
-	UserService_GetAddresses_FullMethodName    = "/api.user.v1.UserService/GetAddresses"
+	UserService_Signin_FullMethodName           = "/api.user.v1.UserService/Signin"
+	UserService_GetUserInfo_FullMethodName      = "/api.user.v1.UserService/GetUserInfo"
+	UserService_CreateAddresses_FullMethodName  = "/api.user.v1.UserService/CreateAddresses"
+	UserService_UpdateAddresses_FullMethodName  = "/api.user.v1.UserService/UpdateAddresses"
+	UserService_DeleteAddresses_FullMethodName  = "/api.user.v1.UserService/DeleteAddresses"
+	UserService_GetAddresses_FullMethodName     = "/api.user.v1.UserService/GetAddresses"
+	UserService_CreateCreditCard_FullMethodName = "/api.user.v1.UserService/CreateCreditCard"
+	UserService_UpdateCreditCard_FullMethodName = "/api.user.v1.UserService/UpdateCreditCard"
+	UserService_DeleteCreditCard_FullMethodName = "/api.user.v1.UserService/DeleteCreditCard"
+	UserService_GetCreditCard_FullMethodName    = "/api.user.v1.UserService/GetCreditCard"
+	UserService_ListCreditCards_FullMethodName  = "/api.user.v1.UserService/ListCreditCards"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -37,6 +42,11 @@ type UserServiceClient interface {
 	UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
 	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error)
 	GetAddresses(ctx context.Context, in *GetAddressesRequest, opts ...grpc.CallOption) (*GetAddressesReply, error)
+	CreateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
+	UpdateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
+	DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...grpc.CallOption) (*CardsReply, error)
+	GetCreditCard(ctx context.Context, in *GetCreditCardsRequest, opts ...grpc.CallOption) (*GetCreditCardsReply, error)
+	ListCreditCards(ctx context.Context, in *ListCreditCardsRequest, opts ...grpc.CallOption) (*ListCreditCardsReply, error)
 }
 
 type userServiceClient struct {
@@ -107,6 +117,56 @@ func (c *userServiceClient) GetAddresses(ctx context.Context, in *GetAddressesRe
 	return out, nil
 }
 
+func (c *userServiceClient) CreateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CardsReply)
+	err := c.cc.Invoke(ctx, UserService_CreateCreditCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CardsReply)
+	err := c.cc.Invoke(ctx, UserService_UpdateCreditCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...grpc.CallOption) (*CardsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CardsReply)
+	err := c.cc.Invoke(ctx, UserService_DeleteCreditCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetCreditCard(ctx context.Context, in *GetCreditCardsRequest, opts ...grpc.CallOption) (*GetCreditCardsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCreditCardsReply)
+	err := c.cc.Invoke(ctx, UserService_GetCreditCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListCreditCards(ctx context.Context, in *ListCreditCardsRequest, opts ...grpc.CallOption) (*ListCreditCardsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCreditCardsReply)
+	err := c.cc.Invoke(ctx, UserService_ListCreditCards_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -117,6 +177,11 @@ type UserServiceServer interface {
 	UpdateAddresses(context.Context, *Address) (*Address, error)
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
 	GetAddresses(context.Context, *GetAddressesRequest) (*GetAddressesReply, error)
+	CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
+	GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error)
+	ListCreditCards(context.Context, *ListCreditCardsRequest) (*ListCreditCardsReply, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -144,6 +209,21 @@ func (UnimplementedUserServiceServer) DeleteAddresses(context.Context, *DeleteAd
 }
 func (UnimplementedUserServiceServer) GetAddresses(context.Context, *GetAddressesRequest) (*GetAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddresses not implemented")
+}
+func (UnimplementedUserServiceServer) CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCreditCard not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCreditCard not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCreditCard not implemented")
+}
+func (UnimplementedUserServiceServer) GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCreditCard not implemented")
+}
+func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *ListCreditCardsRequest) (*ListCreditCardsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCreditCards not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -274,6 +354,96 @@ func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CreateCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreditCards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateCreditCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateCreditCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateCreditCard(ctx, req.(*CreditCards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreditCards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateCreditCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateCreditCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateCreditCard(ctx, req.(*CreditCards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCreditCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteCreditCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteCreditCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteCreditCard(ctx, req.(*DeleteCreditCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCreditCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetCreditCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetCreditCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetCreditCard(ctx, req.(*GetCreditCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListCreditCards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCreditCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListCreditCards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListCreditCards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListCreditCards(ctx, req.(*ListCreditCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +474,26 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAddresses",
 			Handler:    _UserService_GetAddresses_Handler,
+		},
+		{
+			MethodName: "CreateCreditCard",
+			Handler:    _UserService_CreateCreditCard_Handler,
+		},
+		{
+			MethodName: "UpdateCreditCard",
+			Handler:    _UserService_UpdateCreditCard_Handler,
+		},
+		{
+			MethodName: "DeleteCreditCard",
+			Handler:    _UserService_DeleteCreditCard_Handler,
+		},
+		{
+			MethodName: "GetCreditCard",
+			Handler:    _UserService_GetCreditCard_Handler,
+		},
+		{
+			MethodName: "ListCreditCards",
+			Handler:    _UserService_ListCreditCards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

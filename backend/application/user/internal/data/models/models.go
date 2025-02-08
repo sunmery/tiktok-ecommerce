@@ -4,6 +4,16 @@
 
 package models
 
+type CreditCardsCreditCards struct {
+	ID              int32  `json:"id"`
+	Owner           string `json:"owner"`
+	Name            string `json:"name"`
+	Number          string `json:"number"`
+	Cvv             string `json:"cvv"`
+	ExpirationYear  string `json:"expirationYear"`
+	ExpirationMonth string `json:"expirationMonth"`
+}
+
 type UsersAddresses struct {
 	ID            int32  `json:"id"`
 	Owner         string `json:"owner"`

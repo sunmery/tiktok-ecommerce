@@ -1,6 +1,5 @@
 # 可观测性
-jaeger:
-  service_name: "ecommerce-user-account-v1"
+trace:
   grpc:
     endpoint: 192.168.3.128:4317
     # endpoint: localhost:4317

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"backend/application/product/internal/conf"
+	"backend/application/product/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
-	"backend/application/product/internal/conf"
-	"backend/application/product/pkg"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
@@ -21,7 +21,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "organization-application-version"
+	Name = "ecommence-product-v1"
 	// Version 通过环境变量来替换
 	Version      string
 	flagconf     string

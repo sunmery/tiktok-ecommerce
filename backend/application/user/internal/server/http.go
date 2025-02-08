@@ -4,6 +4,7 @@ import (
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
+	"backend/constants"
 	"context"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
@@ -38,7 +39,7 @@ func NewHTTPServer(c *conf.Server,
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			semconv.ServiceNameKey.String(tr.Jaeger.ServiceName),
+			semconv.ServiceNameKey.String(constants.UserServiceV1),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),

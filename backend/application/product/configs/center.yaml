@@ -1,7 +1,0 @@
-registryCenter:
-  address: localhost:8500
-  scheme: http
-  healthCheck: false
-
-configCenter:
-  address: localhost:8500
