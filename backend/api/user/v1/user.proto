@@ -6,18 +6,11 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
-//import "address.proto";  // 使用正确的路径
 
-option go_package = "api/user/v1";
+option go_package = "api/user/v1;user";
 
 service UserService {
-  rpc Signin (SigninRequest) returns (SigninReply) {
-    option (google.api.http) = {
-      post: "/v1/user",
-      body: "*"
-    };
-  };
-  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse) {
+  rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
     option (google.api.http) = {
       get: "/v1/user/profile"
     };
@@ -73,7 +66,6 @@ service UserService {
   };
 }
 
-
 message CreditCards {
   string number = 1 [json_name = "number"];
   string cvv = 2 [json_name = "cvv"];
@@ -114,18 +106,63 @@ message ListCreditCardsReply {
   repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
 }
 
-message SigninRequest {
-  string code = 1;
-  string state = 2;
-}
-
-message SigninReply {
-  string state = 1;
-  string data = 2;
-}
-
-message GetUserInfoRequest {
+message GetProfileRequest {
   string authorization = 1;
+}
+
+message GetProfileResponse {
+  string state = 1 [json_name = "state"];
+  Data data = 2 [json_name = "data"];
+}
+
+message Address {
+  uint32 id = 1;
+  string owner = 2 [(google.api.field_behavior) = REQUIRED];
+  string name = 3 [(google.api.field_behavior) = REQUIRED];
+  string city = 4 [(google.api.field_behavior) = REQUIRED];
+  string state = 5 [(google.api.field_behavior) = REQUIRED];
+  string country = 6 [(google.api.field_behavior) = REQUIRED];
+  string zip_code = 7 [
+    (google.api.field_behavior) = REQUIRED,
+    json_name = "zip_code"
+  ];
+  string street_address = 8 [
+    (google.api.field_behavior) = REQUIRED,
+    json_name = "street_address"
+  ];
+}
+
+message UpdateAddressesRequest {
+  Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message DeleteAddressesRequest {
+  int32 addresses_id = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    json_name = "addresses_id"
+  ];
+  string name = 2 [(google.api.field_behavior) = REQUIRED];
+  string owner = 3 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetAddressesRequest {
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+  string owner = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message AddressReply {
+  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
+  Address address = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetAddressesReply {
+  repeated Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message DeleteAddressesReply {
+  string message = 1 [(google.api.field_behavior) = REQUIRED];
+  uint32 id = 2 [(google.api.field_behavior) = REQUIRED];
+  uint32 code = 3 [(google.api.field_behavior) = REQUIRED];
 }
 
 message Data {
@@ -287,59 +324,4 @@ message Data {
   string lastSigninWrongTime = 146;
   uint32 signinWrongTimes = 147;
   google.protobuf.Any managedAccounts = 148;
-}
-
-message GetUserInfoResponse {
-  string state = 1 [json_name = "state"];
-  Data data = 2 [json_name = "data"];
-}
-
-message Address {
-  uint32 id = 1;
-  string owner = 2 [(google.api.field_behavior) = REQUIRED];
-  string name = 3 [(google.api.field_behavior) = REQUIRED];
-  string city = 4 [(google.api.field_behavior) = REQUIRED];
-  string state = 5 [(google.api.field_behavior) = REQUIRED];
-  string country = 6 [(google.api.field_behavior) = REQUIRED];
-  string zip_code = 7 [
-    (google.api.field_behavior) = REQUIRED,
-    json_name = "zip_code"
-  ];
-  string street_address = 8 [
-    (google.api.field_behavior) = REQUIRED,
-    json_name = "street_address"
-  ];
-}
-
-message UpdateAddressesRequest {
-  Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-message DeleteAddressesRequest {
-  int32 addresses_id = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    json_name = "addresses_id"
-  ];
-  string name = 2 [(google.api.field_behavior) = REQUIRED];
-  string owner = 3 [(google.api.field_behavior) = REQUIRED];
-}
-
-message GetAddressesRequest {
-  string name = 1 [(google.api.field_behavior) = REQUIRED];
-  string owner = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-message AddressReply {
-  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
-  Address address = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-message GetAddressesReply {
-  repeated Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-message DeleteAddressesReply {
-  string message = 1 [(google.api.field_behavior) = REQUIRED];
-  uint32 id = 2 [(google.api.field_behavior) = REQUIRED];
-  uint32 code = 3 [(google.api.field_behavior) = REQUIRED];
 }

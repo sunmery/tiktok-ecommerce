@@ -23,10 +23,11 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server,
+func NewHTTPServer(
+	c *conf.Server,
 	user *service.UserService,
 	ac *conf.Auth,
-	tr *conf.Trace,
+	oc *conf.Observability,
 	logger log.Logger,
 ) *http.Server {
 	// InitSentry()
@@ -50,7 +51,7 @@ func NewHTTPServer(c *conf.Server,
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
+	_, err2 := initTracerProvider(ctx, res, oc.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-http v2.8.3
 // - protoc             v5.29.3
-// source: v1/service.proto
+// source: v1/auth.proto
 
-package v1
+package auth
 
 import (
 	context "context"

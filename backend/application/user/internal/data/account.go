@@ -1,32 +1,17 @@
 package data
 
 import (
+	authV1 "backend/api/auth/v1"
 	"backend/application/user/internal/biz"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"strings"
 )
 
-func (u *userRepo) Signin(ctx context.Context, req *biz.SigninRequest) (*biz.SigninReply, error) {
-	code := req.Code
-	state := req.State
-	token, err := u.data.cs.GetOAuthToken(code, state)
-	if err != nil {
-		fmt.Println("GetOAuthToken() error", err)
-		return nil, errors.New("GetOAuthToken() error:" + err.Error())
-	}
-
-	fmt.Println("GetOAuthToken() token", token)
-	return &biz.SigninReply{
-		State: "ok",
-		Data:  token.AccessToken,
-	}, nil
-}
-
-func (u *userRepo) GetUserInfo(ctx context.Context, req *biz.GetUserInfoRequest) (*biz.GetUserInfoReply, error) {
+func (u *userRepo) GetProfile(ctx context.Context, req *biz.GetProfileRequest) (*biz.GetProfileReply, error) {
 	authHeader := req.Authorization
 	if authHeader == "" {
 		return nil, fmt.Errorf("authorization: (%v) header is empty", authHeader)
@@ -37,21 +22,24 @@ func (u *userRepo) GetUserInfo(ctx context.Context, req *biz.GetUserInfoRequest)
 		return nil, fmt.Errorf("token is not valid Bearer token : %s", authHeader)
 	}
 
-	claims, err := u.data.cs.ParseJwtToken(token[1])
+	fmt.Println("token:", token[1])
+	profile, err := u.data.authClient.GetUserInfo(ctx, &authV1.GetUserInfoRequest{
+		Authorization: token[1],
+	})
 	if err != nil {
-		return nil, fmt.Errorf("ParseJwtToken() error")
+		return nil, err
 	}
 
 	resp := casdoorsdk.User{
-		Owner:  claims.Owner,
-		Type:   claims.Type,
-		Name:   claims.Name,
-		Id:     claims.Id,
-		Avatar: claims.Avatar,
-		Email:  claims.Email,
+		Owner:  profile.Data.Owner,
+		Type:   profile.Data.Type,
+		Name:   profile.Data.Name,
+		Id:     profile.Data.Id,
+		Avatar: profile.Data.Avatar,
+		Email:  profile.Data.Email,
 	}
 
-	return &biz.GetUserInfoReply{
+	return &biz.GetProfileReply{
 		State: "ok",
 		// Data:  claims.User,
 		Data: resp,

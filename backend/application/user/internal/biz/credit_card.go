@@ -2,8 +2,6 @@ package biz
 
 import (
 	"context"
-
-	"github.com/go-kratos/kratos/v2/log"
 )
 
 // CreditCards is a CreditCards model.
@@ -38,23 +36,7 @@ type DeleteCreditCardsRequest struct {
 	Id    uint32 `json:"id"`
 }
 
-// CreditCardsRepo is a Greater repo.
-type CreditCardsRepo interface {
-	CreateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
-	UpdateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
-	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error)
-	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error)
-	SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error)
-	ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error)
-}
-
-// CreditCardsUsecase is a CreditCards usecase.
-type CreditCardsUsecase struct {
-	repo CreditCardsRepo
-	log  *log.Helper
-}
-
-func (cc *UserUsecase) CreateCreditCards(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
+func (cc *UserUsecase) CreateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
 	cc.log.WithContext(ctx).Infof("CreateCreditCards: %+v\n", req)
 	return cc.repo.CreateCreditCard(ctx, req)
 }

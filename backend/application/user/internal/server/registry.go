@@ -11,10 +11,12 @@ import (
 // NewRegistrar 使用Consul作为注册中心
 func NewRegistrar(c *conf.Consul) registry.Registrar {
 	// 创建consul客户端
-	configs := api.DefaultConfig()
-	// 从conf/conf.proto定义Consul配置与configs/config.yml配置文件中读取consul的配置
-	configs.Address = c.RegistryCenter.Address
-	configs.Scheme = c.RegistryCenter.Scheme
+	configs := &api.Config{
+		Address: c.RegistryCenter.Address,
+		Scheme:  c.RegistryCenter.Scheme,
+		Token:   c.RegistryCenter.AclToken,
+	}
+
 	// 创建consul客户端
 	consulClient, err := api.NewClient(configs)
 	if err != nil {

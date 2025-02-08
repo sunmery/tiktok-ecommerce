@@ -4,9 +4,7 @@ import (
 	v1 "backend/api/auth/v1"
 	"backend/application/auth/internal/biz"
 	"context"
-	"errors"
 	"fmt"
-	"github.com/go-kratos/kratos/v2/transport"
 )
 
 func (s *AuthService) Signin(ctx context.Context, req *v1.SigninRequest) (*v1.SigninReply, error) {
@@ -25,16 +23,8 @@ func (s *AuthService) Signin(ctx context.Context, req *v1.SigninRequest) (*v1.Si
 }
 
 func (s *AuthService) GetUserInfo(ctx context.Context, req *v1.GetUserInfoRequest) (*v1.GetUserInfoResponse, error) {
-	tr, ok := transport.FromServerContext(ctx)
-	if !ok {
-		fmt.Println("获取header失败")
-		return nil, errors.New("获取header失败")
-	}
-	header := tr.RequestHeader()
-	authorization := header.Get("Authorization")
-
 	result, err := s.ac.GetUserInfo(ctx, &biz.GetUserInfoRequest{
-		Authorization: authorization,
+		Authorization: req.Authorization,
 	})
 	if err != nil {
 		return nil, err

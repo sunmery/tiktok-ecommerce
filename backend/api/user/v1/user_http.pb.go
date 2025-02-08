@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-http v2.8.3
 // - protoc             v5.29.3
-// source: v1/service.proto
+// source: v1/user.proto
 
-package v1
+package user
 
 import (
 	context "context"
@@ -25,9 +25,8 @@ const OperationUserServiceDeleteAddresses = "/api.user.v1.UserService/DeleteAddr
 const OperationUserServiceDeleteCreditCard = "/api.user.v1.UserService/DeleteCreditCard"
 const OperationUserServiceGetAddresses = "/api.user.v1.UserService/GetAddresses"
 const OperationUserServiceGetCreditCard = "/api.user.v1.UserService/GetCreditCard"
-const OperationUserServiceGetUserInfo = "/api.user.v1.UserService/GetUserInfo"
+const OperationUserServiceGetUserProfile = "/api.user.v1.UserService/GetUserProfile"
 const OperationUserServiceListCreditCards = "/api.user.v1.UserService/ListCreditCards"
-const OperationUserServiceSignin = "/api.user.v1.UserService/Signin"
 const OperationUserServiceUpdateAddresses = "/api.user.v1.UserService/UpdateAddresses"
 const OperationUserServiceUpdateCreditCard = "/api.user.v1.UserService/UpdateCreditCard"
 
@@ -38,17 +37,15 @@ type UserServiceHTTPServer interface {
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
 	GetAddresses(context.Context, *GetAddressesRequest) (*GetAddressesReply, error)
 	GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error)
-	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
+	GetUserProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	ListCreditCards(context.Context, *ListCreditCardsRequest) (*ListCreditCardsReply, error)
-	Signin(context.Context, *SigninRequest) (*SigninReply, error)
 	UpdateAddresses(context.Context, *Address) (*Address, error)
 	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
 }
 
 func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r := s.Route("/")
-	r.POST("/v1/user", _UserService_Signin0_HTTP_Handler(srv))
-	r.GET("/v1/user/profile", _UserService_GetUserInfo0_HTTP_Handler(srv))
+	r.GET("/v1/user/profile", _UserService_GetUserProfile0_HTTP_Handler(srv))
 	r.POST("/v1/user/address", _UserService_CreateAddresses0_HTTP_Handler(srv))
 	r.PATCH("/v1/user/address", _UserService_UpdateAddresses0_HTTP_Handler(srv))
 	r.DELETE("/v1/user/address", _UserService_DeleteAddresses0_HTTP_Handler(srv))
@@ -60,43 +57,21 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.GET("/v1/credit_cards/all", _UserService_ListCreditCards0_HTTP_Handler(srv))
 }
 
-func _UserService_Signin0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_GetUserProfile0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in SigninRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
+		var in GetProfileRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceSignin)
+		http.SetOperation(ctx, OperationUserServiceGetUserProfile)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Signin(ctx, req.(*SigninRequest))
+			return srv.GetUserProfile(ctx, req.(*GetProfileRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*SigninReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _UserService_GetUserInfo0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetUserInfoRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationUserServiceGetUserInfo)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetUserInfo(ctx, req.(*GetUserInfoRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*GetUserInfoResponse)
+		reply := out.(*GetProfileResponse)
 		return ctx.Result(200, reply)
 	}
 }
@@ -297,9 +272,8 @@ type UserServiceHTTPClient interface {
 	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest, opts ...http.CallOption) (rsp *CardsReply, err error)
 	GetAddresses(ctx context.Context, req *GetAddressesRequest, opts ...http.CallOption) (rsp *GetAddressesReply, err error)
 	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest, opts ...http.CallOption) (rsp *GetCreditCardsReply, err error)
-	GetUserInfo(ctx context.Context, req *GetUserInfoRequest, opts ...http.CallOption) (rsp *GetUserInfoResponse, err error)
+	GetUserProfile(ctx context.Context, req *GetProfileRequest, opts ...http.CallOption) (rsp *GetProfileResponse, err error)
 	ListCreditCards(ctx context.Context, req *ListCreditCardsRequest, opts ...http.CallOption) (rsp *ListCreditCardsReply, err error)
-	Signin(ctx context.Context, req *SigninRequest, opts ...http.CallOption) (rsp *SigninReply, err error)
 	UpdateAddresses(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
 	UpdateCreditCard(ctx context.Context, req *CreditCards, opts ...http.CallOption) (rsp *CardsReply, err error)
 }
@@ -390,11 +364,11 @@ func (c *UserServiceHTTPClientImpl) GetCreditCard(ctx context.Context, in *GetCr
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...http.CallOption) (*GetUserInfoResponse, error) {
-	var out GetUserInfoResponse
+func (c *UserServiceHTTPClientImpl) GetUserProfile(ctx context.Context, in *GetProfileRequest, opts ...http.CallOption) (*GetProfileResponse, error) {
+	var out GetProfileResponse
 	pattern := "/v1/user/profile"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationUserServiceGetUserInfo))
+	opts = append(opts, http.Operation(OperationUserServiceGetUserProfile))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -410,19 +384,6 @@ func (c *UserServiceHTTPClientImpl) ListCreditCards(ctx context.Context, in *Lis
 	opts = append(opts, http.Operation(OperationUserServiceListCreditCards))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *UserServiceHTTPClientImpl) Signin(ctx context.Context, in *SigninRequest, opts ...http.CallOption) (*SigninReply, error) {
-	var out SigninReply
-	pattern := "/v1/user"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationUserServiceSignin))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
