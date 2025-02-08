@@ -9,8 +9,6 @@ services:
       driverName: postgres
       dbName: casdoor
       dataSourceName: "user=postgres password=citus host=citus port=5432 sslmode=disable dbname=casdoor"
-    volumes:
-      - ./:/conf
     networks:
       app-network:
 

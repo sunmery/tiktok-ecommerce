@@ -1,6 +1,8 @@
 package server
 
 import (
+	"backend/application/product/internal/conf"
+	"backend/constants"
 	"context"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
@@ -34,7 +36,7 @@ func NewHTTPServer(c *conf.Server,
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+			semconv.ServiceNameKey.String(constants.ProductServiceV1),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),

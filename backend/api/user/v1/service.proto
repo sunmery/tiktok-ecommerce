@@ -44,6 +44,74 @@ service UserService {
       get: "/v1/user/address"
     };
   };
+  rpc CreateCreditCard (CreditCards) returns (CardsReply){
+    option (google.api.http) = {
+      post: "/v1/credit_cards",
+      body: "*"
+    };
+  };
+  rpc UpdateCreditCard (CreditCards) returns (CardsReply){
+    option (google.api.http) = {
+      patch: "/v1/credit_cards",
+      body: "*"
+    };
+  };
+  rpc DeleteCreditCard (DeleteCreditCardsRequest) returns (CardsReply){
+    option (google.api.http) = {
+      delete: "/v1/credit_cards/{id}"
+    };
+  };
+  rpc GetCreditCard (GetCreditCardsRequest) returns (GetCreditCardsReply){
+    option (google.api.http) = {
+      get: "/v1/credit_cards/{number}"
+    };
+  };
+  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
+    option (google.api.http) = {
+      get: "/v1/credit_cards/all"
+    };
+  };
+}
+
+
+message CreditCards {
+  string number = 1 [json_name = "number"];
+  string cvv = 2 [json_name = "cvv"];
+  string expiration_year = 3 [json_name = "expiration_year"];
+  string expiration_month = 4 [json_name = "expiration_month"];
+  string owner = 5;
+  string name = 6;
+  uint32 id = 7;
+}
+
+message CardsReply {
+  string message = 1;
+  int32 code = 2;
+}
+
+message DeleteCreditCardsRequest {
+  uint32 id = 1;
+}
+
+message GetCreditCardsRequest {
+  string owner = 1;
+  string name = 2;
+  string number = 3 [json_name = "number"];
+}
+message GetCreditCardsReply {
+  CreditCards credit_cards = 1 [json_name = "credit_cards"];
+}
+message SearchCreditCardsReply {
+  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
+}
+
+message ListCreditCardsRequest {
+  string owner = 1;
+  string name = 2;
+}
+
+message ListCreditCardsReply {
+  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
 }
 
 message SigninRequest {

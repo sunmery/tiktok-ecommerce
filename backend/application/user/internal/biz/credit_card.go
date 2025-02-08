@@ -54,32 +54,27 @@ type CreditCardsUsecase struct {
 	log  *log.Helper
 }
 
-// NewCreditCardsUsecase new a CreditCards usecase.
-func NewCreditCardsUsecase(repo CreditCardsRepo, logger log.Logger) *CreditCardsUsecase {
-	return &CreditCardsUsecase{repo: repo, log: log.NewHelper(logger)}
+func (cc *UserUsecase) CreateCreditCards(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
+	cc.log.WithContext(ctx).Infof("CreateCreditCards: %+v\n", req)
+	return cc.repo.CreateCreditCard(ctx, req)
 }
-
-func (uc *CreditCardsUsecase) CreateCreditCards(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
-	uc.log.WithContext(ctx).Infof("CreateCreditCards: %+v\n", req)
-	return uc.repo.CreateCreditCard(ctx, req)
+func (cc *UserUsecase) UpdateCreditCards(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
+	cc.log.WithContext(ctx).Infof("UpdateCreditCards: %+v\n", req)
+	return cc.repo.UpdateCreditCard(ctx, req)
 }
-func (uc *CreditCardsUsecase) UpdateCreditCards(ctx context.Context, req *CreditCards) (*CreditCardsReply, error) {
-	uc.log.WithContext(ctx).Infof("UpdateCreditCards: %+v\n", req)
-	return uc.repo.UpdateCreditCard(ctx, req)
+func (cc *UserUsecase) DeleteCreditCards(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error) {
+	cc.log.WithContext(ctx).Infof("DeleteCreditCards: %+v\n", req)
+	return cc.repo.DeleteCreditCard(ctx, req)
 }
-func (uc *CreditCardsUsecase) DeleteCreditCards(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error) {
-	uc.log.WithContext(ctx).Infof("DeleteCreditCards: %+v\n", req)
-	return uc.repo.DeleteCreditCard(ctx, req)
+func (cc *UserUsecase) GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error) {
+	cc.log.WithContext(ctx).Infof("GetCreditCards: %+v\n", req)
+	return cc.repo.GetCreditCard(ctx, req)
 }
-func (uc *CreditCardsUsecase) GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error) {
-	uc.log.WithContext(ctx).Infof("GetCreditCards: %+v\n", req)
-	return uc.repo.GetCreditCard(ctx, req)
+func (cc *UserUsecase) SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error) {
+	cc.log.WithContext(ctx).Infof("GetCreditCards: %+v\n", req)
+	return cc.repo.SearchCreditCards(ctx, req)
 }
-func (uc *CreditCardsUsecase) SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error) {
-	uc.log.WithContext(ctx).Infof("GetCreditCards: %+v\n", req)
-	return uc.repo.SearchCreditCards(ctx, req)
-}
-func (uc *CreditCardsUsecase) ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error) {
-	uc.log.WithContext(ctx).Infof("ListCreditCards: %+v\n", req)
-	return uc.repo.ListCreditCards(ctx, req)
+func (cc *UserUsecase) ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error) {
+	cc.log.WithContext(ctx).Infof("ListCreditCards: %+v\n", req)
+	return cc.repo.ListCreditCards(ctx, req)
 }

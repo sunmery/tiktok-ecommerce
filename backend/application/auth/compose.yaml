@@ -1,0 +1,21 @@
+services:
+
+  users:
+    image: tiktok/users:prod
+    platform: linux/amd64
+    ports:
+      - "30001:30001"
+      - "30002:30002"
+    container_name: users
+    restart: always
+    networks:
+      - app-network
+    environment:
+      - DB_SOURCE=postgresql://postgres:postgres@postgres17:5432/simple_bank?sslmode=disable
+      - REDIS_ADDRESS=redis7:6379
+      - REDIS_USERNAME=default
+      - REDIS_PASSWORD=msdnmm
+    command:
+      - "/bin/user"
+      - "-conf"
+      - "/bin/configs"
