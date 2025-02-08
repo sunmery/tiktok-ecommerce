@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
 	"github.com/go-kratos/kratos/v2/log"
-	"strings"
 )
 
 func (u *authRepo) Signin(ctx context.Context, req *biz.SigninRequest) (*biz.SigninReply, error) {
@@ -27,17 +26,7 @@ func (u *authRepo) Signin(ctx context.Context, req *biz.SigninRequest) (*biz.Sig
 }
 
 func (u *authRepo) GetUserInfo(ctx context.Context, req *biz.GetUserInfoRequest) (*biz.GetUserInfoReply, error) {
-	authHeader := req.Authorization
-	if authHeader == "" {
-		return nil, fmt.Errorf("authorization: (%v) header is empty", authHeader)
-	}
-
-	token := strings.Split(authHeader, "Bearer ")
-	if len(token) < 2 {
-		return nil, fmt.Errorf("token is not valid Bearer token : %s", authHeader)
-	}
-
-	claims, err := u.data.cs.ParseJwtToken(token[1])
+	claims, err := u.data.cs.ParseJwtToken(req.Authorization)
 	if err != nil {
 		return nil, fmt.Errorf("ParseJwtToken() error")
 	}

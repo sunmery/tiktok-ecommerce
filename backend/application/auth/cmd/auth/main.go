@@ -21,7 +21,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "ecommence-auth-v1"
+	Name = "ecommerce-auth-v1"
 	// Version 通过环境变量来替换
 	Version string
 	// flagconf     string
@@ -41,7 +41,7 @@ func init() {
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Registrar) *kratos.App {
 	return kratos.New(
-		kratos.ID(id),
+		kratos.ID(fmt.Sprintf("%s-%s", id, Name)),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{

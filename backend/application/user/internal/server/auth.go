@@ -12,8 +12,7 @@ import (
 // NewWhiteListMatcher 创建jwt白名单
 func NewWhiteListMatcher() selector.MatchFunc {
 	whiteList := make(map[string]struct{})
-	// whiteList["/admin.v1.AdminService/Login"] = struct{}{}
-	whiteList["/api.user.v1.UserService/Signin"] = struct{}{}
+	// whiteList["/api.user.v1.UserService/Signin"] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {
 			return false
@@ -32,7 +31,7 @@ func parseRSAPublicKeyFromPEM(pemBytes []byte) (*rsa.PublicKey, error) {
 }
 
 func InitJwtKey(ac *conf.Auth) *rsa.PublicKey {
-	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.ServiceKey))
+	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.Certificate))
 	if err != nil {
 		panic("failed to parse public key")
 	}

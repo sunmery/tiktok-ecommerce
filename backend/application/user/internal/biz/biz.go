@@ -15,12 +15,21 @@ var ProviderSet = wire.NewSet(NewUserUsecase)
 // )
 
 type UserRepo interface {
-	Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error)
-	GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error)
+	GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error)
+
+	// 地址接口
 	CreateAddress(ctx context.Context, req *Address) (*Address, error)
 	UpdateAddress(ctx context.Context, req *Address) (*Address, error)
 	DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error)
 	GetAddresses(ctx context.Context, req *Request) (*Addresses, error)
+
+	// 银行卡接口
+	CreateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
+	UpdateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
+	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error)
+	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error)
+	SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error)
+	ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error)
 }
 
 type UserUsecase struct {
@@ -35,14 +44,9 @@ func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
 	}
 }
 
-func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
-	cc.log.WithContext(ctx).Infof("Signin request: %+v", req)
-	return cc.repo.Signin(ctx, req)
-}
-
-func (cc *UserUsecase) GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error) {
-	cc.log.WithContext(ctx).Infof("GetUserInfo request: %+v", req)
-	return cc.repo.GetUserInfo(ctx, req)
+func (cc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error) {
+	// cc.log.WithContext(ctx).Infof("GetProfile request: %+v", req)
+	return cc.repo.GetProfile(ctx, req)
 }
 
 func (cc *UserUsecase) CreateAddress(ctx context.Context, req *Address) (*Address, error) {

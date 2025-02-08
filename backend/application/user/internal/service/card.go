@@ -1,15 +1,29 @@
 package service
 
 import (
+	"backend/application/user/internal/biz"
+	"backend/pkg/token"
 	"context"
 
 	pb "backend/api/user/v1"
 )
 
 func (s *UserService) CreateCreditCard(ctx context.Context, req *pb.CreditCards) (*pb.CardsReply, error) {
-	s.uc.
-	return &pb.CardsReply{
+	payload, err := token.ExtractPayload(ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	_, err = s.uc.CreateCreditCard(ctx, &biz.CreditCards{
+		Owner: payload.Owner,
+		Name:  payload.Name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CardsReply{
+		Message: "OK",
+		Code:    200,
 	}, nil
 }
 func (s *UserService) UpdateCreditCard(ctx context.Context, req *pb.CreditCards) (*pb.CardsReply, error) {

@@ -4,6 +4,7 @@ import (
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
+	"backend/constants"
 	"context"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
@@ -17,7 +18,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, greeter *service.UserService, tr *conf.Trace, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, user *service.UserService, oc *conf.Observability, logger log.Logger) *grpc.Server {
 	// trace start
 	ctx := context.Background()
 
@@ -25,7 +26,7 @@ func NewGRPCServer(c *conf.Server, greeter *service.UserService, tr *conf.Trace,
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			semconv.ServiceNameKey.String(tr.Jaeger.ServiceName),
+			semconv.ServiceNameKey.String(constants.UserServiceV1),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),
@@ -36,7 +37,7 @@ func NewGRPCServer(c *conf.Server, greeter *service.UserService, tr *conf.Trace,
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
+	_, err2 := initTracerProvider(ctx, res, oc.Trace.Grpc.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
@@ -66,6 +67,6 @@ func NewGRPCServer(c *conf.Server, greeter *service.UserService, tr *conf.Trace,
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterUserServiceServer(srv, greeter)
+	v1.RegisterUserServiceServer(srv, user)
 	return srv
 }

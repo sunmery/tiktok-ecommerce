@@ -2,19 +2,11 @@ package biz
 
 import "github.com/casdoor/casdoor-go-sdk/casdoorsdk"
 
-type SigninRequest struct {
-	Code  string `json:"code,omitempty"`
-	State string `json:"state,omitempty"`
-}
-type SigninReply struct {
-	State string `json:"state,omitempty"`
-	Data  string `json:"data,omitempty"`
-}
-type GetUserInfoRequest struct {
+type GetProfileRequest struct {
 	Authorization string
 }
 
-type GetUserInfoReply struct {
+type GetProfileReply struct {
 	State string          `json:"state,omitempty"`
 	Data  casdoorsdk.User `json:"data"`
 }
