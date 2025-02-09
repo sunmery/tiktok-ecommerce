@@ -14,7 +14,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor, NewCartRepo)
 
 type Data struct {
 	db  *models.Queries
@@ -76,7 +76,7 @@ func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 	return client
 }
 
-type userRepo struct {
+type cartRepo struct {
 	data *Data
 	log  *log.Helper
 }

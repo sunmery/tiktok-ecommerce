@@ -1,17 +1,18 @@
 package service
 
 import (
+	pb "backend/api/cart/v1"
+	"backend/application/cart/internal/biz"
 	"context"
-
-	pb "api/cart/v1"
 )
 
 type CartServiceService struct {
 	pb.UnimplementedCartServiceServer
+	cc *biz.CartUsecase
 }
 
-func NewCartServiceService() *CartServiceService {
-	return &CartServiceService{}
+func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
+	return &CartServiceService{cc: cc}
 }
 
 func (s *CartServiceService) AddItem(ctx context.Context, req *pb.AddItemReq) (*pb.AddItemResp, error) {

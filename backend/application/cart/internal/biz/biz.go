@@ -8,30 +8,54 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewUserUsecase)
+var ProviderSet = wire.NewSet(NewCartUsecase)
 
 // var (
-// 	// ErrUserNotFound is user not found.
-// 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
+// 	// ErrCartNotFound is Cart not found.
+// 	ErrCartNotFound = errors.NotFound(v1.ErrorReason_Cart_NOT_FOUND.String(), "Cart not found")
 // )
 
-type UserRepo interface {
-	Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error)
+type CartRepo interface {
+	AddItem(ctx context.Context, req *AddItemReq) (*AddItemResp, error)
+	GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error)
+	EmptyCart(ctx context.Context, req *EmptyCartReq) (*EmptyCartResp, error)
+	UpdateItem(ctx context.Context, req *UpdateItemReq) (*UpdateItemResp, error)
+	RemoveItem(ctx context.Context, req *RemoveItemReq) (*RemoveItemResp, error)
 }
 
-type UserUsecase struct {
-	repo UserRepo
+type CartUsecase struct {
+	repo CartRepo
 	log  *log.Helper
 }
 
-func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{
+func NewCartUsecase(repo CartRepo, logger log.Logger) *CartUsecase {
+	return &CartUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
 }
 
-func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
-	cc.log.WithContext(ctx).Infof("Signin request: %+v", req)
-	return cc.repo.Signin(ctx, req)
+func (cc *CartUsecase) AddItem(ctx context.Context, req *AddItemReq) (*AddItemResp, error) {
+	cc.log.WithContext(ctx).Infof("AddItem request: %+v", req)
+	return cc.repo.AddItem(ctx, req)
+}
+
+func (cc *CartUsecase) GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error) {
+	cc.log.WithContext(ctx).Infof("GetCart request: %+v", req)
+	return cc.repo.GetCart(ctx, req)
+}
+
+func (cc *CartUsecase) EmptyCart(ctx context.Context, req *EmptyCartReq) (*EmptyCartResp, error) {
+	cc.log.WithContext(ctx).Infof("EmptyCart request: %+v", req)
+	return cc.repo.EmptyCart(ctx, req)
+}
+
+func (cc *CartUsecase) UpdateItem(ctx context.Context, req *UpdateItemReq) (*UpdateItemResp, error) {
+	cc.log.WithContext(ctx).Infof("UpdateItem request: %+v", req)
+	return cc.repo.UpdateItem(ctx, req)
+}
+
+func (cc *CartUsecase) RemoveItem(ctx context.Context, req *RemoveItemReq) (*RemoveItemResp, error) {
+	cc.log.WithContext(ctx).Infof("RemoveItem request: %+v", req)
+	return cc.repo.RemoveItem(ctx, req)
 }
