@@ -1,7 +1,9 @@
 package server
 
 import (
+	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
+	"backend/application/cart/internal/service"
 	"context"
 	"fmt"
 
@@ -21,7 +23,7 @@ import (
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
-
+	cart *service.CartServiceService,
 	ac *conf.Auth,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -97,7 +99,7 @@ func NewHTTPServer(c *conf.Server,
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	// v1.RegisterUserServiceHTTPServer(srv, user)
+	v1.RegisterCartServiceHTTPServer(srv, cart)
 	return srv
 }
 

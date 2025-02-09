@@ -1,7 +1,9 @@
 package server
 
 import (
+	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
+	"backend/application/cart/internal/service"
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -15,7 +17,7 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-
+	cart *service.CartServiceService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -68,7 +70,7 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	// v1.RegisterUserServiceServer(srv, user)
+	v1.RegisterCartServiceServer(srv, cart)
 
 	return srv
 }
