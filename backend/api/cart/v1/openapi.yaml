@@ -1,0 +1,221 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: CartService API
+    version: 0.0.1
+paths:
+    /v1/carts:
+        get:
+            tags:
+                - CartService
+            description: 获取购物车信息
+            operationId: CartService_GetCart
+            parameters:
+                - name: userId
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetCartResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - CartService
+            description: 新增购物车商品
+            operationId: CartService_AddItem
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddItemReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AddItemResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - CartService
+            description: 清空购物车
+            operationId: CartService_EmptyCart
+            parameters:
+                - name: userId
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/EmptyCartResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/carts/item:
+        put:
+            tags:
+                - CartService
+            description: 更新购物车商品数量
+            operationId: CartService_UpdateItem
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateItemReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdateItemResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/carts/item/{productId}:
+        delete:
+            tags:
+                - CartService
+            description: 删除购物车商品
+            operationId: CartService_RemoveItem
+            parameters:
+                - name: productId
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: userId
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RemoveItemResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+components:
+    schemas:
+        AddItemReq:
+            type: object
+            properties:
+                userId:
+                    type: integer
+                    format: uint32
+                item:
+                    $ref: '#/components/schemas/CartItem'
+            description: 新增购物车商品
+        AddItemResp:
+            type: object
+            properties: {}
+        Cart:
+            type: object
+            properties:
+                userId:
+                    type: integer
+                    format: uint32
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/CartItem'
+            description: 购物车信息
+        CartItem:
+            type: object
+            properties:
+                productId:
+                    type: integer
+                    format: uint32
+                quantity:
+                    type: integer
+                    format: int32
+            description: 购物车商品
+        EmptyCartResp:
+            type: object
+            properties: {}
+        GetCartResp:
+            type: object
+            properties:
+                cart:
+                    $ref: '#/components/schemas/Cart'
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        RemoveItemResp:
+            type: object
+            properties: {}
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
+                message:
+                    type: string
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        UpdateItemReq:
+            type: object
+            properties:
+                userId:
+                    type: integer
+                    format: uint32
+                item:
+                    $ref: '#/components/schemas/CartItem'
+            description: 更新购物车商品
+        UpdateItemResp:
+            type: object
+            properties: {}
+tags:
+    - name: CartService
