@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package cart.service.v1;
+package api.cart.v1;
 
 import "google/api/annotations.proto";
 
-option go_package = '/cart';
+option go_package = 'api/cart/v1';
 
 service CartService {
   //新增购物车商品
@@ -44,7 +44,6 @@ service CartService {
 message CartItem {
   uint32 product_id = 1;   // 商品ID
   int32 quantity = 2;       // 商品数量
-  double price = 3;         // 商品单价
 }
 
 // 新增购物车商品
@@ -75,7 +74,6 @@ message GetCartResp {
 message Cart {
   uint32 user_id = 1;       // 用户ID
   repeated CartItem items = 2;   // 购物车商品列表
-  double total_amount = 3;  // 购物车总金额
 }
 
 
