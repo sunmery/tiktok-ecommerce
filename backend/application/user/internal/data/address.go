@@ -3,7 +3,6 @@ package data
 import (
 	"backend/application/user/internal/biz"
 	"backend/application/user/internal/data/models"
-	"backend/pkg/token"
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5"
@@ -63,17 +62,9 @@ func (u *userRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Ad
 }
 
 func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRequest) (*biz.DeleteAddressesReply, error) {
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Owner != payload.Owner || req.Name != payload.Name {
-		return nil, errors.New("invalid token")
-	}
 	reply, err := u.data.db.DeleteAddress(ctx, models.DeleteAddressParams{
-		Owner: payload.Owner,
-		Name:  payload.Name,
+		Owner: req.Owner,
+		Name:  req.Name,
 		ID:    int32(req.AddressId),
 	})
 	if err != nil {
@@ -87,7 +78,6 @@ func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRe
 }
 
 func (u *userRepo) GetAddresses(ctx context.Context, req *biz.Request) (*biz.Addresses, error) {
-
 	addresses, aErr := u.data.db.GetAddresses(ctx, models.GetAddressesParams{
 		Owner: req.Owner,
 		Name:  req.Name,
