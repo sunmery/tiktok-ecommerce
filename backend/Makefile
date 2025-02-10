@@ -1,24 +1,39 @@
-GOPATH:=$(shell go env GOPATH)
-VERSION=$(shell git describe --tags --always)
-APP_RELATIVE_PATH=$(shell basename $$PWD)
-API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
-INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
-KRATOS_VERSION=$(shell go mod graph |grep go-kratos/kratos/v2 |head -n 1 |awk -F '@' '{print $$2}')
-KRATOS=$(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
-APP_NAME=$(APP_RELATIVE_PATH)
-# 默认值
-VERSION ?= dev
+GOHOSTOS := $(shell go env GOHOSTOS)
+GOPATH := $(shell go env GOPATH)
+VERSION := $(shell git describe --tags --always)
+KRATOS_VERSION := $(shell go mod graph | grep go-kratos/kratos/v2 | head -n 1 | awk -F '@' '{print $$2}')
+KRATOS := $(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
+
+ifeq ($(GOHOSTOS), windows)
+Git_Bash = "$(subst \,/,$(subst cmd\git.exe,bin\bash.exe,$(shell where git)))"
+APP_RELATIVE_PATH := $(shell $(Git_Bash) -c "cd ../../application/$$(basename $$PWD) && basename $$PWD")
+API_PROTO_FILES := $(shell $(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && find . -name '*.proto'")
+INTERNAL_PROTO_FILES := $(shell $(Git_Bash) -c "find internal -name '*.proto'")
+else
+APP_RELATIVE_PATH := $(shell basename $$PWD)
+API_PROTO_FILES := $(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+INTERNAL_PROTO_FILES := $(shell find internal -name *.proto)
+endif
+
+# 公共配置
+APP_NAME := $(APP_RELATIVE_PATH)
 GOIMAGE ?= golang:1.23.3-alpine3.20
 GOOS ?= linux
 GOARCH ?= amd64
 CGOENABLED ?= 0
 HTTP_PORT ?= 30001
 GRPC_PORT ?= 30002
-# 动态变量
-DOCKER_IMAGE=e-commence/$(APP_NAME):dev
-SERVICE = $(APP_RELATIVE_PATH)
-REPOSITORY = e-commence/$(SERVICE)
-REGISTER="ccr.ccs.tencentyun.com"
+DOCKER_IMAGE := e-commence/$(APP_NAME):dev
+SERVICE := $(APP_RELATIVE_PATH)
+REPOSITORY := e-commence/$(SERVICE)
+REGISTER := "ccr.ccs.tencentyun.com"
+
+.PHONY: xxx
+xxx:
+	@echo "--------"
+	@echo $(Git_Bash)
+	@echo $(INTERNAL_PROTO_FILES)
+	@echo $(API_PROTO_FILES)
 
 .PHONY: infra
 infra:
@@ -29,11 +44,32 @@ infra:
 
 .PHONY: grpc
 grpc:
+	@echo "Generating gRPC code..."
+	$(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    --go-grpc_out=paths=source_relative:. \
+    --go-http_out=paths=source_relative:. \
+    --go-errors_out=paths=source_relative:. \
+    $(API_PROTO_FILES)"
+
+.PHONY: api-path-fix
+api-path-fix:
+ifeq ($(GOHOSTOS), windows)
+	@echo "Fixing Windows path delimiters..."
+	$(Git_Bash) -c "find ../../api/$(APP_RELATIVE_PATH) -name '*.pb.go' -exec sed -i 's|\\\\|/|g' {} \;"
+endif
+
+.PHONY: proto
+proto: grpc http errors swagger config api-path-fix
+
+.PHONY: api
+http:
 	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-           --proto_path=../../third_party \
-           --go_out=paths=source_relative:. \
-           --go-grpc_out=paths=source_relative:. \
-           $(API_PROTO_FILES)
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    --go-http_out=paths=source_relative:. \
+    $(API_PROTO_FILES)
 
 .PHONY: http
 http:
@@ -66,13 +102,13 @@ config:
            --go_out=paths=source_relative:. \
            $(INTERNAL_PROTO_FILES)
 
-.PHONY: api
-api:
-	@make http
-	@make grpc
-	@make errors
-	@make swagger
-	@make config
+#.PHONY: api
+#api:
+#	@make http
+#	@make grpc
+#	@make errors
+#	@make swagger
+#	@make config
 
 # 构建镜像
 .PHONY: docker-build

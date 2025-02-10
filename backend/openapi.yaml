@@ -3,21 +3,51 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: ProductCatalogService API
     version: 0.0.1
 paths:
-    /helloworld/{name}:
+    /v1/product:
+        post:
+            tags:
+                - ProductCatalogService
+            operationId: ProductCatalogService_CreateProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/product/list:
         get:
             tags:
-                - Greeter
-                - subgroup
-            description: Sends a greeting
-            operationId: Greeter_SayHello
+                - ProductCatalogService
+            description: 查询商品列表
+            operationId: ProductCatalogService_ListProducts
             parameters:
-                - name: name
-                  in: path
-                  required: true
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: string
+                - name: categoryName
+                  in: query
                   schema:
                     type: string
             responses:
@@ -26,14 +56,214 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
+                                $ref: '#/components/schemas/ListProductsResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/product/search:
+        get:
+            tags:
+                - ProductCatalogService
+            description: 根据字符串查询商品
+            operationId: ProductCatalogService_SearchProducts
+            parameters:
+                - name: query
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SearchProductsResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/product/{id}:
+        get:
+            tags:
+                - ProductCatalogService
+            description: 查询某个商品详细信息
+            operationId: ProductCatalogService_GetProduct
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - ProductCatalogService
+            operationId: ProductCatalogService_DeleteProduct
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeleteProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        patch:
+            tags:
+                - ProductCatalogService
+            operationId: ProductCatalogService_UpdateProduct
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdateProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
-        helloworld.v1.HelloReply:
+        CreateProductReply:
             type: object
             properties:
+                id:
+                    type: integer
+                    format: uint32
+        CreateProductRequest:
+            required:
+                - product
+            type: object
+            properties:
+                product:
+                    $ref: '#/components/schemas/Product'
+        DeleteProductReply:
+            type: object
+            properties:
+                success:
+                    type: boolean
+        GetProductResp:
+            type: object
+            properties:
+                product:
+                    $ref: '#/components/schemas/Product'
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        ListProductsResp:
+            type: object
+            properties:
+                products:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Product'
+        Product:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: uint32
+                name:
+                    type: string
+                description:
+                    type: string
+                picture:
+                    type: string
+                price:
+                    type: number
+                    format: float
+                categories:
+                    type: array
+                    items:
+                        type: string
+        SearchProductsResp:
+            type: object
+            properties:
+                results:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Product'
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
                 message:
                     type: string
-            description: The response message containing the greetings
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        UpdateProductReply:
+            type: object
+            properties:
+                success:
+                    type: boolean
+        UpdateProductRequest:
+            required:
+                - id
+                - product
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: uint32
+                product:
+                    $ref: '#/components/schemas/Product'
 tags:
-    - name: Greeter
+    - name: ProductCatalogService

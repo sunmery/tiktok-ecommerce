@@ -1,12 +1,13 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"github.com/go-kratos/kratos/v2/registry"
 	"backend/application/product/internal/conf"
 	"backend/application/product/pkg"
+	"flag"
+	"fmt"
 	"os"
+
+	"github.com/go-kratos/kratos/v2/registry"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -33,7 +34,7 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/user/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
+	flag.StringVar(&configPath, "config_path", "config.yaml", "config center path, eg: -config_center config.yaml")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 

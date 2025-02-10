@@ -2,18 +2,54 @@ syntax = "proto3";
 
 package product.service.v1;
 
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/api/field_behavior.proto";
+
 option go_package = "api/product/v1;v1";
 
 service ProductCatalogService {
-  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {}
-  rpc GetProduct(GetProductReq) returns (GetProductResp) {}
-  rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {}
+  //查询商品列表
+  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {
+    option (google.api.http) = {
+      get: "/v1/product/list"
+    };
+  }
+  //查询某个商品详细信息
+  rpc GetProduct(GetProductReq) returns (GetProductResp) {
+    option (google.api.http) = {
+      get: "/v1/products/{id}"
+    };
+  }
+  //根据字符串查询商品
+  rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {
+    option (google.api.http) = {
+      get: "/v1/products/search/{query}"
+    };
+  }
+  // rpc CreateProduct (Product) returns (CreateProductReply){
+  //   option (google.api.http) = {
+  //     post: "/v1/product",
+  //     body: "*"
+  //   };
+  // }
+  // rpc UpdateProduct (Product) returns (UpdateProductReply){
+  //   option (google.api.http) = {
+  //     patch: "/v1/product/{id}",
+  //     body: "*"
+  //   };
+  // }
+  // rpc DeleteProduct (DeleteProductReq) returns (DeleteProductReply){
+  //   option (google.api.http) = {
+  //     delete:"/v1/product/{id}"
+  //   };
+  // }
 }
 
 message ListProductsReq{
   int32 page = 1;
   int64 pageSize = 2;
-
   string categoryName = 3;
 }
 
@@ -32,7 +68,7 @@ message ListProductsResp {
 }
 
 message GetProductReq {
-  uint32 id = 1;
+  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 message GetProductResp {
@@ -40,9 +76,25 @@ message GetProductResp {
 }
 
 message SearchProductsReq {
-  string query = 1;
+  string query = 1[(google.api.field_behavior) = REQUIRED];
 }
 
 message SearchProductsResp {
-  repeated Product results = 1;
+  repeated Product products = 1;
 }
+
+// message CreateProductReply {
+//   uint32 id = 1;
+// }
+
+// message UpdateProductReply {
+//   bool success = 1;
+// }
+
+// message DeleteProductReq {
+//   uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
+// }
+
+// message DeleteProductReply {
+//   bool success = 1;
+// }
