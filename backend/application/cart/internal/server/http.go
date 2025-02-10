@@ -18,7 +18,6 @@ import (
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 // NewHTTPServer new an HTTP server.
@@ -36,12 +35,12 @@ func NewHTTPServer(c *conf.Server,
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			// The service name used to display traces in backends
-			// serviceName,
-			semconv.ServiceNameKey.String(obs.Trace.ServiceName),
-			// attribute.String("exporter", "otlptracehttp"),
-			// attribute.String("environment", "dev"),
-			// attribute.Float64("float", 312.23),
+		// The service name used to display traces in backends
+		// serviceName,
+		//semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+		// attribute.String("exporter", "otlptracehttp"),
+		// attribute.String("environment", "dev"),
+		// attribute.Float64("float", 312.23),
 		),
 	)
 	if err != nil {
