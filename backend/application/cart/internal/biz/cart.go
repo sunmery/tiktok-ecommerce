@@ -5,18 +5,22 @@ type CartItem struct {
 	Quantity  int32  `json:"quantity"`
 }
 
-type AddItemReq struct {
+type UpsertItemReq struct {
 	UserId uint32   `json:"user_id"`
 	Item   CartItem `json:"item"`
 }
 
-type AddItemResp struct{}
+type UpsertItemResp struct {
+	Success bool `json:"success"`
+}
 
 type EmptyCartReq struct {
 	UserId uint32 `json:"user_id"`
 }
 
-type EmptyCartResp struct{}
+type EmptyCartResp struct {
+	Success bool `json:"success"`
+}
 
 type GetCartReq struct {
 	UserId uint32 `json:"user_id"`
@@ -31,16 +35,11 @@ type Cart struct {
 	Items  []CartItem `json:"items"`
 }
 
-type UpdateItemReq struct {
-	UserId uint32   `json:"user_id"`
-	Item   CartItem `json:"item"`
-}
-
-type UpdateItemResp struct{}
-
-type RemoveItemReq struct {
+type RemoveCartItemReq struct {
 	UserId    uint32 `json:"user_id"`
 	ProductId uint32 `json:"product_id"`
 }
 
-type RemoveItemResp struct{}
+type RemoveCartItemResp struct {
+	Success bool `json:"success"`
+}

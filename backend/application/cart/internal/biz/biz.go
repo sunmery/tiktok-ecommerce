@@ -16,11 +16,10 @@ var ProviderSet = wire.NewSet(NewCartUsecase)
 // )
 
 type CartRepo interface {
-	AddItem(ctx context.Context, req *AddItemReq) (*AddItemResp, error)
+	UpsertItem(ctx context.Context, req *UpsertItemReq) (*UpsertItemResp, error)
 	GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error)
 	EmptyCart(ctx context.Context, req *EmptyCartReq) (*EmptyCartResp, error)
-	UpdateItem(ctx context.Context, req *UpdateItemReq) (*UpdateItemResp, error)
-	RemoveItem(ctx context.Context, req *RemoveItemReq) (*RemoveItemResp, error)
+	RemoveCartItem(ctx context.Context, req *RemoveCartItemReq) (*RemoveCartItemResp, error)
 }
 
 type CartUsecase struct {
@@ -35,9 +34,9 @@ func NewCartUsecase(repo CartRepo, logger log.Logger) *CartUsecase {
 	}
 }
 
-func (cc *CartUsecase) AddItem(ctx context.Context, req *AddItemReq) (*AddItemResp, error) {
-	cc.log.WithContext(ctx).Infof("AddItem request: %+v", req)
-	return cc.repo.AddItem(ctx, req)
+func (cc *CartUsecase) UpsertItem(ctx context.Context, req *UpsertItemReq) (*UpsertItemResp, error) {
+	cc.log.WithContext(ctx).Infof("UpsertItem request: %+v", req)
+	return cc.repo.UpsertItem(ctx, req)
 }
 
 func (cc *CartUsecase) GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error) {
@@ -50,12 +49,7 @@ func (cc *CartUsecase) EmptyCart(ctx context.Context, req *EmptyCartReq) (*Empty
 	return cc.repo.EmptyCart(ctx, req)
 }
 
-func (cc *CartUsecase) UpdateItem(ctx context.Context, req *UpdateItemReq) (*UpdateItemResp, error) {
-	cc.log.WithContext(ctx).Infof("UpdateItem request: %+v", req)
-	return cc.repo.UpdateItem(ctx, req)
-}
-
-func (cc *CartUsecase) RemoveItem(ctx context.Context, req *RemoveItemReq) (*RemoveItemResp, error) {
-	cc.log.WithContext(ctx).Infof("RemoveItem request: %+v", req)
-	return cc.repo.RemoveItem(ctx, req)
+func (cc *CartUsecase) RemoveCartItem(ctx context.Context, req *RemoveCartItemReq) (*RemoveCartItemResp, error) {
+	cc.log.WithContext(ctx).Infof("RemoveCartItem request: %+v", req)
+	return cc.repo.RemoveCartItem(ctx, req)
 }

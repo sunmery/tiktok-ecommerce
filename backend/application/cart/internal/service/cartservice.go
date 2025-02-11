@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
+	"errors"
+
 	pb "backend/api/cart/v1"
 	"backend/application/cart/internal/biz"
-	"context"
 )
 
 type CartServiceService struct {
@@ -15,18 +17,64 @@ func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
 	return &CartServiceService{cc: cc}
 }
 
-func (s *CartServiceService) AddItem(ctx context.Context, req *pb.AddItemReq) (*pb.AddItemResp, error) {
-	return &pb.AddItemResp{}, nil
+func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemReq) (*pb.UpsertItemResp, error) {
+	resp, err := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
+		UserId: req.UserId,
+		Item: biz.CartItem{
+			ProductId: req.Item.ProductId,
+			Quantity:  req.Item.Quantity,
+		},
+	})
+	if err != nil {
+		return nil, errors.New("failed to upsert item")
+	}
+
+	return &pb.UpsertItemResp{
+		Success: resp.Success,
+	}, nil
 }
 func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
-	return &pb.GetCartResp{}, nil
+	cart, err := s.cc.GetCart(ctx, &biz.GetCartReq{
+		UserId: req.UserId,
+	})
+	if err != nil {
+		return nil, errors.New("failed to get cart")
+	}
+	items := make([]*pb.CartItem, len(cart.Cart.Items))
+	for i, item := range cart.Cart.Items {
+		items[i] = &pb.CartItem{
+			ProductId: item.ProductId,
+			Quantity:  item.Quantity,
+		}
+	}
+
+	return &pb.GetCartResp{
+		Cart: &pb.Cart{
+			UserId: cart.Cart.UserId,
+			Items:  items,
+		},
+	}, nil
 }
 func (s *CartServiceService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq) (*pb.EmptyCartResp, error) {
-	return &pb.EmptyCartResp{}, nil
+	resp, err := s.cc.EmptyCart(ctx, &biz.EmptyCartReq{
+		UserId: req.UserId,
+	})
+	if err != nil {
+		return nil, errors.New("failed to empty cart")
+	}
+	return &pb.EmptyCartResp{
+		Success: resp.Success,
+	}, nil
 }
-func (s *CartServiceService) UpdateItem(ctx context.Context, req *pb.UpdateItemReq) (*pb.UpdateItemResp, error) {
-	return &pb.UpdateItemResp{}, nil
-}
-func (s *CartServiceService) RemoveItem(ctx context.Context, req *pb.RemoveItemReq) (*pb.RemoveItemResp, error) {
-	return &pb.RemoveItemResp{}, nil
+func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveCartItemReq) (*pb.RemoveCartItemResp, error) {
+	resp, err := s.cc.RemoveCartItem(ctx, &biz.RemoveCartItemReq{
+		UserId:    req.UserId,
+		ProductId: req.ProductId,
+	})
+	if err != nil {
+		return nil, errors.New("failed to remove cart item")
+	}
+	return &pb.RemoveCartItemResp{
+		Success: resp.Success,
+	}, nil
 }
