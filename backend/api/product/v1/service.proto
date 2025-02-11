@@ -3,42 +3,65 @@ syntax = "proto3";
 package product.service.v1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/api/field_behavior.proto";
 
 option go_package = "api/product/v1;v1";
 
 service ProductCatalogService {
+  //查询商品列表
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {
     option (google.api.http) = {
       get: "/v1/product/list"
     };
   }
+  //查询某个商品详细信息
   rpc GetProduct(GetProductReq) returns (GetProductResp) {
     option (google.api.http) = {
-      get: "/v1/product/{id}"
+      get: "/v1/products/{id}"
     };
   }
+  //根据字符串查询商品
   rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {
     option (google.api.http) = {
-      get: "/v1/product/{query}"
+      get: "/v1/products/search/{query}"
+    };
+  }
+  rpc CreateProduct (Product) returns (ProductReply){
+    option (google.api.http) = {
+      post: "/v1/product",
+      body: "*"
+    };
+  }
+  rpc UpdateProduct (Product) returns (ProductReply){
+    option (google.api.http) = {
+      patch: "/v1/product",
+      body: "*"
+    };
+  }
+  rpc DeleteProduct (DeleteProductReq) returns (ProductReply){
+    option (google.api.http) = {
+      delete:"/v1/product"
     };
   }
 }
 
 message ListProductsReq{
-  int32 page = 1;
-  int64 pageSize = 2;
-
+  int32 page = 1 [(google.api.field_behavior) = REQUIRED];
+  int64 pageSize = 2 [(google.api.field_behavior) = REQUIRED];
   string categoryName = 3;
 }
 
 message Product {
-  uint32 id = 1;
-  string name = 2;
-  string description = 3;
-  string picture = 4;
-  float price = 5;
-
-  repeated string categories = 6;
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+  string description = 2 [(google.api.field_behavior) = REQUIRED];
+  string picture = 3 [(google.api.field_behavior) = REQUIRED];
+  float price = 4 [(google.api.field_behavior) = REQUIRED];
+  repeated string categories = 5 [(google.api.field_behavior) = REQUIRED];
+  string owner = 6 [(google.api.field_behavior) = REQUIRED];
+  string username = 7 [(google.api.field_behavior) = REQUIRED];
+  uint32 id = 8;
 }
 
 message ListProductsResp {
@@ -46,7 +69,7 @@ message ListProductsResp {
 }
 
 message GetProductReq {
-  uint32 id = 1;
+  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 message GetProductResp {
@@ -54,9 +77,30 @@ message GetProductResp {
 }
 
 message SearchProductsReq {
-  string query = 1;
+  string query = 1[(google.api.field_behavior) = REQUIRED];
 }
 
 message SearchProductsResp {
-  repeated Product results = 1;
+  repeated Product products = 1;
 }
+
+// message CreateProductReq {
+//   string name = 1 [(google.api.field_behavior) = REQUIRED];
+//   string description = 2 [(google.api.field_behavior) = REQUIRED];
+//   string picture = 3 [(google.api.field_behavior) = REQUIRED];
+//   float price = 4 [(google.api.field_behavior) = REQUIRED];
+//   repeated string categories = 5 [(google.api.field_behavior) = REQUIRED];
+//   string owner = 6 [(google.api.field_behavior) = REQUIRED];
+//   string username = 7 [(google.api.field_behavior) = REQUIRED];
+// }
+message ProductReply {
+  string message = 1;
+  int32 code = 2;
+}
+
+message DeleteProductReq {
+  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
+  string owner = 2 [(google.api.field_behavior) = REQUIRED];
+  string username = 3 [(google.api.field_behavior) = REQUIRED];
+}
+

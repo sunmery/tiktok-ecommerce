@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: v1/service.proto
+// source: api/product/v1/service.proto
 
 package v1
 
@@ -22,15 +22,24 @@ const (
 	ProductCatalogService_ListProducts_FullMethodName   = "/product.service.v1.ProductCatalogService/ListProducts"
 	ProductCatalogService_GetProduct_FullMethodName     = "/product.service.v1.ProductCatalogService/GetProduct"
 	ProductCatalogService_SearchProducts_FullMethodName = "/product.service.v1.ProductCatalogService/SearchProducts"
+	ProductCatalogService_CreateProduct_FullMethodName  = "/product.service.v1.ProductCatalogService/CreateProduct"
+	ProductCatalogService_UpdateProduct_FullMethodName  = "/product.service.v1.ProductCatalogService/UpdateProduct"
+	ProductCatalogService_DeleteProduct_FullMethodName  = "/product.service.v1.ProductCatalogService/DeleteProduct"
 )
 
 // ProductCatalogServiceClient is the client API for ProductCatalogService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductCatalogServiceClient interface {
+	// 查询商品列表
 	ListProducts(ctx context.Context, in *ListProductsReq, opts ...grpc.CallOption) (*ListProductsResp, error)
+	// 查询某个商品详细信息
 	GetProduct(ctx context.Context, in *GetProductReq, opts ...grpc.CallOption) (*GetProductResp, error)
+	// 根据字符串查询商品
 	SearchProducts(ctx context.Context, in *SearchProductsReq, opts ...grpc.CallOption) (*SearchProductsResp, error)
+	CreateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error)
+	UpdateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error)
+	DeleteProduct(ctx context.Context, in *DeleteProductReq, opts ...grpc.CallOption) (*ProductReply, error)
 }
 
 type productCatalogServiceClient struct {
@@ -71,13 +80,49 @@ func (c *productCatalogServiceClient) SearchProducts(ctx context.Context, in *Se
 	return out, nil
 }
 
+func (c *productCatalogServiceClient) CreateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductReply)
+	err := c.cc.Invoke(ctx, ProductCatalogService_CreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productCatalogServiceClient) UpdateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductReply)
+	err := c.cc.Invoke(ctx, ProductCatalogService_UpdateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productCatalogServiceClient) DeleteProduct(ctx context.Context, in *DeleteProductReq, opts ...grpc.CallOption) (*ProductReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductReply)
+	err := c.cc.Invoke(ctx, ProductCatalogService_DeleteProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductCatalogServiceServer is the server API for ProductCatalogService service.
 // All implementations must embed UnimplementedProductCatalogServiceServer
 // for forward compatibility.
 type ProductCatalogServiceServer interface {
+	// 查询商品列表
 	ListProducts(context.Context, *ListProductsReq) (*ListProductsResp, error)
+	// 查询某个商品详细信息
 	GetProduct(context.Context, *GetProductReq) (*GetProductResp, error)
+	// 根据字符串查询商品
 	SearchProducts(context.Context, *SearchProductsReq) (*SearchProductsResp, error)
+	CreateProduct(context.Context, *Product) (*ProductReply, error)
+	UpdateProduct(context.Context, *Product) (*ProductReply, error)
+	DeleteProduct(context.Context, *DeleteProductReq) (*ProductReply, error)
 	mustEmbedUnimplementedProductCatalogServiceServer()
 }
 
@@ -96,6 +141,15 @@ func (UnimplementedProductCatalogServiceServer) GetProduct(context.Context, *Get
 }
 func (UnimplementedProductCatalogServiceServer) SearchProducts(context.Context, *SearchProductsReq) (*SearchProductsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchProducts not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) CreateProduct(context.Context, *Product) (*ProductReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) UpdateProduct(context.Context, *Product) (*ProductReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) DeleteProduct(context.Context, *DeleteProductReq) (*ProductReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
 }
 func (UnimplementedProductCatalogServiceServer) mustEmbedUnimplementedProductCatalogServiceServer() {}
 func (UnimplementedProductCatalogServiceServer) testEmbeddedByValue()                               {}
@@ -172,6 +226,60 @@ func _ProductCatalogService_SearchProducts_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductCatalogService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Product)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).CreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_CreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).CreateProduct(ctx, req.(*Product))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductCatalogService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Product)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).UpdateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_UpdateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).UpdateProduct(ctx, req.(*Product))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductCatalogService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).DeleteProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_DeleteProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).DeleteProduct(ctx, req.(*DeleteProductReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductCatalogService_ServiceDesc is the grpc.ServiceDesc for ProductCatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -191,7 +299,19 @@ var ProductCatalogService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "SearchProducts",
 			Handler:    _ProductCatalogService_SearchProducts_Handler,
 		},
+		{
+			MethodName: "CreateProduct",
+			Handler:    _ProductCatalogService_CreateProduct_Handler,
+		},
+		{
+			MethodName: "UpdateProduct",
+			Handler:    _ProductCatalogService_UpdateProduct_Handler,
+		},
+		{
+			MethodName: "DeleteProduct",
+			Handler:    _ProductCatalogService_DeleteProduct_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/service.proto",
+	Metadata: "api/product/v1/service.proto",
 }

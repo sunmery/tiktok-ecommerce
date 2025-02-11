@@ -19,3 +19,16 @@ LIMIT 1;
 SELECT *
 FROM products.products
 WHERE name ILIKE '%' || @name || '%';
+
+-- name: UpdateProduct :one
+UPDATE products.products
+SET name = $1, description = $2, picture = $3, price = $4, categories = $5
+WHERE id = $6
+RETURNING *;
+
+-- name: DeleteProduct :exec
+DELETE FROM products.products
+WHERE id = @id
+RETURNING *;
+```
+

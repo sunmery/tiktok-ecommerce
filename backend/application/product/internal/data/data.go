@@ -21,6 +21,10 @@ type Data struct {
 	cs  *casdoorsdk.Client
 }
 
+func (d *Data) DB(ctx context.Context) any {
+	panic("unimplemented")
+}
+
 // NewData .
 func NewData(
 	pgx *pgxpool.Pool,
@@ -75,7 +79,8 @@ func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 	return client
 }
 
-type userRepo struct {
-	data *Data
-	log  *log.Helper
-}
+// Remove the unused userRepo type declaration
+// type userRepo struct {
+//     data *Data
+//     log  *log.Helper
+// }

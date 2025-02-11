@@ -35,6 +35,19 @@ type Querier interface {
 	//  FROM products.products
 	//  WHERE name ILIKE '%' || $1 || '%'
 	SearchProducts(ctx context.Context, name *string) ([]ProductsProducts, error)
+	//UpdateProduct
+	//
+	//  UPDATE products.products
+	//  SET name = $1, description = $2, picture = $3, price = $4, categories = $5
+	//  WHERE id = $6
+	//  RETURNING id, name, description, picture, price, categories
+	// UpdateProduct(ctx context.Context, arg UpdateProductParams) (ProductsProducts, error)
+	// //DeleteProduct
+	// //
+	// //  DELETE FROM products.products
+	// //  WHERE id = $1
+	// DeleteProduct(ctx context.Context, id int32) (ProductsProducts, error)
 }
 
 var _ Querier = (*Queries)(nil)
+
