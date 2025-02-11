@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "kratos-template/internal/conf;conf";
+option go_package = "product/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -91,9 +91,11 @@ message Consul {
     string address = 1;
     string scheme = 2;
     bool health_check = 3;
+    string acl_token = 4;
   }
   message ConfigCenter {
     string addr = 1;
+    string acl_token = 2;
   }
   RegistryCenter registry_center = 1;
   ConfigCenter config_center = 2;

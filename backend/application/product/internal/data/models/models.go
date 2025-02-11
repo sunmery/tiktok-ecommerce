@@ -4,11 +4,44 @@
 
 package models
 
+import (
+	"time"
+)
+
+type ProductsCategories struct {
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	ParentID  *int32    `json:"parentID"`
+	IsActive  bool      `json:"isActive"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type ProductsInventoryHistory struct {
+	ID           int64     `json:"id"`
+	ProductID    int32     `json:"productID"`
+	OldStock     int32     `json:"oldStock"`
+	NewStock     int32     `json:"newStock"`
+	ChangeReason string    `json:"changeReason"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
+type ProductsProductCategories struct {
+	ProductID  int32 `json:"productID"`
+	CategoryID int32 `json:"categoryID"`
+}
+
 type ProductsProducts struct {
-	ID          int32    `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Picture     string   `json:"picture"`
-	Price       float32  `json:"price"`
-	Categories  []string `json:"categories"`
+	ID                int32     `json:"id"`
+	Name              string    `json:"name"`
+	Description       string    `json:"description"`
+	Picture           string    `json:"picture"`
+	Price             float32   `json:"price"`
+	TotalStock        int32     `json:"totalStock"`
+	AvailableStock    *int32    `json:"availableStock"`
+	ReservedStock     int32     `json:"reservedStock"`
+	LowStockThreshold int32     `json:"lowStockThreshold"`
+	AllowNegative     bool      `json:"allowNegative"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+	Version           int32     `json:"version"`
 }
