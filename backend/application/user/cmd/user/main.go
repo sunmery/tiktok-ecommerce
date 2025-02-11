@@ -32,7 +32,7 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/user/config.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
+	flag.StringVar(&configPath, "config_path", "ecommerce/user/prod.yaml", "config center path, eg: -config_center ecommerce/user/prod.yaml")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 
@@ -100,13 +100,13 @@ func main() {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
 
-	// 链路追踪
-	var tc conf.Trace
-	if err := c.Scan(&tc); err != nil {
+	// 可观测性
+	var oc conf.Observability
+	if err := c.Scan(&oc); err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &tc, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &oc, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}

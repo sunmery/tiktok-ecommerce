@@ -1,10 +1,9 @@
 registryCenter:
-  # address: node8.apikv.com:32080 # NodePort 外网可访问的Consul HTTP API地址
-  # address: http://node15.apikv.com:8500 # NodePort 外网可访问的Consul HTTP API地址
-  # address: http://192.168.3.12:32080 # NodePort 外网可访问的Consul HTTP API地址
-  address: 159.75.231.54:8500 # NodePort 外网可访问的Consul HTTP API地址
+  address: localhost:8500 # NodePort 外网可访问的Consul HTTP API地址
   scheme: http
-  healthCheck: true
+  healthCheck: false
+  acl_token:
 
 configCenter:
-  address: 159.75.231.54:8500
+  address: localhost:8500
+  acl_token:

@@ -5,41 +5,32 @@ import (
 	"backend/application/user/internal/biz"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/go-kratos/kratos/v2/transport"
+
+	"fmt"
 )
 
-func (s *UserService) Signin(ctx context.Context, req *v1.SigninRequest) (*v1.SigninReply, error) {
-	result, err := s.uc.Signin(ctx, &biz.SigninRequest{
-		State: req.State,
-		Code:  req.Code,
-	})
-	fmt.Printf("result:%+v", result)
-	if err != nil {
-		return nil, err
-	}
-	return &v1.SigninReply{
-		State: result.State,
-		Data:  result.Data,
-	}, nil
-}
-
-func (s *UserService) GetUserInfo(ctx context.Context, req *v1.GetUserInfoRequest) (*v1.GetUserInfoResponse, error) {
+// GetUserProfile 获取用户档案
+func (s *UserService) GetUserProfile(ctx context.Context, req *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
+	// 从上下文获取headers
 	tr, ok := transport.FromServerContext(ctx)
 	if !ok {
 		fmt.Println("获取header失败")
 		return nil, errors.New("获取header失败")
 	}
+	// 获取Authorization
 	header := tr.RequestHeader()
-	authorization := header.Get("Authorization")
+	// 赋值给req
+	req.Authorization = header.Get("Authorization")
 
-	result, err := s.uc.GetUserInfo(ctx, &biz.GetUserInfoRequest{
-		Authorization: authorization,
+	// 传递Authorization
+	result, err := s.uc.GetProfile(ctx, &biz.GetProfileRequest{
+		Authorization: req.Authorization,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &v1.GetUserInfoResponse{
+	return &v1.GetProfileResponse{
 		State: result.State,
 		Data: &v1.Data{
 			Owner: result.Data.Owner,

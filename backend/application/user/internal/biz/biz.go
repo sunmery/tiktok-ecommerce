@@ -15,12 +15,19 @@ var ProviderSet = wire.NewSet(NewUserUsecase)
 // )
 
 type UserRepo interface {
-	Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error)
-	GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error)
+	GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error)
+
 	CreateAddress(ctx context.Context, req *Address) (*Address, error)
 	UpdateAddress(ctx context.Context, req *Address) (*Address, error)
 	DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error)
 	GetAddresses(ctx context.Context, req *Request) (*Addresses, error)
+
+	CreateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
+	UpdateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
+	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error)
+	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error)
+	SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error)
+	ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error)
 }
 
 type UserUsecase struct {
@@ -33,34 +40,4 @@ func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
-}
-
-func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
-	cc.log.WithContext(ctx).Infof("Signin request: %+v", req)
-	return cc.repo.Signin(ctx, req)
-}
-
-func (cc *UserUsecase) GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoReply, error) {
-	cc.log.WithContext(ctx).Infof("GetUserInfo request: %+v", req)
-	return cc.repo.GetUserInfo(ctx, req)
-}
-
-func (cc *UserUsecase) CreateAddress(ctx context.Context, req *Address) (*Address, error) {
-	cc.log.WithContext(ctx).Infof("CreateAddress: %+v", req)
-	return cc.repo.CreateAddress(ctx, req)
-}
-
-func (cc *UserUsecase) UpdateAddress(ctx context.Context, req *Address) (*Address, error) {
-	cc.log.WithContext(ctx).Infof("UpdateAddress: %+v", req)
-	return cc.repo.UpdateAddress(ctx, req)
-}
-
-func (cc *UserUsecase) DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
-	cc.log.WithContext(ctx).Infof("DeleteAddress: %+v", req)
-	return cc.repo.DeleteAddress(ctx, req)
-}
-
-func (cc *UserUsecase) GetAddresses(ctx context.Context, req *Request) (*Addresses, error) {
-	cc.log.WithContext(ctx).Infof("GetAddresses: %+v", req)
-	return cc.repo.GetAddresses(ctx, req)
 }

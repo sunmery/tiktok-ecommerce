@@ -1,6 +1,8 @@
 package server
 
 import (
+	"backend/application/product/internal/conf"
+	"backend/application/product/internal/service"
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -13,7 +15,7 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-
+	product *service.ProductCatalogServiceService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,

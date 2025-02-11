@@ -71,7 +71,6 @@ message Observability {
     message HTTP {
       string endpoint = 1;
     }
-    string service_name = 1;
     GRPC grpc = 2;
     HTTP http = 3;
   }

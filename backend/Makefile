@@ -155,7 +155,7 @@ migrate-new:
 
 # 升级全部的迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
 migrate-up:
-	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/tiktok?sslmode=disable"
+	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/ecommerce?sslmode=disable"
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up
 
 # 向上迁移一个版本, 根据数据库的表schema_migrations的version来决定
