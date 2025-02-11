@@ -9,13 +9,12 @@ import (
 	"context"
 )
 
-const EmptyCart = `-- name: EmptyCart :many
+const EmptyCart = `-- name: EmptyCart :exec
 DELETE FROM cart_schema.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM cart_schema.cart AS c
-     WHERE c.user_id = $1)  -- 获取用户的购物车ID
-RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
+     WHERE c.user_id = $1)
 `
 
 // EmptyCart
@@ -24,33 +23,10 @@ RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
 //	WHERE ci.cart_id =
 //	    (SELECT c.cart_id
 //	     FROM cart_schema.cart AS c
-//	     WHERE c.user_id = $1)  -- 获取用户的购物车ID
-//	RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
-func (q *Queries) EmptyCart(ctx context.Context, userID int32) ([]CartSchemaCartItems, error) {
-	rows, err := q.db.Query(ctx, EmptyCart, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []CartSchemaCartItems
-	for rows.Next() {
-		var i CartSchemaCartItems
-		if err := rows.Scan(
-			&i.CartItemID,
-			&i.CartID,
-			&i.ProductID,
-			&i.Quantity,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+//	     WHERE c.user_id = $1)
+func (q *Queries) EmptyCart(ctx context.Context, userID int32) error {
+	_, err := q.db.Exec(ctx, EmptyCart, userID)
+	return err
 }
 
 const GetCart = `-- name: GetCart :many

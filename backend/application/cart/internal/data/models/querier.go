@@ -15,9 +15,8 @@ type Querier interface {
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1)  -- 获取用户的购物车ID
-	//  RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
-	EmptyCart(ctx context.Context, userID int32) ([]CartSchemaCartItems, error)
+	//       WHERE c.user_id = $1)
+	EmptyCart(ctx context.Context, userID int32) error
 	//GetCart
 	//
 	//  SELECT ci.cart_item_id, ci.quantity

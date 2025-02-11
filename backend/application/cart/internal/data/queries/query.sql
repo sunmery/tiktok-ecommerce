@@ -32,10 +32,9 @@ WHERE ci.cart_id =
     AND ci.product_id = $2  -- 删除指定商品ID
 RETURNING *;
 
--- name: EmptyCart :many
+-- name: EmptyCart :exec
 DELETE FROM cart_schema.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM cart_schema.cart AS c
-     WHERE c.user_id = $1)  -- 获取用户的购物车ID
-RETURNING *;
+     WHERE c.user_id = $1);  -- 获取用户的购物车ID

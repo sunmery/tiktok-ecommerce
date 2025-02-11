@@ -17,10 +17,13 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 
 // EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
+	err := c.data.db.EmptyCart(ctx, int32(req.UserId))
+	if err != nil {
+		return nil, err
+	}
 	return &biz.EmptyCartResp{
 		Success: true,
 	}, nil
-	panic("unimplemented")
 }
 
 // GetCart implements biz.CartRepo.
@@ -55,6 +58,7 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 	if err != nil || dreq == (models.CartSchemaCartItems{}) {
 		return nil, err
 	}
+	c.log.WithContext(ctx).Infof("RemoveCartItem request2 : %+v", dreq)
 	return &biz.RemoveCartItemResp{
 		Success: true,
 	}, nil
