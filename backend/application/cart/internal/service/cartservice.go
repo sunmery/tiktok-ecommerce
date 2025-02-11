@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	pb "backend/api/cart/v1"
 	"backend/application/cart/internal/biz"
@@ -18,6 +19,17 @@ func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
 }
 
 func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemReq) (*pb.UpsertItemResp, error) {
+	fmt.Println("UpsertItem: ", req)
+	if req == nil {
+		return nil, errors.New("invalid request")
+	}
+	if req.Item == nil {
+		return nil, errors.New("Item is nil")
+	}
+	if req.Item.ProductId == 0 {
+		return nil, errors.New("ProductId is empty")
+	}
+
 	resp, err := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
 		UserId: req.UserId,
 		Item: biz.CartItem{

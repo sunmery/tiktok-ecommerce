@@ -6,7 +6,9 @@ import (
 	"backend/application/cart/internal/service"
 	"context"
 	"fmt"
+	"io/ioutil"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -104,22 +106,22 @@ func NewHTTPServer(c *conf.Server,
 
 func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 	// 从Request Header的Content-Type中提取出对应的解码器
-	_, ok := http.CodecForRequest(r, "Content-Type")
+	codec, ok := http.CodecForRequest(r, "Content-Type")
 	// 如果找不到对应的解码器此时会报错
 	if !ok {
-		r.Header.Set("Content-Type", "application/json")
-		// return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
+		//r.Header.Set("Content-Type", "application/json")
+		return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
 	}
 	// fmt.Printf("method:%s\n", r.Method)
-	// if r.Method == "POST" {
-	// 	data, err := ioutil.ReadAll(r.Body)
-	// 	if err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// 	if err = codec.Unmarshal(data, v); err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// }
+	if r.Method == "POST" {
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return errors.BadRequest("CODEC", err.Error())
+		}
+		if err = codec.Unmarshal(data, v); err != nil {
+			return errors.BadRequest("CODEC", err.Error())
+		}
+	}
 
 	return nil
 }

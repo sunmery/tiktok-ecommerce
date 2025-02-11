@@ -22,7 +22,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "organization-application-version"
+	Name = "ecommerce-cart-v1"
 	// Version 通过环境变量来替换
 	Version           string
 	flagconf          string

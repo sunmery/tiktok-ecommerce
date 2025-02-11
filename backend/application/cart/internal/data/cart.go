@@ -66,5 +66,16 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 
 // UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
-	panic("unimplemented")
+	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
+		UserID:    int32(req.UserId),
+		ProductID: int32(req.Item.ProductId),
+		Quantity:  int32(req.Item.Quantity),
+	})
+	if err != nil {
+		return nil, err
+	}
+	c.log.WithContext(ctx).Infof("UpsertItem request1 : %+v", resp)
+	return &biz.UpsertItemResp{
+		Success: true,
+	}, nil
 }
