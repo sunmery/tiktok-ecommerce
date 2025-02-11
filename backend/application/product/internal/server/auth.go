@@ -1,19 +1,18 @@
 package server
 
 import (
+	"backend/application/product/internal/conf"
 	"context"
 	"crypto/rsa"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	jwtV5 "github.com/golang-jwt/jwt/v5"
-	"backend/application/product/internal/conf"
 )
 
 // NewWhiteListMatcher 创建jwt白名单
 func NewWhiteListMatcher() selector.MatchFunc {
 	whiteList := make(map[string]struct{})
-	// whiteList["/admin.v1.AdminService/Login"] = struct{}{}
-	whiteList["/api.user.v1.UserService/Signin"] = struct{}{}
+	// whiteList["/api.user.v1.UserService/Signin"] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {
 			return false

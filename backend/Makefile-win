@@ -28,13 +28,6 @@ SERVICE := $(APP_RELATIVE_PATH)
 REPOSITORY := e-commence/$(SERVICE)
 REGISTER := "ccr.ccs.tencentyun.com"
 
-.PHONY: xxx
-xxx:
-	@echo "--------"
-	@echo $(Git_Bash)
-	@echo $(INTERNAL_PROTO_FILES)
-	@echo $(API_PROTO_FILES)
-
 .PHONY: infra
 infra:
 	docker compose -f infrastructure/consul/compose.yaml up -d
@@ -44,32 +37,11 @@ infra:
 
 .PHONY: grpc
 grpc:
-	@echo "Generating gRPC code..."
 	$(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
     --proto_path=../../third_party \
     --go_out=paths=source_relative:. \
     --go-grpc_out=paths=source_relative:. \
-    --go-http_out=paths=source_relative:. \
-    --go-errors_out=paths=source_relative:. \
     $(API_PROTO_FILES)"
-
-.PHONY: api-path-fix
-api-path-fix:
-ifeq ($(GOHOSTOS), windows)
-	@echo "Fixing Windows path delimiters..."
-	$(Git_Bash) -c "find ../../api/$(APP_RELATIVE_PATH) -name '*.pb.go' -exec sed -i 's|\\\\|/|g' {} \;"
-endif
-
-.PHONY: proto
-proto: grpc http errors swagger config api-path-fix
-
-.PHONY: api
-http:
-	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-    --proto_path=../../third_party \
-    --go_out=paths=source_relative:. \
-    --go-http_out=paths=source_relative:. \
-    $(API_PROTO_FILES)
 
 .PHONY: http
 http:
@@ -102,13 +74,13 @@ config:
            --go_out=paths=source_relative:. \
            $(INTERNAL_PROTO_FILES)
 
-#.PHONY: api
-#api:
-#	@make http
-#	@make grpc
-#	@make errors
-#	@make swagger
-#	@make config
+.PHONY: api
+api:
+	@make http
+	@make grpc
+	@make errors
+	@make swagger
+	@make config
 
 # 构建镜像
 .PHONY: docker-build
@@ -148,9 +120,9 @@ docker-run:
 	  -p $(GRPC_PORT):$(GRPC_PORT) \
 	  $(REGISTER)/$(REPOSITORY):dev
 
-.PHONY: generate
+.PHONY: wire
 # generate client code
-generate:
+wire:
 	go generate ./...
 
 .PHONY: build
@@ -167,22 +139,10 @@ test:
 run:
 	cd cmd/server/ && go run .
 
-.PHONY: ent
-ent:
-	cd internal/data/ && ent generate ./ent/schema
-
 .PHONY: wire
 # generate wire
 wire:
 	cd cmd/server && wire
-
-.PHONY: api
-# generate api proto
-api: grpc http swagger errors
-
-.PHONY: all
-# generate all
-all: grpc http config generate
 
 # 生成迁移文件
 # 使用: make new-migrate name=verify_emails

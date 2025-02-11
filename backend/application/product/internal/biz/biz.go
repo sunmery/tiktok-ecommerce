@@ -2,13 +2,11 @@ package biz
 
 import (
 	"context"
-	"errors"
+	"github.com/google/wire"
 
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/google/wire"
 )
 
-// ProviderSet is biz providers.
 var ProviderSet = wire.NewSet(NewProductUsecase)
 
 // var (
@@ -80,11 +78,13 @@ type ProductRepo interface {
 	DeleteProduct(ctx context.Context, req DeleteProductReq) (*ProductReply, error)
 }
 
+// ProductUsecase is a Product usecase.
 type ProductUsecase struct {
 	repo ProductRepo
 	log  *log.Helper
 }
 
+// NewProductUsecase new a Product usecase.
 func NewProductUsecase(repo ProductRepo, logger log.Logger) *ProductUsecase {
 	return &ProductUsecase{
 		repo: repo,

@@ -47,11 +47,11 @@ service ProductCatalogService {
   }
 }
 
-message ListProductsReq{
-  int32 page = 1 [(google.api.field_behavior) = REQUIRED];
-  int64 pageSize = 2 [(google.api.field_behavior) = REQUIRED];
-  string categoryName = 3;
-}
+// message ListProductsReq{
+//   int32 page = 1 [(google.api.field_behavior) = REQUIRED];
+//   int64 pageSize = 2 [(google.api.field_behavior) = REQUIRED];
+//   string categoryName = 3;
+// }
 
 message Product {
   string name = 1 [(google.api.field_behavior) = REQUIRED];
@@ -64,16 +64,31 @@ message Product {
   uint32 id = 8;
 }
 
+message CreateProductRequest {
+  string name = 3;
+  string description = 4;
+  string picture = 5;
+  float price = 6;
+  repeated string categories = 7;
+}
+
+message ProductReply {
+  Product product = 1 ;
+}
+
+message ListProductsReq{
+  int32 page = 1;
+  int64 pageSize = 2 [json_name = "page_size"];
+
+  string categoryName = 3 [json_name = "category_name"];
+}
+
 message ListProductsResp {
   repeated Product products = 1;
 }
 
 message GetProductReq {
   uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-message GetProductResp {
-  Product product = 1;
 }
 
 message SearchProductsReq {
@@ -93,10 +108,10 @@ message SearchProductsResp {
 //   string owner = 6 [(google.api.field_behavior) = REQUIRED];
 //   string username = 7 [(google.api.field_behavior) = REQUIRED];
 // }
-message ProductReply {
-  string message = 1;
-  int32 code = 2;
-}
+// message ProductReply {
+//   string message = 1;
+//   int32 code = 2;
+// }
 
 message DeleteProductReq {
   uint32 id = 1 [(google.api.field_behavior) = REQUIRED];

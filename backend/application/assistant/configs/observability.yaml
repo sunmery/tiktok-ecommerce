@@ -1,7 +1,0 @@
-# 可观测性
-jaeger:
-  service_name: "ecommerce-assistant-v1"
-  grpc:
-    endpoint: localhost:4317
-  http:
-    endpoint: localhost:4318

@@ -10,15 +10,20 @@ import (
 	"fmt"
 )
 
+// GetUserProfile 获取用户档案
 func (s *UserService) GetUserProfile(ctx context.Context, req *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
+	// 从上下文获取headers
 	tr, ok := transport.FromServerContext(ctx)
 	if !ok {
 		fmt.Println("获取header失败")
 		return nil, errors.New("获取header失败")
 	}
+	// 获取Authorization
 	header := tr.RequestHeader()
+	// 赋值给req
 	req.Authorization = header.Get("Authorization")
 
+	// 传递Authorization
 	result, err := s.uc.GetProfile(ctx, &biz.GetProfileRequest{
 		Authorization: req.Authorization,
 	})

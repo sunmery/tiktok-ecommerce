@@ -8,13 +8,6 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {
-	return &productRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
-}
-
 type productRepo struct {
 	data *Data
 	log  *log.Helper
@@ -54,7 +47,7 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.Product) (*biz.
 func (p *productRepo) CreateProduct(ctx context.Context, req biz.Product) (*biz.ProductReply, error) {
 	db := p.data.DB(ctx)
 
-	_, err := db.CreateProduct(ctx, models.CreateProductParams{
+	product, err := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     req.Picture,
@@ -64,9 +57,26 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.Product) (*biz.
 	if err != nil {
 		return nil, err
 	}
-	return &biz.ProductReply{
-		Message: "OK",
-		Code:    http.StatusOK,
+	// 审计日志自动使用同一事务(相同的 ctx)
+	_, err = db.CreateAuditLog(ctx, models.CreateAuditLogParams{
+		Action:    "CREATE",
+		ProductID: product.ID,
+		Owner:     req.Owner,
+		Name:      req.Username,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.CreateProductReply{
+		Product: biz.Product{
+			Id:          uint32(product.ID),
+			Name:        product.Name,
+			Description: product.Description,
+			Picture:     product.Picture,
+			Price:       product.Price,
+			Categories:  product.Categories,
+		},
 	}, nil
 }
 
@@ -89,10 +99,9 @@ func (p productRepo) ListProducts(ctx context.Context, req biz.ListProductsReq) 
 			Categories:  product.Categories,
 		}
 	}
-	return &biz.ListProductsResp{
-		Products: productsResp,
+	return &biz.SearchProductsResp{
+		Result: productsResp,
 	}, nil
-
 }
 
 func (p productRepo) GetProduct(ctx context.Context, req biz.GetProductReq) (*biz.GetProductResp, error) {

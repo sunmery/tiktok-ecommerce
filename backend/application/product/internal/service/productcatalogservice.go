@@ -11,8 +11,7 @@ import (
 
 type ProductService struct {
 	pb.UnimplementedProductCatalogServiceServer
-
-	pc *biz.ProductUsecase
+	pu *biz.ProductUsecase
 }
 
 func NewProductService(pc *biz.ProductUsecase) *ProductService {
@@ -65,10 +64,7 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReq) 
 }
 
 func (s *ProductService) SearchProducts(ctx context.Context, req *pb.SearchProductsReq) (*pb.SearchProductsResp, error) {
-	fmt.Printf("✅ 完整请求: %+v\n", req)
-	result, err := s.pc.SearchProducts(ctx, biz.SearchProductsReq{
-		Query: req.Query,
-	})
+	products, err := s.pu.SearchProducts(ctx, &biz.SearchProductsReq{Query: req.GetQuery()})
 	if err != nil {
 		return nil, err
 	}
@@ -90,32 +86,23 @@ func (s *ProductService) SearchProducts(ctx context.Context, req *pb.SearchProdu
 	}, nil
 }
 
-
-func (s *ProductService) CreateProduct(ctx context.Context, req *pb.Product) (*pb.ProductReply, error) {
-	if req == nil {
-        fmt.Println("❌ req 是 nil，说明 gRPC 调用没有正确传入参数！")
-        return nil, errors.New("invalid request: req is nil")
-    }
+func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductReply, error) {
 	payload, err := token.ExtractPayload(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("✅ req: %+v\n", req)
-fmt.Printf("✅ owner: %+v\n username: %+v\n", req.Owner, req.Username)
 
-	if req.Owner != payload.Owner || req.Username != payload.Name {
-		return nil, errors.New("invalid token")
-	}
-	
-	result, err := s.pc.CreateProduct(ctx, biz.Product{ // Pass the address of the struct
+	p, cErr := s.pu.CreateProduct(ctx, &biz.CreateProductRequest{
+		Owner:       payload.Owner,
+		Username:    payload.Name,
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     req.Picture,
 		Price:       req.Price,
 		Categories:  req.Categories,
 	})
-	if err != nil {
-		return nil, err
+	if cErr != nil {
+		return nil, cErr
 	}
 	return &pb.ProductReply{
 		Message: result.Message,

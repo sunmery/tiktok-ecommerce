@@ -4,7 +4,6 @@ import (
 	"context"
 )
 
-// CreditCards is a CreditCards model.
 type CreditCards struct {
 	Id              uint32 `json:"id"`
 	Owner           string `json:"owner"`

@@ -5,8 +5,7 @@ sql:
     engine: "postgresql"
     database:
       uri: ${DB_SOURCE}
-      # uri: postgresql://postgres:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/simple_bank?sslmode=disable
-      # uri: postgresql://postgres:postgres@localhost:5432/simple_bank?sslmode=disable
+      # uri: postgresql://user:password@host:5432/database?sslmode=disable
     gen:
       go:
         package: "models"
