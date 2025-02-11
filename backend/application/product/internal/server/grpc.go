@@ -1,8 +1,10 @@
 package server
 
 import (
+	v1 "backend/api/product/v1"
 	"backend/application/product/internal/conf"
 	"backend/application/product/internal/service"
+	"backend/constants"
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -27,7 +29,7 @@ func NewGRPCServer(
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+			semconv.ServiceNameKey.String(constants.ProductServiceV1),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),
@@ -68,7 +70,6 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	// v1.RegisterUserServiceServer(srv, user)
-
+	v1.RegisterProductCatalogServiceServer(srv, product)
 	return srv
 }
