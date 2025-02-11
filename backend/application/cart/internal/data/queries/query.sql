@@ -1,48 +1,38 @@
--- name: AddItem :one
-INSERT INTO cart_schema.carts (user_id, items, updated_at) 
-VALUES ($1, $2::jsonb, $3)
-RETURNING *;
+-- name: UpsertItem :exec
+INSERT INTO cart_schema.cart_items (cart_id, product_id, quantity, created_at, updated_at)
+VALUES (
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1 LIMIT 1),  -- 获取用户的购物车ID
+    $2,   -- 商品ID
+    $3,   -- 商品数量
+    CURRENT_TIMESTAMP,  -- 创建时间
+    CURRENT_TIMESTAMP   -- 更新时间
+)
+ON CONFLICT (cart_id, product_id)  -- 如果购物车ID和商品ID组合重复
+DO UPDATE SET 
+    quantity = cart_schema.cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
+    updated_at = CURRENT_TIMESTAMP;  -- 更新时间
 
--- name: GetCart :one
-SELECT items
-FROM cart_schema.carts
-WHERE user_id = $1
-ORDER BY updated_at DESC;
+-- name: GetCart :many
+SELECT ci.cart_item_id, ci.quantity 
+FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1);  -- 获取用户的购物车ID
+
+-- name: RemoveCartItem :exec
+DELETE FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1)  -- 获取用户的购物车ID
+    AND ci.product_id = $2;  -- 删除指定商品ID
 
 -- name: EmptyCart :exec
-DELETE 
-FROM cart_schema.carts 
-WHERE user_id = $1
-RETURNING *;
-
--- name: UpdateItem :one
-UPDATE cart_schema.carts
-SET items = CASE
-    -- 如果存在 product_id 为 $1 的商品，更新它的 quantity
-    WHEN items @> jsonb_build_array(jsonb_build_object('product_id', $1::text)) THEN
-        jsonb_set(
-            items,
-            '{0,quantity}',  -- 这里的路径为数组索引形式，假设 product_id 对应数组的第一个位置
-            $2::jsonb -- 更新 quantity 字段为 $2
-        )
-    -- 如果不存在，则向 items 数组中添加新的商品
-    ELSE
-        items || jsonb_build_array(
-            jsonb_build_object(
-                'product_id', $1::text,
-                'quantity', $2::int
-            )
-        )
-    END
-WHERE user_id = $3
-RETURNING *;
-
--- name: RemoveItem :one
-UPDATE cart_schema.carts
-SET items = (
-    SELECT jsonb_agg(item)
-    FROM jsonb_array_elements(items) AS item
-    WHERE item->>'product_id' != $1::text
-)
-WHERE user_id = $2
-RETURNING *;
+DELETE FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1);  -- 获取用户的购物车ID

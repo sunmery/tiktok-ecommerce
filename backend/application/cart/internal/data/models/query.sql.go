@@ -7,160 +7,140 @@ package models
 
 import (
 	"context"
-
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const AddItem = `-- name: AddItem :one
-INSERT INTO cart_schema.carts (user_id, items, updated_at) 
-VALUES ($1, $2::jsonb, $3)
-RETURNING user_id, items, updated_at
-`
-
-type AddItemParams struct {
-	UserID    uuid.UUID        `json:"userID"`
-	Column2   []byte           `json:"column2"`
-	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
-}
-
-// AddItem
-//
-//	INSERT INTO cart_schema.carts (user_id, items, updated_at)
-//	VALUES ($1, $2::jsonb, $3)
-//	RETURNING user_id, items, updated_at
-func (q *Queries) AddItem(ctx context.Context, arg AddItemParams) (CartSchemaCarts, error) {
-	row := q.db.QueryRow(ctx, AddItem, arg.UserID, arg.Column2, arg.UpdatedAt)
-	var i CartSchemaCarts
-	err := row.Scan(&i.UserID, &i.Items, &i.UpdatedAt)
-	return i, err
-}
-
 const EmptyCart = `-- name: EmptyCart :exec
-DELETE 
-FROM cart_schema.carts 
-WHERE user_id = $1
-RETURNING user_id, items, updated_at
+
+DELETE FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1)
 `
 
-// EmptyCart
+// 删除指定商品ID
 //
-//	DELETE
-//	FROM cart_schema.carts
-//	WHERE user_id = $1
-//	RETURNING user_id, items, updated_at
-func (q *Queries) EmptyCart(ctx context.Context, userID uuid.UUID) error {
+//	DELETE FROM cart_schema.cart_items AS ci
+//	WHERE ci.cart_id =
+//	    (SELECT c.cart_id
+//	     FROM cart_schema.cart AS c
+//	     WHERE c.user_id = $1)
+func (q *Queries) EmptyCart(ctx context.Context, userID int32) error {
 	_, err := q.db.Exec(ctx, EmptyCart, userID)
 	return err
 }
 
-const GetCart = `-- name: GetCart :one
-SELECT items
-FROM cart_schema.carts
-WHERE user_id = $1
-ORDER BY updated_at DESC
+const GetCart = `-- name: GetCart :many
+
+SELECT ci.cart_item_id, ci.quantity 
+FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1)
 `
 
-// GetCart
-//
-//	SELECT items
-//	FROM cart_schema.carts
-//	WHERE user_id = $1
-//	ORDER BY updated_at DESC
-func (q *Queries) GetCart(ctx context.Context, userID uuid.UUID) ([]byte, error) {
-	row := q.db.QueryRow(ctx, GetCart, userID)
-	var items []byte
-	err := row.Scan(&items)
-	return items, err
+type GetCartRow struct {
+	CartItemID int32 `json:"cartItemID"`
+	Quantity   int32 `json:"quantity"`
 }
 
-const RemoveItem = `-- name: RemoveItem :one
-UPDATE cart_schema.carts
-SET items = (
-    SELECT jsonb_agg(item)
-    FROM jsonb_array_elements(items) AS item
-    WHERE item->>'product_id' != $1::text
+// 更新时间
+//
+//	SELECT ci.cart_item_id, ci.quantity
+//	FROM cart_schema.cart_items AS ci
+//	WHERE ci.cart_id =
+//	    (SELECT c.cart_id
+//	     FROM cart_schema.cart AS c
+//	     WHERE c.user_id = $1)
+func (q *Queries) GetCart(ctx context.Context, userID int32) ([]GetCartRow, error) {
+	rows, err := q.db.Query(ctx, GetCart, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCartRow
+	for rows.Next() {
+		var i GetCartRow
+		if err := rows.Scan(&i.CartItemID, &i.Quantity); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const RemoveCartItem = `-- name: RemoveCartItem :exec
+
+DELETE FROM cart_schema.cart_items AS ci
+WHERE ci.cart_id = 
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1)  -- 获取用户的购物车ID
+    AND ci.product_id = $2
+`
+
+type RemoveCartItemParams struct {
+	UserID    int32 `json:"userID"`
+	ProductID int32 `json:"productID"`
+}
+
+// 获取用户的购物车ID
+//
+//	DELETE FROM cart_schema.cart_items AS ci
+//	WHERE ci.cart_id =
+//	    (SELECT c.cart_id
+//	     FROM cart_schema.cart AS c
+//	     WHERE c.user_id = $1)  -- 获取用户的购物车ID
+//	    AND ci.product_id = $2
+func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) error {
+	_, err := q.db.Exec(ctx, RemoveCartItem, arg.UserID, arg.ProductID)
+	return err
+}
+
+const UpsertItem = `-- name: UpsertItem :exec
+INSERT INTO cart_schema.cart_items (cart_id, product_id, quantity, created_at, updated_at)
+VALUES (
+    (SELECT c.cart_id
+     FROM cart_schema.cart AS c
+     WHERE c.user_id = $1 LIMIT 1),  -- 获取用户的购物车ID
+    $2,   -- 商品ID
+    $3,   -- 商品数量
+    CURRENT_TIMESTAMP,  -- 创建时间
+    CURRENT_TIMESTAMP   -- 更新时间
 )
-WHERE user_id = $2
-RETURNING user_id, items, updated_at
+ON CONFLICT (cart_id, product_id)  -- 如果购物车ID和商品ID组合重复
+DO UPDATE SET 
+    quantity = cart_schema.cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
+    updated_at = CURRENT_TIMESTAMP
 `
 
-type RemoveItemParams struct {
-	Column1 string    `json:"column1"`
-	UserID  uuid.UUID `json:"userID"`
+type UpsertItemParams struct {
+	UserID    int32 `json:"userID"`
+	ProductID int32 `json:"productID"`
+	Quantity  int32 `json:"quantity"`
 }
 
-// RemoveItem
+// UpsertItem
 //
-//	UPDATE cart_schema.carts
-//	SET items = (
-//	    SELECT jsonb_agg(item)
-//	    FROM jsonb_array_elements(items) AS item
-//	    WHERE item->>'product_id' != $1::text
+//	INSERT INTO cart_schema.cart_items (cart_id, product_id, quantity, created_at, updated_at)
+//	VALUES (
+//	    (SELECT c.cart_id
+//	     FROM cart_schema.cart AS c
+//	     WHERE c.user_id = $1 LIMIT 1),  -- 获取用户的购物车ID
+//	    $2,   -- 商品ID
+//	    $3,   -- 商品数量
+//	    CURRENT_TIMESTAMP,  -- 创建时间
+//	    CURRENT_TIMESTAMP   -- 更新时间
 //	)
-//	WHERE user_id = $2
-//	RETURNING user_id, items, updated_at
-func (q *Queries) RemoveItem(ctx context.Context, arg RemoveItemParams) (CartSchemaCarts, error) {
-	row := q.db.QueryRow(ctx, RemoveItem, arg.Column1, arg.UserID)
-	var i CartSchemaCarts
-	err := row.Scan(&i.UserID, &i.Items, &i.UpdatedAt)
-	return i, err
-}
-
-const UpdateItem = `-- name: UpdateItem :one
-UPDATE cart_schema.carts
-SET items = CASE
-    -- 如果存在 product_id 为 $1 的商品，更新它的 quantity
-    WHEN items @> jsonb_build_array(jsonb_build_object('product_id', $1::text)) THEN
-        jsonb_set(
-            items,
-            '{0,quantity}',  -- 这里的路径为数组索引形式，假设 product_id 对应数组的第一个位置
-            $2::jsonb -- 更新 quantity 字段为 $2
-        )
-    -- 如果不存在，则向 items 数组中添加新的商品
-    ELSE
-        items || jsonb_build_array(
-            jsonb_build_object(
-                'product_id', $1::text,
-                'quantity', $2::int
-            )
-        )
-    END
-WHERE user_id = $3
-RETURNING user_id, items, updated_at
-`
-
-type UpdateItemParams struct {
-	Column1 string    `json:"column1"`
-	Column2 []byte    `json:"column2"`
-	UserID  uuid.UUID `json:"userID"`
-}
-
-// UpdateItem
-//
-//	UPDATE cart_schema.carts
-//	SET items = CASE
-//	    -- 如果存在 product_id 为 $1 的商品，更新它的 quantity
-//	    WHEN items @> jsonb_build_array(jsonb_build_object('product_id', $1::text)) THEN
-//	        jsonb_set(
-//	            items,
-//	            '{0,quantity}',  -- 这里的路径为数组索引形式，假设 product_id 对应数组的第一个位置
-//	            $2::jsonb -- 更新 quantity 字段为 $2
-//	        )
-//	    -- 如果不存在，则向 items 数组中添加新的商品
-//	    ELSE
-//	        items || jsonb_build_array(
-//	            jsonb_build_object(
-//	                'product_id', $1::text,
-//	                'quantity', $2::int
-//	            )
-//	        )
-//	    END
-//	WHERE user_id = $3
-//	RETURNING user_id, items, updated_at
-func (q *Queries) UpdateItem(ctx context.Context, arg UpdateItemParams) (CartSchemaCarts, error) {
-	row := q.db.QueryRow(ctx, UpdateItem, arg.Column1, arg.Column2, arg.UserID)
-	var i CartSchemaCarts
-	err := row.Scan(&i.UserID, &i.Items, &i.UpdatedAt)
-	return i, err
+//	ON CONFLICT (cart_id, product_id)  -- 如果购物车ID和商品ID组合重复
+//	DO UPDATE SET
+//	    quantity = cart_schema.cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
+//	    updated_at = CURRENT_TIMESTAMP
+func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) error {
+	_, err := q.db.Exec(ctx, UpsertItem, arg.UserID, arg.ProductID, arg.Quantity)
+	return err
 }

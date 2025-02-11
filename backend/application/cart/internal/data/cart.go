@@ -24,16 +24,22 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 
 // GetCart implements biz.CartRepo.
 func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartResp, error) {
+	cart, err := c.data.db.GetCart(ctx, int32(req.UserId))
+	if err != nil {
+		return nil, err
+	}
+	var cartItems []biz.CartItem
+	for _, item := range cart {
+		var cartitem biz.CartItem
+		cartitem.ProductId = uint32(item.CartItemID)
+		cartitem.Quantity = item.Quantity
+		cartItems = append(cartItems, cartitem)
+	}
 
 	return &biz.GetCartResp{
 		Cart: biz.Cart{
-			UserId: 1,
-			Items: []biz.CartItem{
-				{
-					ProductId: 1,
-					Quantity:  1,
-				},
-			},
+			UserId: req.UserId,
+			Items:  cartItems,
 		},
 	}, nil
 }
