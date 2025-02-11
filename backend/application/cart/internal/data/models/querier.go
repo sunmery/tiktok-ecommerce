@@ -9,17 +9,16 @@ import (
 )
 
 type Querier interface {
-	// 删除指定商品ID
-	//
+	//EmptyCart
 	//
 	//  DELETE FROM cart_schema.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1)
-	EmptyCart(ctx context.Context, userID int32) error
-	// 更新时间
-	//
+	//       WHERE c.user_id = $1)  -- 获取用户的购物车ID
+	//  RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
+	EmptyCart(ctx context.Context, userID int32) ([]CartSchemaCartItems, error)
+	//GetCart
 	//
 	//  SELECT ci.cart_item_id, ci.quantity
 	//  FROM cart_schema.cart_items AS ci
@@ -36,8 +35,9 @@ type Querier interface {
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
 	//       WHERE c.user_id = $1)  -- 获取用户的购物车ID
-	//      AND ci.product_id = $2
-	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) error
+	//      AND ci.product_id = $2  -- 删除指定商品ID
+	//  RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
+	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartSchemaCartItems, error)
 	//UpsertItem
 	//
 	//  INSERT INTO cart_schema.cart_items (cart_id, product_id, quantity, created_at, updated_at)
@@ -53,8 +53,9 @@ type Querier interface {
 	//  ON CONFLICT (cart_id, product_id)  -- 如果购物车ID和商品ID组合重复
 	//  DO UPDATE SET
 	//      quantity = cart_schema.cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
-	//      updated_at = CURRENT_TIMESTAMP
-	UpsertItem(ctx context.Context, arg UpsertItemParams) error
+	//      updated_at = CURRENT_TIMESTAMP  -- 更新时间
+	//  RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
+	UpsertItem(ctx context.Context, arg UpsertItemParams) (CartSchemaCartItems, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -2,6 +2,7 @@ package data
 
 import (
 	"backend/application/cart/internal/biz"
+	"backend/application/cart/internal/data/models"
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -46,7 +47,17 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 
 // RemoveCartItem implements biz.CartRepo.
 func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemReq) (*biz.RemoveCartItemResp, error) {
-	panic("unimplemented")
+	c.log.WithContext(ctx).Infof("RemoveCartItem request1 : %+v", req)
+	dreq, err := c.data.db.RemoveCartItem(ctx, models.RemoveCartItemParams{
+		UserID:    int32(req.UserId),
+		ProductID: int32(req.ProductId),
+	})
+	if err != nil || dreq == (models.CartSchemaCartItems{}) {
+		return nil, err
+	}
+	return &biz.RemoveCartItemResp{
+		Success: true,
+	}, nil
 }
 
 // UpsertItem implements biz.CartRepo.
