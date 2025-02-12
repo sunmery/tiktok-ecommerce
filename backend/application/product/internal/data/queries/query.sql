@@ -4,8 +4,9 @@ INSERT INTO products.products(name,
                               description,
                               picture,
                               price,
+                              category_id,
                               total_stock)
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: CreateCategories :one
@@ -53,10 +54,12 @@ RETURNING *;
 -- RETURNING *;
 
 -- name: ListProducts :many
+
 SELECT *
 FROM products.products
+WHERE ($1 = ANY(category_id))
 ORDER BY id
-OFFSET $1 LIMIT $2;
+OFFSET $2 LIMIT $3;
 
 -- name: GetProduct :one
 SELECT *
@@ -71,7 +74,7 @@ WHERE name ILIKE '%' || $1 || '%';
 
 -- name: UpdateProduct :one
 UPDATE products.products
-SET name = $1, description = $2, picture = $3, price = $4, categories = $5
+SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
 WHERE id = $6
 RETURNING *;
 
@@ -79,6 +82,4 @@ RETURNING *;
 DELETE FROM products.products
 WHERE id = @id
 RETURNING *;
-```
-
 

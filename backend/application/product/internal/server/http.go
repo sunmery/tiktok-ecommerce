@@ -7,7 +7,6 @@ import (
 	"backend/constants"
 	"context"
 	"fmt"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -19,16 +18,12 @@ import (
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
-	//semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
-<<<<<<< HEAD
-	product *service.ProductService,
-=======
 	product *service.ProductCatalogServiceService,
->>>>>>> main
 	ac *conf.Auth,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -43,7 +38,7 @@ func NewHTTPServer(c *conf.Server,
 		resource.WithAttributes(
 			// The service name used to display traces in backends
 			// serviceName,
-			//semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+			semconv.ServiceNameKey.String(constants.ProductServiceV1),
 			// attribute.String("exporter", "otlptracehttp"),
 			// attribute.String("environment", "dev"),
 			// attribute.Float64("float", 312.23),

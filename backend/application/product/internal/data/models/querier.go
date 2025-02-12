@@ -21,9 +21,10 @@ type Querier interface {
 	//                                description,
 	//                                picture,
 	//                                price,
+	//                                category_id,
 	//                                total_stock)
-	//  VALUES ($1, $2, $3, $4, $5)
-	//  RETURNING id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	CreateProduct(ctx context.Context, arg CreateProductParams) (ProductsProducts, error)
 	// 关联商品与分类
 	// 将商品1关联到分类2（Smartphones）
@@ -44,16 +45,22 @@ type Querier interface {
 	//          'ORDER_RESERVED')
 	//  RETURNING id, product_id, old_stock, new_stock, change_reason, created_at
 	CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error)
+	//DeleteProduct
+	//
+	//  DELETE FROM products.products
+	//  WHERE id = $1
+	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	DeleteProduct(ctx context.Context, id int32) error
 	//GetProduct
 	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	//  FROM products.products
 	//  WHERE id = $1
 	//  LIMIT 1
 	GetProduct(ctx context.Context, id int32) (ProductsProducts, error)
 	// 查询某分类下的所有商品
 	//
-	//  SELECT p.id, p.name, p.description, p.picture, p.price, p.total_stock, p.available_stock, p.reserved_stock, p.low_stock_threshold, p.allow_negative, p.created_at, p.updated_at, p.version
+	//  SELECT p.id, p.name, p.description, p.picture, p.price, p.category_id, p.total_stock, p.available_stock, p.reserved_stock, p.low_stock_threshold, p.allow_negative, p.created_at, p.updated_at, p.version
 	//  FROM products.products p
 	//           JOIN products.product_categories pc ON p.id = pc.product_id
 	//  WHERE pc.category_id = $1
@@ -64,25 +71,33 @@ type Querier interface {
 	// RETURNING *;
 	//
 	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//
+	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	//  FROM products.products
+	//  WHERE ($1 = ANY(category_id))
 	//  ORDER BY id
-	//  OFFSET $1 LIMIT $2
+	//  OFFSET $2 LIMIT $3
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ProductsProducts, error)
 	//SearchProducts
 	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	//  FROM products.products
 	//  WHERE name ILIKE '%' || $1 || '%'
 	SearchProducts(ctx context.Context, dollar_1 *string) ([]ProductsProducts, error)
+	//UpdateProduct
+	//
+	//  UPDATE products.products
+	//  SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
+	//  WHERE id = $6
+	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (ProductsProducts, error)
 	// 预留库存（下单时）
 	//
 	//  UPDATE products.products
 	//  SET reserved_stock = reserved_stock + 2
 	//  WHERE id = 1
-	//  RETURNING id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	UpdateProductsReservedStock(ctx context.Context) (ProductsProducts, error)
 }
 
 var _ Querier = (*Queries)(nil)
-

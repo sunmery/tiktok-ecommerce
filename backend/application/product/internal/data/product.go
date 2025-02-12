@@ -44,7 +44,8 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.Product) (*biz.
 	}, nil
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req biz.Product) (*biz.ProductReply, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.CreateProductReply, error) {
+	// 通过 data.DB(ctx) 自动获取事务或普通连接
 	db := p.data.DB(ctx)
 
 	product, err := db.CreateProduct(ctx, models.CreateProductParams{
@@ -52,11 +53,13 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.Product) (*biz.
 		Description: req.Description,
 		Picture:     req.Picture,
 		Price:       req.Price,
-		Categories:  req.Categories,
+		CategoryID:  req.CategoryId,
+		TotalStock:  req.TotalStock,
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	// 审计日志自动使用同一事务(相同的 ctx)
 	_, err = db.CreateAuditLog(ctx, models.CreateAuditLogParams{
 		Action:    "CREATE",
@@ -75,28 +78,90 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.Product) (*biz.
 			Description: product.Description,
 			Picture:     product.Picture,
 			Price:       product.Price,
-			Categories:  product.Categories,
+			CategoryId:  product.CategoryId,
 		},
 	}, nil
 }
 
-func (p productRepo) ListProducts(ctx context.Context, req biz.ListProductsReq) (*biz.ListProductsResp, error) {
+func (p *productRepo) ListProducts(ctx context.Context, req *biz.ListProductsReq) (*biz.ListProductsResp, error) {
 	products, err := p.data.db.ListProducts(ctx, models.ListProductsParams{
-		Page:     int64(req.Page),
-		PageSize: req.PageSize,
+		Offset: int64((req.Page - 1) * req.PageSize),
+		Limit:  int64(req.PageSize),
+		CategoryID: req.CategoryId,
 	})
 	if err != nil {
 		return nil, err
 	}
-	productsResp := make([]biz.Product, len(products))
+
+	productsResp := make([]*biz.Product, len(products))
 	for i, product := range products {
-		productsResp[i] = biz.Product{
+		productsResp[i] = &biz.Product{
 			Id:          uint32(product.ID),
 			Name:        product.Name,
 			Description: product.Description,
 			Picture:     product.Picture,
 			Price:       product.Price,
-			Categories:  product.Categories,
+			TotalStock: product.TotalStock,
+			AvailableStock: product.AvailableStock,
+			ReservedStock: product.ReservedStock,
+			LowStockThreshold: product.LowStockThreshold,
+			AllowNegative: product.AllowNegative,
+			CreatedAt: product.CreatedAt,
+			UpdatedAt: product.UpdatedAt,
+			Version: product.Version,
+		}
+	}
+	return &biz.ListProductsResp{
+		Product: productsResp,
+	}, nil
+}
+
+func (p *productRepo) GetProduct(ctx context.Context, id uint32) (*biz.GetProductResp, error) {
+	product, err := p.data.db.GetProduct(ctx, int32(id))
+	if err != nil {
+		return nil, err
+	}
+	return &biz.GetProductResp{Product: &biz.Product{
+		Id:          uint32(product.ID),
+		Name:        product.Name,
+		Description: product.Description,
+		Picture:     product.Picture,
+		Price:       product.Price,
+		CategoryId:  product.CategoryID,
+		TotalStock: product.TotalStock,
+		AvailableStock: product.AvailableStock,
+		ReservedStock: product.ReservedStock,
+		LowStockThreshold: product.LowStockThreshold,
+		AllowNegative: product.AllowNegative,
+		CreatedAt: product.CreatedAt,
+		UpdatedAt: product.UpdatedAt,
+		Version: product.Version,
+	}}, nil
+}
+
+func (p *productRepo) SearchProducts(ctx context.Context, req *biz.SearchProductsReq) (*biz.SearchProductsResp, error) {
+
+	products, err := p.data.db.SearchProducts(ctx, &req.Query)
+	if err != nil {
+		return nil, err
+	}
+	productsResp := make([]*biz.Product, len(products))
+	for i, product := range products {
+		productsResp[i] = &biz.Product{
+			Id:          uint32(product.ID),
+			Name:        product.Name,
+			Description: product.Description,
+			Picture:     product.Picture,
+			Price:       product.Price,
+			CategoryId:  product.CategoryID,
+			TotalStock: product.TotalStock,
+			AvailableStock: product.AvailableStock,
+			ReservedStock: product.ReservedStock,
+			LowStockThreshold: product.LowStockThreshold,
+			AllowNegative: product.AllowNegative,
+			CreatedAt: product.CreatedAt,
+			UpdatedAt: product.UpdatedAt,
+			Version: product.Version,
 		}
 	}
 	return &biz.SearchProductsResp{
@@ -104,42 +169,9 @@ func (p productRepo) ListProducts(ctx context.Context, req biz.ListProductsReq) 
 	}, nil
 }
 
-func (p productRepo) GetProduct(ctx context.Context, req biz.GetProductReq) (*biz.GetProductResp, error) {
-	productInfo, err := p.data.db.GetProduct(ctx, int32(req.Id))
-
-	if err != nil {
-		return nil, err
+func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {
+	return &productRepo{
+		data: data,
+		log:  log.NewHelper(logger),
 	}
-
-	return &biz.GetProductResp{
-		Product: biz.Product{
-			Id:          uint32(productInfo.ID),
-			Name:        productInfo.Name,
-			Description: productInfo.Description,
-			Picture:     productInfo.Picture,
-			Price:       productInfo.Price,
-			Categories:  productInfo.Categories,
-		},
-	}, nil
-}
-
-func (p productRepo) SearchProducts(ctx context.Context, req biz.SearchProductsReq) (*biz.SearchProductsResp, error) {
-	products, err := p.data.db.SearchProducts(ctx, &req.Query)
-	if err != nil {
-		return nil, err
-	}
-	productsResp := make([]biz.Product, len(products))
-	for i, product := range products {
-		productsResp[i] = biz.Product{
-			Id:          uint32(product.ID),
-			Name:        product.Name,
-			Description: product.Description,
-			Picture:     product.Picture,
-			Price:       product.Price,
-			Categories:  product.Categories,
-		}
-	}
-	return &biz.SearchProductsResp{
-		Products: productsResp,
-	}, nil
 }

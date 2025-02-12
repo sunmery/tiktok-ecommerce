@@ -23,9 +23,6 @@ type Data struct {
 	logger *log.Helper
 }
 
-func (d *Data) DB(ctx context.Context) any {
-	panic("unimplemented")
-}
 // 使用标准库的私有类型(包级唯一)避免冲突
 type contextTxKey struct{}
 

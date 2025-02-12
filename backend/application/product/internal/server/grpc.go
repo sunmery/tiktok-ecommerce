@@ -18,7 +18,7 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-	product *service.ProductService,
+	product *service.ProductCatalogServiceService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,

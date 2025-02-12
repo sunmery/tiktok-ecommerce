@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS products.products
     -- 价格信息
     price               REAL         NOT NULL CHECK (price >= 0),                          -- 商品价格（精确到小数点后2位，非负数）
 
+    -- 分类信息
+    category_id        INT[]        NOT NULL DEFAULT '{}',                                 -- 分类ID列表（数组类型，至少一个分类）
+
     -- 库存管理
     total_stock         INT          NOT NULL DEFAULT 0 CHECK (total_stock >= 0),          -- 总库存（物理库存，非负数）
     available_stock     INT GENERATED ALWAYS AS (total_stock - reserved_stock) STORED,     -- 可用库存（计算字段 = 总库存 - 预留库存）

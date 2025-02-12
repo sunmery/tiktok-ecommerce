@@ -6,7 +6,6 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/hashicorp/consul/api"
-	"log"
 )
 
 // NewRegistrar 使用Consul作为注册中心

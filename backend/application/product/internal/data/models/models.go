@@ -36,6 +36,7 @@ type ProductsProducts struct {
 	Description       string    `json:"description"`
 	Picture           string    `json:"picture"`
 	Price             float32   `json:"price"`
+	CategoryID        []int32   `json:"categoryID"`
 	TotalStock        int32     `json:"totalStock"`
 	AvailableStock    *int32    `json:"availableStock"`
 	ReservedStock     int32     `json:"reservedStock"`

@@ -8,5 +8,3 @@ import (
 var ProviderSet = wire.NewSet(NewProductService)
 
 
-
-
