@@ -22,6 +22,8 @@ type ProductsInventoryHistory struct {
 	OldStock     int32     `json:"oldStock"`
 	NewStock     int32     `json:"newStock"`
 	ChangeReason string    `json:"changeReason"`
+	Owner        string    `json:"owner"`
+	Username     string    `json:"username"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 

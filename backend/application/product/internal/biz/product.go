@@ -23,6 +23,26 @@ type Product struct {
 	Version           int32     `json:"version"`
 }
 
+type DeleteProductReq struct {
+	Id uint32 `json:"id"`
+
+	Owner    string `json:"owner"`
+	Username string `json:"username"`
+}
+
+type UpdateProductRequest struct {
+	Id          uint32	`json:"id"`
+	Name        string	`json:"name"`
+	Description string` json:"description"`
+	Picture     string	`json:"picture"`
+	Price       float32	`json:"price"`
+	CategoryId  []int32		`json:"categoryId"`
+	TotalStock        int32     `json:"totalStock"`
+
+	Owner    string `json:"owner"`
+	Username string `json:"username"`
+}
+
 type CreateProductRequest struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -35,7 +55,7 @@ type CreateProductRequest struct {
 	Username string `json:"username"`
 }
 
-type CreateProductReply struct {
+type ProductReply struct {
 	Product Product
 }
 
@@ -101,27 +121,17 @@ func (s *ProductUsecase) SearchProducts(ctx context.Context, req *SearchProducts
 	return resp, nil
 }
 
-func (s *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
+func (s *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*ProductReply, error) {
 	s.log.WithContext(ctx).Infof("CreateProduct %v", req)
 	return s.repo.CreateProduct(ctx, req)
 }
 
-func (s *ProductUsecase) UpdateProduct(ctx context.Context, req Product) (*ProductReply, error) {
+func (s *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*ProductReply, error) {
 	s.log.WithContext(ctx).Infof("UpdateProduct %v", req)
 	return s.repo.UpdateProduct(ctx, req)
 }
 
-func (s *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductReq) (*ProductReply, error) {
+func (s *ProductUsecase) DeleteProduct(ctx context.Context, req *DeleteProductReq) (*ProductReply, error) {
 	s.log.WithContext(ctx).Infof("DeleteProduct %v", req)
-	
-	if req.Id == 0 {
-		return nil, errors.New("product ID cannot be empty")
-	}
-
-	resp, err := s.repo.DeleteProduct(ctx, req)
-	if err != nil {
-		s.log.WithContext(ctx).Errorf("Failed to delete product: %v", err)
-		return resp, err
-	}
-	return resp, nil
+	return s.repo.DeleteProduct(ctx, req)
 }

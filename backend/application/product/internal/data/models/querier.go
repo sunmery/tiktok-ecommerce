@@ -9,6 +9,12 @@ import (
 )
 
 type Querier interface {
+	// 创建审计日志
+	//
+	//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
+	//  VALUES ($1, $2, $3, $4, $5)
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error)
 	// 创建分类数据
 	//
 	//  INSERT INTO products.categories (name, parent_id)
@@ -43,14 +49,14 @@ type Querier interface {
 	//          (SELECT total_stock FROM products.products WHERE id = $1),
 	//          (SELECT total_stock FROM products.products WHERE id = $1) - $2,
 	//          'ORDER_RESERVED')
-	//  RETURNING id, product_id, old_stock, new_stock, change_reason, created_at
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 	CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error)
 	//DeleteProduct
 	//
 	//  DELETE FROM products.products
 	//  WHERE id = $1
 	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-	DeleteProduct(ctx context.Context, id int32) error
+	DeleteProduct(ctx context.Context, id int32) (ProductsProducts, error)
 	//GetProduct
 	//
 	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
@@ -65,11 +71,7 @@ type Querier interface {
 	//           JOIN products.product_categories pc ON p.id = pc.product_id
 	//  WHERE pc.category_id = $1
 	GetProductCategories(ctx context.Context, categoryID int32) ([]ProductsProducts, error)
-	// -- name: CreateAuditLog :one
-	// INSERT INTO products.audit_log (action, product_id, owner, name)
-	// VALUES ($1, $2, $3, $4)
-	// RETURNING *;
-	//
+	//ListProducts
 	//
 	//
 	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
@@ -84,11 +86,18 @@ type Querier interface {
 	//  FROM products.products
 	//  WHERE name ILIKE '%' || $1 || '%'
 	SearchProducts(ctx context.Context, dollar_1 *string) ([]ProductsProducts, error)
+	// 更新审计日志
+	//
+	//  UPDATE products.inventory_history
+	//  SET change_reason = $1, new_stock = $2, owner = $3, username = $4
+	//  WHERE product_id = $5
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+	UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error)
 	//UpdateProduct
 	//
 	//  UPDATE products.products
-	//  SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
-	//  WHERE id = $6
+	//  SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5, total_stock = $6
+	//  WHERE id = $7
 	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (ProductsProducts, error)
 	// 预留库存（下单时）

@@ -4,7 +4,6 @@ import (
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"context"
-	"net/http"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -13,38 +12,75 @@ type productRepo struct {
 	log  *log.Helper
 }
 
-func (p *productRepo) DeleteProduct(ctx context.Context, req biz.DeleteProductReq) (*biz.ProductReply, error) {
-	_, err := p.data.db.DeleteProduct(ctx, models.DeleteProductParams{
-		ID: int32(req.Id),
+func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductReq) (*biz.ProductReply, error) {
+	db := p.data.DB(ctx)
+	
+	product,err := db.DeleteProduct(ctx, int32(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
+		ChangeReason:    "DELETE",
+		ProductID: int32(req.Id),
+		NewStock:  0,
+		Owner:     req.Owner,
+		Username:      req.Username,
 	})
 	if err != nil {
 		return nil, err
 	}
+	
 	return &biz.ProductReply{
-		Message: "OK",
-		Code:    http.StatusOK,
+		Product: biz.Product{
+			Id:          uint32(product.ID),
+			Name:        product.Name,
+		},
 	}, nil
 }
 
-func (p *productRepo) UpdateProduct(ctx context.Context, req biz.Product) (*biz.ProductReply, error) {
-	_, err := p.data.db.UpdateProduct(ctx, models.UpdateProductParams{
+func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.ProductReply, error) {
+	db := p.data.DB(ctx)
+	
+	product, err := db.UpdateProduct(ctx, models.UpdateProductParams{
 		ID:          int32(req.Id),
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     req.Picture,
 		Price:       req.Price,
-		Categories:  req.Categories,
+		CategoryID:  req.CategoryId,
+		TotalStock:  req.TotalStock,
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
+		ChangeReason:    "UPDATE",
+		ProductID: int32(req.Id),
+		NewStock:  req.TotalStock,
+		Owner:     req.Owner,
+		Username:      req.Username,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+
 	return &biz.ProductReply{
-		Message: "OK",
-		Code:    http.StatusOK,
+		Product: biz.Product{
+			Id:          uint32(product.ID),
+			Name:        product.Name,
+			Description: product.Description,
+			Picture:     product.Picture,
+			Price:       product.Price,
+			CategoryId:  product.CategoryID,
+			TotalStock: product.TotalStock,
+		},
 	}, nil
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.CreateProductReply, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.ProductReply, error) {
 	// 通过 data.DB(ctx) 自动获取事务或普通连接
 	db := p.data.DB(ctx)
 
@@ -62,23 +98,25 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 
 	// 审计日志自动使用同一事务(相同的 ctx)
 	_, err = db.CreateAuditLog(ctx, models.CreateAuditLogParams{
-		Action:    "CREATE",
+		ChangeReason:    "CREATE",
 		ProductID: product.ID,
+		NewStock:  product.TotalStock,
 		Owner:     req.Owner,
-		Name:      req.Username,
+		Username:      req.Username,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &biz.CreateProductReply{
+	return &biz.ProductReply{
 		Product: biz.Product{
 			Id:          uint32(product.ID),
 			Name:        product.Name,
 			Description: product.Description,
 			Picture:     product.Picture,
 			Price:       product.Price,
-			CategoryId:  product.CategoryId,
+			CategoryId:  product.CategoryID,
+			TotalStock: product.TotalStock,
 		},
 	}, nil
 }

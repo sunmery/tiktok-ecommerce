@@ -32,7 +32,7 @@ type ProductCatalogServiceHTTPServer interface {
 	GetProduct(context.Context, *GetProductReq) (*ProductReply, error)
 	ListProducts(context.Context, *ListProductsReq) (*ListProductsResp, error)
 	SearchProducts(context.Context, *SearchProductsReq) (*SearchProductsResp, error)
-	UpdateProduct(context.Context, *Product) (*ProductReply, error)
+	UpdateProduct(context.Context, *UpdateProductRequest) (*ProductReply, error)
 }
 
 func RegisterProductCatalogServiceHTTPServer(s *http.Server, srv ProductCatalogServiceHTTPServer) {
@@ -69,7 +69,7 @@ func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServic
 
 func _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in Product
+		var in UpdateProductRequest
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv ProductCatalogServic
 		}
 		http.SetOperation(ctx, OperationProductCatalogServiceUpdateProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UpdateProduct(ctx, req.(*Product))
+			return srv.UpdateProduct(ctx, req.(*UpdateProductRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -177,7 +177,7 @@ type ProductCatalogServiceHTTPClient interface {
 	GetProduct(ctx context.Context, req *GetProductReq, opts ...http.CallOption) (rsp *ProductReply, err error)
 	ListProducts(ctx context.Context, req *ListProductsReq, opts ...http.CallOption) (rsp *ListProductsResp, err error)
 	SearchProducts(ctx context.Context, req *SearchProductsReq, opts ...http.CallOption) (rsp *SearchProductsResp, err error)
-	UpdateProduct(ctx context.Context, req *Product, opts ...http.CallOption) (rsp *ProductReply, err error)
+	UpdateProduct(ctx context.Context, req *UpdateProductRequest, opts ...http.CallOption) (rsp *ProductReply, err error)
 }
 
 type ProductCatalogServiceHTTPClientImpl struct {
@@ -253,7 +253,7 @@ func (c *ProductCatalogServiceHTTPClientImpl) SearchProducts(ctx context.Context
 	return &out, nil
 }
 
-func (c *ProductCatalogServiceHTTPClientImpl) UpdateProduct(ctx context.Context, in *Product, opts ...http.CallOption) (*ProductReply, error) {
+func (c *ProductCatalogServiceHTTPClientImpl) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...http.CallOption) (*ProductReply, error) {
 	var out ProductReply
 	pattern := "/v1/product"
 	path := binding.EncodeURL(pattern, in, false)

@@ -9,6 +9,19 @@ INSERT INTO products.products(name,
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
+-- name: CreateAuditLog :one
+-- 创建审计日志
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
+
+-- name: UpdateAuditLog :one
+-- 更新审计日志
+UPDATE products.inventory_history
+SET change_reason = $1, new_stock = $2, owner = $3, username = $4
+WHERE product_id = $5
+RETURNING *;
+
 -- name: CreateCategories :one
 -- 创建分类数据
 INSERT INTO products.categories (name, parent_id)
@@ -48,10 +61,6 @@ VALUES ($1,
         'ORDER_RESERVED')
 RETURNING *;
 
--- -- name: CreateAuditLog :one
--- INSERT INTO products.audit_log (action, product_id, owner, name)
--- VALUES ($1, $2, $3, $4)
--- RETURNING *;
 
 -- name: ListProducts :many
 
@@ -74,11 +83,11 @@ WHERE name ILIKE '%' || $1 || '%';
 
 -- name: UpdateProduct :one
 UPDATE products.products
-SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
-WHERE id = $6
+SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5, total_stock = $6
+WHERE id = $7
 RETURNING *;
 
--- name: DeleteProduct :exec
+-- name: DeleteProduct :one
 DELETE FROM products.products
 WHERE id = @id
 RETURNING *;

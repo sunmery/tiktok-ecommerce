@@ -9,6 +9,47 @@ import (
 	"context"
 )
 
+const CreateAuditLog = `-- name: CreateAuditLog :one
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+`
+
+type CreateAuditLogParams struct {
+	ChangeReason string `json:"changeReason"`
+	ProductID    int32  `json:"productID"`
+	NewStock     int32  `json:"newStock"`
+	Owner        string `json:"owner"`
+	Username     string `json:"username"`
+}
+
+// 创建审计日志
+//
+//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
+//  VALUES ($1, $2, $3, $4, $5)
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error) {
+	row := q.db.QueryRow(ctx, CreateAuditLog,
+		arg.ChangeReason,
+		arg.ProductID,
+		arg.NewStock,
+		arg.Owner,
+		arg.Username,
+	)
+	var i ProductsInventoryHistory
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.OldStock,
+		&i.NewStock,
+		&i.ChangeReason,
+		&i.Owner,
+		&i.Username,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const CreateCategories = `-- name: CreateCategories :one
 INSERT INTO products.categories (name, parent_id)
 VALUES ($1, $2)
@@ -130,7 +171,7 @@ VALUES ($1,
         (SELECT total_stock FROM products.products WHERE id = $1),
         (SELECT total_stock FROM products.products WHERE id = $1) - $2,
         'ORDER_RESERVED')
-RETURNING id, product_id, old_stock, new_stock, change_reason, created_at
+RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 `
 
 type CreateProductInventoryHistoryParams struct {
@@ -148,7 +189,7 @@ type CreateProductInventoryHistoryParams struct {
 //          (SELECT total_stock FROM products.products WHERE id = $1),
 //          (SELECT total_stock FROM products.products WHERE id = $1) - $2,
 //          'ORDER_RESERVED')
-//  RETURNING id, product_id, old_stock, new_stock, change_reason, created_at
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 func (q *Queries) CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, CreateProductInventoryHistory, arg.Column1, arg.Column2)
 	var i ProductsInventoryHistory
@@ -158,12 +199,14 @@ func (q *Queries) CreateProductInventoryHistory(ctx context.Context, arg CreateP
 		&i.OldStock,
 		&i.NewStock,
 		&i.ChangeReason,
+		&i.Owner,
+		&i.Username,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const DeleteProduct = `-- name: DeleteProduct :exec
+const DeleteProduct = `-- name: DeleteProduct :one
 DELETE FROM products.products
 WHERE id = $1
 RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
@@ -174,9 +217,26 @@ RETURNING id, name, description, picture, price, category_id, total_stock, avail
 //  DELETE FROM products.products
 //  WHERE id = $1
 //  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-func (q *Queries) DeleteProduct(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, DeleteProduct, id)
-	return err
+func (q *Queries) DeleteProduct(ctx context.Context, id int32) (ProductsProducts, error) {
+	row := q.db.QueryRow(ctx, DeleteProduct, id)
+	var i ProductsProducts
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Picture,
+		&i.Price,
+		&i.CategoryID,
+		&i.TotalStock,
+		&i.AvailableStock,
+		&i.ReservedStock,
+		&i.LowStockThreshold,
+		&i.AllowNegative,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Version,
+	)
+	return i, err
 }
 
 const GetProduct = `-- name: GetProduct :one
@@ -264,7 +324,6 @@ func (q *Queries) GetProductCategories(ctx context.Context, categoryID int32) ([
 
 const ListProducts = `-- name: ListProducts :many
 
-
 SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 FROM products.products
 WHERE ($1 = ANY(category_id))
@@ -278,11 +337,7 @@ type ListProductsParams struct {
 	Limit      int64 `json:"limit"`
 }
 
-// -- name: CreateAuditLog :one
-// INSERT INTO products.audit_log (action, product_id, owner, name)
-// VALUES ($1, $2, $3, $4)
-// RETURNING *;
-//
+//ListProducts
 //
 //
 //  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
@@ -371,10 +426,53 @@ func (q *Queries) SearchProducts(ctx context.Context, dollar_1 *string) ([]Produ
 	return items, nil
 }
 
+const UpdateAuditLog = `-- name: UpdateAuditLog :one
+UPDATE products.inventory_history
+SET change_reason = $1, new_stock = $2, owner = $3, username = $4
+WHERE product_id = $5
+RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+`
+
+type UpdateAuditLogParams struct {
+	ChangeReason string `json:"changeReason"`
+	NewStock     int32  `json:"newStock"`
+	Owner        string `json:"owner"`
+	Username     string `json:"username"`
+	ProductID    int32  `json:"productID"`
+}
+
+// 更新审计日志
+//
+//  UPDATE products.inventory_history
+//  SET change_reason = $1, new_stock = $2, owner = $3, username = $4
+//  WHERE product_id = $5
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+func (q *Queries) UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error) {
+	row := q.db.QueryRow(ctx, UpdateAuditLog,
+		arg.ChangeReason,
+		arg.NewStock,
+		arg.Owner,
+		arg.Username,
+		arg.ProductID,
+	)
+	var i ProductsInventoryHistory
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.OldStock,
+		&i.NewStock,
+		&i.ChangeReason,
+		&i.Owner,
+		&i.Username,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const UpdateProduct = `-- name: UpdateProduct :one
 UPDATE products.products
-SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
-WHERE id = $6
+SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5, total_stock = $6
+WHERE id = $7
 RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 `
 
@@ -384,14 +482,15 @@ type UpdateProductParams struct {
 	Picture     string  `json:"picture"`
 	Price       float32 `json:"price"`
 	CategoryID  []int32 `json:"categoryID"`
+	TotalStock  int32   `json:"totalStock"`
 	ID          int32   `json:"id"`
 }
 
 //UpdateProduct
 //
 //  UPDATE products.products
-//  SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5
-//  WHERE id = $6
+//  SET name = $1, description = $2, picture = $3, price = $4, category_Id = $5, total_stock = $6
+//  WHERE id = $7
 //  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (ProductsProducts, error) {
 	row := q.db.QueryRow(ctx, UpdateProduct,
@@ -400,6 +499,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.Picture,
 		arg.Price,
 		arg.CategoryID,
+		arg.TotalStock,
 		arg.ID,
 	)
 	var i ProductsProducts

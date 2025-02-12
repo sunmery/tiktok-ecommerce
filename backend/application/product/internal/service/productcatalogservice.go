@@ -5,7 +5,6 @@ import (
 	"backend/application/product/internal/biz"
 	"backend/pkg/token"
 	"context"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -100,6 +99,10 @@ func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *p
 		return nil, err
 	}
 
+	// if req.Owner != payload.Owner || req.Username != payload.Name {
+	// 	return nil, errors.New("invalid token")
+	// }
+
 	p, cErr := s.pu.CreateProduct(ctx, &biz.CreateProductRequest{
 		Owner:       payload.Owner,
 		Username:    payload.Name,
@@ -107,7 +110,8 @@ func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *p
 		Description: req.Description,
 		Picture:     req.Picture,
 		Price:       req.Price,
-		Categories:  req.Categories,
+		CategoryId:  req.CategoryId,
+		TotalStock:  req.TotalStock,
 	})
 	if cErr != nil {
 		return nil, cErr
@@ -119,10 +123,73 @@ func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *p
 			Description: p.Product.Description,
 			Picture:     p.Product.Picture,
 			Price:       p.Product.Price,
-			Categories:  p.Product.Categories,
+			CategoryId:  p.Product.CategoryId,
+			TotalStock:  p.Product.TotalStock,
 		},
 	}, nil
 }
+
+func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.ProductReply, error) {
+	payload, err := token.ExtractPayload(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	p, cErr := s.pu.UpdateProduct(ctx, &biz.UpdateProductRequest{
+		Owner:       payload.Owner,
+		Username:    payload.Name,
+		Id:          req.Id,
+		Name:        req.Name,
+		Description: req.Description,
+		Picture:     req.Picture,
+		Price:       req.Price,
+		CategoryId:  req.CategoryId,
+		TotalStock:  req.TotalStock,
+	})
+	if cErr != nil {
+		return nil, cErr
+	}
+	return &pb.ProductReply{
+		Product: &pb.Product{
+			Id:          p.Product.Id,
+			Name:        p.Product.Name,
+			Description: p.Product.Description,
+			Picture:     p.Product.Picture,
+			Price:       p.Product.Price,
+			CategoryId:  p.Product.CategoryId,
+			TotalStock:  p.Product.TotalStock,
+		},
+	}, nil	
+}
+
+func (s *ProductCatalogServiceService) DeleteProduct(ctx context.Context, req *pb.DeleteProductReq) (*pb.ProductReply, error) {
+	payload, err := token.ExtractPayload(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	p, cErr := s.pu.DeleteProduct(ctx, &biz.DeleteProductReq{
+		Owner:       payload.Owner,
+		Username:    payload.Name,
+		Id:          req.Id,
+	})
+	if cErr != nil {
+		return nil, cErr
+	}
+	return &pb.ProductReply{
+		Product: &pb.Product{
+			Id:          p.Product.Id,
+			Name:        p.Product.Name,
+			Description: p.Product.Description,
+			Picture:     p.Product.Picture,
+			Price:       p.Product.Price,
+			CategoryId:  p.Product.CategoryId,
+			TotalStock:  p.Product.TotalStock,
+		},
+	}, nil
+}
+
+
 
 // func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, req *pb.Product) (*pb.ProductReply, error) {
 // 	payload, err := token.ExtractPayload(ctx)

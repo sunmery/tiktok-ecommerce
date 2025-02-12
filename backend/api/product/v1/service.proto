@@ -14,7 +14,7 @@ service ProductCatalogService {
       body: "*"
     };
   }
-  rpc UpdateProduct(Product) returns (ProductReply) {
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductReply) {
     option (google.api.http) = {
       patch: "/v1/product",
       body: "*"
@@ -82,7 +82,24 @@ message CreateProductRequest {
   string description = 4;
   string picture = 5;
   float price = 6;
-  repeated string categories = 7;
+  repeated int32 categoryId = 7;
+  int32 totalStock = 8;
+
+  string owner = 9;
+  string username = 10;
+}
+
+message UpdateProductRequest {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  string picture = 4;
+  float price = 5;
+  repeated int32 categoryId = 6;
+  int32 totalStock = 7;
+
+  string owner = 8;
+  string username = 9;
 }
 
 message ProductReply {
