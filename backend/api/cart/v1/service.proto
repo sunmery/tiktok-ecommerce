@@ -10,39 +10,40 @@ service CartService {
   //新增购物车商品
   rpc UpsertItem(UpsertItemReq) returns (UpsertItemResp) {
     option (google.api.http) = {
-      post: "/v1/carts",
+      post: "/v1/cart",
       body: "*"
     };
   }
   //获取购物车信息
   rpc GetCart(GetCartReq) returns (GetCartResp) {
     option (google.api.http) = {
-      get: "/v1/carts"
+      get: "/v1/cart"
     };
   }
   //清空购物车
   rpc EmptyCart(EmptyCartReq) returns (EmptyCartResp) {
     option (google.api.http) = {
-      delete: "/v1/carts"
+      delete: "/v1/cart"
     };
   }
   //删除购物车商品
   rpc RemoveCartItem(RemoveCartItemReq) returns (RemoveCartItemResp) {
     option (google.api.http) = {
-      delete: "/v1/carts/item/{product_id}"
+      delete: "/v1/cart/item/{product_id}"
     };
   }
 }
 // 购物车商品
 message CartItem {
-  uint32 product_id = 1;   // 商品ID
+  uint32 product_id = 1 [json_name = "product_id"]; // 商品ID
   int32 quantity = 2;       // 商品数量
 }
 
 // 新增购物车商品
 message UpsertItemReq {
-  uint32 user_id = 1;
-  CartItem item = 2;
+  string owner = 1;
+  string name = 2;
+  CartItem item = 3;
 }
 
 message UpsertItemResp {
@@ -51,7 +52,8 @@ message UpsertItemResp {
 
 // 清空购物车
 message EmptyCartReq {
-  uint32 user_id = 1;
+  string owner = 1;
+  string name = 2;
 }
 
 message EmptyCartResp {
@@ -60,7 +62,8 @@ message EmptyCartResp {
 
 // 获取购物车信息
 message GetCartReq {
-  uint32 user_id = 1;
+  string owner = 1;
+  string name = 2;
 }
 
 message GetCartResp {
@@ -69,14 +72,16 @@ message GetCartResp {
 
 // 购物车信息
 message Cart {
-  uint32 user_id = 1;       // 用户ID
-  repeated CartItem items = 2;   // 购物车商品列表
+  string owner = 1;
+  string name = 2;      // 用户ID
+  repeated CartItem items = 3;   // 购物车商品列表
 }
 
 // 删除购物车商品
 message RemoveCartItemReq {
-  uint32 user_id = 1;
-  uint32 product_id = 2;
+  string owner = 1;
+  string name = 2;
+  uint32 product_id = 3 [json_name = "product_id"];
 }
 message RemoveCartItemResp {
   bool success = 1;  // 操作是否成功

@@ -6,18 +6,21 @@ info:
     title: CartService API
     version: 0.0.1
 paths:
-    /v1/carts:
+    /v1/cart:
         get:
             tags:
                 - CartService
             description: 获取购物车信息
             operationId: CartService_GetCart
             parameters:
-                - name: userId
+                - name: owner
                   in: query
                   schema:
-                    type: integer
-                    format: uint32
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -61,11 +64,14 @@ paths:
             description: 清空购物车
             operationId: CartService_EmptyCart
             parameters:
-                - name: userId
+                - name: owner
                   in: query
                   schema:
-                    type: integer
-                    format: uint32
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -79,24 +85,27 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /v1/carts/item/{productId}:
+    /v1/cart/item/{product_id}:
         delete:
             tags:
                 - CartService
             description: 删除购物车商品
             operationId: CartService_RemoveCartItem
             parameters:
-                - name: productId
+                - name: product_id
                   in: path
                   required: true
                   schema:
                     type: integer
                     format: uint32
-                - name: userId
+                - name: owner
                   in: query
                   schema:
-                    type: integer
-                    format: uint32
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -115,9 +124,10 @@ components:
         Cart:
             type: object
             properties:
-                userId:
-                    type: integer
-                    format: uint32
+                owner:
+                    type: string
+                name:
+                    type: string
                 items:
                     type: array
                     items:
@@ -126,7 +136,7 @@ components:
         CartItem:
             type: object
             properties:
-                productId:
+                product_id:
                     type: integer
                     format: uint32
                 quantity:
@@ -175,9 +185,10 @@ components:
         UpsertItemReq:
             type: object
             properties:
-                userId:
-                    type: integer
-                    format: uint32
+                owner:
+                    type: string
+                name:
+                    type: string
                 item:
                     $ref: '#/components/schemas/CartItem'
             description: 新增购物车商品
