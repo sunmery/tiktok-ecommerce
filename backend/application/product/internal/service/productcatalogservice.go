@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/application/product/internal/biz"
+	"backend/pkg/token"
 	"context"
 
 	pb "backend/api/product/v1"
@@ -9,7 +10,7 @@ import (
 
 type ProductCatalogServiceService struct {
 	pb.UnimplementedProductCatalogServiceServer
-	pc *biz.ProductUsecase
+	pu *biz.ProductUsecase
 }
 
 func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, product *pb.Product) (*pb.ProductReply, error) {
@@ -18,7 +19,7 @@ func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, produc
 }
 
 func (s *ProductCatalogServiceService) SearchProducts(ctx context.Context, req *pb.SearchProductsReq) (*pb.SearchProductsResp, error) {
-	products, err := s.ps.SearchProducts(ctx, &biz.SearchProductsReq{Query: req.GetQuery()})
+	products, err := s.pu.SearchProducts(ctx, &biz.SearchProductsReq{Query: req.GetQuery()})
 	if err != nil {
 		return nil, err
 	}
@@ -39,17 +40,22 @@ func (s *ProductCatalogServiceService) SearchProducts(ctx context.Context, req *
 }
 
 func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductReply, error) {
-	p, err := s.ps.CreateProduct(ctx, &biz.CreateProductRequest{
-		Owner:       req.Owner,
-		Username:    req.Username,
+	payload, err := token.ExtractPayload(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	p, cErr := s.pu.CreateProduct(ctx, &biz.CreateProductRequest{
+		Owner:       payload.Owner,
+		Username:    payload.Name,
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     req.Picture,
 		Price:       req.Price,
 		Categories:  req.Categories,
 	})
-	if err != nil {
-		return nil, err
+	if cErr != nil {
+		return nil, cErr
 	}
 	return &pb.ProductReply{
 		Product: &pb.Product{
@@ -64,7 +70,7 @@ func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *p
 }
 
 func (s *ProductCatalogServiceService) ListProducts(ctx context.Context, req *pb.ListProductsReq) (*pb.ListProductsResp, error) {
-	list, err := s.ps.ListProducts(ctx, &biz.ListProductsReq{
+	list, err := s.pu.ListProducts(ctx, &biz.ListProductsReq{
 		Page:         uint(req.Page),
 		PageSize:     uint(req.PageSize),
 		CategoryName: req.CategoryName,
@@ -89,7 +95,7 @@ func (s *ProductCatalogServiceService) ListProducts(ctx context.Context, req *pb
 }
 
 func (s *ProductCatalogServiceService) GetProduct(ctx context.Context, req *pb.GetProductReq) (*pb.ProductReply, error) {
-	product, err := s.ps.GetProduct(ctx, req.Id)
+	product, err := s.pu.GetProduct(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +109,6 @@ func (s *ProductCatalogServiceService) GetProduct(ctx context.Context, req *pb.G
 	}}, nil
 }
 
-func NewServiceProductCatalogServiceService(ps *biz.ProductUsecase) *ProductCatalogServiceService {
-	return &ProductCatalogServiceService{ps: ps}
+func NewProductCatalogServiceService(ps *biz.ProductUsecase) *ProductCatalogServiceService {
+	return &ProductCatalogServiceService{pu: ps}
 }

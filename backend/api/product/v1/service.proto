@@ -7,28 +7,33 @@ import "google/api/annotations.proto";
 option go_package = "api/product/v1;v1";
 
 service ProductCatalogService {
+  rpc CreateProduct(CreateProductRequest) returns (ProductReply) {
+    option (google.api.http) = {
+      post: "/v1/product",
+      body: "*"
+    };
+  }
+  rpc UpdateProduct(Product) returns (ProductReply) {
+    option (google.api.http) = {
+      patch: "/v1/product",
+      body: "*"
+    };
+  }
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {
     option (google.api.http) = {
       get: "/v1/product/list"
     };
   }
-  rpc GetProduct(GetProductReq) returns (GetProductResp) {
+  rpc GetProduct(GetProductReq) returns (ProductReply) {
     option (google.api.http) = {
       get: "/v1/product/{id}"
     };
   }
   rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {
     option (google.api.http) = {
-      get: "/v1/product/{query}"
+      get: "/v1/product/search/{query}"
     };
   }
-}
-
-message ListProductsReq{
-  int32 page = 1;
-  int64 pageSize = 2;
-
-  string categoryName = 3;
 }
 
 message Product {
@@ -41,16 +46,31 @@ message Product {
   repeated string categories = 6;
 }
 
+message CreateProductRequest {
+  string name = 3;
+  string description = 4;
+  string picture = 5;
+  float price = 6;
+  repeated string categories = 7;
+}
+
+message ProductReply {
+  Product product = 1 ;
+}
+
+message ListProductsReq{
+  int32 page = 1;
+  int64 pageSize = 2 [json_name = "page_size"];
+
+  string categoryName = 3 [json_name = "category_name"];
+}
+
 message ListProductsResp {
   repeated Product products = 1;
 }
 
 message GetProductReq {
   uint32 id = 1;
-}
-
-message GetProductResp {
-  Product product = 1;
 }
 
 message SearchProductsReq {

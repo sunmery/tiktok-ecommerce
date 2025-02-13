@@ -1,8 +1,0 @@
-registryCenter:
-  # address: http://localhost:32080 # NodePort 外网可访问的Consul HTTP API地址
-  scheme: http
-  acl_token:
-  healthCheck: true
-
-configCenter:
-  address: localhost:8500
