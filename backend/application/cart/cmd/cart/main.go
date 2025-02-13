@@ -3,6 +3,7 @@ package main
 import (
 	"backend/application/cart/internal/conf"
 	"backend/application/cart/pkg"
+	"backend/constants"
 	"flag"
 	"fmt"
 	"os"
@@ -22,7 +23,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "ecommerce-cart-v1"
+	Name = constants.CartServiceV1
 	// Version 通过环境变量来替换
 	Version           string
 	flagconf          string

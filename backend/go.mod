@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/casdoor/casdoor-go-sdk v1.3.0
+	github.com/exaring/otelpgx v0.9.0
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-kratos/kratos/contrib/config/consul/v2 v2.0.0-20250127095200-20970020a5ef
