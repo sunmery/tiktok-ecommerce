@@ -10,7 +10,9 @@ import (
 
 type CartSchemaCart struct {
 	CartID    int32            `json:"cartID"`
-	UserID    int32            `json:"userID"`
+	Owner     string           `json:"owner"`
+	Name      string           `json:"name"`
+	CartName  string           `json:"cartName"`
 	Status    string           `json:"status"`
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`

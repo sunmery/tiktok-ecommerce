@@ -8,6 +8,11 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
+type cartRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
 func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 	return &cartRepo{
 		data: data,
@@ -17,7 +22,11 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 
 // EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
-	err := c.data.db.EmptyCart(ctx, int32(req.UserId))
+	err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
+		Owner:    req.Owner,
+		Name:     req.Name,
+		CartName: "cart",
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -28,22 +37,27 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 
 // GetCart implements biz.CartRepo.
 func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartResp, error) {
-	cart, err := c.data.db.GetCart(ctx, int32(req.UserId))
+	cart, err := c.data.db.GetCart(ctx, models.GetCartParams{
+		Owner:    req.Owner,
+		Name:     req.Name,
+		CartName: "cart",
+	})
 	if err != nil {
 		return nil, err
 	}
 	var cartItems []biz.CartItem
 	for _, item := range cart {
 		var cartitem biz.CartItem
-		cartitem.ProductId = uint32(item.CartItemID)
+		cartitem.ProductId = uint32(item.ProductID)
 		cartitem.Quantity = item.Quantity
 		cartItems = append(cartItems, cartitem)
 	}
 
 	return &biz.GetCartResp{
 		Cart: biz.Cart{
-			UserId: req.UserId,
-			Items:  cartItems,
+			Owner: req.Owner,
+			Name:  req.Name,
+			Items: cartItems,
 		},
 	}, nil
 }
@@ -52,7 +66,9 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemReq) (*biz.RemoveCartItemResp, error) {
 	c.log.WithContext(ctx).Infof("RemoveCartItem request1 : %+v", req)
 	dreq, err := c.data.db.RemoveCartItem(ctx, models.RemoveCartItemParams{
-		UserID:    int32(req.UserId),
+		Owner:     req.Owner,
+		Name:      req.Name,
+		CartName:  "cart",
 		ProductID: int32(req.ProductId),
 	})
 	if err != nil || dreq == (models.CartSchemaCartItems{}) {
@@ -67,7 +83,9 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 // UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
 	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
-		UserID:    int32(req.UserId),
+		Owner:     req.Owner,
+		Name:      req.Name,
+		CartName:  "cart",
 		ProductID: int32(req.Item.ProductId),
 		Quantity:  int32(req.Item.Quantity),
 	})

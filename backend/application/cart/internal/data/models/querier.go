@@ -15,26 +15,27 @@ type Querier interface {
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1)
-	EmptyCart(ctx context.Context, userID int32) error
+	//       WHERE c.owner = $1 AND c.name = $2 AND c.cart_name = $3)
+	EmptyCart(ctx context.Context, arg EmptyCartParams) error
 	//GetCart
 	//
-	//  SELECT ci.cart_item_id, ci.quantity
+	//  SELECT ci.product_id, ci.quantity
 	//  FROM cart_schema.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1)
-	GetCart(ctx context.Context, userID int32) ([]GetCartRow, error)
+	//       WHERE c.owner = $1 AND c.name = $2 AND c.cart_name = $3 LIMIT 1)
+	GetCart(ctx context.Context, arg GetCartParams) ([]GetCartRow, error)
 	// 获取用户的购物车ID
+	//
 	//
 	//
 	//  DELETE FROM cart_schema.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1)  -- 获取用户的购物车ID
-	//      AND ci.product_id = $2  -- 删除指定商品ID
+	//       WHERE c.owner = $1 AND c.name = $2 AND c.cart_name = $3 LIMIT 1)  -- 获取用户的购物车ID
+	//      AND ci.product_id = $4  -- 删除指定商品ID
 	//  RETURNING cart_item_id, cart_id, product_id, quantity, created_at, updated_at
 	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartSchemaCartItems, error)
 	//UpsertItem
@@ -43,9 +44,9 @@ type Querier interface {
 	//  VALUES (
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1 LIMIT 1),  -- 获取用户的购物车ID
-	//      $2,   -- 商品ID
-	//      $3,   -- 商品数量
+	//       WHERE c.owner = $1 AND c.name = $2 AND c.cart_name = $3 LIMIT 1),  -- 获取用户的购物车ID
+	//      $4,   -- 商品ID
+	//      $5,   -- 商品数量
 	//      CURRENT_TIMESTAMP,  -- 创建时间
 	//      CURRENT_TIMESTAMP   -- 更新时间
 	//  )
