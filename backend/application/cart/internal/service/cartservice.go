@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	pb "backend/api/cart/v1"
 	"backend/application/cart/internal/biz"
@@ -19,19 +18,9 @@ func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
 }
 
 func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemReq) (*pb.UpsertItemResp, error) {
-	fmt.Println("UpsertItem: ", req)
-	if req == nil {
-		return nil, errors.New("invalid request")
-	}
-	if req.Item == nil {
-		return nil, errors.New("Item is nil")
-	}
-	if req.Item.ProductId == 0 {
-		return nil, errors.New("ProductId is empty")
-	}
-
 	resp, err := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
-		UserId: req.UserId,
+		Owner: req.Owner,
+		Name:  req.Name,
 		Item: biz.CartItem{
 			ProductId: req.Item.ProductId,
 			Quantity:  req.Item.Quantity,
@@ -40,14 +29,14 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 	if err != nil {
 		return nil, errors.New("failed to upsert item")
 	}
-
 	return &pb.UpsertItemResp{
 		Success: resp.Success,
 	}, nil
 }
 func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
 	cart, err := s.cc.GetCart(ctx, &biz.GetCartReq{
-		UserId: req.UserId,
+		Owner: req.Owner,
+		Name:  req.Name,
 	})
 	if err != nil {
 		return nil, errors.New("failed to get cart")
@@ -59,19 +48,23 @@ func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*
 			Quantity:  item.Quantity,
 		}
 	}
-
 	return &pb.GetCartResp{
 		Cart: &pb.Cart{
-			UserId: cart.Cart.UserId,
-			Items:  items,
+			Owner: cart.Cart.Owner,
+			Name:  cart.Cart.Name,
+			Items: items,
 		},
 	}, nil
 }
 func (s *CartServiceService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq) (*pb.EmptyCartResp, error) {
 	resp, err := s.cc.EmptyCart(ctx, &biz.EmptyCartReq{
-		UserId: req.UserId,
+		Owner: req.Owner,
+		Name:  req.Name,
 	})
 	if err != nil {
+		return nil, errors.New("failed to empty cart")
+	}
+	if !resp.Success {
 		return nil, errors.New("failed to empty cart")
 	}
 	return &pb.EmptyCartResp{
@@ -80,7 +73,8 @@ func (s *CartServiceService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq
 }
 func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveCartItemReq) (*pb.RemoveCartItemResp, error) {
 	resp, err := s.cc.RemoveCartItem(ctx, &biz.RemoveCartItemReq{
-		UserId:    req.UserId,
+		Owner:     req.Owner,
+		Name:      req.Name,
 		ProductId: req.ProductId,
 	})
 	if err != nil {

@@ -6,8 +6,9 @@ type CartItem struct {
 }
 
 type UpsertItemReq struct {
-	UserId uint32   `json:"user_id"`
-	Item   CartItem `json:"item"`
+	Owner string   `json:"owner"`
+	Name  string   `json:"name"`
+	Item  CartItem `json:"item"`
 }
 
 type UpsertItemResp struct {
@@ -15,7 +16,8 @@ type UpsertItemResp struct {
 }
 
 type EmptyCartReq struct {
-	UserId uint32 `json:"user_id"`
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
 }
 
 type EmptyCartResp struct {
@@ -23,7 +25,8 @@ type EmptyCartResp struct {
 }
 
 type GetCartReq struct {
-	UserId uint32 `json:"user_id"`
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
 }
 
 type GetCartResp struct {
@@ -31,12 +34,14 @@ type GetCartResp struct {
 }
 
 type Cart struct {
-	UserId uint32     `json:"user_id"`
-	Items  []CartItem `json:"items"`
+	Owner string     `json:"owner"`
+	Name  string     `json:"name"`
+	Items []CartItem `json:"items"`
 }
 
 type RemoveCartItemReq struct {
-	UserId    uint32 `json:"user_id"`
+	Owner     string `json:"owner"`
+	Name      string `json:"name"`
 	ProductId uint32 `json:"product_id"`
 }
 
