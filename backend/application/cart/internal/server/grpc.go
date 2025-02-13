@@ -4,6 +4,7 @@ import (
 	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
 	"backend/application/cart/internal/service"
+	"backend/constants"
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 // NewGRPCServer new a gRPC server.
@@ -26,9 +28,9 @@ func NewGRPCServer(
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-		// The service name used to display traces in backends
-		// serviceName,
-		//semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+			// The service name used to display traces in backends
+			// serviceName,
+			semconv.ServiceNameKey.String(constants.CartServiceV1),
 		// attribute.String("exporter", "otlptracehttp"),
 		// attribute.String("environment", "dev"),
 		// attribute.Float64("float", 312.23),

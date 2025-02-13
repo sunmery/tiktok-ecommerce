@@ -4,6 +4,7 @@ import (
 	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
 	"backend/application/cart/internal/service"
+	"backend/constants"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -20,6 +21,7 @@ import (
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 // NewHTTPServer new an HTTP server.
@@ -37,9 +39,9 @@ func NewHTTPServer(c *conf.Server,
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-		// The service name used to display traces in backends
-		// serviceName,
-		//semconv.ServiceNameKey.String(obs.Trace.ServiceName),
+			// The service name used to display traces in backends
+			// serviceName,
+			semconv.ServiceNameKey.String(constants.CartServiceV1),
 		// attribute.String("exporter", "otlptracehttp"),
 		// attribute.String("environment", "dev"),
 		// attribute.Float64("float", 312.23),
