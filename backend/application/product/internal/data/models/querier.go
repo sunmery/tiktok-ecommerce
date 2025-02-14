@@ -11,8 +11,8 @@ import (
 type Querier interface {
 	// 创建审计日志
 	//
-	//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
-	//  VALUES ($1, $2, $3, $4, $5)
+	//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error)
 	// 创建分类数据
@@ -57,6 +57,11 @@ type Querier interface {
 	//  WHERE id = $1
 	//  RETURNING id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 	DeleteProduct(ctx context.Context, id int32) (ProductsProducts, error)
+	// 查询所有分类
+	//
+	//  SELECT id, name, parent_id, is_active, created_at
+	//  FROM products.categories
+	GetCategories(ctx context.Context) ([]ProductsCategories, error)
 	//GetProduct
 	//
 	//  SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
@@ -88,9 +93,22 @@ type Querier interface {
 	SearchProducts(ctx context.Context, dollar_1 *string) ([]ProductsProducts, error)
 	// 更新审计日志
 	//
-	//  UPDATE products.inventory_history
-	//  SET change_reason = $1, new_stock = $2, owner = $3, username = $4
-	//  WHERE product_id = $5
+	//  INSERT INTO products.inventory_history (
+	//      product_id,
+	//      change_reason,
+	//      new_stock,
+	//      owner,
+	//      username,
+	//      old_stock
+	//  )
+	//  VALUES (
+	//      $1,  -- product_id
+	//      $2,  -- change_reason
+	//      $3,  -- new_stock
+	//      $4,  -- owner
+	//      $5,  -- username
+	//      (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
+	//  )
 	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 	UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error)
 	//UpdateProduct

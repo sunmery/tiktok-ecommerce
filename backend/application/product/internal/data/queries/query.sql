@@ -11,15 +11,28 @@ RETURNING *;
 
 -- name: CreateAuditLog :one
 -- 创建审计日志
-INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: UpdateAuditLog :one
 -- 更新审计日志
-UPDATE products.inventory_history
-SET change_reason = $1, new_stock = $2, owner = $3, username = $4
-WHERE product_id = $5
+INSERT INTO products.inventory_history (
+    product_id, 
+    change_reason, 
+    new_stock, 
+    owner, 
+    username, 
+    old_stock
+)
+VALUES (
+    $1,  -- product_id
+    $2,  -- change_reason
+    $3,  -- new_stock
+    $4,  -- owner
+    $5,  -- username
+    (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
+)
 RETURNING *;
 
 -- name: CreateCategories :one
@@ -27,6 +40,12 @@ RETURNING *;
 INSERT INTO products.categories (name, parent_id)
 VALUES ($1, $2)
 RETURNING *;
+
+-- name: GetCategories :many
+-- 查询所有分类
+SELECT *
+FROM products.categories;
+
 
 -- name: CreateProductCategories :one
 -- 关联商品与分类

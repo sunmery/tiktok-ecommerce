@@ -10,8 +10,8 @@ import (
 )
 
 const CreateAuditLog = `-- name: CreateAuditLog :one
-INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 `
 
@@ -19,20 +19,22 @@ type CreateAuditLogParams struct {
 	ChangeReason string `json:"changeReason"`
 	ProductID    int32  `json:"productID"`
 	NewStock     int32  `json:"newStock"`
+	OldStock     int32  `json:"oldStock"`
 	Owner        string `json:"owner"`
 	Username     string `json:"username"`
 }
 
 // 创建审计日志
 //
-//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, owner, username)
-//  VALUES ($1, $2, $3, $4, $5)
+//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
+//  VALUES ($1, $2, $3, $4, $5, $6)
 //  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, CreateAuditLog,
 		arg.ChangeReason,
 		arg.ProductID,
 		arg.NewStock,
+		arg.OldStock,
 		arg.Owner,
 		arg.Username,
 	)
@@ -239,6 +241,41 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int32) (ProductsProducts
 	return i, err
 }
 
+const GetCategories = `-- name: GetCategories :many
+SELECT id, name, parent_id, is_active, created_at
+FROM products.categories
+`
+
+// 查询所有分类
+//
+//  SELECT id, name, parent_id, is_active, created_at
+//  FROM products.categories
+func (q *Queries) GetCategories(ctx context.Context) ([]ProductsCategories, error) {
+	rows, err := q.db.Query(ctx, GetCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductsCategories
+	for rows.Next() {
+		var i ProductsCategories
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ParentID,
+			&i.IsActive,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetProduct = `-- name: GetProduct :one
 SELECT id, name, description, picture, price, category_id, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
 FROM products.products
@@ -427,33 +464,59 @@ func (q *Queries) SearchProducts(ctx context.Context, dollar_1 *string) ([]Produ
 }
 
 const UpdateAuditLog = `-- name: UpdateAuditLog :one
-UPDATE products.inventory_history
-SET change_reason = $1, new_stock = $2, owner = $3, username = $4
-WHERE product_id = $5
+INSERT INTO products.inventory_history (
+    product_id, 
+    change_reason, 
+    new_stock, 
+    owner, 
+    username, 
+    old_stock
+)
+VALUES (
+    $1,  -- product_id
+    $2,  -- change_reason
+    $3,  -- new_stock
+    $4,  -- owner
+    $5,  -- username
+    (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
+)
 RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 `
 
 type UpdateAuditLogParams struct {
+	ProductID    int32  `json:"productID"`
 	ChangeReason string `json:"changeReason"`
 	NewStock     int32  `json:"newStock"`
 	Owner        string `json:"owner"`
 	Username     string `json:"username"`
-	ProductID    int32  `json:"productID"`
 }
 
 // 更新审计日志
 //
-//  UPDATE products.inventory_history
-//  SET change_reason = $1, new_stock = $2, owner = $3, username = $4
-//  WHERE product_id = $5
+//  INSERT INTO products.inventory_history (
+//      product_id,
+//      change_reason,
+//      new_stock,
+//      owner,
+//      username,
+//      old_stock
+//  )
+//  VALUES (
+//      $1,  -- product_id
+//      $2,  -- change_reason
+//      $3,  -- new_stock
+//      $4,  -- owner
+//      $5,  -- username
+//      (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
+//  )
 //  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
 func (q *Queries) UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, UpdateAuditLog,
+		arg.ProductID,
 		arg.ChangeReason,
 		arg.NewStock,
 		arg.Owner,
 		arg.Username,
-		arg.ProductID,
 	)
 	var i ProductsInventoryHistory
 	err := row.Scan(

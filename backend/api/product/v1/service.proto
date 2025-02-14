@@ -4,6 +4,7 @@ package product.service.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "api/product/v1;v1";
 
@@ -40,13 +41,55 @@ service ProductCatalogService {
       delete:"/v1/product"
     };
   }
+
+  rpc ListCategories (google.protobuf.Empty) returns (ListCategoriesResp){
+    option (google.api.http) = {
+      get:"/v1/categories/tree"
+    };
+  }
+  rpc CreateCategory (CreateCategoryReq) returns (CategoryReply){
+    option (google.api.http) = {
+      post:"/v1/categories"
+      body:"*"
+    };
+  }
+  rpc GetCategoryChildren(GetCategoryChildrenReq) returns (GetCategoryChildrenResp){
+    option (google.api.http) = {
+      get:"/v1/categories/children/{id}"
+    };
+  }
 }
 
-// message ListProductsReq{
-//   int32 page = 1 [(google.api.field_behavior) = REQUIRED];
-//   int64 pageSize = 2 [(google.api.field_behavior) = REQUIRED];
-//   string categoryName = 3;
-// }
+message CreateCategoryReq {
+  string name = 1;
+  int32 parentId = 3;
+}
+
+message CategoryReply {
+  Category category = 1;
+}
+
+message ListCategoriesResp {
+  repeated Category categories = 1;
+}
+
+message GetCategoryChildrenReq {
+  int32 id = 1;
+}
+
+message GetCategoryChildrenResp {
+  repeated Category categories = 1;
+}
+
+message Category {
+  int32 id = 1;
+  string name = 2;
+  int32 parentId = 4;
+  repeated Category children = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  bool isActive = 7;
+}
+
 message Product {
   uint32 id = 1;
   string name = 2;
