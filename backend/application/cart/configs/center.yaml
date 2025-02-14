@@ -1,0 +1,7 @@
+registryCenter:
+  address: 159.75.231.54:8500
+  scheme: http
+  healthCheck: true
+
+configCenter:
+  address: 159.75.231.54:8500
