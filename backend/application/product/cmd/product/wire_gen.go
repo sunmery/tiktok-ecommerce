@@ -32,9 +32,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, cons
 	}
 	productRepo := data.NewProductRepo(dataData, logger)
 	productUsecase := biz.NewProductUsecase(productRepo, logger)
-	productService := service.NewProductService(productUsecase)
-	grpcServer := server.NewGRPCServer(productService, confServer, observability, logger)
-	httpServer := server.NewHTTPServer(confServer, productService, auth, observability, logger)
+	productCatalogServiceService := service.NewProductService(productUsecase)
+	grpcServer := server.NewGRPCServer(productCatalogServiceService, confServer, observability, logger)
+	httpServer := server.NewHTTPServer(confServer, productCatalogServiceService, auth, observability, logger)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {

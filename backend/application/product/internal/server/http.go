@@ -7,6 +7,8 @@ import (
 	"backend/constants"
 	"context"
 	"fmt"
+
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -66,6 +68,7 @@ func NewHTTPServer(c *conf.Server,
 					return nil
 				}),
 			),
+			metadata.Server(),
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 			selector.Server(
 				jwt.Server(

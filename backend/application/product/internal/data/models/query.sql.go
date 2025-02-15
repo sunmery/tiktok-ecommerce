@@ -7,36 +7,36 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const CreateAuditLog = `-- name: CreateAuditLog :one
-INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, user_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 `
 
 type CreateAuditLogParams struct {
-	ChangeReason string `json:"changeReason"`
-	ProductID    int32  `json:"productID"`
-	NewStock     int32  `json:"newStock"`
-	OldStock     int32  `json:"oldStock"`
-	Owner        string `json:"owner"`
-	Username     string `json:"username"`
+	ChangeReason string    `json:"changeReason"`
+	ProductID    int32     `json:"productID"`
+	NewStock     int32     `json:"newStock"`
+	OldStock     int32     `json:"oldStock"`
+	UserID       uuid.UUID `json:"userID"`
 }
 
 // 创建审计日志
 //
-//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
-//  VALUES ($1, $2, $3, $4, $5, $6)
-//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, user_id)
+//  VALUES ($1, $2, $3, $4, $5)
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, CreateAuditLog,
 		arg.ChangeReason,
 		arg.ProductID,
 		arg.NewStock,
 		arg.OldStock,
-		arg.Owner,
-		arg.Username,
+		arg.UserID,
 	)
 	var i ProductsInventoryHistory
 	err := row.Scan(
@@ -45,8 +45,7 @@ func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) 
 		&i.OldStock,
 		&i.NewStock,
 		&i.ChangeReason,
-		&i.Owner,
-		&i.Username,
+		&i.UserID,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -173,7 +172,7 @@ VALUES ($1,
         (SELECT total_stock FROM products.products WHERE id = $1),
         (SELECT total_stock FROM products.products WHERE id = $1) - $2,
         'ORDER_RESERVED')
-RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 `
 
 type CreateProductInventoryHistoryParams struct {
@@ -191,7 +190,7 @@ type CreateProductInventoryHistoryParams struct {
 //          (SELECT total_stock FROM products.products WHERE id = $1),
 //          (SELECT total_stock FROM products.products WHERE id = $1) - $2,
 //          'ORDER_RESERVED')
-//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 func (q *Queries) CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, CreateProductInventoryHistory, arg.Column1, arg.Column2)
 	var i ProductsInventoryHistory
@@ -201,8 +200,7 @@ func (q *Queries) CreateProductInventoryHistory(ctx context.Context, arg CreateP
 		&i.OldStock,
 		&i.NewStock,
 		&i.ChangeReason,
-		&i.Owner,
-		&i.Username,
+		&i.UserID,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -468,27 +466,24 @@ INSERT INTO products.inventory_history (
     product_id, 
     change_reason, 
     new_stock, 
-    owner, 
-    username, 
+    user_id,
     old_stock
 )
 VALUES (
     $1,  -- product_id
     $2,  -- change_reason
     $3,  -- new_stock
-    $4,  -- owner
-    $5,  -- username
+    $4, -- user_id
     (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
 )
-RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 `
 
 type UpdateAuditLogParams struct {
-	ProductID    int32  `json:"productID"`
-	ChangeReason string `json:"changeReason"`
-	NewStock     int32  `json:"newStock"`
-	Owner        string `json:"owner"`
-	Username     string `json:"username"`
+	ProductID    int32     `json:"productID"`
+	ChangeReason string    `json:"changeReason"`
+	NewStock     int32     `json:"newStock"`
+	UserID       uuid.UUID `json:"userID"`
 }
 
 // 更新审计日志
@@ -497,26 +492,23 @@ type UpdateAuditLogParams struct {
 //      product_id,
 //      change_reason,
 //      new_stock,
-//      owner,
-//      username,
+//      user_id,
 //      old_stock
 //  )
 //  VALUES (
 //      $1,  -- product_id
 //      $2,  -- change_reason
 //      $3,  -- new_stock
-//      $4,  -- owner
-//      $5,  -- username
+//      $4, -- user_id
 //      (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
 //  )
-//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 func (q *Queries) UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error) {
 	row := q.db.QueryRow(ctx, UpdateAuditLog,
 		arg.ProductID,
 		arg.ChangeReason,
 		arg.NewStock,
-		arg.Owner,
-		arg.Username,
+		arg.UserID,
 	)
 	var i ProductsInventoryHistory
 	err := row.Scan(
@@ -525,8 +517,7 @@ func (q *Queries) UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) 
 		&i.OldStock,
 		&i.NewStock,
 		&i.ChangeReason,
-		&i.Owner,
-		&i.Username,
+		&i.UserID,
 		&i.CreatedAt,
 	)
 	return i, err

@@ -11,9 +11,9 @@ import (
 type Querier interface {
 	// 创建审计日志
 	//
-	//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
-	//  VALUES ($1, $2, $3, $4, $5, $6)
-	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+	//  INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, user_id)
+	//  VALUES ($1, $2, $3, $4, $5)
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (ProductsInventoryHistory, error)
 	// 创建分类数据
 	//
@@ -49,7 +49,7 @@ type Querier interface {
 	//          (SELECT total_stock FROM products.products WHERE id = $1),
 	//          (SELECT total_stock FROM products.products WHERE id = $1) - $2,
 	//          'ORDER_RESERVED')
-	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 	CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error)
 	//DeleteProduct
 	//
@@ -97,19 +97,17 @@ type Querier interface {
 	//      product_id,
 	//      change_reason,
 	//      new_stock,
-	//      owner,
-	//      username,
+	//      user_id,
 	//      old_stock
 	//  )
 	//  VALUES (
 	//      $1,  -- product_id
 	//      $2,  -- change_reason
 	//      $3,  -- new_stock
-	//      $4,  -- owner
-	//      $5,  -- username
+	//      $4, -- user_id
 	//      (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
 	//  )
-	//  RETURNING id, product_id, old_stock, new_stock, change_reason, owner, username, created_at
+	//  RETURNING id, product_id, old_stock, new_stock, change_reason, user_id, created_at
 	UpdateAuditLog(ctx context.Context, arg UpdateAuditLogParams) (ProductsInventoryHistory, error)
 	//UpdateProduct
 	//

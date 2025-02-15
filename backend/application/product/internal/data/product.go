@@ -4,7 +4,12 @@ import (
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"context"
+	"fmt"
+
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/metadata"
+	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type productRepo struct {
@@ -18,17 +23,29 @@ func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductR
 	db := p.data.DB(ctx)
 
 	product, err := db.DeleteProduct(ctx, int32(req.Id))
+
+
 	if err != nil {
 		return nil, err
+	}
+
+	var userID uuid.UUID
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userIDStr := md.Get("x-md-global-userid")
+		parsedUserID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+		userID = parsedUserID
 	}
 
 	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
 		ChangeReason: "DELETE",
 		NewStock:     0,
-		Owner:        req.Owner,
-		Username:     req.Username,
+		UserID:       userID,
 		ProductID:    int32(req.Id),
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +74,22 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 		return nil, err
 	}
 
+	
+	var userID uuid.UUID
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userIDStr := md.Get("x-md-global-userid")
+		parsedUserID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+		userID = parsedUserID
+	}
+
 	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
 		ChangeReason: "UPDATE",
 		ProductID:    int32(req.Id),
 		NewStock:     req.TotalStock,
-		Owner:        req.Owner,
-		Username:     req.Username,
+		UserID:       userID,
 	})
 	if err != nil {
 		return nil, err
@@ -85,6 +112,37 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	// 通过 data.DB(ctx) 自动获取事务或普通连接
 	db := p.data.DB(ctx)
 
+	// 生成分类树
+	resp, err := p.ListCategories(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	categoryTree := resp.Categories
+
+	// 将分类转换为 map，方便查找
+	categoryMap := make(map[uint32]*biz.Category)
+	var flatten func([]biz.Category)
+	flatten = func(categories []biz.Category) {
+		for _, cat := range categories {
+			categoryMap[cat.ID] = &cat
+			flatten(cat.Children) // 递归存储所有分类
+		}
+	}
+	flatten(categoryTree)
+
+	// 遍历商品的所有分类，检查是否都是叶子分类
+	for _, categoryID := range req.CategoryId {
+		category, exists := categoryMap[uint32(categoryID)]
+		if !exists {
+			return nil, fmt.Errorf("分类 ID %d 不存在", categoryID)
+		}
+
+		// 不是叶子分类则报错
+		if len(category.Children) > 0 {
+			return nil, fmt.Errorf("分类 ID %d 不是叶子分类，无法添加商品", categoryID)
+		}
+	}
+
 	product, err := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Name,
 		Description: req.Description,
@@ -97,14 +155,24 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		return nil, err
 	}
 
+	
+	var userID uuid.UUID
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userIDStr := md.Get("x-md-global-userid")
+		parsedUserID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+		userID = parsedUserID
+	}
+
 	// 审计日志自动使用同一事务(相同的 ctx)
 	_, err = db.CreateAuditLog(ctx, models.CreateAuditLogParams{
 		ChangeReason: "CREATE",
 		ProductID:    product.ID,
 		NewStock:     product.TotalStock,
 		OldStock:     product.TotalStock,
-		Owner:        req.Owner,
-		Username:     req.Username,
+		UserID:       userID,
 	})
 	if err != nil {
 		return nil, err

@@ -3,7 +3,6 @@ package service
 import (
 	pb "backend/api/product/v1"
 	"backend/application/product/internal/biz"
-	"backend/pkg/token"
 	"context"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -94,14 +93,8 @@ func (s *ProductCatalogServiceService) SearchProducts(ctx context.Context, req *
 }
 
 func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.ProductReply, error) {
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	p, cErr := s.pu.UpdateProduct(ctx, &biz.UpdateProductRequest{
-		Owner:       payload.Owner,
-		Username:    payload.Name,
 		Id:          req.Id,
 		Name:        req.Name,
 		Description: req.Description,
@@ -127,18 +120,8 @@ func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, req *p
 }
 
 func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductReply, error) {
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// if req.Owner != payload.Owner || req.Username != payload.Name {
-	// 	return nil, errors.New("invalid token")
-	// }
 
 	p, cErr := s.pu.CreateProduct(ctx, &biz.CreateProductRequest{
-		Owner:       payload.Owner,
-		Username:    payload.Name,
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     req.Picture,
@@ -165,14 +148,7 @@ func (s *ProductCatalogServiceService) CreateProduct(ctx context.Context, req *p
 
 
 func (s *ProductCatalogServiceService) DeleteProduct(ctx context.Context, req *pb.DeleteProductReq) (*pb.ProductReply, error) {
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	p, cErr := s.pu.DeleteProduct(ctx, &biz.DeleteProductReq{
-		Owner:       payload.Owner,
-		Username:    payload.Name,
 		Id:          req.Id,
 	})
 	if cErr != nil {
@@ -191,61 +167,3 @@ func (s *ProductCatalogServiceService) DeleteProduct(ctx context.Context, req *p
 	}, nil
 }
 
-
-
-// func (s *ProductCatalogServiceService) UpdateProduct(ctx context.Context, req *pb.Product) (*pb.ProductReply, error) {
-// 	payload, err := token.ExtractPayload(ctx)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	fmt.Printf("✅ req: %+v\n", req)
-//     fmt.Printf("✅ owner: %+v\n username: %+v\n", req.Owner, req.Username)
-
-// 	if req.Owner != payload.Owner || req.Username != payload.Name {
-// 		return nil, errors.New("invalid token")
-// 	}
-	
-// 	result, err := s.pc.UpdateProduct(ctx, biz.Product{ // Pass the address of the struct
-// 		Name:        req.Name,
-// 		Description: req.Description,
-// 		Picture:     req.Picture,
-// 		Price:       req.Price,
-// 		Categories:  req.Categories,
-// 		Id:          req.Id,
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &pb.ProductReply{
-// 		Message: result.Message,
-// 		Code:   result.Code,
-// 	}, nil
-// }
-
-// func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductReq) (*pb.ProductReply, error) {
-// 	payload, err := token.ExtractPayload(ctx)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	fmt.Printf("✅ req: %+v\n", req)
-//     fmt.Printf("✅ owner: %+v\n username: %+v\n", req.Owner, req.Username)
-
-// 	if req.Owner != payload.Owner || req.Username != payload.Name {
-// 		return nil, errors.New("invalid token")
-// 	}
-
-// 	result, err := s.pc.DeleteProduct(ctx, biz.DeleteProductReq{
-// 		Id: req.Id,
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &pb.ProductReply{
-// 		Message: result.Message,
-// 		Code:   result.Code,
-// 	}, nil
-// }
-
-// func (s *ProductCatalogServiceService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*pb.DeleteProductReply, error) {
-// 	return &pb.DeleteProductReply{}, nil
-// }

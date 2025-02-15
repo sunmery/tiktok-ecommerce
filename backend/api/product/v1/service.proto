@@ -127,9 +127,6 @@ message CreateProductRequest {
   float price = 6;
   repeated int32 categoryId = 7;
   int32 totalStock = 8;
-
-  string owner = 9;
-  string username = 10;
 }
 
 message UpdateProductRequest {
@@ -140,9 +137,6 @@ message UpdateProductRequest {
   float price = 5;
   repeated int32 categoryId = 6;
   int32 totalStock = 7;
-
-  string owner = 8;
-  string username = 9;
 }
 
 message ProductReply {
@@ -172,23 +166,7 @@ message SearchProductsResp {
   repeated Product results = 1;
 }
 
-// message CreateProductReq {
-//   string name = 1 [(google.api.field_behavior) = REQUIRED];
-//   string description = 2 [(google.api.field_behavior) = REQUIRED];
-//   string picture = 3 [(google.api.field_behavior) = REQUIRED];
-//   float price = 4 [(google.api.field_behavior) = REQUIRED];
-//   repeated string categories = 5 [(google.api.field_behavior) = REQUIRED];
-//   string owner = 6 [(google.api.field_behavior) = REQUIRED];
-//   string username = 7 [(google.api.field_behavior) = REQUIRED];
-// }
-// message ProductReply {
-//   string message = 1;
-//   int32 code = 2;
-// }
-
 message DeleteProductReq {
   uint32 id = 1 ;
-  string owner = 2 ;
-  string username = 3;
 }
 

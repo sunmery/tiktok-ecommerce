@@ -11,8 +11,8 @@ RETURNING *;
 
 -- name: CreateAuditLog :one
 -- 创建审计日志
-INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, owner, username)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO products.inventory_history(change_reason, product_id, new_stock, old_stock, user_id)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: UpdateAuditLog :one
@@ -21,16 +21,14 @@ INSERT INTO products.inventory_history (
     product_id, 
     change_reason, 
     new_stock, 
-    owner, 
-    username, 
+    user_id,
     old_stock
 )
 VALUES (
     $1,  -- product_id
     $2,  -- change_reason
     $3,  -- new_stock
-    $4,  -- owner
-    $5,  -- username
+    $4, -- user_id
     (SELECT total_stock FROM products.products WHERE id = $1)  -- old_stock
 )
 RETURNING *;

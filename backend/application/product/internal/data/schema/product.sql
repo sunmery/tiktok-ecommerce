@@ -59,7 +59,6 @@ CREATE TABLE IF NOT EXISTS products.inventory_history
     new_stock     INT         NOT NULL CHECK (new_stock >= 0),                      -- 变更后库存（非负数）
     change_reason VARCHAR(20) NOT NULL CHECK (change_reason IN ('PURCHASE', 'ADJUSTMENT', 'RETURN', 'ORDER_RESERVED',
                                                                 'ORDER_RELEASED')), -- 变更原因（枚举值）
-    owner        VARCHAR(50) NOT NULL CHECK (LENGTH(owner) >= 2),                  -- 组织名称（至少2个字符）
-    username      VARCHAR(50) NOT NULL CHECK (LENGTH(username) >= 2),               -- 操作人（至少2个字符）
+    user_id     UUID       NOT NULL,                                             -- 操作人ID
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()                                -- 创建时间（自动记录）
 );

@@ -6,6 +6,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ProductsCategories struct {
@@ -22,8 +24,7 @@ type ProductsInventoryHistory struct {
 	OldStock     int32     `json:"oldStock"`
 	NewStock     int32     `json:"newStock"`
 	ChangeReason string    `json:"changeReason"`
-	Owner        string    `json:"owner"`
-	Username     string    `json:"username"`
+	UserID       uuid.UUID `json:"userID"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 

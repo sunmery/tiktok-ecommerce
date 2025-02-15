@@ -107,14 +107,6 @@ paths:
                   schema:
                     type: integer
                     format: uint32
-                - name: owner
-                  in: query
-                  schema:
-                    type: string
-                - name: username
-                  in: query
-                  schema:
-                    type: string
             responses:
                 "200":
                     description: OK
@@ -288,10 +280,6 @@ components:
                 totalStock:
                     type: integer
                     format: int32
-                owner:
-                    type: string
-                username:
-                    type: string
         GetCategoryChildrenResp:
             type: object
             properties:
@@ -415,9 +403,5 @@ components:
                 totalStock:
                     type: integer
                     format: int32
-                owner:
-                    type: string
-                username:
-                    type: string
 tags:
     - name: ProductCatalogService

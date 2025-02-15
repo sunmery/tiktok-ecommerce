@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Product struct {
@@ -25,9 +27,7 @@ type Product struct {
 
 type DeleteProductReq struct {
 	Id uint32 `json:"id"`
-
-	Owner    string `json:"owner"`
-	Username string `json:"username"`
+	UserID uuid.UUID `json:"userId"`
 }
 
 type UpdateProductRequest struct {
@@ -38,9 +38,7 @@ type UpdateProductRequest struct {
 	Price       float32	`json:"price"`
 	CategoryId  []int32		`json:"categoryId"`
 	TotalStock        int32     `json:"totalStock"`
-
-	Owner    string `json:"owner"`
-	Username string `json:"username"`
+	UserID uuid.UUID `json:"userId"`
 }
 
 type CreateProductRequest struct {
@@ -50,9 +48,7 @@ type CreateProductRequest struct {
 	Price       float32  `json:"price"`
 	CategoryId []int32 `json:"categoryId"`
 	TotalStock  int32   `json:"totalStock"`
-
-	Owner    string `json:"owner"`
-	Username string `json:"username"`
+	UserID uuid.UUID `json:"userId"`
 }
 
 type ProductReply struct {
