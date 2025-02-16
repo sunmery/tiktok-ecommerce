@@ -4,7 +4,9 @@
 // - protoc             v5.29.3
 // source: v1/category.proto
 
-package categories
+// 定义包名，用于区分不同的服务模块。
+
+package category
 
 import (
 	context "context"
@@ -20,32 +22,40 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CategoryService_CreateCategory_FullMethodName      = "/api.categories.v1.CategoryService/CreateCategory"
-	CategoryService_GetCategory_FullMethodName         = "/api.categories.v1.CategoryService/GetCategory"
-	CategoryService_UpdateCategory_FullMethodName      = "/api.categories.v1.CategoryService/UpdateCategory"
-	CategoryService_DeleteCategory_FullMethodName      = "/api.categories.v1.CategoryService/DeleteCategory"
-	CategoryService_GetSubTree_FullMethodName          = "/api.categories.v1.CategoryService/GetSubTree"
-	CategoryService_GetCategoryPath_FullMethodName     = "/api.categories.v1.CategoryService/GetCategoryPath"
-	CategoryService_GetLeafCategories_FullMethodName   = "/api.categories.v1.CategoryService/GetLeafCategories"
-	CategoryService_GetClosureRelations_FullMethodName = "/api.categories.v1.CategoryService/GetClosureRelations"
-	CategoryService_UpdateClosureDepth_FullMethodName  = "/api.categories.v1.CategoryService/UpdateClosureDepth"
+	CategoryService_CreateCategory_FullMethodName      = "/api.category.v1.CategoryService/CreateCategory"
+	CategoryService_GetCategory_FullMethodName         = "/api.category.v1.CategoryService/GetCategory"
+	CategoryService_UpdateCategory_FullMethodName      = "/api.category.v1.CategoryService/UpdateCategory"
+	CategoryService_DeleteCategory_FullMethodName      = "/api.category.v1.CategoryService/DeleteCategory"
+	CategoryService_GetSubTree_FullMethodName          = "/api.category.v1.CategoryService/GetSubTree"
+	CategoryService_GetCategoryPath_FullMethodName     = "/api.category.v1.CategoryService/GetCategoryPath"
+	CategoryService_GetLeafCategories_FullMethodName   = "/api.category.v1.CategoryService/GetLeafCategories"
+	CategoryService_GetClosureRelations_FullMethodName = "/api.category.v1.CategoryService/GetClosureRelations"
+	CategoryService_UpdateClosureDepth_FullMethodName  = "/api.category.v1.CategoryService/UpdateClosureDepth"
 )
 
 // CategoryServiceClient is the client API for CategoryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 定义分类服务（CategoryService），提供对分类数据的操作接口。
 type CategoryServiceClient interface {
-	// 分类基础操作
+	// 创建分类
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
+	// 获取单个分类
 	GetCategory(ctx context.Context, in *GetCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
+	// 更新单个分类
+	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 删除分类及关联关系
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// 树形结构操作
+	// 获取分类的子树结构（树形结构操作）
 	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error)
+	// 获取分类的完整路径（从根节点到当前分类的路径）
 	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error)
+	// 获取所有叶子分类（三级分类）
 	GetLeafCategories(ctx context.Context, in *GetLeafCategoriesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error)
-	// 闭包关系操作
+	// 获取分类闭包关系（Closure Table 实现的层级关系）
 	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClosureRelation], error)
+	// 更新闭包关系深度（调整分类层级）
 	UpdateClosureDepth(ctx context.Context, in *UpdateClosureDepthRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -77,9 +87,9 @@ func (c *categoryServiceClient) GetCategory(ctx context.Context, in *GetCategory
 	return out, nil
 }
 
-func (c *categoryServiceClient) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error) {
+func (c *categoryServiceClient) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Category)
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CategoryService_UpdateCategory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -186,18 +196,26 @@ func (c *categoryServiceClient) UpdateClosureDepth(ctx context.Context, in *Upda
 // CategoryServiceServer is the server API for CategoryService service.
 // All implementations must embed UnimplementedCategoryServiceServer
 // for forward compatibility.
+//
+// 定义分类服务（CategoryService），提供对分类数据的操作接口。
 type CategoryServiceServer interface {
-	// 分类基础操作
+	// 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
+	// 获取单个分类
 	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
-	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error)
+	// 更新单个分类
+	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
+	// 删除分类及关联关系
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
-	// 树形结构操作
+	// 获取分类的子树结构（树形结构操作）
 	GetSubTree(*GetSubTreeRequest, grpc.ServerStreamingServer[Category]) error
+	// 获取分类的完整路径（从根节点到当前分类的路径）
 	GetCategoryPath(*GetCategoryPathRequest, grpc.ServerStreamingServer[Category]) error
+	// 获取所有叶子分类（三级分类）
 	GetLeafCategories(*GetLeafCategoriesRequest, grpc.ServerStreamingServer[Category]) error
-	// 闭包关系操作
+	// 获取分类闭包关系（Closure Table 实现的层级关系）
 	GetClosureRelations(*GetClosureRequest, grpc.ServerStreamingServer[ClosureRelation]) error
+	// 更新闭包关系深度（调整分类层级）
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCategoryServiceServer()
 }
@@ -215,7 +233,7 @@ func (UnimplementedCategoryServiceServer) CreateCategory(context.Context, *Creat
 func (UnimplementedCategoryServiceServer) GetCategory(context.Context, *GetCategoryRequest) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategory not implemented")
 }
-func (UnimplementedCategoryServiceServer) UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error) {
+func (UnimplementedCategoryServiceServer) UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCategory not implemented")
 }
 func (UnimplementedCategoryServiceServer) DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error) {
@@ -395,7 +413,7 @@ func _CategoryService_UpdateClosureDepth_Handler(srv interface{}, ctx context.Co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CategoryService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.categories.v1.CategoryService",
+	ServiceName: "api.category.v1.CategoryService",
 	HandlerType: (*CategoryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

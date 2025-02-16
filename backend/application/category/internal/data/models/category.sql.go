@@ -40,7 +40,7 @@ level_validation AS (
     effective_parent_id,
     parent_path,
     CASE
-      WHEN parent_level >= 3 THEN NULL
+      WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
       ELSE parent_level + 1
     END AS new_level
   FROM parent_info
@@ -58,7 +58,7 @@ insert_main AS (
     END,
     $2,   -- Name 参数
     $3,   -- SortOrder 参数
-    CASE WHEN lv.new_level = 3 THEN TRUE ELSE FALSE END
+    CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
   FROM level_validation lv
   WHERE lv.new_level IS NOT NULL
   RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
@@ -123,7 +123,7 @@ type CreateCategoryParams struct {
 //	    effective_parent_id,
 //	    parent_path,
 //	    CASE
-//	      WHEN parent_level >= 3 THEN NULL
+//	      WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
 //	      ELSE parent_level + 1
 //	    END AS new_level
 //	  FROM parent_info
@@ -141,7 +141,7 @@ type CreateCategoryParams struct {
 //	    END,
 //	    $2,   -- Name 参数
 //	    $3,   -- SortOrder 参数
-//	    CASE WHEN lv.new_level = 3 THEN TRUE ELSE FALSE END
+//	    CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
 //	  FROM level_validation lv
 //	  WHERE lv.new_level IS NOT NULL
 //	  RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
@@ -202,6 +202,30 @@ WHERE descendant IN (
 //	)
 func (q *Queries) DeleteCategory(ctx context.Context, id *int64) error {
 	_, err := q.db.Exec(ctx, DeleteCategory, id)
+	return err
+}
+
+const DeleteClosureRelations = `-- name: DeleteClosureRelations :exec
+
+DELETE FROM categories.category_closure
+WHERE descendant IN (
+    SELECT descendant
+    FROM categories.category_closure
+    WHERE ancestor = $1
+)
+`
+
+// 确保深度不超过 3
+// 删除指定分类及其所有后代节点的闭包关系
+//
+//	DELETE FROM categories.category_closure
+//	WHERE descendant IN (
+//	    SELECT descendant
+//	    FROM categories.category_closure
+//	    WHERE ancestor = $1
+//	)
+func (q *Queries) DeleteClosureRelations(ctx context.Context, categoryID *int64) error {
+	_, err := q.db.Exec(ctx, DeleteClosureRelations, categoryID)
 	return err
 }
 
@@ -307,13 +331,13 @@ func (q *Queries) GetClosureRelations(ctx context.Context, categoryID int64) ([]
 
 const GetLeafCategories = `-- name: GetLeafCategories :many
 SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-WHERE is_leaf = TRUE AND level = 3
+WHERE is_leaf = TRUE AND level = 4
 `
 
 // GetLeafCategories
 //
 //	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-//	WHERE is_leaf = TRUE AND level = 3
+//	WHERE is_leaf = TRUE AND level = 4
 func (q *Queries) GetLeafCategories(ctx context.Context) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetLeafCategories)
 	if err != nil {
@@ -430,6 +454,7 @@ WHERE descendant IN (
     FROM categories.category_closure
     WHERE ancestor = $2
 )
+AND depth + $1 <= 3
 `
 
 type UpdateClosureDepthParams struct {
@@ -446,7 +471,38 @@ type UpdateClosureDepthParams struct {
 //	    FROM categories.category_closure
 //	    WHERE ancestor = $2
 //	)
+//	AND depth + $1 <= 3
 func (q *Queries) UpdateClosureDepth(ctx context.Context, arg UpdateClosureDepthParams) error {
 	_, err := q.db.Exec(ctx, UpdateClosureDepth, arg.Delta, arg.CategoryID)
+	return err
+}
+
+const UpdateParentLeafStatus = `-- name: UpdateParentLeafStatus :exec
+UPDATE categories.categories
+SET
+    is_leaf = NOT EXISTS (
+        SELECT 1
+        FROM categories
+        WHERE parent_id = $1
+        LIMIT 1
+    ),
+    updated_at = NOW()
+WHERE id = $1
+`
+
+// 更新父分类的叶子节点状态
+//
+//	UPDATE categories.categories
+//	SET
+//	    is_leaf = NOT EXISTS (
+//	        SELECT 1
+//	        FROM categories
+//	        WHERE parent_id = $1
+//	        LIMIT 1
+//	    ),
+//	    updated_at = NOW()
+//	WHERE id = $1
+func (q *Queries) UpdateParentLeafStatus(ctx context.Context, parentID *int64) error {
+	_, err := q.db.Exec(ctx, UpdateParentLeafStatus, parentID)
 	return err
 }

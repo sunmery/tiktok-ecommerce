@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/category.proto
 
-package categories
+package category
 
 import (
 	context "context"
@@ -20,18 +20,22 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationCategoryServiceCreateCategory = "/api.categories.v1.CategoryService/CreateCategory"
-const OperationCategoryServiceDeleteCategory = "/api.categories.v1.CategoryService/DeleteCategory"
-const OperationCategoryServiceGetCategory = "/api.categories.v1.CategoryService/GetCategory"
-const OperationCategoryServiceUpdateCategory = "/api.categories.v1.CategoryService/UpdateCategory"
-const OperationCategoryServiceUpdateClosureDepth = "/api.categories.v1.CategoryService/UpdateClosureDepth"
+const OperationCategoryServiceCreateCategory = "/api.category.v1.CategoryService/CreateCategory"
+const OperationCategoryServiceDeleteCategory = "/api.category.v1.CategoryService/DeleteCategory"
+const OperationCategoryServiceGetCategory = "/api.category.v1.CategoryService/GetCategory"
+const OperationCategoryServiceUpdateCategory = "/api.category.v1.CategoryService/UpdateCategory"
+const OperationCategoryServiceUpdateClosureDepth = "/api.category.v1.CategoryService/UpdateClosureDepth"
 
 type CategoryServiceHTTPServer interface {
-	// CreateCategory 分类基础操作
+	// CreateCategory 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
+	// DeleteCategory 删除分类及关联关系
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
+	// GetCategory 获取单个分类
 	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
-	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error)
+	// UpdateCategory 更新单个分类
+	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
+	// UpdateClosureDepth 更新闭包关系深度（调整分类层级）
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 }
 
@@ -108,7 +112,7 @@ func _CategoryService_UpdateCategory0_HTTP_Handler(srv CategoryServiceHTTPServer
 		if err != nil {
 			return err
 		}
-		reply := out.(*Category)
+		reply := out.(*emptypb.Empty)
 		return ctx.Result(200, reply)
 	}
 }
@@ -164,7 +168,7 @@ type CategoryServiceHTTPClient interface {
 	CreateCategory(ctx context.Context, req *CreateCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
 	DeleteCategory(ctx context.Context, req *DeleteCategoryRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetCategory(ctx context.Context, req *GetCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
-	UpdateCategory(ctx context.Context, req *UpdateCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
+	UpdateCategory(ctx context.Context, req *UpdateCategoryRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	UpdateClosureDepth(ctx context.Context, req *UpdateClosureDepthRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
 
@@ -215,8 +219,8 @@ func (c *CategoryServiceHTTPClientImpl) GetCategory(ctx context.Context, in *Get
 	return &out, nil
 }
 
-func (c *CategoryServiceHTTPClientImpl) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...http.CallOption) (*Category, error) {
-	var out Category
+func (c *CategoryServiceHTTPClientImpl) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
 	pattern := "/v1/category/{id}"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationCategoryServiceUpdateCategory))

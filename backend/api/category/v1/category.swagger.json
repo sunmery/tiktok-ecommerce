@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "v1/category.proto",
+    "title": "定义包名，用于区分不同的服务模块。",
     "version": "version not set"
   },
   "tags": [
@@ -18,7 +18,7 @@
   "paths": {
     "/v1/category": {
       "post": {
-        "summary": "分类基础操作",
+        "summary": "创建分类",
         "operationId": "CategoryService_CreateCategory",
         "responses": {
           "200": {
@@ -51,6 +51,7 @@
     },
     "/v1/category/leaves": {
       "get": {
+        "summary": "获取所有叶子分类（三级分类）",
         "operationId": "CategoryService_GetLeafCategories",
         "responses": {
           "200": {
@@ -78,7 +79,7 @@
         "parameters": [
           {
             "name": "level",
-            "description": "固定传3",
+            "description": "固定传 3，表示获取三级分类（叶子分类）。",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -92,7 +93,7 @@
     },
     "/v1/category/{categoryId}/closure": {
       "get": {
-        "summary": "闭包关系操作",
+        "summary": "获取分类闭包关系（Closure Table 实现的层级关系）",
         "operationId": "CategoryService_GetClosureRelations",
         "responses": {
           "200": {
@@ -120,6 +121,7 @@
         "parameters": [
           {
             "name": "categoryId",
+            "description": "分类的唯一标识符，用于获取其闭包关系。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -131,6 +133,7 @@
         ]
       },
       "patch": {
+        "summary": "更新闭包关系深度（调整分类层级）",
         "operationId": "CategoryService_UpdateClosureDepth",
         "responses": {
           "200": {
@@ -150,6 +153,7 @@
         "parameters": [
           {
             "name": "categoryId",
+            "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -171,6 +175,7 @@
     },
     "/v1/category/{categoryId}/path": {
       "get": {
+        "summary": "获取分类的完整路径（从根节点到当前分类的路径）",
         "operationId": "CategoryService_GetCategoryPath",
         "responses": {
           "200": {
@@ -198,6 +203,7 @@
         "parameters": [
           {
             "name": "categoryId",
+            "description": "分类的唯一标识符，用于获取其完整路径。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -211,6 +217,7 @@
     },
     "/v1/category/{id}": {
       "get": {
+        "summary": "获取单个分类",
         "operationId": "CategoryService_GetCategory",
         "responses": {
           "200": {
@@ -229,6 +236,7 @@
         "parameters": [
           {
             "name": "id",
+            "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -240,6 +248,7 @@
         ]
       },
       "delete": {
+        "summary": "删除分类及关联关系",
         "operationId": "CategoryService_DeleteCategory",
         "responses": {
           "200": {
@@ -259,6 +268,7 @@
         "parameters": [
           {
             "name": "id",
+            "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -270,12 +280,14 @@
         ]
       },
       "put": {
+        "summary": "更新单个分类",
         "operationId": "CategoryService_UpdateCategory",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Category"
+              "type": "object",
+              "properties": {}
             }
           },
           "default": {
@@ -288,6 +300,7 @@
         "parameters": [
           {
             "name": "id",
+            "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -309,7 +322,7 @@
     },
     "/v1/category/{rootId}/subtree": {
       "get": {
-        "summary": "树形结构操作",
+        "summary": "获取分类的子树结构（树形结构操作）",
         "operationId": "CategoryService_GetSubTree",
         "responses": {
           "200": {
@@ -337,6 +350,7 @@
         "parameters": [
           {
             "name": "rootId",
+            "description": "根节点的 ID，用于获取其子树。",
             "in": "path",
             "required": true,
             "type": "string",
@@ -354,9 +368,11 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "新的分类名称。"
         }
-      }
+      },
+      "title": "更新分类请求"
     },
     "CategoryServiceUpdateClosureDepthBody": {
       "type": "object",
@@ -364,9 +380,10 @@
         "delta": {
           "type": "integer",
           "format": "int32",
-          "title": "深度变化值"
+          "title": "深度变化值（正数表示增加深度，负数表示减少深度）。"
         }
-      }
+      },
+      "title": "更新闭包关系深度请求"
     },
     "protobufAny": {
       "type": "object",
@@ -401,74 +418,89 @@
       "properties": {
         "id": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "分类的唯一标识符。"
         },
         "parentId": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "level": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "分类的层级（例如：1 表示一级分类，2 表示二级分类）。"
         },
         "path": {
           "type": "string",
-          "title": "ltree 序列化为字符串"
+          "title": "分类路径（ltree 序列化为字符串，用于快速查询层级关系）。"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "分类名称。"
         },
         "sortOrder": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "排序值，用于控制分类的显示顺序。"
         },
         "isLeaf": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "是否为叶子节点（没有子分类）。"
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "分类创建时间。"
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "分类最后更新时间。"
         }
       },
-      "title": "基础数据结构"
+      "title": "基础数据结构：分类（Category）"
     },
     "v1ClosureRelation": {
       "type": "object",
       "properties": {
         "ancestor": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "祖先分类的 ID。"
         },
         "descendant": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "后代分类的 ID。"
         },
         "depth": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "祖先与后代之间的层级深度（0 表示自身，1 表示直接子节点）。"
         }
-      }
+      },
+      "title": "数据结构：闭包关系（ClosureRelation）"
     },
     "v1CreateCategoryRequest": {
       "type": "object",
       "properties": {
         "parentId": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "分类名称。"
         },
         "sortOrder": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "排序值。"
         }
       },
-      "title": "请求/响应消息"
+      "title": "创建分类请求"
     }
   }
 }

@@ -29,7 +29,7 @@ level_validation AS (
     effective_parent_id,
     parent_path,
     CASE
-      WHEN parent_level >= 3 THEN NULL
+      WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
       ELSE parent_level + 1
     END AS new_level
   FROM parent_info
@@ -47,7 +47,7 @@ insert_main AS (
     END,
     $2,   -- Name 参数
     $3,   -- SortOrder 参数
-    CASE WHEN lv.new_level = 3 THEN TRUE ELSE FALSE END
+    CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
   FROM level_validation lv
   WHERE lv.new_level IS NOT NULL
   RETURNING *
@@ -116,7 +116,7 @@ ORDER BY cc.depth DESC;
 
 -- name: GetLeafCategories :many
 SELECT * FROM categories.categories
-WHERE is_leaf = TRUE AND level = 3;
+WHERE is_leaf = TRUE AND level = 4;
 
 -- name: GetClosureRelations :many
 SELECT * FROM categories.category_closure
@@ -129,4 +129,27 @@ WHERE descendant IN (
     SELECT descendant
     FROM categories.category_closure
     WHERE ancestor = @category_id
+)
+AND depth + @delta <= 3; -- 确保深度不超过 3
+
+-- 删除指定分类及其所有后代节点的闭包关系
+-- name: DeleteClosureRelations :exec
+DELETE FROM categories.category_closure
+WHERE descendant IN (
+    SELECT descendant
+    FROM categories.category_closure
+    WHERE ancestor = @category_id
 );
+
+-- 更新父分类的叶子节点状态
+-- name: UpdateParentLeafStatus :exec
+UPDATE categories.categories
+SET
+    is_leaf = NOT EXISTS (
+        SELECT 1
+        FROM categories
+        WHERE parent_id = @parent_id
+        LIMIT 1
+    ),
+    updated_at = NOW()
+WHERE id = @parent_id;

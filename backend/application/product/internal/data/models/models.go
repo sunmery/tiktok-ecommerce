@@ -7,17 +7,48 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ProductsProductAttributes struct {
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	Attributes []byte    `json:"attributes"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+type ProductsProductAudits struct {
+	ID         int64     `json:"id"`
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	OldStatus  int16     `json:"oldStatus"`
+	NewStatus  int16     `json:"newStatus"`
+	Reason     *string   `json:"reason"`
+	OperatorID int64     `json:"operatorID"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
+type ProductsProductImages struct {
+	ID         int64     `json:"id"`
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	Url        string    `json:"url"`
+	IsPrimary  bool      `json:"isPrimary"`
+	SortOrder  *int16    `json:"sortOrder"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
 type ProductsProducts struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Picture     string    `json:"picture"`
-	Price       float32   `json:"price"`
-	Stock       int32     `json:"stock"`
-	CategoryID  uuid.UUID `json:"categoryID"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID             int64              `json:"id"`
+	MerchantID     int64              `json:"merchantID"`
+	Name           string             `json:"name"`
+	Description    *string            `json:"description"`
+	Price          pgtype.Numeric     `json:"price"`
+	Stock          *int32             `json:"stock"`
+	Status         int16              `json:"status"`
+	CurrentAuditID *int64             `json:"currentAuditID"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	UpdatedAt      time.Time          `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }

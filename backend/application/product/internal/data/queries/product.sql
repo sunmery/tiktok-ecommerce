@@ -1,48 +1,115 @@
+-- 所有分片表必须：
+-- 1. 包含分片键列（merchant_id）
+-- 2. 主键必须包含分片键
+-- 3. 外键约束需要特殊处理（Citus 不支持跨节点外键）
+
+-- 创建商品主记录，返回生成的ID
+-- merchant_id 作为分片键，必须提供
 -- name: CreateProduct :one
 INSERT INTO products.products (name,
                                description,
-                               picture,
                                price,
                                stock,
-                               category_id)
-VALUES ($1, $2, $3, $4, $5,$6)
-RETURNING *;
+                               status,
+                               merchant_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, created_at, updated_at;
+
+-- name: UpdateProduct :exec
+-- 更新商品基础信息，使用乐观锁控制并发
+UPDATE products.products
+SET name        = $2,
+    description = $3,
+    price       = $4,
+    stock       = $5,
+    status      = $6,
+    updated_at  = NOW()
+WHERE id = $1
+  AND merchant_id = $7
+  AND updated_at = $8;
+-- 乐观锁版本控制
 
 -- name: GetProduct :one
-SELECT *
+-- 获取商品详情，包含软删除检查
+SELECT id,
+       name,
+       description,
+       price,
+       stock,
+       status,
+       merchant_id,
+       created_at,
+       updated_at
 FROM products.products
 WHERE id = $1
-LIMIT 1;
+  AND merchant_id = $2
+  AND deleted_at IS NULL;
 
--- name: ListProducts :many
-SELECT *
-FROM products.products
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2;
-
--- name: UpdateProduct :one
+-- name: SoftDeleteProduct :exec
+-- 软删除商品，设置删除时间戳
 UPDATE products.products
-SET name        = COALESCE($2, name),
-    description       = COALESCE($3, description),
-    picture       = COALESCE($4, picture),
-    price       = COALESCE($5, price),
-    stock       = COALESCE($6, stock),
-    category_id = COALESCE($7, category_id)
+SET deleted_at = NOW()
 WHERE id = $1
-RETURNING *;
+  AND merchant_id = $2;
 
--- name: DeleteProduct :exec
-DELETE
-FROM products.products
-WHERE id = $1;
+-- name: CreateProductImages :copyfrom
+INSERT INTO products.product_images (merchant_id, -- 新增分片键
+                                     product_id,
+                                     url,
+                                     is_primary,
+                                     sort_order)
+VALUES ($1, $2, $3, $4, $5);
 
--- name: LockProductStock :one
-SELECT stock
-FROM products.products
-WHERE id = $1
-    FOR UPDATE;
+-- name: GetProductImages :many
+-- 获取商品图片列表，按排序顺序返回
+SELECT *
+FROM products.product_images
+WHERE merchant_id = $1
+  AND product_id = $2 -- 查询必须包含分片键
+ORDER BY sort_order;
 
--- name: UpdateProductStock :exec
+-- 批量插入图片
+-- name: BulkCreateProductImages :exec
+INSERT INTO products.product_images
+    (merchant_id, product_id, url, is_primary, sort_order)
+SELECT m_id, p_id, u, is_p, s_ord
+FROM ROWS FROM (
+         unnest(@merchant_ids::bigint[]),
+         unnest(@product_ids::bigint[]),
+         unnest(@urls::text[]),
+         unnest(@is_primary::boolean[]),
+         unnest(@sort_orders::smallint[])
+         ) AS t(m_id, p_id, u, is_p, s_ord);
+
+
+-- name: CreateAuditRecord :one
+-- 创建审核记录，返回新记录ID
+INSERT INTO product_audits (product_id,
+                            merchant_id,
+                            old_status,
+                            new_status,
+                            reason,
+                            operator_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, created_at;
+
+
+-- name: UpdateProductStatus :exec
+-- 更新商品状态并记录当前审核ID
 UPDATE products.products
-SET stock = $2
-WHERE id = $1;
+SET status           = $2,
+    current_audit_id = $3,
+    updated_at       = NOW()
+WHERE id = $1
+  AND merchant_id = $4;
+
+-- name: GetLatestAudit :one
+-- 获取最新审核记录
+INSERT INTO products.product_audits (merchant_id, -- 新增分片键
+                                     product_id,
+                                     old_status,
+                                     new_status,
+                                     reason,
+                                     operator_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, created_at;
