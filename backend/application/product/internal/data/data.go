@@ -1,26 +1,37 @@
 package data
 
 import (
+	categoryv1 "backend/api/category/v1"
 	"backend/application/product/internal/conf"
 	"backend/application/product/internal/data/models"
+	"backend/constants"
 	"context"
 	"fmt"
 	"github.com/exaring/otelpgx"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/google/wire"
+	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo, NewDiscovery, NewCategoryClient)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
-	logger *log.Helper
+	db  *models.Queries
+	pgx *pgxpool.Pool
+	rdb *redis.Client
+	// mdb    *mongo.Database
+	logger         *log.Helper
+	categoryClient categoryv1.CategoryServiceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -31,6 +42,8 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	logger log.Logger,
+	categoryClient categoryv1.CategoryServiceClient,
+// mdb *mongo.Database,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -40,7 +53,41 @@ func NewData(
 		pgx:    db,                    // 数据库事务
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
+		// mdb:    mdb,
+		categoryClient: categoryClient,
 	}, cleanup, nil
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewCategoryClient 分类微服务
+func NewCategoryClient(d registry.Discovery, logger log.Logger) (categoryv1.CategoryServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.CategoryServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Server(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return categoryv1.NewCategoryServiceClient(conn), nil
 }
 
 // NewCache 缓存
@@ -58,7 +105,24 @@ func NewCache(c *conf.Data) *redis.Client {
 	return rdb
 }
 
-// NewDB 数据库
+// NewMongo 文档数据库
+// func NewMongo(conf *conf.Data, logger log.Logger) *mongo.Database {
+// 	helper := log.NewHelper(log.With(logger, "module", "user/data/mongo"))
+//
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	defer cancel()
+// 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.Mongo.Url))
+// 	if err != nil {
+// 		helper.Fatalf("failed opening connection to mongo: %v", err)
+// 	}
+// 	err = client.Ping(ctx, readpref.Primary())
+// 	if err != nil {
+// 		helper.Fatal(err)
+// 	}
+// 	return client.Database(conf.Mongo.Database, nil)
+// }
+
+// NewDB 关系型数据库
 func NewDB(c *conf.Data) *pgxpool.Pool {
 	cfg, err := pgxpool.ParseConfig(c.Database.Source)
 	if err != nil {
