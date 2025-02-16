@@ -1,23 +1,25 @@
 syntax = "proto3";
 
-package api.category.v1;
+package api.categories.v1;
 
-option go_package = "api/category/v1;category";
+option go_package = "api/categories/v1;categories";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 service CategoryService {
-  rpc GetCategoryTree(GetCategoryTreeRequest) returns (CategoryTree) {
-    option (google.api.http) = {
-      get: "/v1/category/tree"
-    };
-  }
-
+  // 分类基础操作
   rpc CreateCategory(CreateCategoryRequest) returns (Category) {
     option (google.api.http) = {
       post: "/v1/category"
       body: "*"
+    };
+  }
+
+  rpc GetCategory(GetCategoryRequest) returns (Category) {
+    option (google.api.http) = {
+      get: "/v1/category/{id}"
     };
   }
 
@@ -28,45 +30,102 @@ service CategoryService {
     };
   }
 
-  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryReply) {
+  rpc DeleteCategory(DeleteCategoryRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/category/{id}"
     };
   }
+
+  // 树形结构操作
+  rpc GetSubTree(GetSubTreeRequest) returns (stream Category) {
+    option (google.api.http) = {
+      get: "/v1/category/{root_id}/subtree"
+    };
+  }
+
+  rpc GetCategoryPath(GetCategoryPathRequest) returns (stream Category) {
+    option (google.api.http) = {
+      get: "/v1/category/{category_id}/path"
+    };
+  }
+
+  rpc GetLeafCategories(GetLeafCategoriesRequest) returns (stream Category) {
+    option (google.api.http) = {
+      get: "/v1/category/leaves"
+    };
+  }
+
+  // 闭包关系操作
+  rpc GetClosureRelations(GetClosureRequest) returns (stream ClosureRelation) {
+    option (google.api.http) = {
+      get: "/v1/category/{category_id}/closure"
+    };
+  }
+
+  rpc UpdateClosureDepth(UpdateClosureDepthRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/category/{category_id}/closure"
+      body: "*"
+    };
+  }
 }
 
-message CategoryTree {
-  repeated Category categories = 1;
-}
-
+// 基础数据结构
 message Category {
-  string id = 1;
-  string name = 2;
+  int64 id = 1;
+  int64 parent_id = 2;
   int32 level = 3;
-  repeated Category children = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
+  string path = 4;  // ltree 序列化为字符串
+  string name = 5;
+  int32 sort_order = 6;
+  bool is_leaf = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
 }
 
-message GetCategoryTreeRequest {
-  string query = 1;
+message ClosureRelation {
+  int64 ancestor = 1;
+  int64 descendant = 2;
+  int32 depth = 3;
 }
 
+// 请求/响应消息
 message CreateCategoryRequest {
-  string name = 1;
-  uint32 level = 2;
-  string parent_id = 3; // Optional parent category ID
+  int64 parent_id = 1;
+  string name = 2;
+  int32 sort_order = 3;
+}
+
+message GetCategoryRequest {
+  int64 id = 1;
 }
 
 message UpdateCategoryRequest {
-  string id = 1;
+  int64 id = 1;
   string name = 2;
 }
 
 message DeleteCategoryRequest {
-  string id = 1;
+  int64 id = 1;
 }
 
-message DeleteCategoryReply {
-  string message = 1;
+message GetSubTreeRequest {
+  int64 root_id = 1;
+}
+
+message GetCategoryPathRequest {
+  int64 category_id = 1;
+}
+
+message GetLeafCategoriesRequest {
+  int32 level = 1;  // 固定传3
+}
+
+message GetClosureRequest {
+  int64 category_id = 1;
+}
+
+message UpdateClosureDepthRequest {
+  int64 category_id = 1;
+  int32 delta = 2;  // 深度变化值
 }

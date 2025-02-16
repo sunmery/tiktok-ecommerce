@@ -17,9 +17,10 @@ import (
 var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
+	db  *models.Queries
+	pgx *pgxpool.Pool
+	rdb *redis.Client
+	// mdb    *mongo.Database
 	logger *log.Helper
 }
 
@@ -31,6 +32,7 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	logger log.Logger,
+// mdb *mongo.Database,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -40,6 +42,7 @@ func NewData(
 		pgx:    db,                    // 数据库事务
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
+		// mdb:    mdb,
 	}, cleanup, nil
 }
 
@@ -58,7 +61,24 @@ func NewCache(c *conf.Data) *redis.Client {
 	return rdb
 }
 
-// NewDB 数据库
+// NewMongo 文档数据库
+// func NewMongo(conf *conf.Data, logger log.Logger) *mongo.Database {
+// 	helper := log.NewHelper(log.With(logger, "module", "user/data/mongo"))
+//
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	defer cancel()
+// 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.Mongo.Url))
+// 	if err != nil {
+// 		helper.Fatalf("failed opening connection to mongo: %v", err)
+// 	}
+// 	err = client.Ping(ctx, readpref.Primary())
+// 	if err != nil {
+// 		helper.Fatal(err)
+// 	}
+// 	return client.Database(conf.Mongo.Database, nil)
+// }
+
+// NewDB 关系型数据库
 func NewDB(c *conf.Data) *pgxpool.Pool {
 	cfg, err := pgxpool.ParseConfig(c.Database.Source)
 	if err != nil {

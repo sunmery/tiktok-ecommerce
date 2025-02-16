@@ -1,33 +1,48 @@
 -- name: CreateProduct :one
-INSERT INTO products.item (
-  sku, name, description, category_paths,
-  main_image_url, image_gallery, price, status
-) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
-)
+INSERT INTO products.products (name,
+                               description,
+                               picture,
+                               price,
+                               stock,
+                               category_id)
+VALUES ($1, $2, $3, $4, $5,$6)
 RETURNING *;
 
 -- name: GetProduct :one
-SELECT * FROM products.item
-WHERE id = $1 LIMIT 1;
+SELECT *
+FROM products.products
+WHERE id = $1
+LIMIT 1;
+
+-- name: ListProducts :many
+SELECT *
+FROM products.products
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
 
 -- name: UpdateProduct :one
-UPDATE products.item SET
-  name = $2,
-  description = $3,
-  category_paths = $4,
-  main_image_url = $5,
-  image_gallery = $6,
-  price = $7,
-  status = $8,
-  updated_at = NOW()
+UPDATE products.products
+SET name        = COALESCE($2, name),
+    description       = COALESCE($3, description),
+    picture       = COALESCE($4, picture),
+    price       = COALESCE($5, price),
+    stock       = COALESCE($6, stock),
+    category_id = COALESCE($7, category_id)
 WHERE id = $1
 RETURNING *;
 
--- name: SearchCategory :many
-SELECT * FROM products.item
-WHERE category_paths @> '["5f8d04b3"]'::jsonb;
-
 -- name: DeleteProduct :exec
-DELETE FROM products.item
+DELETE
+FROM products.products
+WHERE id = $1;
+
+-- name: LockProductStock :one
+SELECT stock
+FROM products.products
+WHERE id = $1
+    FOR UPDATE;
+
+-- name: UpdateProductStock :exec
+UPDATE products.products
+SET stock = $2
 WHERE id = $1;

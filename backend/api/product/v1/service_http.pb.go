@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/service.proto
 
-package v1
+package product
 
 import (
 	context "context"
@@ -26,7 +26,7 @@ const OperationProductCatalogServiceSearchProducts = "/product.service.v1.Produc
 const OperationProductCatalogServiceUpdateProduct = "/product.service.v1.ProductCatalogService/UpdateProduct"
 
 type ProductCatalogServiceHTTPServer interface {
-	CreateProduct(context.Context, *CreateProductRequest) (*ProductReply, error)
+	CreateProduct(context.Context, *Product) (*ProductReply, error)
 	GetProduct(context.Context, *GetProductReq) (*ProductReply, error)
 	ListProducts(context.Context, *ListProductsReq) (*ListProductsResp, error)
 	SearchProducts(context.Context, *SearchProductsReq) (*SearchProductsResp, error)
@@ -44,7 +44,7 @@ func RegisterProductCatalogServiceHTTPServer(s *http.Server, srv ProductCatalogS
 
 func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in CreateProductRequest
+		var in Product
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServic
 		}
 		http.SetOperation(ctx, OperationProductCatalogServiceCreateProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CreateProduct(ctx, req.(*CreateProductRequest))
+			return srv.CreateProduct(ctx, req.(*Product))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -150,7 +150,7 @@ func _ProductCatalogService_SearchProducts0_HTTP_Handler(srv ProductCatalogServi
 }
 
 type ProductCatalogServiceHTTPClient interface {
-	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *ProductReply, err error)
+	CreateProduct(ctx context.Context, req *Product, opts ...http.CallOption) (rsp *ProductReply, err error)
 	GetProduct(ctx context.Context, req *GetProductReq, opts ...http.CallOption) (rsp *ProductReply, err error)
 	ListProducts(ctx context.Context, req *ListProductsReq, opts ...http.CallOption) (rsp *ListProductsResp, err error)
 	SearchProducts(ctx context.Context, req *SearchProductsReq, opts ...http.CallOption) (rsp *SearchProductsResp, err error)
@@ -165,7 +165,7 @@ func NewProductCatalogServiceHTTPClient(client *http.Client) ProductCatalogServi
 	return &ProductCatalogServiceHTTPClientImpl{client}
 }
 
-func (c *ProductCatalogServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...http.CallOption) (*ProductReply, error) {
+func (c *ProductCatalogServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *Product, opts ...http.CallOption) (*ProductReply, error) {
 	var out ProductReply
 	pattern := "/v1/product"
 	path := binding.EncodeURL(pattern, in, false)

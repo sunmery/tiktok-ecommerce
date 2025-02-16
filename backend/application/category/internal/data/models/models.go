@@ -6,20 +6,24 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
+// 商品分类主表（ltree路径+闭包表双重优化）
 type CategoriesCategories struct {
-	ID        uuid.UUID `json:"id"`
+	ID        int64     `json:"id"`
+	ParentID  int64     `json:"parent_id"`
+	Level     int16     `json:"level"`
+	Path      string    `json:"path"`
 	Name      string    `json:"name"`
-	Level     int32     `json:"level"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	SortOrder int16     `json:"sort_order"`
+	IsLeaf    bool      `json:"is_leaf"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// 分类闭包关系表（存储所有层级关系）
 type CategoriesCategoryClosure struct {
-	Ancestor   uuid.UUID `json:"ancestor"`
-	Descendant uuid.UUID `json:"descendant"`
-	Depth      int32     `json:"depth"`
+	Ancestor   int64 `json:"ancestor"`
+	Descendant int64 `json:"descendant"`
+	Depth      int16 `json:"depth"`
 }

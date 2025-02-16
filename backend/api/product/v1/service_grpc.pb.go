@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/service.proto
 
-package v1
+package product
 
 import (
 	context "context"
@@ -30,7 +30,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductCatalogServiceClient interface {
-	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductReply, error)
+	CreateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error)
 	UpdateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error)
 	ListProducts(ctx context.Context, in *ListProductsReq, opts ...grpc.CallOption) (*ListProductsResp, error)
 	GetProduct(ctx context.Context, in *GetProductReq, opts ...grpc.CallOption) (*ProductReply, error)
@@ -45,7 +45,7 @@ func NewProductCatalogServiceClient(cc grpc.ClientConnInterface) ProductCatalogS
 	return &productCatalogServiceClient{cc}
 }
 
-func (c *productCatalogServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductReply, error) {
+func (c *productCatalogServiceClient) CreateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProductReply)
 	err := c.cc.Invoke(ctx, ProductCatalogService_CreateProduct_FullMethodName, in, out, cOpts...)
@@ -99,7 +99,7 @@ func (c *productCatalogServiceClient) SearchProducts(ctx context.Context, in *Se
 // All implementations must embed UnimplementedProductCatalogServiceServer
 // for forward compatibility.
 type ProductCatalogServiceServer interface {
-	CreateProduct(context.Context, *CreateProductRequest) (*ProductReply, error)
+	CreateProduct(context.Context, *Product) (*ProductReply, error)
 	UpdateProduct(context.Context, *Product) (*ProductReply, error)
 	ListProducts(context.Context, *ListProductsReq) (*ListProductsResp, error)
 	GetProduct(context.Context, *GetProductReq) (*ProductReply, error)
@@ -114,7 +114,7 @@ type ProductCatalogServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProductCatalogServiceServer struct{}
 
-func (UnimplementedProductCatalogServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*ProductReply, error) {
+func (UnimplementedProductCatalogServiceServer) CreateProduct(context.Context, *Product) (*ProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
 func (UnimplementedProductCatalogServiceServer) UpdateProduct(context.Context, *Product) (*ProductReply, error) {
@@ -151,7 +151,7 @@ func RegisterProductCatalogServiceServer(s grpc.ServiceRegistrar, srv ProductCat
 }
 
 func _ProductCatalogService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateProductRequest)
+	in := new(Product)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func _ProductCatalogService_CreateProduct_Handler(srv interface{}, ctx context.C
 		FullMethod: ProductCatalogService_CreateProduct_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServiceServer).CreateProduct(ctx, req.(*CreateProductRequest))
+		return srv.(ProductCatalogServiceServer).CreateProduct(ctx, req.(*Product))
 	}
 	return interceptor(ctx, in, info, handler)
 }

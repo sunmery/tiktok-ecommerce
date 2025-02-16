@@ -39,7 +39,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateProductRequest"
+              "$ref": "#/definitions/v1Product"
             }
           }
         ],
@@ -213,30 +213,6 @@
         }
       }
     },
-    "v1CreateProductRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "picture": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number",
-          "format": "float"
-        },
-        "categories": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "v1ListProductsResp": {
       "type": "object",
       "properties": {
@@ -269,11 +245,18 @@
           "type": "number",
           "format": "float"
         },
-        "categories": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "stock": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "categoryID": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
         }
       }
     },

@@ -1,45 +1,67 @@
 package biz
 
 import (
-	"github.com/google/uuid"
+	"context"
+	"errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"time"
+)
+
+var (
+	ErrInvalidparentIdArgument = errors.New("category: invalid parent_id argument")
 )
 
 // Category 分类
 type Category struct {
-	ID        uuid.UUID
-	Name      string
+	ID        int64
+	ParentID  int64
 	Level     int
-	ParentID  string
-	Children  []*Category
+	Path      string
+	Name      string
+	SortOrder int
+	IsLeaf    bool
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-type GetCategoryTreeRequest struct {
-	Query string
-}
-
-type CategoryTree struct {
-	Category []Category
-}
-
-type UpdateCategoryRequest struct {
-	ID   string
-	Name string
-}
-
-type DeleteCategoryRequest struct {
-	ID string
-}
-
 type DeleteCategoryReply struct {
-	Message string
+	Success bool
 }
 
-type CreateCategoryRequest struct {
-	Name     string
-	Level    uint32
-	ParentID *string
-	// Children  []*Category
+type CategoryRepo interface {
+	CreateCategory(ctx context.Context, req *Category) (*Category, error)
+	UpdateCategory(ctx context.Context, req *Category) (*Category, error)
+	DeleteCategory(ctx context.Context, id string) (*DeleteCategoryReply, error)
+	GetCategoryTree(ctx context.Context, id uint32) ([]*Category, error)
+}
+
+type CategoryUsecase struct {
+	repo CategoryRepo
+	log  *log.Helper
+}
+
+func NewCategoryUsecase(repo CategoryRepo, logger log.Logger) *CategoryUsecase {
+	return &CategoryUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
+}
+
+func (uc *CategoryUsecase) CreateCategory(ctx context.Context, req *Category) (*Category, error) {
+	uc.log.WithContext(ctx).Infof("CreateCategory request: %+v", req)
+	return uc.repo.CreateCategory(ctx, req)
+}
+
+func (uc *CategoryUsecase) DeleteCategory(ctx context.Context, id string) (*DeleteCategoryReply, error) {
+	uc.log.WithContext(ctx).Infof("DeleteCategory request: %+v", id)
+	return uc.repo.DeleteCategory(ctx, id)
+}
+func (uc *CategoryUsecase) GetCategoryTree(ctx context.Context, id uint32) ([]*Category, error) {
+	uc.log.WithContext(ctx).Info("GetCategoryTree", id)
+	return uc.repo.GetCategoryTree(ctx, id)
+
+}
+func (uc *CategoryUsecase) UpdateCategory(ctx context.Context, req *Category) (*Category, error) {
+	uc.log.WithContext(ctx).Infof("UpdateCategory request: %+v", req)
+	return uc.repo.UpdateCategory(ctx, req)
 }
