@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_HTTP_PORT: 9411
+    ports:
+      - "5775:5775"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"  # Jaeger UI
+      - "14250:14250"
+      - "14268:14268"
+      - "14250:14250"
+      - "4317:4317"    # OpenTelemetry exporter port
+      - "4318:4318"    # OpenTelemetry exporter port
+    networks:
+      - tracing
+
+  opentelemetry-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: opentelemetry-collector
+    ports:
+      - "4317:4317"   # OpenTelemetry receiver port
+      - "4318:4318"   # OpenTelemetry receiver port
+    environment:
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=my-service
+    command:
+      - --config=/otel-local-config.yaml
+    volumes:
+      - ./otel-config.yaml:/otel-local-config.yaml
+    networks:
+      - tracing
+
+networks:
+  tracing:
+    driver: bridge
