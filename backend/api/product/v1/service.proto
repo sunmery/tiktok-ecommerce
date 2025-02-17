@@ -1,44 +1,73 @@
 syntax = "proto3";
 
-package product.service.v1;
+package api.product.v1;
+
+option go_package = "api/product/v1;product";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "validate/validate.proto";
 
-option go_package = "api/product/v1;v1";
+// 商品状态枚举定义
+enum ProductStatus {
+  PRODUCT_STATUS_DRAFT = 0;    // 草稿状态
+  PRODUCT_STATUS_PENDING = 1;  // 待审核
+  PRODUCT_STATUS_APPROVED = 2; // 审核通过
+  PRODUCT_STATUS_REJECTED = 3; // 审核驳回
+}
 
-service ProductCatalogService {
-  rpc CreateProduct(CreateProductRequest) returns (ProductReply) {
+// 审核动作枚举
+enum AuditAction {
+  AUDIT_ACTION_APPROVE = 0; // 通过审核
+  AUDIT_ACTION_REJECT = 1;  // 驳回审核
+}
+
+// 商品服务定义
+service ProductService {
+  // 创建商品（草稿状态）
+  rpc CreateProduct(CreateProductRequest) returns (Product) {
     option (google.api.http) = {
-      post: "/v1/product",
+      post: "/v1/products"
       body: "*"
     };
   }
-  rpc UpdateProduct(UpdateProductRequest) returns (ProductReply) {
+
+  // 更新商品信息
+  rpc UpdateProduct(UpdateProductRequest) returns (Product) {
     option (google.api.http) = {
-      patch: "/v1/product",
+      put: "/v1/products/{id}"
       body: "*"
     };
   }
-  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {
+
+  // 提交商品审核
+  rpc SubmitForAudit(SubmitAuditRequest) returns (AuditRecord) {
     option (google.api.http) = {
-      get: "/v1/product/list"
+      post: "/v1/products/{product_id}/submit-audit"
+      body: "*"
     };
   }
-  rpc GetProduct(GetProductReq) returns (ProductReply) {
+
+  // 审核商品
+  rpc AuditProduct(AuditProductRequest) returns (AuditRecord) {
     option (google.api.http) = {
-      get: "/v1/product/{id}"
+      post: "/v1/products/{product_id}/audit"
+      body: "*"
     };
   }
-  rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {
+
+  // 获取商品详情
+  rpc GetProduct(GetProductRequest) returns (Product) {
     option (google.api.http) = {
-      get: "/v1/product/search/{query}"
+      get: "/v1/products/{id}"
     };
   }
-  rpc DeleteProduct (DeleteProductReq) returns (ProductReply){
+
+  // 删除商品（软删除）
+  rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete:"/v1/product"
+      delete: "/v1/products/{id}"
     };
   }
 
@@ -90,23 +119,42 @@ message Category {
   bool isActive = 7;
 }
 
+// 新增分类验证相关定义
+message CategoryInfo {
+  string category_id = 1 [(validate.rules).string = {min_len: 1}];
+  string category_name = 2;
+}
+
+// 商品核心数据结构
 message Product {
-  uint32 id = 1;
-  string name = 2;
-  string description = 3;
-  string picture = 4;
-  float price = 5;
+  uint64 id = 1[
+    (validate.rules).uint64.gt = 0
+  ];  // 商品唯一ID（系统生成）
+  string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
+  string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
+  double price = 4; // 商品价格（单位：元）
+  int32 stock = 5;  // 库存数量
+  ProductStatus status = 6; // 当前状态
+  uint64 merchant_id = 7;    // 所属商家ID
 
-  repeated int32 categoryId = 6;
+  // 图片信息
+  message Image {
+    string url = 1;         // 图片URL
+    bool is_primary = 2;    // 是否主图
+    int32 sort_order = 3;   // 排序顺序
+  }
+  repeated Image images = 8; // 商品图片列表
 
-  int32 totalStock = 7;
-  int32 availableStock = 8;
-  int32 reservedStock = 9;
-  int32 lowStockThreshold = 10;
-  bool allowNegative = 11;
-  google.protobuf.Timestamp createdAt = 12;
-  google.protobuf.Timestamp updatedAt = 13;
-  int32 version = 14;
+  // 商品属性（动态KV结构）
+  map<string, AttributeValue> attributes = 9;
+
+  // 审核信息（仅当处于审核状态时有效）
+  AuditInfo audit_info = 10;
+
+  // 时间戳
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  CategoryInfo category = 13; // 替换原有category_id字段
 }
 // message Product {
 //   string name = 1 [(google.api.field_behavior) = REQUIRED];
@@ -120,50 +168,80 @@ message Product {
 // }
 
 
+// 属性值类型定义
+message AttributeValue {
+  oneof value {
+    string string_value = 1;      // 字符串类型值
+    StringArray array_value = 2;  // 数组类型值
+    NestedObject object_value = 3;// 嵌套对象
+  }
+}
+
+// 字符串数组
+message StringArray {
+  repeated string items = 1;
+}
+
+// 嵌套对象结构
+message NestedObject {
+  map<string, AttributeValue> fields = 1;
+}
+
+// 审核信息
+message AuditInfo {
+  uint64 audit_id = 1;           // 审核记录ID
+  string reason = 2;            // 审核意见/驳回原因
+  uint64 operator_id = 3;        // 操作人ID
+  google.protobuf.Timestamp operated_at = 4; // 操作时间
+}
+
+// 创建商品请求
 message CreateProductRequest {
-  string name = 3;
-  string description = 4;
-  string picture = 5;
-  float price = 6;
-  repeated int32 categoryId = 7;
-  int32 totalStock = 8;
+  Product product = 1 [(validate.rules).message.required = true];
 }
 
+// 更新商品请求
 message UpdateProductRequest {
-  uint32 id = 1;
-  string name = 2;
-  string description = 3;
-  string picture = 4;
-  float price = 5;
-  repeated int32 categoryId = 6;
-  int32 totalStock = 7;
+  uint64 id = 1;
+  Product product = 2 [(validate.rules).message.required = true];
 }
 
-message ProductReply {
-  Product product = 1 ;
+// 提交审核请求
+message SubmitAuditRequest {
+  uint64 product_id = 1;
+  uint64 merchant_id = 2; // 用于分片路由
 }
 
-message ListProductsReq{
-  int32 page = 1;
-  int64 pageSize = 2 [json_name = "page_size"];
-
-  int32 categoryId = 3 [json_name = "category_id"];
+// 审核操作请求
+message AuditProductRequest {
+  uint64 product_id = 1;
+  uint64 merchant_id = 2; // 用于分片路由
+  AuditAction action = 3;
+  string reason = 4;     // 驳回时必填
+  uint64 operator_id = 5;
 }
 
-message ListProductsResp {
-  repeated Product products = 1;
+// 查询单个商品请求
+message GetProductRequest {
+  uint64 id = 1;
+  uint64 merchant_id = 2; // 用于分片路由
 }
 
-message GetProductReq {
-  uint32 id = 1;
+// 删除商品请求
+message DeleteProductRequest {
+  uint64 id = 1;
+  uint64 merchant_id = 2; // 用于分片路由
 }
 
-message SearchProductsReq {
-  string query = 1;
-}
-
-message SearchProductsResp {
-  repeated Product results = 1;
+// 审核记录返回结构
+message AuditRecord {
+  uint64 id = 1;
+  uint64 product_id = 2;
+  ProductStatus old_status = 3;
+  ProductStatus new_status = 4;
+  string reason = 5;
+  uint64 operator_id = 6;
+  google.protobuf.Timestamp operated_at = 7;
 }
 
 message DeleteProductReq {

@@ -1,11 +1,11 @@
 # Logs
 **/logs
-*.log
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
-frontend/lerna-debug.log*
+*.helper
+frontend/npm-debug.helper*
+frontend/yarn-debug.helper*
+frontend/yarn-error.helper*
+frontend/pnpm-debug.helper*
+frontend/lerna-debug.helper*
 
 .env.prod
 backend/configs/production.yaml

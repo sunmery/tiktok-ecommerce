@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package api.user.v1;
 
+option go_package = "api/user/v1;user";
+
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
-
-option go_package = "api/user/v1;user";
 
 service UserService {
   rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
@@ -15,6 +15,7 @@ service UserService {
       get: "/v1/user/profile"
     };
   };
+
   rpc CreateAddresses (Address) returns (Address) {
     option (google.api.http) = {
       post: "/v1/user/address",
@@ -37,6 +38,12 @@ service UserService {
       get: "/v1/user/address"
     };
   };
+  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
+    option (google.api.http) = {
+      get: "/v1/credit_cards/all"
+    };
+  };
+
   rpc CreateCreditCard (CreditCards) returns (CardsReply){
     option (google.api.http) = {
       post: "/v1/credit_cards",
@@ -57,11 +64,6 @@ service UserService {
   rpc GetCreditCard (GetCreditCardsRequest) returns (GetCreditCardsReply){
     option (google.api.http) = {
       get: "/v1/credit_cards/{number}"
-    };
-  };
-  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
-    option (google.api.http) = {
-      get: "/v1/credit_cards/all"
     };
   };
 }
@@ -104,15 +106,6 @@ message ListCreditCardsRequest {
 
 message ListCreditCardsReply {
   repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
-}
-
-message GetProfileRequest {
-  string authorization = 1;
-}
-
-message GetProfileResponse {
-  string state = 1 [json_name = "state"];
-  Data data = 2 [json_name = "data"];
 }
 
 message Address {
@@ -165,7 +158,16 @@ message DeleteAddressesReply {
   uint32 code = 3 [(google.api.field_behavior) = REQUIRED];
 }
 
-message Data {
+message GetProfileRequest {
+  string authorization = 1;
+}
+
+message GetProfileResponse {
+  string state = 1 [json_name = "state"];
+  UserInfo data = 2 [json_name = "data"];
+}
+
+message UserInfo {
 
   message Properties {
     string no = 1;

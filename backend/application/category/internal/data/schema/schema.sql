@@ -7,9 +7,10 @@ CREATE TABLE categories.categories
     level      INT          NOT NULL CHECK (level >= 1 AND level <= 3),
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    parent_id UUID REFERENCES categories.categories(id),
 
     -- 唯一性约束保证分类名称不重复
-    CONSTRAINT uniq_category_name UNIQUE (name)
+    CONSTRAINT uniq_category_parent UNIQUE (name, parent_id)
 );
 
 -- 闭包表

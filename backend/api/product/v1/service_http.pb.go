@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: api/product/v1/service.proto
 
-package v1
+package product
 
 import (
 	context "context"
@@ -20,6 +20,7 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+<<<<<<< HEAD
 const OperationProductCatalogServiceCreateCategory = "/product.service.v1.ProductCatalogService/CreateCategory"
 const OperationProductCatalogServiceCreateProduct = "/product.service.v1.ProductCatalogService/CreateProduct"
 const OperationProductCatalogServiceDeleteProduct = "/product.service.v1.ProductCatalogService/DeleteProduct"
@@ -40,10 +41,33 @@ type ProductCatalogServiceHTTPServer interface {
 	ListProducts(context.Context, *ListProductsReq) (*ListProductsResp, error)
 	SearchProducts(context.Context, *SearchProductsReq) (*SearchProductsResp, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*ProductReply, error)
+=======
+const OperationProductServiceAuditProduct = "/api.product.v1.ProductService/AuditProduct"
+const OperationProductServiceCreateProduct = "/api.product.v1.ProductService/CreateProduct"
+const OperationProductServiceDeleteProduct = "/api.product.v1.ProductService/DeleteProduct"
+const OperationProductServiceGetProduct = "/api.product.v1.ProductService/GetProduct"
+const OperationProductServiceSubmitForAudit = "/api.product.v1.ProductService/SubmitForAudit"
+const OperationProductServiceUpdateProduct = "/api.product.v1.ProductService/UpdateProduct"
+
+type ProductServiceHTTPServer interface {
+	// AuditProduct 审核商品
+	AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error)
+	// CreateProduct 创建商品（草稿状态）
+	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
+	// DeleteProduct 删除商品（软删除）
+	DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
+	// GetProduct 获取商品详情
+	GetProduct(context.Context, *GetProductRequest) (*Product, error)
+	// SubmitForAudit 提交商品审核
+	SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error)
+	// UpdateProduct 更新商品信息
+	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
+>>>>>>> main
 }
 
-func RegisterProductCatalogServiceHTTPServer(s *http.Server, srv ProductCatalogServiceHTTPServer) {
+func RegisterProductServiceHTTPServer(s *http.Server, srv ProductServiceHTTPServer) {
 	r := s.Route("/")
+<<<<<<< HEAD
 	r.POST("/v1/product", _ProductCatalogService_CreateProduct0_HTTP_Handler(srv))
 	r.PATCH("/v1/product", _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv))
 	r.GET("/v1/product/list", _ProductCatalogService_ListProducts0_HTTP_Handler(srv))
@@ -53,9 +77,17 @@ func RegisterProductCatalogServiceHTTPServer(s *http.Server, srv ProductCatalogS
 	r.GET("/v1/categories/tree", _ProductCatalogService_ListCategories0_HTTP_Handler(srv))
 	r.POST("/v1/categories", _ProductCatalogService_CreateCategory0_HTTP_Handler(srv))
 	r.GET("/v1/categories/children/{id}", _ProductCatalogService_GetCategoryChildren0_HTTP_Handler(srv))
+=======
+	r.POST("/v1/products", _ProductService_CreateProduct0_HTTP_Handler(srv))
+	r.PUT("/v1/products/{id}", _ProductService_UpdateProduct0_HTTP_Handler(srv))
+	r.POST("/v1/products/{product_id}/submit-audit", _ProductService_SubmitForAudit0_HTTP_Handler(srv))
+	r.POST("/v1/products/{product_id}/audit", _ProductService_AuditProduct0_HTTP_Handler(srv))
+	r.GET("/v1/products/{id}", _ProductService_GetProduct0_HTTP_Handler(srv))
+	r.DELETE("/v1/products/{id}", _ProductService_DeleteProduct0_HTTP_Handler(srv))
+>>>>>>> main
 }
 
-func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
+func _ProductService_CreateProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateProductRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -64,7 +96,7 @@ func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServic
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationProductCatalogServiceCreateProduct)
+		http.SetOperation(ctx, OperationProductServiceCreateProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.CreateProduct(ctx, req.(*CreateProductRequest))
 		})
@@ -72,12 +104,12 @@ func _ProductCatalogService_CreateProduct0_HTTP_Handler(srv ProductCatalogServic
 		if err != nil {
 			return err
 		}
-		reply := out.(*ProductReply)
+		reply := out.(*Product)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
+func _ProductService_UpdateProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UpdateProductRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -86,7 +118,10 @@ func _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv ProductCatalogServic
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationProductCatalogServiceUpdateProduct)
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductServiceUpdateProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.UpdateProduct(ctx, req.(*UpdateProductRequest))
 		})
@@ -94,74 +129,62 @@ func _ProductCatalogService_UpdateProduct0_HTTP_Handler(srv ProductCatalogServic
 		if err != nil {
 			return err
 		}
-		reply := out.(*ProductReply)
+		reply := out.(*Product)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _ProductCatalogService_ListProducts0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
+func _ProductService_SubmitForAudit0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in ListProductsReq
-		if err := ctx.BindQuery(&in); err != nil {
+		var in SubmitAuditRequest
+		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationProductCatalogServiceListProducts)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ListProducts(ctx, req.(*ListProductsReq))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ListProductsResp)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _ProductCatalogService_GetProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetProductReq
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationProductCatalogServiceGetProduct)
+		http.SetOperation(ctx, OperationProductServiceSubmitForAudit)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetProduct(ctx, req.(*GetProductReq))
+			return srv.SubmitForAudit(ctx, req.(*SubmitAuditRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*ProductReply)
+		reply := out.(*AuditRecord)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _ProductCatalogService_SearchProducts0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
+func _ProductService_AuditProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in SearchProductsReq
+		var in AuditProductRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationProductCatalogServiceSearchProducts)
+		http.SetOperation(ctx, OperationProductServiceAuditProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.SearchProducts(ctx, req.(*SearchProductsReq))
+			return srv.AuditProduct(ctx, req.(*AuditProductRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*SearchProductsResp)
+		reply := out.(*AuditRecord)
 		return ctx.Result(200, reply)
 	}
 }
 
+<<<<<<< HEAD
 func _ProductCatalogService_DeleteProduct0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in DeleteProductReq
@@ -225,20 +248,32 @@ func _ProductCatalogService_CreateCategory0_HTTP_Handler(srv ProductCatalogServi
 func _ProductCatalogService_GetCategoryChildren0_HTTP_Handler(srv ProductCatalogServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetCategoryChildrenReq
+=======
+func _ProductService_GetProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetProductRequest
+>>>>>>> main
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
+<<<<<<< HEAD
 		http.SetOperation(ctx, OperationProductCatalogServiceGetCategoryChildren)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.GetCategoryChildren(ctx, req.(*GetCategoryChildrenReq))
+=======
+		http.SetOperation(ctx, OperationProductServiceGetProduct)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetProduct(ctx, req.(*GetProductRequest))
+>>>>>>> main
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
+<<<<<<< HEAD
 		reply := out.(*GetCategoryChildrenResp)
 		return ctx.Result(200, reply)
 	}
@@ -254,16 +289,53 @@ type ProductCatalogServiceHTTPClient interface {
 	ListProducts(ctx context.Context, req *ListProductsReq, opts ...http.CallOption) (rsp *ListProductsResp, err error)
 	SearchProducts(ctx context.Context, req *SearchProductsReq, opts ...http.CallOption) (rsp *SearchProductsResp, err error)
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest, opts ...http.CallOption) (rsp *ProductReply, err error)
+=======
+		reply := out.(*Product)
+		return ctx.Result(200, reply)
+	}
+>>>>>>> main
 }
 
-type ProductCatalogServiceHTTPClientImpl struct {
+func _ProductService_DeleteProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteProductRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductServiceDeleteProduct)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteProduct(ctx, req.(*DeleteProductRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+type ProductServiceHTTPClient interface {
+	AuditProduct(ctx context.Context, req *AuditProductRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
+	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *Product, err error)
+	DeleteProduct(ctx context.Context, req *DeleteProductRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *Product, err error)
+	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
+	UpdateProduct(ctx context.Context, req *UpdateProductRequest, opts ...http.CallOption) (rsp *Product, err error)
+}
+
+type ProductServiceHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewProductCatalogServiceHTTPClient(client *http.Client) ProductCatalogServiceHTTPClient {
-	return &ProductCatalogServiceHTTPClientImpl{client}
+func NewProductServiceHTTPClient(client *http.Client) ProductServiceHTTPClient {
+	return &ProductServiceHTTPClientImpl{client}
 }
 
+<<<<<<< HEAD
 func (c *ProductCatalogServiceHTTPClientImpl) CreateCategory(ctx context.Context, in *CreateCategoryReq, opts ...http.CallOption) (*CategoryReply, error) {
 	var out CategoryReply
 	pattern := "/v1/categories"
@@ -280,8 +352,13 @@ func (c *ProductCatalogServiceHTTPClientImpl) CreateCategory(ctx context.Context
 func (c *ProductCatalogServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...http.CallOption) (*ProductReply, error) {
 	var out ProductReply
 	pattern := "/v1/product"
+=======
+func (c *ProductServiceHTTPClientImpl) AuditProduct(ctx context.Context, in *AuditProductRequest, opts ...http.CallOption) (*AuditRecord, error) {
+	var out AuditRecord
+	pattern := "/v1/products/{product_id}/audit"
+>>>>>>> main
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationProductCatalogServiceCreateProduct))
+	opts = append(opts, http.Operation(OperationProductServiceAuditProduct))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
@@ -290,6 +367,7 @@ func (c *ProductCatalogServiceHTTPClientImpl) CreateProduct(ctx context.Context,
 	return &out, nil
 }
 
+<<<<<<< HEAD
 func (c *ProductCatalogServiceHTTPClientImpl) DeleteProduct(ctx context.Context, in *DeleteProductReq, opts ...http.CallOption) (*ProductReply, error) {
 	var out ProductReply
 	pattern := "/v1/product"
@@ -371,10 +449,67 @@ func (c *ProductCatalogServiceHTTPClientImpl) SearchProducts(ctx context.Context
 func (c *ProductCatalogServiceHTTPClientImpl) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...http.CallOption) (*ProductReply, error) {
 	var out ProductReply
 	pattern := "/v1/product"
+=======
+func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...http.CallOption) (*Product, error) {
+	var out Product
+	pattern := "/v1/products"
+>>>>>>> main
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationProductCatalogServiceUpdateProduct))
+	opts = append(opts, http.Operation(OperationProductServiceCreateProduct))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/v1/products/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductServiceDeleteProduct))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) GetProduct(ctx context.Context, in *GetProductRequest, opts ...http.CallOption) (*Product, error) {
+	var out Product
+	pattern := "/v1/products/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductServiceGetProduct))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) SubmitForAudit(ctx context.Context, in *SubmitAuditRequest, opts ...http.CallOption) (*AuditRecord, error) {
+	var out AuditRecord
+	pattern := "/v1/products/{product_id}/submit-audit"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductServiceSubmitForAudit))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...http.CallOption) (*Product, error) {
+	var out Product
+	pattern := "/v1/products/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductServiceUpdateProduct))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

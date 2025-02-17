@@ -25,7 +25,7 @@ import (
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
-	product *service.ProductCatalogServiceService,
+	product *service.ProductService,
 	ac *conf.Auth,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -102,7 +102,7 @@ func NewHTTPServer(c *conf.Server,
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterProductCatalogServiceHTTPServer(srv, product)
+	v1.RegisterProductServiceHTTPServer(srv, product)
 	return srv
 }
 

@@ -5,11 +5,9 @@ import (
 	"backend/application/product/internal/data/models"
 	"context"
 	"fmt"
-
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/metadata"
-	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 type productRepo struct {
@@ -17,264 +15,315 @@ type productRepo struct {
 	log  *log.Helper
 }
 
-
-
-func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductReq) (*biz.ProductReply, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRequest) (biz.Product, error) {
 	db := p.data.DB(ctx)
 
-	product, err := db.DeleteProduct(ctx, int32(req.Id))
-
-
+	// 转换价格到pgtype.Numeric
+	price, err := decimal.NewFromString(fmt.Sprintf("%.2f", req.Product.Price))
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
 	}
 
-	var userID uuid.UUID
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userIDStr := md.Get("x-md-global-userid")
-		parsedUserID, err := uuid.Parse(userIDStr)
-		if err != nil {
-			return nil, err
-		}
-		userID = parsedUserID
-	}
-
-	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
-		ChangeReason: "DELETE",
-		NewStock:     0,
-		UserID:       userID,
-		ProductID:    int32(req.Id),
+	// 执行创建
+	result, err := db.CreateProduct(ctx, models.CreateProductParams{
+		Name:        req.Product.Name,
+		Description: &req.Product.Description,
+		Price:       pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()},
+		Stock:       &req.Product.Stock,
+		Status:      int16(req.Product.Status),
+		MerchantID:  int64(req.Product.MerchantId),
 	})
-
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("failed to create product: %w", err)
 	}
 
-	return &biz.ProductReply{
-		Product: biz.Product{
-			Id:   uint32(product.ID),
-			Name: product.Name,
-		},
-	}, nil
+	// 转换基础信息
+	product := biz.Product{
+		ID: uint64(result.ID),
+		// MerchantId: uint64(result.MerchantID),
+		Name:      req.Product.Name,
+		Price:     req.Product.Price,
+		Stock:     req.Product.Stock,
+		Status:    req.Product.Status,
+		CreatedAt: result.CreatedAt,
+		UpdatedAt: result.UpdatedAt,
+	}
+
+	// 创建图片记录
+	if len(req.Product.Images) > 0 {
+		if err := p.createProductImages(ctx, uint64(result.ID), req.Product.MerchantId, req.Product.Images); err != nil {
+			p.log.Warnf("created product but failed to create images: %v", err)
+		}
+	}
+
+	return product, nil
 }
 
-func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.ProductReply, error) {
+func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRequest) (biz.Product, error) {
 	db := p.data.DB(ctx)
 
-	product, err := db.UpdateProduct(ctx, models.UpdateProductParams{
-		ID:          int32(req.Id),
-		Name:        req.Name,
-		Description: req.Description,
-		Picture:     req.Picture,
-		Price:       req.Price,
-		CategoryID:  req.CategoryId,
-		TotalStock:  req.TotalStock,
+	// 获取当前版本
+	current, err := db.GetProduct(ctx, models.GetProductParams{
+		ID:         int64(req.ID),
+		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("product not found: %w", err)
 	}
 
-	
-	var userID uuid.UUID
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userIDStr := md.Get("x-md-global-userid")
-		parsedUserID, err := uuid.Parse(userIDStr)
+	// 准备更新参数
+	params := models.UpdateProductParams{
+		ID:         int64(req.ID),
+		MerchantID: int64(req.MerchantID),
+		UpdatedAt:  pgtype.Timestamptz{Time: current.UpdatedAt, Valid: true},
+	}
+
+	// 字段掩码处理
+	if req.Name != nil {
+		params.Name = *req.Name
+	} else {
+		params.Name = current.Name
+	}
+
+	if req.Price != nil {
+		price, err := decimal.NewFromString(fmt.Sprintf("%.2f", *req.Price))
 		if err != nil {
-			return nil, err
+			return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
 		}
-		userID = parsedUserID
+		params.Price = pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()}
+	} else {
+		params.Price = current.Price
 	}
 
-	_, err = db.UpdateAuditLog(ctx, models.UpdateAuditLogParams{
-		ChangeReason: "UPDATE",
-		ProductID:    int32(req.Id),
-		NewStock:     req.TotalStock,
-		UserID:       userID,
+	params.Stock = current.Stock
+	// stock := int32(req.Stock)
+	// if req.Stock != nil {
+	// 	params.Stock = &stock
+	// } else {
+	// 	params.Stock = current.Stock
+	// }
+
+	if req.Description != "" {
+		params.Description = &req.Description
+	} else {
+		params.Description = current.Description
+	}
+
+	// 执行更新
+	if err := db.UpdateProduct(ctx, params); err != nil {
+		return biz.Product{}, fmt.Errorf("failed to update product: %w", err)
+	}
+
+	// 获取更新后的数据
+	updated, err := db.GetProduct(ctx, models.GetProductParams{
+		ID:         int64(req.ID),
+		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("failed to get updated product: %w", err)
 	}
 
-	return &biz.ProductReply{
-		Product: biz.Product{
-			Id:          uint32(product.ID),
-			Name:        product.Name,
-			Description: product.Description,
-			Picture:     product.Picture,
-			Price:       product.Price,
-			CategoryId:  product.CategoryID,
-			TotalStock:  product.TotalStock,
-		},
-	}, nil
+	return p.fullProductData(ctx, updated)
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.ProductReply, error) {
-	// 通过 data.DB(ctx) 自动获取事务或普通连接
+func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditRequest) (biz.AuditRecord, error) {
 	db := p.data.DB(ctx)
 
-	// 生成分类树
-	resp, err := p.ListCategories(ctx, &emptypb.Empty{})
-	if err != nil {
-		return nil, err
-	}
-	categoryTree := resp.Categories
-
-	// 将分类转换为 map，方便查找
-	categoryMap := make(map[uint32]*biz.Category)
-	var flatten func([]biz.Category)
-	flatten = func(categories []biz.Category) {
-		for _, cat := range categories {
-			categoryMap[cat.ID] = &cat
-			flatten(cat.Children) // 递归存储所有分类
-		}
-	}
-	flatten(categoryTree)
-
-	// 遍历商品的所有分类，检查是否都是叶子分类
-	for _, categoryID := range req.CategoryId {
-		category, exists := categoryMap[uint32(categoryID)]
-		if !exists {
-			return nil, fmt.Errorf("分类 ID %d 不存在", categoryID)
-		}
-
-		// 不是叶子分类则报错
-		if len(category.Children) > 0 {
-			return nil, fmt.Errorf("分类 ID %d 不是叶子分类，无法添加商品", categoryID)
-		}
-	}
-
-	product, err := db.CreateProduct(ctx, models.CreateProductParams{
-		Name:        req.Name,
-		Description: req.Description,
-		Picture:     req.Picture,
-		Price:       req.Price,
-		CategoryID:  req.CategoryId,
-		TotalStock:  req.TotalStock,
+	// 获取当前产品状态
+	current, err := db.GetProduct(ctx, models.GetProductParams{
+		ID:         int64(req.ProductID),
+		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return nil, err
+		return biz.AuditRecord{}, fmt.Errorf("product not found: %w", err)
 	}
 
-	
-	var userID uuid.UUID
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userIDStr := md.Get("x-md-global-userid")
-		parsedUserID, err := uuid.Parse(userIDStr)
-		if err != nil {
-			return nil, err
-		}
-		userID = parsedUserID
-	}
-
-	// 审计日志自动使用同一事务(相同的 ctx)
-	_, err = db.CreateAuditLog(ctx, models.CreateAuditLogParams{
-		ChangeReason: "CREATE",
-		ProductID:    product.ID,
-		NewStock:     product.TotalStock,
-		OldStock:     product.TotalStock,
-		UserID:       userID,
+	// 创建审核记录
+	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
+		MerchantID: int64(req.MerchantID),
+		ProductID:  int64(req.ProductID),
+		OldStatus:  current.Status,
+		NewStatus:  int16(biz.ProductStatusPending),
+		Reason:     nil,
+		OperatorID: 0, // 从上下文中获取实际操作人
 	})
 	if err != nil {
-		return nil, err
+		return biz.AuditRecord{}, fmt.Errorf("failed to create audit record: %w", err)
 	}
 
-	return &biz.ProductReply{
-		Product: biz.Product{
-			Id:          uint32(product.ID),
-			Name:        product.Name,
-			Description: product.Description,
-			Picture:     product.Picture,
-			Price:       product.Price,
-			CategoryId:  product.CategoryID,
-			TotalStock:  product.TotalStock,
-		},
+	// 更新产品状态
+	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
+		ID:             int64(req.ProductID),
+		Status:         int16(biz.ProductStatusPending),
+		CurrentAuditID: &auditRecord.ID,
+		MerchantID:     int64(req.MerchantID),
+	}); err != nil {
+		return biz.AuditRecord{}, fmt.Errorf("failed to update product status: %w", err)
+	}
+
+	return biz.AuditRecord{
+		ID:         uint64(auditRecord.ID),
+		ProductID:  req.ProductID,
+		OldStatus:  biz.ProductStatus(current.Status),
+		NewStatus:  biz.ProductStatusPending,
+		OperatedAt: auditRecord.CreatedAt,
 	}, nil
 }
 
-func (p *productRepo) ListProducts(ctx context.Context, req *biz.ListProductsReq) (*biz.ListProductsResp, error) {
-	products, err := p.data.db.ListProducts(ctx, models.ListProductsParams{
-		Offset:     int64((req.Page - 1) * req.PageSize),
-		Limit:      int64(req.PageSize),
-		CategoryID: req.CategoryId,
+func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequest) (biz.AuditRecord, error) {
+	db := p.data.DB(ctx)
+
+	// 获取当前产品状态
+	current, err := db.GetProduct(ctx, models.GetProductParams{
+		ID:         int64(req.ProductID),
+		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return nil, err
+		return biz.AuditRecord{}, fmt.Errorf("product not found: %w", err)
 	}
 
-	productsResp := make([]*biz.Product, len(products))
-	for i, product := range products {
-		productsResp[i] = &biz.Product{
-			Id:                uint32(product.ID),
-			Name:              product.Name,
-			Description:       product.Description,
-			Picture:           product.Picture,
-			Price:             product.Price,
-			TotalStock:        product.TotalStock,
-			AvailableStock:    product.AvailableStock,
-			ReservedStock:     product.ReservedStock,
-			LowStockThreshold: product.LowStockThreshold,
-			AllowNegative:     product.AllowNegative,
-			CreatedAt:         product.CreatedAt,
-			UpdatedAt:         product.UpdatedAt,
-			Version:           product.Version,
-		}
+	// 确定新状态
+	var newStatus biz.ProductStatus
+	switch biz.AuditAction(req.Action) { // 添加类型转换
+	case biz.AuditActionApprove:
+		newStatus = biz.ProductStatusApproved
+	case biz.AuditActionReject:
+		newStatus = biz.ProductStatusRejected
+	default:
+		return biz.AuditRecord{}, biz.ErrInvalidAuditAction
 	}
-	return &biz.ListProductsResp{
-		Product: productsResp,
+
+	// 创建审核记录
+	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
+		MerchantID: int64(req.MerchantID),
+		ProductID:  int64(req.ProductID),
+		OldStatus:  current.Status,
+		NewStatus:  int16(newStatus),
+		Reason:     &req.Reason,
+		OperatorID: int64(req.OperatorID),
+	})
+	if err != nil {
+		return biz.AuditRecord{}, fmt.Errorf("failed to create audit record: %w", err)
+	}
+
+	// 更新产品状态
+	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
+		ID:             int64(req.ProductID),
+		Status:         int16(newStatus),
+		CurrentAuditID: &auditRecord.ID,
+		MerchantID:     int64(req.MerchantID),
+	}); err != nil {
+		return biz.AuditRecord{}, fmt.Errorf("failed to update product status: %w", err)
+	}
+
+	return biz.AuditRecord{
+		ID:         uint64(auditRecord.ID),
+		ProductID:  req.ProductID,
+		OldStatus:  biz.ProductStatus(current.Status),
+		NewStatus:  newStatus,
+		Reason:     req.Reason,
+		OperatorID: req.OperatorID,
+		OperatedAt: auditRecord.CreatedAt,
 	}, nil
 }
 
-func (p *productRepo) GetProduct(ctx context.Context, id uint32) (*biz.GetProductResp, error) {
-	product, err := p.data.db.GetProduct(ctx, int32(id))
+func (p *productRepo) GetProduct(ctx context.Context, req biz.GetProductRequest) (biz.Product, error) {
+	db := p.data.DB(ctx)
+
+	// 获取基础信息
+	product, err := db.GetProduct(ctx, models.GetProductParams{
+		ID:         int64(req.ID),
+		MerchantID: int64(req.MerchantID),
+	})
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("failed to get product: %w", err)
 	}
-	return &biz.GetProductResp{Product: &biz.Product{
-		Id:                uint32(product.ID),
-		Name:              product.Name,
-		Description:       product.Description,
-		Picture:           product.Picture,
-		Price:             product.Price,
-		CategoryId:        product.CategoryID,
-		TotalStock:        product.TotalStock,
-		AvailableStock:    product.AvailableStock,
-		ReservedStock:     product.ReservedStock,
-		LowStockThreshold: product.LowStockThreshold,
-		AllowNegative:     product.AllowNegative,
-		CreatedAt:         product.CreatedAt,
-		UpdatedAt:         product.UpdatedAt,
-		Version:           product.Version,
-	}}, nil
+
+	return p.fullProductData(ctx, product)
 }
 
-func (p *productRepo) SearchProducts(ctx context.Context, req *biz.SearchProductsReq) (*biz.SearchProductsResp, error) {
+func (p *productRepo) DeleteProduct(ctx context.Context, req biz.DeleteProductRequest) error {
+	db := p.data.DB(ctx)
 
-	products, err := p.data.db.SearchProducts(ctx, &req.Query)
+	return db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
+		ID:         int64(req.ID),
+		MerchantID: int64(req.MerchantID),
+	})
+}
+
+// 辅助方法：完整产品数据组装
+func (p *productRepo) fullProductData(ctx context.Context, product models.GetProductRow) (biz.Product, error) {
+	// 获取图片
+	images, err := p.data.DB(ctx).GetProductImages(ctx, models.GetProductImagesParams{
+		MerchantID: product.MerchantID,
+		ProductID:  product.ID,
+	})
 	if err != nil {
-		return nil, err
+		return biz.Product{}, fmt.Errorf("failed to get product images: %w", err)
 	}
-	productsResp := make([]*biz.Product, len(products))
-	for i, product := range products {
-		productsResp[i] = &biz.Product{
-			Id:                uint32(product.ID),
-			Name:              product.Name,
-			Description:       product.Description,
-			Picture:           product.Picture,
-			Price:             product.Price,
-			CategoryId:        product.CategoryID,
-			TotalStock:        product.TotalStock,
-			AvailableStock:    product.AvailableStock,
-			ReservedStock:     product.ReservedStock,
-			LowStockThreshold: product.LowStockThreshold,
-			AllowNegative:     product.AllowNegative,
-			CreatedAt:         product.CreatedAt,
-			UpdatedAt:         product.UpdatedAt,
-			Version:           product.Version,
+
+	// 转换价格
+	price, _ := decimal.NewFromString(fmt.Sprintf("%s%d", product.Price.Int.String(), product.Price.Exp))
+
+	// 组装返回结果
+	return biz.Product{
+		ID:          uint64(product.ID),
+		MerchantId:  uint64(product.MerchantID),
+		Name:        product.Name,
+		Description: *product.Description,
+		Price:       float64(price.IntPart()),
+		Stock:       *product.Stock,
+		Status:      biz.ProductStatus(product.Status),
+		CreatedAt:   product.CreatedAt,
+		UpdatedAt:   product.UpdatedAt,
+		Images:      p.convertImages(images),
+		// 其他字段根据实际需求补充
+	}, nil
+}
+
+// 转换图片数据
+func (p *productRepo) convertImages(images []models.ProductsProductImages) []*biz.ProductImage {
+	result := make([]*biz.ProductImage, 0, len(images))
+	for _, img := range images {
+		sortOrder := 0
+		result = append(result, &biz.ProductImage{
+			URL:       img.Url,
+			IsPrimary: img.IsPrimary,
+			SortOrder: &sortOrder,
+		})
+	}
+	return result
+}
+
+// 创建产品图片
+func (p *productRepo) createProductImages(ctx context.Context, productID uint64, merchantID uint64, images []*biz.ProductImage) error {
+	if len(images) == 0 {
+		return nil
+	}
+
+	bulkParams := models.BulkCreateProductImagesParams{
+		MerchantIds: make([]int64, len(images)),
+		ProductIds:  make([]int64, len(images)),
+		Urls:        make([]string, len(images)),
+		IsPrimary:   make([]bool, len(images)),
+		SortOrders:  make([]int16, len(images)), // 数据库字段类型为 SMALLINT
+	}
+
+	for i, img := range images {
+		bulkParams.MerchantIds[i] = int64(merchantID)
+		bulkParams.ProductIds[i] = int64(productID)
+		bulkParams.Urls[i] = img.URL
+		bulkParams.IsPrimary[i] = img.IsPrimary
+
+		// 处理 SortOrder
+		if img.SortOrder != nil {
+			bulkParams.SortOrders[i] = int16(*img.SortOrder) // 解引用指针并转换类型
+		} else {
+			bulkParams.SortOrders[i] = 0 // 默认值
 		}
 	}
-	return &biz.SearchProductsResp{
-		Result: productsResp,
-	}, nil
+
+	return p.data.DB(ctx).BulkCreateProductImages(ctx, bulkParams)
 }
 
 func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {

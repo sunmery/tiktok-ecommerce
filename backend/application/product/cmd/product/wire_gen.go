@@ -26,15 +26,23 @@ import (
 func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, consul *conf.Consul, observability *conf.Observability, logger log.Logger) (*kratos.App, func(), error) {
 	pool := data.NewDB(confData)
 	client := data.NewCache(confData)
-	dataData, cleanup, err := data.NewData(pool, client, logger)
+	discovery, err := data.NewDiscovery(consul)
+	if err != nil {
+		return nil, nil, err
+	}
+	categoryServiceClient, err := data.NewCategoryClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(pool, client, logger, categoryServiceClient)
 	if err != nil {
 		return nil, nil, err
 	}
 	productRepo := data.NewProductRepo(dataData, logger)
 	productUsecase := biz.NewProductUsecase(productRepo, logger)
-	productCatalogServiceService := service.NewProductService(productUsecase)
-	grpcServer := server.NewGRPCServer(productCatalogServiceService, confServer, observability, logger)
-	httpServer := server.NewHTTPServer(confServer, productCatalogServiceService, auth, observability, logger)
+	productService := service.NewProductService(productUsecase)
+	grpcServer := server.NewGRPCServer(productService, confServer, observability, logger)
+	httpServer := server.NewHTTPServer(confServer, productService, auth, observability, logger)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {

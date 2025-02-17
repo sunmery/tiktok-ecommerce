@@ -1,58 +1,123 @@
 package biz
 
 import (
+	pb "backend/api/product/v1"
 	"context"
-	"errors"
+	"fmt"
+	"github.com/go-kratos/kratos/v2/errors"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
-
-	"github.com/google/uuid"
 )
 
+type ProductStatus uint
+
+const (
+	ProductStatusDraft ProductStatus = iota
+	ProductStatusPending
+	ProductStatusApproved
+	ProductStatusRejected
+)
+
+var (
+	ErrProductNotFound    = errors.New(404, "protduct: ", "product not found")
+	ErrInvalidStatus      = errors.New(500, "protduct: ", "invalid status transition")
+	ErrStockInsufficient  = errors.New(403, "protduct: ", "insufficient stock")
+	ErrAuditReasonMissing = errors.New(403, "protduct: ", "reject reason required")
+	ErrInvalidAuditAction = errors.New(400, "product", "invalid audit action")
+)
+
+// 补充状态映射
+var pbStatusMapping = map[ProductStatus]pb.ProductStatus{
+	ProductStatusDraft:    pb.ProductStatus_PRODUCT_STATUS_DRAFT,
+	ProductStatusPending:  pb.ProductStatus_PRODUCT_STATUS_PENDING,
+	ProductStatusApproved: pb.ProductStatus_PRODUCT_STATUS_APPROVED,
+	ProductStatusRejected: pb.ProductStatus_PRODUCT_STATUS_REJECTED,
+}
+
+var validTransitions = map[ProductStatus]map[ProductStatus]bool{
+	ProductStatusDraft: {
+		ProductStatusPending: true,
+	},
+	ProductStatusPending: {
+		ProductStatusApproved: true,
+		ProductStatusRejected: true,
+	},
+	ProductStatusRejected: {
+		ProductStatusDraft: true,
+	},
+}
+
+// AuditAction 添加AuditAction类型
+type AuditAction int
+type AttributeValue struct{}
+
+const (
+	AuditActionApprove AuditAction = 0
+	AuditActionReject  AuditAction = 1
+)
+
+// AuditRecord 完善AuditRecord定义
+type AuditRecord struct {
+	ID         uint64
+	ProductID  uint64
+	OldStatus  ProductStatus
+	NewStatus  ProductStatus
+	Reason     string
+	OperatorID uint64
+	OperatedAt time.Time
+}
+type AuditInfo struct {
+	AuditId    uint64    // 审核记录ID
+	Reason     string    // 审核意见/驳回原因
+	OperatorId uint64    // 操作人ID
+	OperatedAt time.Time // 操作时间
+}
+
+type CategoryInfo struct {
+	CategoryId   string
+	CategoryName string
+}
+type ProductImage struct {
+	URL       string
+	IsPrimary bool
+	SortOrder *int
+}
+
+// Product 商品领域模型
 type Product struct {
-	Id          uint32	`json:"id"`
-	Name        string	`json:"name"`
-	Description string` json:"description"`
-	Picture     string	`json:"picture"`
-	Price       float32	`json:"price"`
-	CategoryId  []int32		`json:"categoryId"`
-	TotalStock        int32     `json:"totalStock"`
-	AvailableStock    *int32    `json:"availableStock"`
-	ReservedStock     int32     `json:"reservedStock"`
-	LowStockThreshold int32     `json:"lowStockThreshold"`
-	AllowNegative     bool      `json:"allowNegative"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	Version           int32     `json:"version"`
+	ID          uint64
+	MerchantId  uint64
+	Name        string
+	Price       float64
+	Description string
+	Stock       int32
+	Images      []*ProductImage
+	Status      ProductStatus
+	Category    CategoryInfo
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Attributes  map[string]*AttributeValue
+	AuditInfo   AuditInfo
 }
 
-type DeleteProductReq struct {
-	Id uint32 `json:"id"`
-	UserID uuid.UUID `json:"userId"`
+type SubmitAuditRequest struct {
+	ProductID  uint64
+	MerchantID uint64
+	ID         uint64
+	Reason     string
+	OperatorID uint64
+	OperatedAt time.Time
 }
 
+// UpdateProductRequest 更新商品请求结构体
 type UpdateProductRequest struct {
-	Id          uint32	`json:"id"`
-	Name        string	`json:"name"`
-	Description string` json:"description"`
-	Picture     string	`json:"picture"`
-	Price       float32	`json:"price"`
-	CategoryId  []int32		`json:"categoryId"`
-	TotalStock        int32     `json:"totalStock"`
-	UserID uuid.UUID `json:"userId"`
-}
-
-type CreateProductRequest struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Picture     string   `json:"picture"`
-	Price       float32  `json:"price"`
-	CategoryId []int32 `json:"categoryId"`
-	TotalStock  int32   `json:"totalStock"`
-	UserID uuid.UUID `json:"userId"`
-}
-
-type ProductReply struct {
-	Product Product
+	ID          uint64
+	MerchantID  uint64 // 添加缺失字段
+	Name        *string
+	Price       *float64
+	Description string
+	Stock       *int
+	Category    CategoryInfo
 }
 
 type ListProductsReq struct {
@@ -76,58 +141,125 @@ type SearchProductsResp struct {
 	Result []*Product `json:"result"`
 }
 
-func (s *ProductUsecase) ListProducts(ctx context.Context, req *ListProductsReq) (*ListProductsResp, error) {
-	s.log.WithContext(ctx).Infof("ListProducts %v", req)
+type AuditProductRequest struct {
+	ProductID  uint64
+	MerchantID uint64
+	Action     uint64
+	Reason     string
+	OperatorID uint64
+}
 
-	if req.Page < 1 || req.PageSize < 1 {
-		return nil, errors.New("invalid pagination parameters")
+// DeleteProductRequest 完善DeleteProductRequest
+type DeleteProductRequest struct {
+	ID         uint64
+	MerchantID uint64
+}
+
+// GetProductRequest 完善GetProductRequest
+type GetProductRequest struct {
+	ID         uint64
+	MerchantID uint64
+}
+
+// CreateProductRequest 完善CreateProductRequest
+type CreateProductRequest struct {
+	Product Product
+}
+
+type ImageModel struct {
+	ID        uint `gorm:"primaryKey"`
+	ProductID uint64
+	URL       string
+	IsPrimary bool
+	SortOrder int32
+}
+
+type AttributeModel struct {
+	ID        uint `gorm:"primaryKey"`
+	ProductID uint64
+	Key       string
+	Type      string // "string", "array", "object"
+	Value     string
+}
+
+type AuditInfoModel struct {
+	AuditID    uint64
+	Reason     string
+	OperatorID uint64
+	OperatedAt time.Time
+}
+
+// ProductRepo is a Greater repo.
+type ProductRepo interface {
+	CreateProduct(ctx context.Context, req CreateProductRequest) (Product, error)
+	UpdateProduct(ctx context.Context, req UpdateProductRequest) (Product, error)
+	SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (AuditRecord, error)
+	AuditProduct(ctx context.Context, req AuditProductRequest) (AuditRecord, error)
+	GetProduct(ctx context.Context, req GetProductRequest) (Product, error)
+	DeleteProduct(ctx context.Context, req DeleteProductRequest) error
+}
+
+// CanTransitionTo 添加状态转换方法
+func (p *Product) CanTransitionTo(newStatus ProductStatus) bool {
+	return validTransitions[p.Status][newStatus]
+}
+func (p *Product) ChangeStatus(newStatus ProductStatus) error {
+	if !validTransitions[p.Status][newStatus] {
+		return fmt.Errorf("invalid status transition from %d to %d", p.Status, newStatus)
 	}
-
-	resp, err := s.repo.ListProducts(ctx, req)
+	p.Status = newStatus
+	return nil
+}
+func (p *ProductUsecase) CreateProduct(ctx context.Context, req CreateProductRequest) (Product, error) {
+	product, err := p.repo.CreateProduct(ctx, req)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("Failed to list products: %v", err)
-		return nil, err
+		return Product{}, err
 	}
-	return resp, nil
+	return product, nil
 }
-
-func (s *ProductUsecase) GetProduct(ctx context.Context, id uint32) (*GetProductResp, error) {
-	s.log.WithContext(ctx).Infof("GetProduct %v", id)
-	
-	resp, err := s.repo.GetProduct(ctx, id)
+func (p *ProductUsecase) UpdateProduct(ctx context.Context, req UpdateProductRequest) (Product, error) {
+	product, err := p.repo.UpdateProduct(ctx, req)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("Failed to get product: %v", err)
-		return nil, err
+		return Product{}, err
 	}
-	return resp, nil
+	return product, nil
 }
-
-func (s *ProductUsecase) SearchProducts(ctx context.Context, req *SearchProductsReq) (*SearchProductsResp, error) {
-	s.log.WithContext(ctx).Infof("SearchProducts %v", req)
-	
-	if req.Query == "" {
-		return nil, errors.New("search query cannot be empty")
-	}
-
-	resp, err := s.repo.SearchProducts(ctx, req)
+func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (AuditRecord, error) {
+	record, err := p.repo.SubmitForAudit(ctx, req)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("Failed to search products: %v", err)
-		return nil, err
+		return AuditRecord{}, err
 	}
-	return resp, nil
+	return record, nil
+}
+func (p *ProductUsecase) AuditProduct(ctx context.Context, req AuditProductRequest) (AuditRecord, error) {
+	record, err := p.repo.AuditProduct(ctx, req)
+	if err != nil {
+		return AuditRecord{}, err
+	}
+	return record, nil
+}
+func (p *ProductUsecase) GetProduct(ctx context.Context, req GetProductRequest) (Product, error) {
+	p.log.Debugf("GetProduct: %+v", req)
+
+	// 正确接收两个返回值
+	product, err := p.repo.GetProduct(ctx, req)
+	if err != nil {
+		return Product{}, err // 返回错误
+	}
+	return product, nil // 返回结果和nil错误
+}
+func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
+	p.log.Debugf("DeleteProduct: %+v", req)
+	return &emptypb.Empty{}, nil
 }
 
-func (s *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*ProductReply, error) {
-	s.log.WithContext(ctx).Infof("CreateProduct %v", req)
-	return s.repo.CreateProduct(ctx, req)
-}
-
-func (s *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*ProductReply, error) {
-	s.log.WithContext(ctx).Infof("UpdateProduct %v", req)
-	return s.repo.UpdateProduct(ctx, req)
-}
-
-func (s *ProductUsecase) DeleteProduct(ctx context.Context, req *DeleteProductReq) (*ProductReply, error) {
-	s.log.WithContext(ctx).Infof("DeleteProduct %v", req)
-	return s.repo.DeleteProduct(ctx, req)
+// 辅助验证函数
+func validateProduct(p *Product) error {
+	if p.Name == "" {
+		return errors.New(403, "", "product name required")
+	}
+	if p.Price <= 0 {
+		return errors.New(403, "", "invalid price")
+	}
+	return nil
 }

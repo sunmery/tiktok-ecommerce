@@ -18,7 +18,7 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-	product *service.ProductCatalogServiceService,
+	product *service.ProductService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -71,6 +71,6 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterProductCatalogServiceServer(srv, product)
+	v1.RegisterProductServiceServer(srv, product)
 	return srv
 }

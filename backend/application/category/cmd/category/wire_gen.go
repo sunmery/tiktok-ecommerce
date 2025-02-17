@@ -16,10 +16,6 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-import (
-	_ "go.uber.org/automaxprocs"
-)
-
 // Injectors from wire.go:
 
 // wireApp init kratos application.

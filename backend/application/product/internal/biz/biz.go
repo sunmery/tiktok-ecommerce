@@ -1,25 +1,11 @@
 package biz
 
 import (
-	"context"
 	"github.com/google/wire"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
 var ProviderSet = wire.NewSet(NewProductUsecase)
-
-type ProductRepo interface {
-	ListProducts(ctx context.Context, req *ListProductsReq) (*ListProductsResp, error)
-	GetProduct(ctx context.Context, id uint32) (*GetProductResp, error)
-	SearchProducts(ctx context.Context, req *SearchProductsReq) (*SearchProductsResp, error)
-	CreateProduct(ctx context.Context, req *CreateProductRequest) (*ProductReply, error)
-	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*ProductReply, error)
-	DeleteProduct(ctx context.Context, req *DeleteProductReq) (*ProductReply, error)
-	ListCategories(ctx context.Context,_ *emptypb.Empty) (*ListCategoriesResp, error)
-	CreateCategory(ctx context.Context, req *CreateCategoryRequest) (*CategoryReply, error)
-//	GetCategoryChildren(ctx context.Context, categoryID uint32) (*CategoryReply, error)
-}
 
 // ProductUsecase is a Product usecase.
 type ProductUsecase struct {
