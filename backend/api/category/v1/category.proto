@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package api.category.v1;
+
+option go_package = "api/category/v1;category";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service CategoryService {
+  rpc GetCategoryTree(GetCategoryTreeRequest) returns (CategoryTree) {
+    option (google.api.http) = {
+      get: "/v1/category/tree"
+    };
+  }
+
+  rpc CreateCategory(CreateCategoryRequest) returns (Category) {
+    option (google.api.http) = {
+      post: "/v1/category"
+      body: "*"
+    };
+  }
+
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Category) {
+    option (google.api.http) = {
+      put: "/v1/category/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryReply) {
+    option (google.api.http) = {
+      delete: "/v1/category/{id}"
+    };
+  }
+}
+
+message CategoryTree {
+  repeated Category categories = 1;
+}
+
+message Category {
+  string id = 1;
+  string name = 2;
+  int32 level = 3;
+  repeated Category children = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message GetCategoryTreeRequest {
+  string query = 1;
+}
+
+message CreateCategoryRequest {
+  string name = 1;
+  uint32 level = 2;
+  string parent_id = 3; // Optional parent category ID
+}
+
+message UpdateCategoryRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message DeleteCategoryRequest {
+  string id = 1;
+}
+
+message DeleteCategoryReply {
+  string message = 1;
+}
