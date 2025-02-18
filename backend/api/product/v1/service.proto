@@ -70,53 +70,6 @@ service ProductService {
       delete: "/v1/products/{id}"
     };
   }
-
-  rpc ListCategories (google.protobuf.Empty) returns (ListCategoriesResp){
-    option (google.api.http) = {
-      get:"/v1/categories/tree"
-    };
-  }
-  rpc CreateCategory (CreateCategoryReq) returns (CategoryReply){
-    option (google.api.http) = {
-      post:"/v1/categories"
-      body:"*"
-    };
-  }
-  rpc GetCategoryChildren(GetCategoryChildrenReq) returns (GetCategoryChildrenResp){
-    option (google.api.http) = {
-      get:"/v1/categories/children/{id}"
-    };
-  }
-}
-
-message CreateCategoryReq {
-  string name = 1;
-  int32 parentId = 3;
-}
-
-message CategoryReply {
-  Category category = 1;
-}
-
-message ListCategoriesResp {
-  repeated Category categories = 1;
-}
-
-message GetCategoryChildrenReq {
-  int32 id = 1;
-}
-
-message GetCategoryChildrenResp {
-  repeated Category categories = 1;
-}
-
-message Category {
-  int32 id = 1;
-  string name = 2;
-  int32 parentId = 4;
-  repeated Category children = 5;
-  google.protobuf.Timestamp createdAt = 6;
-  bool isActive = 7;
 }
 
 // 新增分类验证相关定义
@@ -156,16 +109,6 @@ message Product {
   google.protobuf.Timestamp updated_at = 12;
   CategoryInfo category = 13; // 替换原有category_id字段
 }
-// message Product {
-//   string name = 1 [(google.api.field_behavior) = REQUIRED];
-//   string description = 2 [(google.api.field_behavior) = REQUIRED];
-//   string picture = 3 [(google.api.field_behavior) = REQUIRED];
-//   float price = 4 [(google.api.field_behavior) = REQUIRED];
-//   repeated string categories = 5 [(google.api.field_behavior) = REQUIRED];
-//   string owner = 6 [(google.api.field_behavior) = REQUIRED];
-//   string username = 7 [(google.api.field_behavior) = REQUIRED];
-//   uint32 id = 8;
-// }
 
 
 // 属性值类型定义
@@ -244,7 +187,4 @@ message AuditRecord {
   google.protobuf.Timestamp operated_at = 7;
 }
 
-message DeleteProductReq {
-  uint32 id = 1 ;
-}
 

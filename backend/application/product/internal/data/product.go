@@ -1,10 +1,12 @@
 package data
 
 import (
+	"backend/api/category/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"context"
 	"fmt"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
@@ -23,6 +25,15 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 	if err != nil {
 		return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
 	}
+
+	category, err = p.data.categoryClient.GetCategoryByName(ctx, req.Product.Category.CategoryName)
+
+	if category == nil {
+		p.data.categoryClient.CreateCategory(ctx, &v1.CreateCategoryRequest{
+			Name: req.Product.Category.CategoryName,
+			ParentId: 0,
+			SortOrder: 0,
+		})
 
 	// 执行创建
 	result, err := db.CreateProduct(ctx, models.CreateProductParams{

@@ -120,26 +120,26 @@ type UpdateProductRequest struct {
 	Category    CategoryInfo
 }
 
-type ListProductsReq struct {
-	Page         uint   `json:"page"`
-	PageSize     uint   `json:"pageSize"`
-	CategoryId int32 `json:"categoryId"`
-}
+// type ListProductsReq struct {
+// 	Page         uint   `json:"page"`
+// 	PageSize     uint   `json:"pageSize"`
+// 	CategoryId int32 `json:"categoryId"`
+// }
 
-type ListProductsResp struct {
-	Product []*Product `json:"product"`
-}
+// type ListProductsResp struct {
+// 	Product []*Product `json:"product"`
+// }
 
-type GetProductResp struct {
-	Product *Product `json:"product"`
-}
+// type GetProductResp struct {
+// 	Product *Product `json:"product"`
+// }
 
-type SearchProductsReq struct {
-	Query string `json:"query"`
-}
-type SearchProductsResp struct {
-	Result []*Product `json:"result"`
-}
+// type SearchProductsReq struct {
+// 	Query string `json:"query"`
+// }
+// type SearchProductsResp struct {
+// 	Result []*Product `json:"result"`
+// }
 
 type AuditProductRequest struct {
 	ProductID  uint64

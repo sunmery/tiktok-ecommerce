@@ -147,11 +147,7 @@ type UnimplementedProductServiceServer struct{}
 func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
-<<<<<<< HEAD
-func (UnimplementedProductCatalogServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*ProductReply, error) {
-=======
 func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {
->>>>>>> main
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
 }
 func (UnimplementedProductServiceServer) SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error) {
@@ -166,25 +162,8 @@ func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProduct
 func (UnimplementedProductServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
 }
-<<<<<<< HEAD
-func (UnimplementedProductCatalogServiceServer) DeleteProduct(context.Context, *DeleteProductReq) (*ProductReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
-}
-func (UnimplementedProductCatalogServiceServer) ListCategories(context.Context, *emptypb.Empty) (*ListCategoriesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCategories not implemented")
-}
-func (UnimplementedProductCatalogServiceServer) CreateCategory(context.Context, *CreateCategoryReq) (*CategoryReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCategory not implemented")
-}
-func (UnimplementedProductCatalogServiceServer) GetCategoryChildren(context.Context, *GetCategoryChildrenReq) (*GetCategoryChildrenResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryChildren not implemented")
-}
-func (UnimplementedProductCatalogServiceServer) mustEmbedUnimplementedProductCatalogServiceServer() {}
-func (UnimplementedProductCatalogServiceServer) testEmbeddedByValue()                               {}
-=======
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 func (UnimplementedProductServiceServer) testEmbeddedByValue()                        {}
->>>>>>> main
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ProductServiceServer will
@@ -222,11 +201,7 @@ func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-<<<<<<< HEAD
-func _ProductCatalogService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-=======
 func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
->>>>>>> main
 	in := new(UpdateProductRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -239,11 +214,7 @@ func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context,
 		FullMethod: ProductService_UpdateProduct_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-<<<<<<< HEAD
-		return srv.(ProductCatalogServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
-=======
 		return srv.(ProductServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
->>>>>>> main
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -302,27 +273,12 @@ func _ProductService_GetProduct_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-<<<<<<< HEAD
-func _ProductCatalogService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteProductReq)
-=======
 func _ProductService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteProductRequest)
->>>>>>> main
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-<<<<<<< HEAD
-		return srv.(ProductCatalogServiceServer).DeleteProduct(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ProductCatalogService_DeleteProduct_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServiceServer).DeleteProduct(ctx, req.(*DeleteProductReq))
-=======
 		return srv.(ProductServiceServer).DeleteProduct(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
@@ -331,70 +287,11 @@ func _ProductService_DeleteProduct_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).DeleteProduct(ctx, req.(*DeleteProductRequest))
->>>>>>> main
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-<<<<<<< HEAD
-func _ProductCatalogService_ListCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductCatalogServiceServer).ListCategories(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ProductCatalogService_ListCategories_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServiceServer).ListCategories(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ProductCatalogService_CreateCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCategoryReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductCatalogServiceServer).CreateCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ProductCatalogService_CreateCategory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServiceServer).CreateCategory(ctx, req.(*CreateCategoryReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ProductCatalogService_GetCategoryChildren_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCategoryChildrenReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductCatalogServiceServer).GetCategoryChildren(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ProductCatalogService_GetCategoryChildren_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServiceServer).GetCategoryChildren(ctx, req.(*GetCategoryChildrenReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// ProductCatalogService_ServiceDesc is the grpc.ServiceDesc for ProductCatalogService service.
-=======
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
->>>>>>> main
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ProductService_ServiceDesc = grpc.ServiceDesc{
@@ -424,22 +321,6 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProduct",
 			Handler:    _ProductService_DeleteProduct_Handler,
-		},
-		{
-			MethodName: "DeleteProduct",
-			Handler:    _ProductCatalogService_DeleteProduct_Handler,
-		},
-		{
-			MethodName: "ListCategories",
-			Handler:    _ProductCatalogService_ListCategories_Handler,
-		},
-		{
-			MethodName: "CreateCategory",
-			Handler:    _ProductCatalogService_CreateCategory_Handler,
-		},
-		{
-			MethodName: "GetCategoryChildren",
-			Handler:    _ProductCatalogService_GetCategoryChildren_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
