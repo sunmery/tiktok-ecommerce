@@ -26,6 +26,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 		return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
 	}
 
+	// TODO 创建分类
 	category, err = p.data.categoryClient.GetCategoryByName(ctx, req.Product.Category.CategoryName)
 
 	if category == nil {
@@ -34,6 +35,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 			ParentId: 0,
 			SortOrder: 0,
 		})
+	
 
 	// 执行创建
 	result, err := db.CreateProduct(ctx, models.CreateProductParams{

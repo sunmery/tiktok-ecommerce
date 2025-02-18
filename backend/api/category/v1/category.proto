@@ -16,7 +16,7 @@ service CategoryService {
   // 创建分类
   rpc CreateCategory(CreateCategoryRequest) returns (Category) {
     option (google.api.http) = {
-      post: "/v1/category" // HTTP POST 请求路径。
+      post: "/v1/categories" // HTTP POST 请求路径。
       body: "*" // 表示请求体包含所有字段。
     };
   }
@@ -24,14 +24,14 @@ service CategoryService {
   // 获取单个分类
   rpc GetCategory(GetCategoryRequest) returns (Category) {
     option (google.api.http) = {
-      get: "/v1/category/{id}" // HTTP GET 请求路径，通过 ID 获取分类。
+      get: "/v1/categories/{id}" // HTTP GET 请求路径，通过 ID 获取分类。
     };
   }
 
   // 更新单个分类
   rpc UpdateCategory(UpdateCategoryRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      put: "/v1/category/{id}" // HTTP PUT 请求路径，通过 ID 更新分类。
+      put: "/v1/categories/{id}" // HTTP PUT 请求路径，通过 ID 更新分类。
       body: "*" // 表示请求体包含所有字段。
     };
   }
@@ -39,45 +39,49 @@ service CategoryService {
   // 删除分类及关联关系
   rpc DeleteCategory(DeleteCategoryRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/v1/category/{id}" // HTTP DELETE 请求路径，通过 ID 删除分类。
+      delete: "/v1/categories/{id}" // HTTP DELETE 请求路径，通过 ID 删除分类。
     };
   }
 
   // 获取分类的子树结构（树形结构操作）
   rpc GetSubTree(GetSubTreeRequest) returns (stream Category) {
     option (google.api.http) = {
-      get: "/v1/category/{root_id}/subtree" // HTTP GET 请求路径，获取指定根节点的子树。
+      get: "/v1/categories/{root_id}/subtree" // HTTP GET 请求路径，获取指定根节点的子树。
     };
   }
 
   // 获取分类的完整路径（从根节点到当前分类的路径）
   rpc GetCategoryPath(GetCategoryPathRequest) returns (stream Category) {
     option (google.api.http) = {
-      get: "/v1/category/{category_id}/path" // HTTP GET 请求路径，获取分类的路径。
+      get: "/v1/categories/{category_id}/path" // HTTP GET 请求路径，获取分类的路径。
     };
   }
 
   // 获取所有叶子分类（三级分类）
-  rpc GetLeafCategories(GetLeafCategoriesRequest) returns (stream Category) {
+  rpc GetLeafCategories(google.protobuf.Empty) returns (Categorys) {
     option (google.api.http) = {
-      get: "/v1/category/leaves" // HTTP GET 请求路径，获取所有叶子分类。
+      get: "/v1/categories/leaves" // HTTP GET 请求路径，获取所有叶子分类。
     };
   }
 
   // 获取分类闭包关系（Closure Table 实现的层级关系）
   rpc GetClosureRelations(GetClosureRequest) returns (stream ClosureRelation) {
     option (google.api.http) = {
-      get: "/v1/category/{category_id}/closure" // HTTP GET 请求路径，获取分类的闭包关系。
+      get: "/v1/categories/{category_id}/closure" // HTTP GET 请求路径，获取分类的闭包关系。
     };
   }
 
   // 更新闭包关系深度（调整分类层级）
   rpc UpdateClosureDepth(UpdateClosureDepthRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      patch: "/v1/category/{category_id}/closure" // HTTP PATCH 请求路径，更新闭包关系深度。
+      patch: "/v1/categories/{category_id}/closure" // HTTP PATCH 请求路径，更新闭包关系深度。
       body: "*" // 表示请求体包含所有字段。
     };
   }
+}
+
+message Categorys {
+  repeated Category categorys = 1;
 }
 
 // 基础数据结构：分类（Category）
@@ -133,11 +137,6 @@ message GetSubTreeRequest {
 // 获取分类路径请求
 message GetCategoryPathRequest {
   int64 category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
-}
-
-// 获取叶子分类请求
-message GetLeafCategoriesRequest {
-  int32 level = 1; // 固定传 3，表示获取三级分类（叶子分类）。
 }
 
 // 获取闭包关系请求

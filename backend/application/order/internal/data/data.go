@@ -13,7 +13,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo)
 
 type Data struct {
 	db     *models.Queries
@@ -63,6 +63,13 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 	if err != nil {
 		panic(fmt.Errorf("parse database config failed: %v", err))
 	}
+
+	// 连接池设置
+	cfg.MaxConns = c.Database.Pool.MaxConns
+	cfg.MinConns = c.Database.Pool.MinConns
+	cfg.MaxConnLifetime = c.Database.Pool.MaxConnLifetime.AsDuration()
+	cfg.HealthCheckPeriod = c.Database.Pool.HealthCheckPeriod.AsDuration()
+	cfg.MaxConnIdleTime = c.Database.Pool.MaxConnIdleTime.AsDuration()
 
 	// 链路追踪配置
 	cfg.ConnConfig.Tracer = otelpgx.NewTracer()

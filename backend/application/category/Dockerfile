@@ -18,7 +18,7 @@ ARG CGOENABLED=0
 # Go的环境变量, 例如alpine镜像不内置gcc,则关闭CGO很有效
 ARG GO_PROXY=https://proxy.golang.com.cn,direct
 
-COPY . .
+COPY .. .
 
 # 设置环境变量
 # RUN go env -w GOPROXY=https://goproxy.cn,direct
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build -o /bin ./...
    # 带版本的形式: go build -ldflags="-X main.Version=${VERSION}" -o /bin/main .
    # 多个服务的形式: go build -o /bin/ ./...
-COPY ./configs /bin/configs
+# COPY ./configs /bin/configs
 
 FROM alpine:latest AS final
 # 从构建阶段复制编译好的 Go 应用程序到运行阶段
@@ -54,7 +54,7 @@ ARG HTTP_PORT=30001
 ARG GRPC_PORT=30002
 
 # 修改镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 
 # 安装应用运行必需的系统证书和时区数据包
 # RUN --mount=type=cache,target=/var/cache/apk \
@@ -65,8 +65,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
 # RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser
 
 # 设置时区为上海
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN echo 'Asia/Shanghai' >/etc/timezone
+# RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+# RUN echo 'Asia/Shanghai' >/etc/timezone
 
 # USER appuser
 
@@ -74,10 +74,10 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 EXPOSE $HTTP_PORT
 EXPOSE $GRPC_PORT
 
-RUN mkdir -p /data/conf
+# RUN mkdir -p /data/conf
 
 # 设置容器启动时执行的命令
-CMD ["/bin/user", "-conf", "/data/conf"]
+CMD ["/bin/category"]
 
 # 构建Docker所属的当前平台与架构的二进制文件, 进到当前的backend目录
 # VERSION=dev

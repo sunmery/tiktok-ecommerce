@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/category": {
+    "/v1/categories": {
       "post": {
         "summary": "创建分类",
         "operationId": "CategoryService_CreateCategory",
@@ -49,24 +49,15 @@
         ]
       }
     },
-    "/v1/category/leaves": {
+    "/v1/categories/leaves": {
       "get": {
         "summary": "获取所有叶子分类（三级分类）",
         "operationId": "CategoryService_GetLeafCategories",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1Category"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1Category"
+              "$ref": "#/definitions/v1Categorys"
             }
           },
           "default": {
@@ -76,22 +67,12 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "level",
-            "description": "固定传 3，表示获取三级分类（叶子分类）。",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
         "tags": [
           "CategoryService"
         ]
       }
     },
-    "/v1/category/{categoryId}/closure": {
+    "/v1/categories/{categoryId}/closure": {
       "get": {
         "summary": "获取分类闭包关系（Closure Table 实现的层级关系）",
         "operationId": "CategoryService_GetClosureRelations",
@@ -173,7 +154,7 @@
         ]
       }
     },
-    "/v1/category/{categoryId}/path": {
+    "/v1/categories/{categoryId}/path": {
       "get": {
         "summary": "获取分类的完整路径（从根节点到当前分类的路径）",
         "operationId": "CategoryService_GetCategoryPath",
@@ -215,7 +196,7 @@
         ]
       }
     },
-    "/v1/category/{id}": {
+    "/v1/categories/{id}": {
       "get": {
         "summary": "获取单个分类",
         "operationId": "CategoryService_GetCategory",
@@ -320,7 +301,7 @@
         ]
       }
     },
-    "/v1/category/{rootId}/subtree": {
+    "/v1/categories/{rootId}/subtree": {
       "get": {
         "summary": "获取分类的子树结构（树形结构操作）",
         "operationId": "CategoryService_GetSubTree",
@@ -460,6 +441,18 @@
         }
       },
       "title": "基础数据结构：分类（Category）"
+    },
+    "v1Categorys": {
+      "type": "object",
+      "properties": {
+        "categorys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Category"
+          }
+        }
+      }
     },
     "v1ClosureRelation": {
       "type": "object",

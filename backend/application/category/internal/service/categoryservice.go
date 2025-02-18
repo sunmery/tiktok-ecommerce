@@ -4,6 +4,7 @@ import (
 	"backend/application/category/internal/biz"
 	"context"
 	"errors"
+	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -142,7 +143,7 @@ func (s *CategoryServiceService) DeleteCategory(ctx context.Context, req *pb.Del
 	return &emptypb.Empty{}, nil
 }
 
-// GetSubTree 获取子树（流式返回）
+// GetSubTree 获取子树
 // 接口文档：GET /v1/category/{root_id}/subtree
 func (s *CategoryServiceService) GetSubTree(req *pb.GetSubTreeRequest, stream pb.CategoryService_GetSubTreeServer) error {
 	// 参数校验
@@ -182,7 +183,7 @@ func (s *CategoryServiceService) GetSubTree(req *pb.GetSubTreeRequest, stream pb
 	return nil
 }
 
-// GetCategoryPath 获取分类路径（流式返回）
+// GetCategoryPath 获取分类路径
 // 接口文档：GET /v1/category/{category_id}/path
 func (s *CategoryServiceService) GetCategoryPath(req *pb.GetCategoryPathRequest, stream grpc.ServerStreamingServer[pb.Category]) error {
 	// 参数校验
@@ -218,23 +219,21 @@ func (s *CategoryServiceService) GetCategoryPath(req *pb.GetCategoryPathRequest,
 	return nil
 }
 
-// GetLeafCategories 获取所有叶子分类（流式返回）
+// GetLeafCategories 获取所有叶子分类
 // 接口文档：GET /v1/category/leaves
-func (s *CategoryServiceService) GetLeafCategories(req *pb.GetLeafCategoriesRequest, stream grpc.ServerStreamingServer[pb.Category]) error {
-	// 参数校验
-	if req.Level != 3 {
-		return status.Error(codes.InvalidArgument, "层级参数必须为3")
-	}
+// func (s *CategoryServiceService) GetLeafCategories(req *pb.GetLeafCategoriesRequest, stream grpc.ServerStreamingServer[pb.Category]) error {
+func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *emptypb.Empty) (*pb.Categorys, error) {
 
 	// 获取叶子分类
-	leafCategories, err := s.uc.GetLeafCategories(stream.Context(), int(req.Level))
+	leafCategories, err := s.uc.GetLeafCategories(ctx)
 	if err != nil {
-		return status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-
+	fmt.Printf("GetLeafCategories res: %+v", leafCategories)
+	var categories = make([]*pb.Category, 0, len(leafCategories))
 	// 流式返回结果
 	for _, category := range leafCategories {
-		if err := stream.Send(&pb.Category{
+		categories = append(categories, &pb.Category{
 			Id:        category.ID,
 			ParentId:  category.ParentID,
 			Level:     int32(category.Level),
@@ -244,14 +243,15 @@ func (s *CategoryServiceService) GetLeafCategories(req *pb.GetLeafCategoriesRequ
 			IsLeaf:    category.IsLeaf,
 			CreatedAt: timestamppb.New(category.CreatedAt),
 			UpdatedAt: timestamppb.New(category.UpdatedAt),
-		}); err != nil {
-			return status.Error(codes.Internal, "流式传输中断")
-		}
+		})
 	}
-	return nil
+
+	return &pb.Categorys{
+		Categorys: categories,
+	}, nil
 }
 
-// GetClosureRelations 获取闭包关系（流式返回）
+// GetClosureRelations 获取闭包关系
 // 接口文档：GET /v1/category/{category_id}/closure
 func (s *CategoryServiceService) GetClosureRelations(req *pb.GetClosureRequest, stream pb.CategoryService_GetClosureRelationsServer) error {
 	// 参数校验

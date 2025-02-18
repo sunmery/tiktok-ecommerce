@@ -1,39 +1,26 @@
-GOHOSTOS := $(shell go env GOHOSTOS)
-GOPATH := $(shell go env GOPATH)
-VERSION := $(shell git describe --tags --always)
-KRATOS_VERSION := $(shell go mod graph | grep go-kratos/kratos/v2 | head -n 1 | awk -F '@' '{print $$2}')
-KRATOS := $(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
+GOPATH:=$(shell go env GOPATH)
+VERSION=$(shell git describe --tags --always)
+APP_RELATIVE_PATH=$(shell basename $$PWD)
+API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
+KRATOS_VERSION=$(shell go mod graph |grep go-kratos/kratos/v2 |head -n 1 |awk -F '@' '{print $$2}')
+KRATOS=$(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
+APP_NAME=$(APP_RELATIVE_PATH)
 
-ifeq ($(GOHOSTOS), windows)
-Git_Bash = "$(subst \,/,$(subst cmd\git.exe,bin\bash.exe,$(shell where git)))"
-APP_RELATIVE_PATH := $(shell $(Git_Bash) -c "cd ../../application/$$(basename $$PWD) && basename $$PWD")
-API_PROTO_FILES := $(shell $(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && find . -name '*.proto'")
-INTERNAL_PROTO_FILES := $(shell $(Git_Bash) -c "find internal -name '*.proto'")
-else
-APP_RELATIVE_PATH := $(shell basename $$PWD)
-API_PROTO_FILES := $(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
-INTERNAL_PROTO_FILES := $(shell find internal -name *.proto)
-endif
-
-# 公共配置
-APP_NAME := $(APP_RELATIVE_PATH)
-GOIMAGE ?= golang:1.23.3-alpine3.20
+# 默认值
+VERSION ?= dev
+GOIMAGE ?= golang:1.24.0-alpine3.20
 GOOS ?= linux
 GOARCH ?= amd64
 CGOENABLED ?= 0
 HTTP_PORT ?= 30001
 GRPC_PORT ?= 30002
-DOCKER_IMAGE := e-commence/$(APP_NAME):dev
-SERVICE := $(APP_RELATIVE_PATH)
-REPOSITORY := e-commence/$(SERVICE)
-REGISTER := "ccr.ccs.tencentyun.com"
 
-.PHONY: xxx
-xxx:
-	@echo "--------"
-	@echo $(Git_Bash)
-	@echo $(INTERNAL_PROTO_FILES)
-	@echo $(API_PROTO_FILES)
+# 动态变量
+DOCKER_IMAGE=e-commerce/$(APP_NAME):dev
+SERVICE = $(APP_RELATIVE_PATH)
+REPOSITORY = e-commence/$(SERVICE)
+REGISTER="ccr.ccs.tencentyun.com"
 
 .PHONY: infra
 infra:
@@ -42,78 +29,31 @@ infra:
 	docker compose -f infrastructure/dragonflydb/compose.yaml up -d
 	docker compose -f infrastructure/minio/compose.yaml up -d
 
-.PHONY: grpc
-grpc:
-	@echo "Generating gRPC code..."
-	$(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-    --proto_path=../../third_party \
-    --go_out=paths=source_relative:. \
-    --go-grpc_out=paths=source_relative:. \
-    --go-http_out=paths=source_relative:. \
-    --go-errors_out=paths=source_relative:. \
-    $(API_PROTO_FILES)"
-
-.PHONY: api-path-fix
-api-path-fix:
-ifeq ($(GOHOSTOS), windows)
-	@echo "Fixing Windows path delimiters..."
-	$(Git_Bash) -c "find ../../api/$(APP_RELATIVE_PATH) -name '*.pb.go' -exec sed -i 's|\\\\|/|g' {} \;"
-endif
-
-.PHONY: proto
-proto: grpc http errors swagger config api-path-fix
-
 .PHONY: api
-http:
-	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+api:
+	@cd ../../api/$(APP_RELATIVE_PATH) && \
+	protoc --proto_path=. \
     --proto_path=../../third_party \
     --go_out=paths=source_relative:. \
     --go-http_out=paths=source_relative:. \
-    $(API_PROTO_FILES)
-
-.PHONY: http
-http:
-	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-    --proto_path=../../third_party \
-    --go_out=paths=source_relative:. \
-    --go-http_out=paths=source_relative:. \
-    $(API_PROTO_FILES)
-
-.PHONY: errors
-errors:
-	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-    --proto_path=../../third_party \
-    --go_out=paths=source_relative:. \
+    --go-grpc_out=paths=source_relative:. \
     --go-errors_out=paths=source_relative:. \
-    $(API_PROTO_FILES)
-
-.PHONY: swagger
-swagger:
-	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-	 --proto_path=../../third_party \
-	 --openapiv2_out . \
-	 --openapiv2_opt logtostderr=true \
-    $(API_PROTO_FILES)
+    --openapiv2_out . \
+    --openapiv2_opt logtostderr=true \
+    $(API_PROTO_FILES) && echo "ok, no err"
 
 .PHONY: config
 config:
-	protoc --proto_path=. \
-           --proto_path=../../third_party \
-           --go_out=paths=source_relative:. \
-           $(INTERNAL_PROTO_FILES)
+	@protoc --proto_path=. \
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    $(INTERNAL_PROTO_FILES)
 
-#.PHONY: api
-#api:
-#	@make http
-#	@make grpc
-#	@make errors
-#	@make swagger
-#	@make config
-
-# 构建镜像
+# 使用 docker 构建镜像, 需要传递该服务的HTTP_PORT, GRPC_PORT 变量
 .PHONY: docker-build
 docker-build:
 	@echo "Building Docker image for service: $(SERVICE)"
+	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
 	@echo "Docker image: $(REPOSITORY):dev"
 	REPOSITORY="ecommence/$(APP_RELATIVE_PATH)"
 	cd ../.. && docker build . \
@@ -127,17 +67,19 @@ docker-build:
 	  --build-arg GOARCH=$(GOARCH) \
 	  --build-arg VERSION=$(VERSION) \
 	  --build-arg HTTP_PORT=$(HTTP_PORT) \
-	  --build-arg GRPC_PORT=$(GRPC_PORT)
+	  --build-arg GRPC_PORT=$(GRPC_PORT) \
+	  --platform $(GOOS)/$(GOARCH)
 
-# 推送 Docker 镜像
+# 推送 Docker 镜像, 需要传递REPOSITORY变量, 例如
 .PHONY: docker-push
 docker-push:
 	@echo "Pushing Docker image for service: $(SERVICE)"
+	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
 	@echo "Docker image: $(REPOSITORY):dev"
-	docker tag $(REPOSITORY):dev $(REGISTER)/$(REPOSITORY):$(VERSION)
+	docker tag $(REPOSITORY):dev $(REGISTER)/$(REPOSITORY):dev
 	docker push $(REGISTER)/$(REPOSITORY):dev
 
-# 推送 Docker 镜像
+# 运行Docker 镜像, 需要传递该服务的HTTP_PORT, GRPC_PORT 变量
 .PHONY: docker-run
 docker-run:
 	docker run \
@@ -154,74 +96,76 @@ generate:
 	go generate ./...
 
 .PHONY: build
-# build
 build:
+	@echo "构建 $(APP_NAME) 应用版本: $(VERSION)"
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./...
 
-.PHONY: test
 # test
+.PHONY: test
 test:
-	go test -v ./... -cover
+	@echo "测试 $(APP_NAME) 正在输出覆盖率和查找潜在的goruntine竞争"
+	go test -v ./... -cover -race
 
 .PHONY: run
 run:
 	cd cmd/server/ && go run .
 
-.PHONY: ent
-ent:
-	cd internal/data/ && ent generate ./ent/schema
-
 .PHONY: wire
 # generate wire
 wire:
-	cd cmd/server && wire
-
-.PHONY: api
-# generate api proto
-api: grpc http swagger errors
+	go generate ./...
 
 .PHONY: all
-# generate all
-all: grpc http config generate
+# 生成全部代码
+all:
+	@make api
+	@make config
+	@make wire
+	@make sqlc
+	@echo "ok, no err"
 
-# 生成迁移文件
-# 使用: make new-migrate name=verify_emails
+.PHONY: migrate-new
+# 生成迁移文件, example: make migrate-new name=verify_emails
 migrate-new:
 	migrate create -dir internal/data/migrate -ext sql -seq $(name)
 
+.PHONY: migrate-up
 # 升级全部的迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
 migrate-up:
 	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/ecommerce?sslmode=disable"
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up
 
+.PHONY: migrate-up1
 # 向上迁移一个版本, 根据数据库的表schema_migrations的version来决定
 migrate-up1:
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up 1
 
+.PHONY: migrate-down
 # 向下全部降级迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
 migrate-down:
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose down
 
+.PHONY: migrate-down1
 # 向下降级一个版本, 根据数据库的表schema_migrations的version来决定
 migrate-down1:
 	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose down 1
 
-# Mock DB
-# -package 包名
-# -destination 包含生成的mock文件位置
-# simple_bank/worker TaskDistributor
-# 最后参数: 包路径与要生成的interface接口的名称
+.PHONY: mock
+# Mock DB -package 包名 -destination 包含生成的mock文件位置 dir/dir TaskDistributor 最后参数: 包路径与要生成的interface接口的名称
 mock:
 	#mockgen -package mockdb -destination mock/store.go example/sqlc Store
 
+.PHONY: evans
 # grpc的命令行测试工具
 evans:
 	evans -r repl --host localhost -p 30002
 
+.PHONY: sqlc
 # 生成sql代码
 sqlc:
 	sqlc generate
 
+.PHONY: help
 # show help
 help:
 	@echo ''

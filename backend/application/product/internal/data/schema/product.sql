@@ -6,7 +6,7 @@ CREATE TABLE products.products (
     name VARCHAR(255) NOT NULL,       -- 商品名称
     description TEXT,                 -- 商品描述
     price NUMERIC(15,2) CHECK (price >= 0), -- 精确金额计算
-    stock INT CHECK (stock >= 0),     -- 简化库存，无分仓
+
     status SMALLINT NOT NULL DEFAULT 1, -- 状态: 1=草稿 2=待审 3=已上架 4=已驳回
     merchant_id BIGINT NOT NULL,       -- 商家ID（业务关联）
     current_audit_id BIGINT,           -- 当前审核记录ID（逻辑外键）
