@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 #     go build -o /bin/$SERVICE ./application/$SERVICE/cmd/$SERVICE/...
     # 带版本的形式: go build -ldflags="-X main.Version=${VERSION}" -o /bin/main .
 
-COPY application/$SERVICE/configs /bin/configs
+# COPY application/$SERVICE/configs /bin/configs
 
 FROM alpine:latest AS final
 # 从构建阶段复制编译好的 Go 应用程序到运行阶段

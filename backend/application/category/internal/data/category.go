@@ -113,7 +113,7 @@ func (r *categoryRepo) GetCategoryPath(ctx context.Context, categoryID int64) ([
 }
 
 // GetLeafCategories 获取所有叶子分类（三级分类）
-func (r *categoryRepo) GetLeafCategories(ctx context.Context, level int) ([]*biz.Category, error) {
+func (r *categoryRepo) GetLeafCategories(ctx context.Context) ([]*biz.Category, error) {
 	dbCategories, err := r.data.DB(ctx).GetLeafCategories(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get leaf categories failed: %w", err)

@@ -32,7 +32,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, req *v1.GetProfileRequ
 	}
 	return &v1.GetProfileResponse{
 		State: result.State,
-		Data: &v1.Data{
+		Data: &v1.UserInfo{
 			Owner: result.Data.Owner,
 			Name:  result.Data.Name,
 			// CreatedTime:         result.Data.CreatedTime,

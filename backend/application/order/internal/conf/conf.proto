@@ -26,9 +26,17 @@ message Server {
 }
 
 message Data {
+  message Pool {
+    int32 max_conns = 1;
+    int32 min_conns = 2;
+    google.protobuf.Duration max_conn_lifetime = 3;
+    google.protobuf.Duration health_check_period = 4;
+    google.protobuf.Duration max_conn_idle_time = 5;
+  }
   message Database {
     string driver = 1;
     string source = 2;
+    Pool pool = 3;
   }
   message Cache {
     string network = 1;
@@ -43,11 +51,9 @@ message Data {
   Cache cache = 2;
 }
 
-// 授权/认证
-message Auth {
-  message JWT {
-    string certificate = 1 [json_name = "service_key"];
-  }
+// SaaS 软件即服务
+message SaaS {
+  // 用户管理平台
   message Casdoor {
     message Server {
       string endpoint = 1;
@@ -56,10 +62,18 @@ message Auth {
       string organization = 4;
       string application = 5;
     }
-    Server server = 2;
+    Server server = 1;
+  }
+
+  Casdoor casdoor = 1;
+}
+
+// 认证
+message Auth {
+  message JWT {
+    string certificate = 1 [json_name = "service_key"];
   }
   JWT jwt = 1;
-  Casdoor casdoor = 2;
 }
 
 // 可观测性

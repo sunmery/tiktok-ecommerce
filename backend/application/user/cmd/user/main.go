@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/application/user/internal/conf"
+	"backend/constants"
 	"backend/pkg"
 	"flag"
 	"fmt"
@@ -20,7 +21,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "ecommerce-user-v1"
+	Name = constants.UserServiceV1
 	// Version 通过环境变量来替换
 	Version      string
 	flagconf     string

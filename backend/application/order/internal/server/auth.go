@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"crypto/rsa"
-	"fmt"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 	"backend/application/order/internal/conf"
@@ -12,7 +12,8 @@ import (
 // NewWhiteListMatcher 创建jwt白名单
 func NewWhiteListMatcher() selector.MatchFunc {
 	whiteList := make(map[string]struct{})
-	// example: 从 api 目录生成的 pb.go 文件找到需要不需要进行鉴权的接口
+	// 从 api 目录生成的 pb.go 文件找到需要不需要进行鉴权的接口
+	// example:
 	// whiteList["/admin.v1.AdminService/Login"] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {
@@ -26,7 +27,7 @@ func NewWhiteListMatcher() selector.MatchFunc {
 func parseRSAPublicKeyFromPEM(pemBytes []byte) (*rsa.PublicKey, error) {
 	publicKey, err := jwtV5.ParseRSAPublicKeyFromPEM(pemBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse RSA public key: %w", err)
+		log.Errorf("failed to parse RSA public key: %w", err)
 	}
 	return publicKey, nil
 }
@@ -34,7 +35,7 @@ func parseRSAPublicKeyFromPEM(pemBytes []byte) (*rsa.PublicKey, error) {
 func InitJwtKey(ac *conf.Auth) *rsa.PublicKey {
 	publicKey, err := parseRSAPublicKeyFromPEM([]byte(ac.Jwt.Certificate))
 	if err != nil {
-		panic("failed to parse public key")
+		log.Errorf("failed to parse RSA public key from PEM: %v", err)
 	}
 	return publicKey
 }
