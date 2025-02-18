@@ -62,9 +62,25 @@
         },
         "zipCode": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       }
+    },
+    "v1CartItem": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品ID"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品数量"
+        }
+      },
+      "title": "购物车商品"
     },
     "v1ListOrderResp": {
       "type": "object",
@@ -109,17 +125,19 @@
         },
         "createdAt": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       }
     },
     "v1OrderItem": {
       "type": "object",
       "properties": {
+        "item": {
+          "$ref": "#/definitions/v1CartItem"
+        },
         "cost": {
           "type": "number",
-          "format": "float",
-          "title": "cart.CartItem item = 1;"
+          "format": "float"
         }
       }
     },

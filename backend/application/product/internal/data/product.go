@@ -24,6 +24,8 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 		return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
 	}
 
+	// TODO 创建分类
+
 	// 执行创建
 	result, err := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Product.Name,

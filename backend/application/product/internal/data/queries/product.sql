@@ -9,10 +9,9 @@
 INSERT INTO products.products (name,
                                description,
                                price,
-                               stock,
                                status,
                                merchant_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, created_at, updated_at;
 
 -- name: UpdateProduct :exec
@@ -21,12 +20,11 @@ UPDATE products.products
 SET name        = $2,
     description = $3,
     price       = $4,
-    stock       = $5,
-    status      = $6,
+    status      = $5,
     updated_at  = NOW()
 WHERE id = $1
-  AND merchant_id = $7
-  AND updated_at = $8;
+  AND merchant_id = $6
+  AND updated_at = $7;
 -- 乐观锁版本控制
 
 -- name: GetProduct :one
@@ -35,7 +33,6 @@ SELECT id,
        name,
        description,
        price,
-       stock,
        status,
        merchant_id,
        created_at,

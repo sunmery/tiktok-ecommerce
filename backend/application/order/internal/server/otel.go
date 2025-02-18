@@ -17,7 +17,8 @@ func initTracerProvider(ctx context.Context, res *resource.Resource, conn string
 	// 服务端的Jaeger支持HTTPS时使用
 	// traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(conn))
 
-	// 服务端的Jaeger不支持HTTPS时使用otlptracehttp.WithInsecure()显式声明只使用HTTP不安全的连接
+	// 服务端的Jaeger不支持HTTPS时,
+	// 使用otlptracehttp.WithInsecure()显式声明只使用HTTP不安全的连接
 	traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithInsecure(), otlptracehttp.WithEndpoint(conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
