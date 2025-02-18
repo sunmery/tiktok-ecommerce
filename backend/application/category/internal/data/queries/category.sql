@@ -77,9 +77,9 @@ RETURNING descendant;
 SELECT * FROM categories.categories
 WHERE id = @id LIMIT 1;
 
--- name: GetCategoryByName :one
-SELECT * FROM categories.categories
-WHERE name = @name LIMIT 1;
+-- -- name: GetCategoryByName :one
+-- SELECT * FROM categories.categories
+-- WHERE name = @name LIMIT 1;
 
 -- name: UpdateCategoryName :exec
 UPDATE categories.categories

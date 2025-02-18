@@ -86,7 +86,6 @@ message Product {
   string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   double price = 4; // 商品价格（单位：元）
-  int32 stock = 5;  // 库存数量
   ProductStatus status = 6; // 当前状态
   uint64 merchant_id = 7;    // 所属商家ID
 

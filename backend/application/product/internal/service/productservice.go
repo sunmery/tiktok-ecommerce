@@ -26,7 +26,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	if err != nil {
 		return nil, convertError(err)
 	}
-	return convertBizProductToPB(&created), nil
+	return convertBizProductToPB(created), nil
 }
 
 func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Product, error) {
@@ -43,10 +43,10 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	if pbProduct.Price > 0 {
 		updateReq.Price = &pbProduct.Price
 	}
-	if pbProduct.Stock >= 0 {
-		stock := int(pbProduct.Stock)
-		updateReq.Stock = &stock
-	}
+	// if pbProduct.Stock >= 0 {
+	// 	stock := int(pbProduct.Stock)
+	// 	updateReq.Stock = &stock
+	// }
 	if pbProduct.Description != "" {
 		updateReq.Description = pbProduct.Description
 	}
@@ -62,7 +62,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 		return nil, convertError(err)
 	}
 
-	return convertBizProductToPB(&updatedProduct), nil
+	return convertBizProductToPB(updatedProduct), nil
 }
 
 func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
@@ -127,7 +127,7 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 		return nil, convertError(err)
 	}
 
-	return convertBizProductToPB(&product), nil
+	return convertBizProductToPB(product), nil
 }
 
 func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*emptypb.Empty, error) {
@@ -151,7 +151,7 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
-		Stock:       p.Stock,
+		// Stock:       p.Stock,
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId,
 		CreatedAt:   timestamppb.New(p.CreatedAt),
@@ -195,7 +195,7 @@ func convertPBToBizProduct(p *pb.Product) *biz.Product {
 		Name:        p.GetName(),
 		Description: p.GetDescription(),
 		Price:       p.GetPrice(),
-		Stock:       p.GetStock(),
+		// Stock:       p.GetStock(),
 		Status:      convertPBStatusToBiz(p.GetStatus()),
 		MerchantId:  p.GetMerchantId(),
 		Category: biz.CategoryInfo{

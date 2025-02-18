@@ -44,9 +44,9 @@ type Querier interface {
 	//  INSERT INTO products.products (name,
 	//                                 description,
 	//                                 price,
-	//                                 stock,
 	//                                 status,
-	//                                 merchant_id)
+	//                                 merchant_id,
+	//                                 category_id)
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at, updated_at
 	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
@@ -78,7 +78,6 @@ type Querier interface {
 	//         name,
 	//         description,
 	//         price,
-	//         stock,
 	//         status,
 	//         merchant_id,
 	//         created_at,
@@ -109,12 +108,11 @@ type Querier interface {
 	//  SET name        = $2,
 	//      description = $3,
 	//      price       = $4,
-	//      stock       = $5,
-	//      status      = $6,
+	//      status      = $5,
 	//      updated_at  = NOW()
 	//  WHERE id = $1
-	//    AND merchant_id = $7
-	//    AND updated_at = $8
+	//    AND merchant_id = $6
+	//    AND updated_at = $7
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	// 更新商品状态并记录当前审核ID
 	//

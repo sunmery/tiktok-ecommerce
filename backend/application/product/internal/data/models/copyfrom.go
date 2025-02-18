@@ -41,14 +41,14 @@ func (r iteratorForCreateProductImages) Err() error {
 	return nil
 }
 
-// CreateProductImages
+//CreateProductImages
 //
-//	INSERT INTO products.product_images (merchant_id, -- 新增分片键
-//	                                     product_id,
-//	                                     url,
-//	                                     is_primary,
-//	                                     sort_order)
-//	VALUES ($1, $2, $3, $4, $5)
+//  INSERT INTO products.product_images (merchant_id, -- 新增分片键
+//                                       product_id,
+//                                       url,
+//                                       is_primary,
+//                                       sort_order)
+//  VALUES ($1, $2, $3, $4, $5)
 func (q *Queries) CreateProductImages(ctx context.Context, arg []CreateProductImagesParams) (int64, error) {
 	return q.db.CopyFrom(ctx, []string{"products", "product_images"}, []string{"merchant_id", "product_id", "url", "is_primary", "sort_order"}, &iteratorForCreateProductImages{rows: arg})
 }

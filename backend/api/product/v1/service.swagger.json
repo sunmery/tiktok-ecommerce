@@ -475,11 +475,6 @@
           "format": "double",
           "title": "商品价格（单位：元）"
         },
-        "stock": {
-          "type": "integer",
-          "format": "int32",
-          "title": "库存数量"
-        },
         "status": {
           "$ref": "#/definitions/v1ProductStatus",
           "title": "当前状态"

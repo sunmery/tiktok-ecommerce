@@ -227,6 +227,17 @@ func (r *categoryRepo) UpdateCategoryName(ctx context.Context, req *biz.Category
 	return err
 }
 
+// func (r *categoryRepo) GetCategoryByName(ctx context.Context, name string) (*biz.Category, error) {
+// 	dbCategory, err := r.data.DB(ctx).GetCategoryByName(ctx, name)
+// 	if err != nil {
+// 		if errors.Is(err, pgx.ErrNoRows) {
+// 			return nil, biz.ErrCategoryNameNotFound
+// 		}
+// 		return nil, fmt.Errorf("get category by name failed: %w", err)
+// 	}
+// 	return convertDBCategory(dbCategory), nil
+// }
+
 // convertDBCategory 转换数据库模型到业务模型
 func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
 	return &biz.Category{

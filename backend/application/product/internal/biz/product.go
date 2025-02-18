@@ -191,11 +191,11 @@ type AuditInfoModel struct {
 
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
-	CreateProduct(ctx context.Context, req CreateProductRequest) (Product, error)
-	UpdateProduct(ctx context.Context, req UpdateProductRequest) (Product, error)
-	SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (AuditRecord, error)
-	AuditProduct(ctx context.Context, req AuditProductRequest) (AuditRecord, error)
-	GetProduct(ctx context.Context, req GetProductRequest) (Product, error)
+	CreateProduct(ctx context.Context, req CreateProductRequest) (*Product, error)
+	UpdateProduct(ctx context.Context, req UpdateProductRequest) (*Product, error)
+	SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (*AuditRecord, error)
+	AuditProduct(ctx context.Context, req AuditProductRequest) (*AuditRecord, error)
+	GetProduct(ctx context.Context, req GetProductRequest) (*Product, error)
 	DeleteProduct(ctx context.Context, req DeleteProductRequest) error
 }
 
@@ -210,41 +210,41 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	p.Status = newStatus
 	return nil
 }
-func (p *ProductUsecase) CreateProduct(ctx context.Context, req CreateProductRequest) (Product, error) {
+func (p *ProductUsecase) CreateProduct(ctx context.Context, req CreateProductRequest) (*Product, error) {
 	product, err := p.repo.CreateProduct(ctx, req)
 	if err != nil {
-		return Product{}, err
+		return nil, err
 	}
 	return product, nil
 }
-func (p *ProductUsecase) UpdateProduct(ctx context.Context, req UpdateProductRequest) (Product, error) {
+func (p *ProductUsecase) UpdateProduct(ctx context.Context, req UpdateProductRequest) (*Product, error) {
 	product, err := p.repo.UpdateProduct(ctx, req)
 	if err != nil {
-		return Product{}, err
+		return nil, err
 	}
 	return product, nil
 }
-func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (AuditRecord, error) {
+func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req SubmitAuditRequest) (*AuditRecord, error) {
 	record, err := p.repo.SubmitForAudit(ctx, req)
 	if err != nil {
-		return AuditRecord{}, err
+		return nil, err
 	}
 	return record, nil
 }
-func (p *ProductUsecase) AuditProduct(ctx context.Context, req AuditProductRequest) (AuditRecord, error) {
+func (p *ProductUsecase) AuditProduct(ctx context.Context, req AuditProductRequest) (*AuditRecord, error) {
 	record, err := p.repo.AuditProduct(ctx, req)
 	if err != nil {
-		return AuditRecord{}, err
+		return nil, err
 	}
 	return record, nil
 }
-func (p *ProductUsecase) GetProduct(ctx context.Context, req GetProductRequest) (Product, error) {
+func (p *ProductUsecase) GetProduct(ctx context.Context, req GetProductRequest) (*Product, error) {
 	p.log.Debugf("GetProduct: %+v", req)
 
 	// 正确接收两个返回值
 	product, err := p.repo.GetProduct(ctx, req)
 	if err != nil {
-		return Product{}, err // 返回错误
+		return nil, err // 返回错误
 	}
 	return product, nil // 返回结果和nil错误
 }
