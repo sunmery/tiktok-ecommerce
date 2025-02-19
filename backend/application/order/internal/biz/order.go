@@ -1,13 +1,13 @@
 package biz
 
 type PlaceOrderReq struct {
-	OrderId      int32   // 订单ID
-	Name         string  // 订单名称
-	UserId       uint32  // 用户ID
-	UserCurrency string  // 货币类型
-	Address      Address // 地址信息
-	Items        []Item  // 商品列表
-	Email        string  // 用户邮箱
+	OrderId      int32       // 订单ID
+	Name         string      // 订单名称
+	UserId       uint32      // 用户ID
+	UserCurrency string      // 货币类型
+	Address      Address     // 地址信息
+	Items        []OrderItem // 商品列表
+	Email        string      // 用户邮箱
 }
 
 type Address struct {
@@ -16,13 +16,6 @@ type Address struct {
 	State         string // 州/省
 	Country       string // 国家
 	ZipCode       int32  // 邮政编码
-}
-type Item struct {
-	Id          int32   // 商品ID
-	Name        string  // 商品名称
-	Description string  // 商品描述
-	Price       float32 // 商品单价
-	Quantity    int32   // 商品数量
 }
 
 type PlaceOrderResp struct {

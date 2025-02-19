@@ -42,12 +42,14 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*
 
 	// 将购物车商品转换为 biz.OrderItem
 	var items []biz.OrderItem
-	for _, cartItem := range cartResp.Items {
+	for _, cartItem := range cartResp.Cart.Items {
 		items = append(items, biz.OrderItem{
-			Id:       cartItem.ProductId,
-			Name:     cartItem.Name,
-			Price:    cartItem.Price,
-			Quantity: cartItem.Quantity,
+			Id:        int32(cartItem.ProductId),
+			Name:      "dorr",
+			Price:     133,
+			Quantity:  cartItem.Quantity,
+			OrderId:   0,
+			ProductId: int32(cartItem.ProductId),
 		})
 	}
 

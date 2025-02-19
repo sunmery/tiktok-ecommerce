@@ -1,6 +1,7 @@
 package data
 
 import (
+	cartv1 "backend/api/cart/v1"
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
 	"backend/application/order/pkg/convert"
@@ -11,14 +12,35 @@ import (
 	"strconv"
 
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/metadata"
 )
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
-
+	var extra string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		extra = md.Get("x-md-global-userid")
+	}
+	fmt.Println(extra)
 	// 获取购物车商品
-	cartItems, err := o.data.cartClient.GetCart()
+	cartItems, err := o.data.cartClient.GetCart(ctx, &cartv1.GetCartReq{
+		Owner: "test",
+		Name:  "test",
+	})
+
 	if err != nil {
 		return nil, err
+	}
+	// 将购物车商品映射到订单商品项
+	orderItems := make([]biz.OrderItem, len(cartItems.Cart.Items))
+	for i, cartItem := range cartItems.Cart.Items {
+		orderItems[i] = biz.OrderItem{
+			Id:        int32(cartItem.ProductId),
+			OrderId:   int32(req.OrderId),
+			ProductId: int32(cartItem.ProductId),
+			Name:      "test",
+			Quantity:  cartItem.Quantity,
+			Price:     6.32,
+		}
 	}
 
 	// 创建订单
