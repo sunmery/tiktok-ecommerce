@@ -24,5 +24,5 @@ CREATE TABLE orders.order_items
     product_id INT           NOT NULL,         -- 商品ID
     name       VARCHAR(100)  NOT NULL,         -- 商品名称
     quantity   INT           NOT NULL,         -- 商品数量
-    price      DECIMAL(10, 2) NOT NULL          -- 商品单价
+    price      REAL NOT NULL          -- 商品单价
 );

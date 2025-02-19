@@ -53,11 +53,12 @@ type OrderSummary struct {
 }
 
 type OrderItem struct {
-	Id          int32   // 商品ID
-	Name        string  // 商品名称
-	Description string  // 商品描述
-	Price       float32 // 商品单价
-	Quantity    int32   // 商品数量
+	Id        int32 // 商品ID
+	OrderId   int32
+	ProductId int32   // 商品ID
+	Name      string  // 商品名称
+	Price     float32 // 商品单价
+	Quantity  int32   // 商品数量
 }
 
 type MarkOrderPaidReq struct {

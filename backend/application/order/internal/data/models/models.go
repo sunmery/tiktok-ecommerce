@@ -6,17 +6,15 @@ package models
 
 import (
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type OrdersOrderItems struct {
-	ID        int32          `json:"id"`
-	OrderID   int32          `json:"orderID"`
-	ProductID int32          `json:"productID"`
-	Name      string         `json:"name"`
-	Quantity  int32          `json:"quantity"`
-	Price     pgtype.Numeric `json:"price"`
+	ID        int32   `json:"id"`
+	OrderID   int32   `json:"orderID"`
+	ProductID int32   `json:"productID"`
+	Name      string  `json:"name"`
+	Quantity  int32   `json:"quantity"`
+	Price     float32 `json:"price"`
 }
 
 type OrdersOrders struct {

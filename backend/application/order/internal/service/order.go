@@ -14,30 +14,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type OrderServiceService struct {
-	pb.UnimplementedOrderServiceServer
-	oc         *biz.OrderUsecase
-	CartClient v1.CartServiceClient // 引入购物车服务的客户端
-}
+func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*pb.PlaceOrderResp, error) {
 
-func NewOrderServiceService(cartClient v1.CartServiceClient) *OrderServiceService {
-	return &OrderServiceService{
-		CartClient: cartClient,
-	}
-}
-
-func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq, userID string) (*pb.PlaceOrderResp, error) {
-
+	// 从上下文获取荷载
 	payload, err := token.ExtractPayload(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	//调用购物车服务
-	CartResp, err := s.CartClient.GetCart(ctx, &v1.GetCartReq{
-		Owner: userID,
-		//Name:  req.Name,
-	})
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "获取购物车失败")
@@ -49,10 +32,21 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *pb.PlaceOrder
 		return nil, status.Error(codes.Internal, "用户ID转换失败")
 	}
 
-	var items []biz.Item
-	for _, cartItem := range CartResp.Cart.Items {
-		items = append(items, biz.Item{
-			Id:       int32(cartItem.ProductId),
+	// 调用购物车服务获取购物车商品
+	cartResp, err := s.cartClient.GetCart(ctx, &v1.GetCartReq{
+		Owner: payload.ID, // 使用用户ID作为Owner
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "获取购物车失败: "+err.Error())
+	}
+
+	// 将购物车商品转换为 biz.OrderItem
+	var items []biz.OrderItem
+	for _, cartItem := range cartResp.Items {
+		items = append(items, biz.OrderItem{
+			Id:       cartItem.ProductId,
+			Name:     cartItem.Name,
+			Price:    cartItem.Price,
 			Quantity: cartItem.Quantity,
 		})
 	}
@@ -81,7 +75,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *pb.PlaceOrder
 
 }
 
-func (s *OrderServiceService) ListOrders(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
+func (s *OrderService) ListOrders(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
 
 	bizResp, err := s.oc.ListOrders(ctx, &biz.ListOrderReq{
 		UserId: req.UserId,
@@ -114,7 +108,7 @@ func (s *OrderServiceService) ListOrders(ctx context.Context, req *pb.ListOrderR
 	}, nil
 }
 
-func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *pb.MarkOrderPaidReq) (*pb.MarkOrderPaidResp, error) {
+func (s *OrderService) MarkOrderPaid(ctx context.Context, req *pb.MarkOrderPaidReq) (*pb.MarkOrderPaidResp, error) {
 
 	log.Printf("MarkOrderPaid called with OrderId: %s, UserId: %d", req.OrderId, req.UserId)
 

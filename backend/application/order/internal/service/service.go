@@ -1,6 +1,7 @@
 package service
 
 import (
+	cartv1 "backend/api/cart/v1"
 	orderv1 "backend/api/order/v1"
 	"backend/application/order/internal/biz"
 
@@ -12,8 +13,8 @@ var ProviderSet = wire.NewSet(NewOrderService)
 
 type OrderService struct {
 	orderv1.UnimplementedOrderServiceServer
-
-	oc *biz.OrderUsecase
+	cartClient cartv1.CartServiceClient
+	oc         *biz.OrderUsecase
 }
 
 func NewOrderService(oc *biz.OrderUsecase) *OrderService {

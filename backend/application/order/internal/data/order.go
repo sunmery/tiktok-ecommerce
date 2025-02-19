@@ -14,6 +14,13 @@ import (
 )
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
+
+	// 获取购物车商品
+	cartItems, err := o.data.cartClient.GetCart()
+	if err != nil {
+		return nil, err
+	}
+
 	// 创建订单
 	orderID, err := o.data.db.CreateOrder(ctx, models.CreateOrderParams{
 		Owner:         fmt.Sprintf("%d", req.UserId),
@@ -66,13 +73,30 @@ func (o *orderRepo) ListOrders(ctx context.Context, req *biz.ListOrderReq) (*biz
 		return nil, err
 	}
 
-	// 将数据库模型转换为业务模型
 	var orderSummaries []biz.OrderSummary
 	for _, dbOrder := range dbOrders {
+		items, err := o.data.db.ListOrderItems(ctx, dbOrder.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list order items for order %s: %w", dbOrder.ID, err)
+		}
+
+		// 将 items 转换为 biz.OrderItem 类型
+		var orderItems []biz.OrderItem
+		for _, item := range items {
+			orderItems = append(orderItems, biz.OrderItem{
+				Id:        item.ID,
+				Name:      item.Name,
+				OrderId:   item.OrderID,
+				ProductId: item.ProductID,
+				Quantity:  item.Quantity,
+				Price:     item.Price,
+			})
+		}
+
 		orderSummaries = append(orderSummaries, biz.OrderSummary{
 			OrderId:   string(dbOrder.ID),
 			CreatedAt: int32(dbOrder.CreatedAt.Unix()),
-			Address: biz.Address{ // 假设 dbOrder 包含了地址信息
+			Address: biz.Address{
 				StreetAddress: dbOrder.StreetAddress,
 				City:          dbOrder.City,
 				State:         dbOrder.State,
@@ -82,6 +106,7 @@ func (o *orderRepo) ListOrders(ctx context.Context, req *biz.ListOrderReq) (*biz
 			Status:       dbOrder.Status,
 			UserCurrency: dbOrder.Currency,
 			Email:        dbOrder.Email,
+			OrderItems:   orderItems, // 使用转换后的 orderItems
 		})
 	}
 
