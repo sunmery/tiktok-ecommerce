@@ -34,27 +34,15 @@ func InitConsul(config ConfigCenter) config.Source {
 	}
 
 	// debug
-	fmt.Printf("configPath:%v\n", config.Path)
-	fmt.Printf("configCenter:%v\n", config.Addr)
-	fmt.Printf("configCenter:%v\n", config.Token)
+	fmt.Printf("config_path:%v\n", config.Path)
+	fmt.Printf("config_center:%v\n", config.Addr)
+	fmt.Printf("config_center:%v\n", config.Token)
 
 	consulClient, err := api.NewClient(&api.Config{
-		Address:    config.Addr,
-		Scheme:     "http",
-		PathPrefix: "",
-		Datacenter: "",
-		Transport:  nil,
-		HttpClient: nil,
-		HttpAuth: &api.HttpBasicAuth{
-			Username: "e5e881e0-1254-0437-7523-fca12f40fda8",
-			Password: "master-token",
-		},
+		Address:  config.Addr,
+		Scheme:   "http",
 		WaitTime: time.Second * 15,
-		// Token:     config.Token,
-		TokenFile: "",
-		Namespace: "",
-		Partition: "",
-		TLSConfig: api.TLSConfig{},
+		Token:    config.Token,
 	})
 	if err != nil {
 		log.Fatal(fmt.Errorf("create consul client failed:%w", err))

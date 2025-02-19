@@ -14,22 +14,22 @@ type Querier interface {
 	//  INSERT INTO products.product_images
 	//      (merchant_id, product_id, url, is_primary, sort_order)
 	//  SELECT m_id, p_id, u, is_p, s_ord
-	//  FROM ROWS FROM (
-	//           unnest($1::bigint[]),
-	//           unnest($2::bigint[]),
-	//           unnest($3::text[]),
-	//           unnest($4::boolean[]),
-	//           unnest($5::smallint[])
-	//           ) AS t(m_id, p_id, u, is_p, s_ord)
+	//  FROM unnest(
+	//               $1::bigint[],
+	//               $2::bigint[],
+	//               $3::text[],
+	//               $4::boolean[],
+	//               $5::smallint[]
+	//       ) AS t(m_id, p_id, u, is_p, s_ord)
 	BulkCreateProductImages(ctx context.Context, arg BulkCreateProductImagesParams) error
 	// 创建审核记录，返回新记录ID
 	//
-	//  INSERT INTO product_audits (product_id,
-	//                              merchant_id,
-	//                              old_status,
-	//                              new_status,
-	//                              reason,
-	//                              operator_id)
+	//  INSERT INTO products.product_audits (product_id,
+	//                                       merchant_id,
+	//                                       old_status,
+	//                                       new_status,
+	//                                       reason,
+	//                                       operator_id)
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at
 	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) (CreateAuditRecordRow, error)
@@ -44,10 +44,9 @@ type Querier interface {
 	//  INSERT INTO products.products (name,
 	//                                 description,
 	//                                 price,
-	//                                 stock,
 	//                                 status,
 	//                                 merchant_id)
-	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  VALUES ($1, $2, $3, $4, $5)
 	//  RETURNING id, created_at, updated_at
 	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
 	//CreateProductImages
@@ -78,7 +77,6 @@ type Querier interface {
 	//         name,
 	//         description,
 	//         price,
-	//         stock,
 	//         status,
 	//         merchant_id,
 	//         created_at,
@@ -100,21 +98,21 @@ type Querier interface {
 	//
 	//  UPDATE products.products
 	//  SET deleted_at = NOW()
-	//  WHERE id = $1
-	//    AND merchant_id = $2
-	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) error
+	//  WHERE merchant_id = $1
+	//    AND id = $2
+	//  RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
+	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error)
 	// 更新商品基础信息，使用乐观锁控制并发
 	//
 	//  UPDATE products.products
 	//  SET name        = $2,
 	//      description = $3,
 	//      price       = $4,
-	//      stock       = $5,
-	//      status      = $6,
+	//      status      = $5,
 	//      updated_at  = NOW()
 	//  WHERE id = $1
-	//    AND merchant_id = $7
-	//    AND updated_at = $8
+	//    AND merchant_id = $6
+	//    AND updated_at = $7
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	// 更新商品状态并记录当前审核ID
 	//

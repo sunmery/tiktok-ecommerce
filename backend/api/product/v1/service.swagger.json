@@ -77,7 +77,7 @@
           },
           {
             "name": "merchantId",
-            "description": "用于分片路由",
+            "description": "商家 ID, 用于分片路由",
             "in": "query",
             "required": false,
             "type": "string",
@@ -116,7 +116,7 @@
           },
           {
             "name": "merchantId",
-            "description": "用于分片路由",
+            "description": "商家 ID, 用于分片路由",
             "in": "query",
             "required": false,
             "type": "string",
@@ -295,7 +295,7 @@
         "merchantId": {
           "type": "string",
           "format": "uint64",
-          "title": "用于分片路由"
+          "title": "商家 ID, 用于分片路由"
         }
       },
       "title": "提交审核请求"

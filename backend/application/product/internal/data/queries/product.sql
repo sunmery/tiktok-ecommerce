@@ -42,12 +42,13 @@ WHERE id = $1
   AND merchant_id = $2
   AND deleted_at IS NULL;
 
--- name: SoftDeleteProduct :exec
+-- name: SoftDeleteProduct :one
 -- 软删除商品，设置删除时间戳
 UPDATE products.products
 SET deleted_at = NOW()
-WHERE id = $1
-  AND merchant_id = $2;
+WHERE merchant_id = $1
+  AND id = $2
+RETURNING *;
 
 -- name: CreateProductImages :copyfrom
 INSERT INTO products.product_images (merchant_id, -- 新增分片键
@@ -70,23 +71,22 @@ ORDER BY sort_order;
 INSERT INTO products.product_images
     (merchant_id, product_id, url, is_primary, sort_order)
 SELECT m_id, p_id, u, is_p, s_ord
-FROM ROWS FROM (
-         unnest(@merchant_ids::bigint[]),
-         unnest(@product_ids::bigint[]),
-         unnest(@urls::text[]),
-         unnest(@is_primary::boolean[]),
-         unnest(@sort_orders::smallint[])
-         ) AS t(m_id, p_id, u, is_p, s_ord);
-
+FROM unnest(
+             @merchant_ids::bigint[],
+             @product_ids::bigint[],
+             @urls::text[],
+             @is_primary::boolean[],
+             @sort_orders::smallint[]
+     ) AS t(m_id, p_id, u, is_p, s_ord);
 
 -- name: CreateAuditRecord :one
 -- 创建审核记录，返回新记录ID
-INSERT INTO product_audits (product_id,
-                            merchant_id,
-                            old_status,
-                            new_status,
-                            reason,
-                            operator_id)
+INSERT INTO products.product_audits (product_id,
+                                     merchant_id,
+                                     old_status,
+                                     new_status,
+                                     reason,
+                                     operator_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at;
 

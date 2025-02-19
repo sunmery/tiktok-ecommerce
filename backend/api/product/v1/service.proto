@@ -151,7 +151,7 @@ message UpdateProductRequest {
 // 提交审核请求
 message SubmitAuditRequest {
   uint64 product_id = 1;
-  uint64 merchant_id = 2; // 用于分片路由
+  uint64 merchant_id = 2; // 商家 ID, 用于分片路由
 }
 
 // 审核操作请求
@@ -165,14 +165,14 @@ message AuditProductRequest {
 
 // 查询单个商品请求
 message GetProductRequest {
-  uint64 id = 1;
-  uint64 merchant_id = 2; // 用于分片路由
+  uint64 id = 1 [(validate.rules).int64 = {gt:0}];
+  uint64 merchant_id = 2 [(validate.rules).int64 = {gt:0}]; // 商家 ID, 用于分片路由
 }
 
 // 删除商品请求
 message DeleteProductRequest {
   uint64 id = 1;
-  uint64 merchant_id = 2; // 用于分片路由
+  uint64 merchant_id = 2; // 商家 ID, 用于分片路由
 }
 
 // 审核记录返回结构

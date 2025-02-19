@@ -1,6 +1,7 @@
 -- 创建分片表前先创建 schema
 CREATE SCHEMA IF NOT EXISTS products;
-
+SET SEARCH_PATH TO products;
+SHOW SEARCH_PATH;
 -----------------------------
 -- 商品主表（分布式分片表）
 -----------------------------

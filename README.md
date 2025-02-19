@@ -1,5 +1,15 @@
 ## 项目开发
 
+目前每个微服务都有自己的 HTTP 和 gRPC 端口, 根据Kubernetes NodePort Service的端口(默认范围：30000-32767)分配, 从 30000 端口开始, 分配如下:
+- auth: 30001,30002
+- user: 30003,30004
+- product: 30005,30006
+- cart: 30007, 30008
+- order: 30009, 30010
+- checkout: 30011, 300012
+- payment: 30013, 30014
+- category: 30015, 30016
+
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 
 1. 拉取, 包含前端项目. 不需要前端删除`` `-recurse-submodules` `` 即可

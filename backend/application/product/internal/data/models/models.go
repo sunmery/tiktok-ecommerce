@@ -10,6 +10,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ProductsInventory struct {
+	ProductID int32 `json:"productID"`
+	SellerID  int32 `json:"sellerID"`
+	Stock     int32 `json:"stock"`
+}
+
 type ProductsProductAttributes struct {
 	MerchantID int64     `json:"merchantID"`
 	ProductID  int64     `json:"productID"`
@@ -45,9 +51,9 @@ type ProductsProducts struct {
 	Name           string             `json:"name"`
 	Description    *string            `json:"description"`
 	Price          pgtype.Numeric     `json:"price"`
-	Stock          *int32             `json:"stock"`
 	Status         int16              `json:"status"`
 	CurrentAuditID *int64             `json:"currentAuditID"`
+	CategoryID     int64              `json:"categoryID"`
 	CreatedAt      time.Time          `json:"createdAt"`
 	UpdatedAt      time.Time          `json:"updatedAt"`
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`

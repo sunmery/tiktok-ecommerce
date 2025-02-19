@@ -1,11 +1,14 @@
 package data
 
 import (
+	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 )
@@ -15,13 +18,13 @@ type productRepo struct {
 	log  *log.Helper
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRequest) (biz.Product, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
 	// 转换价格到pgtype.Numeric
 	price, err := decimal.NewFromString(fmt.Sprintf("%.2f", req.Product.Price))
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
+		return nil, fmt.Errorf("invalid price format: %w", err)
 	}
 
 	// TODO 创建分类
@@ -31,12 +34,12 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 		Name:        req.Product.Name,
 		Description: &req.Product.Description,
 		Price:       pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()},
-		Stock:       &req.Product.Stock,
-		Status:      int16(req.Product.Status),
-		MerchantID:  int64(req.Product.MerchantId),
+
+		Status:     int16(req.Product.Status),
+		MerchantID: int64(req.Product.MerchantId),
 	})
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("failed to create product: %w", err)
+		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 
 	// 转换基础信息
@@ -58,10 +61,10 @@ func (p *productRepo) CreateProduct(ctx context.Context, req biz.CreateProductRe
 		}
 	}
 
-	return product, nil
+	return &product, nil
 }
 
-func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRequest) (biz.Product, error) {
+func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
 	// 获取当前版本
@@ -70,7 +73,10 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRe
 		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("product not found: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, v1.ErrorProductNotFound("查询不到该商品")
+		}
+		return nil, v1.ErrorInvalidStatus("failed to get product: %w", err)
 	}
 
 	// 准备更新参数
@@ -90,14 +96,13 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRe
 	if req.Price != nil {
 		price, err := decimal.NewFromString(fmt.Sprintf("%.2f", *req.Price))
 		if err != nil {
-			return biz.Product{}, fmt.Errorf("invalid price format: %w", err)
+			return nil, fmt.Errorf("invalid price format: %w", err)
 		}
 		params.Price = pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()}
 	} else {
 		params.Price = current.Price
 	}
 
-	params.Stock = current.Stock
 	// stock := int32(req.Stock)
 	// if req.Stock != nil {
 	// 	params.Stock = &stock
@@ -113,7 +118,7 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRe
 
 	// 执行更新
 	if err := db.UpdateProduct(ctx, params); err != nil {
-		return biz.Product{}, fmt.Errorf("failed to update product: %w", err)
+		return nil, fmt.Errorf("failed to update product: %w", err)
 	}
 
 	// 获取更新后的数据
@@ -122,13 +127,13 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req biz.UpdateProductRe
 		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("failed to get updated product: %w", err)
+		return nil, fmt.Errorf("failed to get updated product: %w", err)
 	}
 
 	return p.fullProductData(ctx, updated)
 }
 
-func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditRequest) (biz.AuditRecord, error) {
+func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRequest) (*biz.AuditRecord, error) {
 	db := p.data.DB(ctx)
 
 	// 获取当前产品状态
@@ -137,7 +142,9 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditReq
 		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("product not found: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, v1.ErrorProductNotFound("查询不到该商品")
+		}
 	}
 
 	// 创建审核记录
@@ -150,7 +157,7 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditReq
 		OperatorID: 0, // 从上下文中获取实际操作人
 	})
 	if err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("failed to create audit record: %w", err)
+		return nil, fmt.Errorf("failed to create audit record: %w", err)
 	}
 
 	// 更新产品状态
@@ -160,10 +167,10 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditReq
 		CurrentAuditID: &auditRecord.ID,
 		MerchantID:     int64(req.MerchantID),
 	}); err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("failed to update product status: %w", err)
+		return nil, fmt.Errorf("failed to update product status: %w", err)
 	}
 
-	return biz.AuditRecord{
+	return &biz.AuditRecord{
 		ID:         uint64(auditRecord.ID),
 		ProductID:  req.ProductID,
 		OldStatus:  biz.ProductStatus(current.Status),
@@ -172,7 +179,7 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req biz.SubmitAuditReq
 	}, nil
 }
 
-func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequest) (biz.AuditRecord, error) {
+func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductRequest) (*biz.AuditRecord, error) {
 	db := p.data.DB(ctx)
 
 	// 获取当前产品状态
@@ -181,7 +188,10 @@ func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequ
 		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("product not found: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, v1.ErrorProductNotFound("查询不到该商品")
+		}
+		return nil, v1.ErrorInvalidStatus("data/product: AuditProduct: %+v", err)
 	}
 
 	// 确定新状态
@@ -192,7 +202,7 @@ func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequ
 	case biz.AuditActionReject:
 		newStatus = biz.ProductStatusRejected
 	default:
-		return biz.AuditRecord{}, biz.ErrInvalidAuditAction
+		return nil, v1.ErrorInvalidAuditAction("AuditProduct: 非法的req.Action参数")
 	}
 
 	// 创建审核记录
@@ -205,7 +215,7 @@ func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequ
 		OperatorID: int64(req.OperatorID),
 	})
 	if err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("failed to create audit record: %w", err)
+		return nil, fmt.Errorf("failed to create audit record: %w", err)
 	}
 
 	// 更新产品状态
@@ -215,10 +225,10 @@ func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequ
 		CurrentAuditID: &auditRecord.ID,
 		MerchantID:     int64(req.MerchantID),
 	}); err != nil {
-		return biz.AuditRecord{}, fmt.Errorf("failed to update product status: %w", err)
+		return nil, fmt.Errorf("failed to update product status: %w", err)
 	}
 
-	return biz.AuditRecord{
+	return &biz.AuditRecord{
 		ID:         uint64(auditRecord.ID),
 		ProductID:  req.ProductID,
 		OldStatus:  biz.ProductStatus(current.Status),
@@ -229,7 +239,7 @@ func (p *productRepo) AuditProduct(ctx context.Context, req biz.AuditProductRequ
 	}, nil
 }
 
-func (p *productRepo) GetProduct(ctx context.Context, req biz.GetProductRequest) (biz.Product, error) {
+func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
 	// 获取基础信息
@@ -238,13 +248,16 @@ func (p *productRepo) GetProduct(ctx context.Context, req biz.GetProductRequest)
 		MerchantID: int64(req.MerchantID),
 	})
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("failed to get product: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, v1.ErrorProductNotFound("查询不到该商品")
+		}
+		return nil, v1.ErrorInvalidStatus("GetProduct 内部错误")
 	}
 
 	return p.fullProductData(ctx, product)
 }
 
-func (p *productRepo) DeleteProduct(ctx context.Context, req biz.DeleteProductRequest) error {
+func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
 
 	return db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
@@ -254,27 +267,26 @@ func (p *productRepo) DeleteProduct(ctx context.Context, req biz.DeleteProductRe
 }
 
 // 辅助方法：完整产品数据组装
-func (p *productRepo) fullProductData(ctx context.Context, product models.GetProductRow) (biz.Product, error) {
+func (p *productRepo) fullProductData(ctx context.Context, product models.GetProductRow) (*biz.Product, error) {
 	// 获取图片
 	images, err := p.data.DB(ctx).GetProductImages(ctx, models.GetProductImagesParams{
 		MerchantID: product.MerchantID,
 		ProductID:  product.ID,
 	})
 	if err != nil {
-		return biz.Product{}, fmt.Errorf("failed to get product images: %w", err)
+		return nil, fmt.Errorf("failed to get product images: %w", err)
 	}
 
 	// 转换价格
 	price, _ := decimal.NewFromString(fmt.Sprintf("%s%d", product.Price.Int.String(), product.Price.Exp))
 
 	// 组装返回结果
-	return biz.Product{
+	return &biz.Product{
 		ID:          uint64(product.ID),
 		MerchantId:  uint64(product.MerchantID),
 		Name:        product.Name,
 		Description: *product.Description,
 		Price:       float64(price.IntPart()),
-		Stock:       *product.Stock,
 		Status:      biz.ProductStatus(product.Status),
 		CreatedAt:   product.CreatedAt,
 		UpdatedAt:   product.UpdatedAt,

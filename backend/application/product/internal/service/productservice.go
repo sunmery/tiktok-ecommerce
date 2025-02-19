@@ -4,7 +4,6 @@ import (
 	pb "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"context"
-	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -22,11 +21,11 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 
 func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.Product, error) {
 	bizProduct := convertPBToBizProduct(req.GetProduct())
-	created, err := s.uc.CreateProduct(ctx, biz.CreateProductRequest{Product: *bizProduct})
+	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{Product: *bizProduct})
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
-	return convertBizProductToPB(&created), nil
+	return convertBizProductToPB(created), nil
 }
 
 func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Product, error) {
@@ -57,12 +56,12 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 		}
 	}
 
-	updatedProduct, err := s.uc.UpdateProduct(ctx, updateReq)
+	updatedProduct, err := s.uc.UpdateProduct(ctx, &updateReq)
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 
-	return convertBizProductToPB(&updatedProduct), nil
+	return convertBizProductToPB(updatedProduct), nil
 }
 
 func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
@@ -71,9 +70,9 @@ func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAudit
 		MerchantID: req.MerchantId,
 	}
 
-	record, err := s.uc.SubmitForAudit(ctx, bizReq)
+	record, err := s.uc.SubmitForAudit(ctx, &bizReq)
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 
 	return &pb.AuditRecord{
@@ -100,9 +99,9 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 		OperatorID: req.OperatorId,
 	}
 
-	record, err := s.uc.AuditProduct(ctx, bizReq)
+	record, err := s.uc.AuditProduct(ctx, &bizReq)
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 
 	return &pb.AuditRecord{
@@ -117,17 +116,15 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	bizReq := biz.GetProductRequest{
+	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
 		ID:         req.Id,
 		MerchantID: req.MerchantId,
-	}
-
-	product, err := s.uc.GetProduct(ctx, bizReq)
+	})
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 
-	return convertBizProductToPB(&product), nil
+	return convertBizProductToPB(product), nil
 }
 
 func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*emptypb.Empty, error) {
@@ -138,7 +135,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 
 	_, err := s.uc.DeleteProduct(ctx, bizReq)
 	if err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -261,20 +258,6 @@ func convertPBStatusToBiz(s pb.ProductStatus) biz.ProductStatus {
 		return biz.ProductStatusRejected
 	default:
 		return biz.ProductStatusDraft
-	}
-}
-
-// 错误转换
-func convertError(err error) error {
-	switch {
-	case errors.Is(err, biz.ErrProductNotFound):
-		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, biz.ErrInvalidStatus):
-		return status.Error(codes.FailedPrecondition, err.Error())
-	case errors.Is(err, biz.ErrAuditReasonMissing):
-		return status.Error(codes.InvalidArgument, err.Error())
-	default:
-		return status.Error(codes.Internal, "internal server error")
 	}
 }
 

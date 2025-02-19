@@ -34,8 +34,8 @@ func InitConsul(config ConfigCenter) config.Source {
 	}
 
 	// debug
-	fmt.Printf("configPath:%v\n", config.Path)
-	fmt.Printf("configCenter:%v\n", config.Addr)
+	fmt.Printf("config_path:%v\n", config.Path)
+	fmt.Printf("config_center:%v\n", config.Addr)
 	fmt.Printf("envConfigCenterToken:%v\n", config.Token)
 
 	consulClient, err := api.NewClient(&api.Config{

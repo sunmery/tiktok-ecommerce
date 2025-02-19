@@ -16,13 +16,13 @@ const BulkCreateProductImages = `-- name: BulkCreateProductImages :exec
 INSERT INTO products.product_images
     (merchant_id, product_id, url, is_primary, sort_order)
 SELECT m_id, p_id, u, is_p, s_ord
-FROM ROWS FROM (
-         unnest($1::bigint[]),
-         unnest($2::bigint[]),
-         unnest($3::text[]),
-         unnest($4::boolean[]),
-         unnest($5::smallint[])
-         ) AS t(m_id, p_id, u, is_p, s_ord)
+FROM unnest(
+             $1::bigint[],
+             $2::bigint[],
+             $3::text[],
+             $4::boolean[],
+             $5::smallint[]
+     ) AS t(m_id, p_id, u, is_p, s_ord)
 `
 
 type BulkCreateProductImagesParams struct {
@@ -38,13 +38,13 @@ type BulkCreateProductImagesParams struct {
 //	INSERT INTO products.product_images
 //	    (merchant_id, product_id, url, is_primary, sort_order)
 //	SELECT m_id, p_id, u, is_p, s_ord
-//	FROM ROWS FROM (
-//	         unnest($1::bigint[]),
-//	         unnest($2::bigint[]),
-//	         unnest($3::text[]),
-//	         unnest($4::boolean[]),
-//	         unnest($5::smallint[])
-//	         ) AS t(m_id, p_id, u, is_p, s_ord)
+//	FROM unnest(
+//	             $1::bigint[],
+//	             $2::bigint[],
+//	             $3::text[],
+//	             $4::boolean[],
+//	             $5::smallint[]
+//	     ) AS t(m_id, p_id, u, is_p, s_ord)
 func (q *Queries) BulkCreateProductImages(ctx context.Context, arg BulkCreateProductImagesParams) error {
 	_, err := q.db.Exec(ctx, BulkCreateProductImages,
 		arg.MerchantIds,
@@ -57,48 +57,48 @@ func (q *Queries) BulkCreateProductImages(ctx context.Context, arg BulkCreatePro
 }
 
 const CreateAuditRecord = `-- name: CreateAuditRecord :one
-INSERT INTO product_audits (product_id,
-                            merchant_id,
-                            old_status,
-                            new_status,
-                            reason,
-                            operator_id)
+INSERT INTO products.product_audits (product_id,
+                                     merchant_id,
+                                     old_status,
+                                     new_status,
+                                     reason,
+                                     operator_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at
 `
 
 type CreateAuditRecordParams struct {
-	Column1 *int64  `json:"column1"`
-	Column2 *int64  `json:"column2"`
-	Column3 *int16  `json:"column3"`
-	Column4 *int16  `json:"column4"`
-	Column5 *string `json:"column5"`
-	Column6 *int64  `json:"column6"`
+	ProductID  int64   `json:"productID"`
+	MerchantID int64   `json:"merchantID"`
+	OldStatus  int16   `json:"oldStatus"`
+	NewStatus  int16   `json:"newStatus"`
+	Reason     *string `json:"reason"`
+	OperatorID int64   `json:"operatorID"`
 }
 
 type CreateAuditRecordRow struct {
-	ID        int64              `json:"id"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	ID        int64     `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // 创建审核记录，返回新记录ID
 //
-//	INSERT INTO product_audits (product_id,
-//	                            merchant_id,
-//	                            old_status,
-//	                            new_status,
-//	                            reason,
-//	                            operator_id)
+//	INSERT INTO products.product_audits (product_id,
+//	                                     merchant_id,
+//	                                     old_status,
+//	                                     new_status,
+//	                                     reason,
+//	                                     operator_id)
 //	VALUES ($1, $2, $3, $4, $5, $6)
 //	RETURNING id, created_at
 func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) (CreateAuditRecordRow, error) {
 	row := q.db.QueryRow(ctx, CreateAuditRecord,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Column6,
+		arg.ProductID,
+		arg.MerchantID,
+		arg.OldStatus,
+		arg.NewStatus,
+		arg.Reason,
+		arg.OperatorID,
 	)
 	var i CreateAuditRecordRow
 	err := row.Scan(&i.ID, &i.CreatedAt)
@@ -110,10 +110,9 @@ const CreateProduct = `-- name: CreateProduct :one
 INSERT INTO products.products (name,
                                description,
                                price,
-                               stock,
                                status,
                                merchant_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, created_at, updated_at
 `
 
@@ -121,7 +120,6 @@ type CreateProductParams struct {
 	Name        string         `json:"name"`
 	Description *string        `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
-	Stock       *int32         `json:"stock"`
 	Status      int16          `json:"status"`
 	MerchantID  int64          `json:"merchantID"`
 }
@@ -142,17 +140,15 @@ type CreateProductRow struct {
 //	INSERT INTO products.products (name,
 //	                               description,
 //	                               price,
-//	                               stock,
 //	                               status,
 //	                               merchant_id)
-//	VALUES ($1, $2, $3, $4, $5, $6)
+//	VALUES ($1, $2, $3, $4, $5)
 //	RETURNING id, created_at, updated_at
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error) {
 	row := q.db.QueryRow(ctx, CreateProduct,
 		arg.Name,
 		arg.Description,
 		arg.Price,
-		arg.Stock,
 		arg.Status,
 		arg.MerchantID,
 	)
@@ -224,7 +220,6 @@ SELECT id,
        name,
        description,
        price,
-       stock,
        status,
        merchant_id,
        created_at,
@@ -245,7 +240,6 @@ type GetProductRow struct {
 	Name        string         `json:"name"`
 	Description *string        `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
-	Stock       *int32         `json:"stock"`
 	Status      int16          `json:"status"`
 	MerchantID  int64          `json:"merchantID"`
 	CreatedAt   time.Time      `json:"createdAt"`
@@ -259,7 +253,6 @@ type GetProductRow struct {
 //	       name,
 //	       description,
 //	       price,
-//	       stock,
 //	       status,
 //	       merchant_id,
 //	       created_at,
@@ -276,7 +269,6 @@ func (q *Queries) GetProduct(ctx context.Context, arg GetProductParams) (GetProd
 		&i.Name,
 		&i.Description,
 		&i.Price,
-		&i.Stock,
 		&i.Status,
 		&i.MerchantID,
 		&i.CreatedAt,
@@ -333,27 +325,43 @@ func (q *Queries) GetProductImages(ctx context.Context, arg GetProductImagesPara
 	return items, nil
 }
 
-const SoftDeleteProduct = `-- name: SoftDeleteProduct :exec
+const SoftDeleteProduct = `-- name: SoftDeleteProduct :one
 UPDATE products.products
 SET deleted_at = NOW()
-WHERE id = $1
-  AND merchant_id = $2
+WHERE merchant_id = $1
+  AND id = $2
+RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
 `
 
 type SoftDeleteProductParams struct {
-	ID         int64 `json:"id"`
 	MerchantID int64 `json:"merchantID"`
+	ID         int64 `json:"id"`
 }
 
 // 软删除商品，设置删除时间戳
 //
 //	UPDATE products.products
 //	SET deleted_at = NOW()
-//	WHERE id = $1
-//	  AND merchant_id = $2
-func (q *Queries) SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) error {
-	_, err := q.db.Exec(ctx, SoftDeleteProduct, arg.ID, arg.MerchantID)
-	return err
+//	WHERE merchant_id = $1
+//	  AND id = $2
+//	RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
+func (q *Queries) SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error) {
+	row := q.db.QueryRow(ctx, SoftDeleteProduct, arg.MerchantID, arg.ID)
+	var i ProductsProducts
+	err := row.Scan(
+		&i.ID,
+		&i.MerchantID,
+		&i.Name,
+		&i.Description,
+		&i.Price,
+		&i.Status,
+		&i.CurrentAuditID,
+		&i.CategoryID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const UpdateProduct = `-- name: UpdateProduct :exec
@@ -361,12 +369,11 @@ UPDATE products.products
 SET name        = $2,
     description = $3,
     price       = $4,
-    stock       = $5,
-    status      = $6,
+    status      = $5,
     updated_at  = NOW()
 WHERE id = $1
-  AND merchant_id = $7
-  AND updated_at = $8
+  AND merchant_id = $6
+  AND updated_at = $7
 `
 
 type UpdateProductParams struct {
@@ -374,7 +381,6 @@ type UpdateProductParams struct {
 	Name        string             `json:"name"`
 	Description *string            `json:"description"`
 	Price       pgtype.Numeric     `json:"price"`
-	Stock       *int32             `json:"stock"`
 	Status      int16              `json:"status"`
 	MerchantID  int64              `json:"merchantID"`
 	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
@@ -386,19 +392,17 @@ type UpdateProductParams struct {
 //	SET name        = $2,
 //	    description = $3,
 //	    price       = $4,
-//	    stock       = $5,
-//	    status      = $6,
+//	    status      = $5,
 //	    updated_at  = NOW()
 //	WHERE id = $1
-//	  AND merchant_id = $7
-//	  AND updated_at = $8
+//	  AND merchant_id = $6
+//	  AND updated_at = $7
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
 	_, err := q.db.Exec(ctx, UpdateProduct,
 		arg.ID,
 		arg.Name,
 		arg.Description,
 		arg.Price,
-		arg.Stock,
 		arg.Status,
 		arg.MerchantID,
 		arg.UpdatedAt,
