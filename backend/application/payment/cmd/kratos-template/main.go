@@ -14,8 +14,6 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"github.com/go-kratos/kratos/v2/transport/http"
-
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -39,7 +37,9 @@ func init() {
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Registrar) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server,
+	//hs *http.Server,
+	r registry.Registrar) *kratos.App {
 	return kratos.New(
 		kratos.ID(fmt.Sprintf("%s-%s", id, Name)),
 		kratos.Name(Name),
@@ -51,7 +51,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Regi
 		kratos.Logger(logger),
 		kratos.Server(
 			gs,
-			hs,
+			//hs,
 		),
 		kratos.Registrar(r),
 	)

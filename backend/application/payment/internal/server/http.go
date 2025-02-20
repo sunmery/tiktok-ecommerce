@@ -2,6 +2,7 @@ package server
 
 import (
 	"backend/application/payment/internal/conf"
+	"backend/application/payment/internal/service"
 	"backend/constants"
 	"context"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
-
+	payment *service.PaymentService,
 	ac *conf.Auth,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -100,7 +101,7 @@ func NewHTTPServer(c *conf.Server,
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	// v1.RegisterUserServiceHTTPServer(srv, user)
+	//v1.RegisterPaymentServiceServer(srv, payment)
 	return srv
 }
 
