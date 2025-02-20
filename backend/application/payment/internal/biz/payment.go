@@ -7,10 +7,22 @@ import "context"
 // 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 // )
 
+type CreditCard struct {
+	Number          string
+	CVV             int32
+	ExpirationYear  int32
+	ExpirationMonth int32
+}
+
 type CreateRequest struct {
+	Amount     float64
+	CreditCard CreditCard
+	OrderID    string
+	UserID     int32
 }
 
 type CreateReply struct {
+	TransactionID string
 }
 
 type PaymentRepo interface {
