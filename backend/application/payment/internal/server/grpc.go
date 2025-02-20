@@ -1,8 +1,8 @@
 package server
 
 import (
-	"backend/application/payment/constants"
 	"backend/application/payment/internal/conf"
+	"backend/constants"
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -32,7 +32,7 @@ func NewGRPCServer(
 			// attribute.Float64("float", 312.23),
 
 			// The service name used to display traces in backends serviceName
-			semconv.ServiceNameKey.String(constants.ServiceNameV1),
+			semconv.ServiceNameKey.String(constants.PaymentServiceV1),
 		),
 	)
 	if err != nil {

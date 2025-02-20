@@ -1,8 +1,8 @@
 package server
 
 import (
-	"backend/application/payment/constants"
 	"backend/application/payment/internal/conf"
+	"backend/constants"
 	"context"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
@@ -40,7 +40,7 @@ func NewHTTPServer(c *conf.Server,
 			// attribute.Float64("float", 312.23),
 
 			// The service name used to display traces in backends serviceName
-			semconv.ServiceNameKey.String(constants.ServiceNameV1),
+			semconv.ServiceNameKey.String(constants.PaymentServiceV1),
 		),
 	)
 	if err != nil {
@@ -79,9 +79,9 @@ func NewHTTPServer(c *conf.Server,
 		),
 		// 浏览器跨域
 		http.Filter(handlers.CORS(
-			// 允许的端点列表:
+			// 允许的端点列表：
 			handlers.AllowedOrigins([]string{"http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:443", "https://node1.apikv.com"}),
-			// 允许请求的方法:
+			// 允许请求的方法：
 			handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE", "HEAD", "PATCH"}),
 			// 允许的 Headers:
 			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),

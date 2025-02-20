@@ -1,11 +1,12 @@
 package main
 
 import (
-	"backend/appl
+	"backend/application/payment/internal/conf"
+	"backend/application/payment/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
-	"backend/application/payment/internal/conf"
+	"os"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"

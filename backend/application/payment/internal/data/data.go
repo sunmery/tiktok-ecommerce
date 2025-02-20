@@ -1,7 +1,7 @@
 package data
 
 import (
-	"backend/
+	"backend/application/payment/internal/conf"
 	"context"
 	"fmt"
 	"github.com/exaring/otelpgx"
@@ -22,7 +22,7 @@ type Data struct {
 	logger *log.Helper
 }
 
-// 使用标准库的私有类型(包级唯一)避免冲突
+// 使用标准库的私有类型 (包级唯一) 避免冲突
 type contextTxKey struct{}
 
 // NewData .
@@ -85,7 +85,7 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 	return conn
 }
 
-// DB 从上下文中获取事务或返回默认DB
+// DB 从上下文中获取事务或返回默认 DB
 // 通过 data.DB(ctx) 自动获取事务或普通连接
 // example: db := p.data.DB(ctx)
 func (d *Data) DB(ctx context.Context) *models.Queries {

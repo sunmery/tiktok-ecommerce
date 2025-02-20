@@ -1,7 +1,7 @@
 package server
 
 import (
-	"backend/
+	"backend/application/payment/internal/conf"
 	"context"
 	"crypto/rsa"
 	"github.com/go-kratos/kratos/v2/log"
@@ -9,7 +9,7 @@ import (
 	jwtV5 "github.com/golang-jwt/jwt/v5"
 )
 
-// NewWhiteListMatcher 创建jwt白名单
+// NewWhiteListMatcher 创建 jwt 白名单
 func NewWhiteListMatcher() selector.MatchFunc {
 	whiteList := make(map[string]struct{})
 	// 从 api 目录生成的 pb.go 文件找到需要不需要进行鉴权的接口
