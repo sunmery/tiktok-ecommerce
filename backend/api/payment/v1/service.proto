@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package payment.service.v1;
 
-option go_package = "/payment";
+option go_package = "api/payment/v1;payment";
 
 service PaymentService {
   rpc Charge(ChargeReq) returns (ChargeResp) {}
