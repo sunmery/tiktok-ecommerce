@@ -3,6 +3,7 @@ package main
 import (
 	"backend/application/payment/internal/conf"
 	"backend/application/payment/pkg"
+	"backend/constants"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
@@ -19,7 +20,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "organization-application-version"
+	Name = constants.PaymentServiceV1
 	// Version 通过环境变量来替换
 	Version           string
 	flagconf          string
