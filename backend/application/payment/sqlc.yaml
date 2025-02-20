@@ -4,7 +4,7 @@ sql:
     queries: "internal/data/queries"
     engine: "postgresql"
     database:
-      uri: postgresql://postgres:citus@159.75.231.54:5432/payment?sslmode=disable&timezone=Asia/Shanghai
+      uri: ${DB_SOURCE}
       # uri: postgresql://postgres:postgres@localhost:5432/database?sslmode=disable
     gen:
       go:

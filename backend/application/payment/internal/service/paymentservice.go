@@ -9,10 +9,10 @@ import (
 
 type PaymentServiceService struct {
 	pb.UnimplementedPaymentServiceServer
-	oc *biz.UserUsecase
+	oc *biz.PaymentUsecase
 }
 
-func NewPaymentServiceService(oc *biz.UserUsecase) *PaymentServiceService {
+func NewPaymentServiceService(oc *biz.PaymentUsecase) *PaymentServiceService {
 	return &PaymentServiceService{
 		oc: oc,
 	}
