@@ -1,4 +1,4 @@
-CREATE TABLE "public"."pay_record"
+CREATE TABLE "payment"."pay_record"
 (
     "id"             int4                                        NOT NULL DEFAULT nextval('pay_record_id_seq'::regclass),
     "created_at"     timestamptz(6) NOT NULL DEFAULT now(),
@@ -11,4 +11,3 @@ CREATE TABLE "public"."pay_record"
     "status"         varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
     CONSTRAINT "pay_record_pkey" PRIMARY KEY ("id")
 )
-;

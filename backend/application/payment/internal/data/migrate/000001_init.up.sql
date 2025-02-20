@@ -1,6 +1,6 @@
 CREATE SEQUENCE IF NOT EXISTS pay_record_id_seq;
 
-CREATE TABLE "public"."pay_record"
+CREATE TABLE "payment"."pay_record"
 (
     "id"             int4                                        NOT NULL DEFAULT nextval('pay_record_id_seq'::regclass),
     "created_at"     timestamptz(6) NOT NULL DEFAULT now(),
