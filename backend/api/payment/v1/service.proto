@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package payment.service.v1;
 
+import "validate/validate.proto";
+
 option go_package = "api/payment/v1;payment";
 
 service PaymentService {
@@ -9,21 +11,33 @@ service PaymentService {
 }
 
 message CreditCardInfo {
-  string number = 1;
-  int32 cvv = 2;
-  int32 expiration_year = 3;
-  int32 expiration_month = 4;
+  string number = 1 [(validate.rules).string = {
+    pattern: "^[0-9]{16}$",
+    min_len: 16,
+    max_len: 16
+  }];
+  int32 cvv = 2 [(validate.rules).int32 = {
+    gte: 0,
+    lte: 9999
+  }];
+  int32 expiration_year = 3 [(validate.rules).int32 = {
+    gte: 23
+  }];
+  int32 expiration_month = 4 [(validate.rules).int32 = {
+    gte: 1,
+    lte: 12
+  }];
 }
 
 message ChargeReq {
-  float amount = 1;
-  CreditCardInfo credit_card = 2;
-  string order_id = 3;
-  string user_id = 4;
+  float amount = 1 [(validate.rules).float = {
+    gt: 0
+  }];
+  CreditCardInfo credit_card = 2 [(validate.rules).message.required = true];
+  string order_id = 3 [(validate.rules).string.min_len = 1];
+  string user_id = 4 [(validate.rules).string.min_len = 1];
 }
 
 message ChargeResp {
   string transaction_id = 1;
 }
-
-// 字段校验
