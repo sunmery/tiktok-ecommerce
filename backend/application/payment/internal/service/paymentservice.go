@@ -16,13 +16,13 @@ func (s *PaymentService) Charge(ctx context.Context, req *pb.ChargeReq) (*pb.Cha
 	o, err := s.oc.Create(ctx, &biz.CreateRequest{
 		Amount: float64(req.Amount),
 		CreditCard: biz.CreditCard{
-			Number:          req.CreditCard.CreditCardNumber,
-			CVV:             req.CreditCard.CreditCardCvv,
-			ExpirationYear:  req.CreditCard.CreditCardExpirationYear,
-			ExpirationMonth: req.CreditCard.CreditCardExpirationMonth,
+			Number:          req.CreditCard.Number,
+			CVV:             req.CreditCard.Cvv,
+			ExpirationYear:  req.CreditCard.ExpirationYear,
+			ExpirationMonth: req.CreditCard.ExpirationMonth,
 		},
 		OrderID: "",
-		UserID:  0,
+		UserID:  req.UserId,
 	})
 	if err != nil {
 		return nil, err

@@ -18,7 +18,7 @@ type CreateRequest struct {
 	Amount     float64
 	CreditCard CreditCard
 	OrderID    string
-	UserID     int32
+	UserID     string
 }
 
 type CreateReply struct {

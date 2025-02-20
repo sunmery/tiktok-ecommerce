@@ -25,7 +25,7 @@ INSERT INTO pay_record (
 `
 
 type CreatePayRecordParams struct {
-	UserID        int32              `json:"userID"`
+	UserID        string             `json:"userID"`
 	OrderID       string             `json:"orderID"`
 	TranscationID string             `json:"transcationID"`
 	Amount        float64            `json:"amount"`
@@ -142,7 +142,7 @@ ORDER BY created_at DESC
 //	FROM pay_record
 //	WHERE user_id = $1 AND deleted_at IS NULL
 //	ORDER BY created_at DESC
-func (q *Queries) GetPayRecordsByUserId(ctx context.Context, userID int32) ([]PayRecord, error) {
+func (q *Queries) GetPayRecordsByUserId(ctx context.Context, userID string) ([]PayRecord, error) {
 	rows, err := q.db.Query(ctx, GetPayRecordsByUserId, userID)
 	if err != nil {
 		return nil, err

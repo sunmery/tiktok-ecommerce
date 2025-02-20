@@ -56,18 +56,18 @@
     "v1CreditCardInfo": {
       "type": "object",
       "properties": {
-        "creditCardNumber": {
+        "number": {
           "type": "string"
         },
-        "creditCardCvv": {
+        "cvv": {
           "type": "integer",
           "format": "int32"
         },
-        "creditCardExpirationYear": {
+        "expirationYear": {
           "type": "integer",
           "format": "int32"
         },
-        "creditCardExpirationMonth": {
+        "expirationMonth": {
           "type": "integer",
           "format": "int32"
         }

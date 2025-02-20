@@ -42,7 +42,7 @@ type Querier interface {
 	//  FROM pay_record
 	//  WHERE user_id = $1 AND deleted_at IS NULL
 	//  ORDER BY created_at DESC
-	GetPayRecordsByUserId(ctx context.Context, userID int32) ([]PayRecord, error)
+	GetPayRecordsByUserId(ctx context.Context, userID string) ([]PayRecord, error)
 }
 
 var _ Querier = (*Queries)(nil)

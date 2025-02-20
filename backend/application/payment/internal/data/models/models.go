@@ -12,7 +12,7 @@ type PayRecord struct {
 	ID            int32     `json:"id"`
 	CreatedAt     time.Time `json:"createdAt"`
 	DeletedAt     time.Time `json:"deletedAt"`
-	UserID        int32     `json:"userID"`
+	UserID        string    `json:"userID"`
 	OrderID       string    `json:"orderID"`
 	TranscationID string    `json:"transcationID"`
 	Amount        float64   `json:"amount"`
