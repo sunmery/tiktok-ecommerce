@@ -1,0 +1,77 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "PaymentService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1ChargeResp": {
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreditCardInfo": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string"
+        },
+        "cvv": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "expirationYear": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "expirationMonth": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    }
+  }
+}
