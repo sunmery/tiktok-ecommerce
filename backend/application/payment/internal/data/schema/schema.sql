@@ -1,6 +1,14 @@
-CREATE TABLE table_name
+CREATE TABLE "public"."pay_record"
 (
-    id         SERIAL PRIMARY KEY,
-    created_at timestamptz DEFAULT now() NOT NULL,
-    deleted_at timestamptz DEFAULT now() NOT NULL
-);
+    "id"             int4                                        NOT NULL DEFAULT nextval('pay_record_id_seq'::regclass),
+    "created_at"     timestamptz(6) NOT NULL DEFAULT now(),
+    "deleted_at"     timestamptz(6) NOT NULL DEFAULT now(),
+    "user_id"        int4                                        NOT NULL,
+    "order_id"       varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+    "transcation_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+    "amount"         float8                                      NOT NULL,
+    "pay_at"         timestamptz(6) NOT NULL,
+    "status"         varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+    CONSTRAINT "pay_record_pkey" PRIMARY KEY ("id")
+)
+;

@@ -2,8 +2,10 @@ package data
 
 import (
 	"backend/application/payment/internal/conf"
+	"backend/application/payment/internal/data/models"
 	"context"
 	"fmt"
+
 	"github.com/exaring/otelpgx"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
