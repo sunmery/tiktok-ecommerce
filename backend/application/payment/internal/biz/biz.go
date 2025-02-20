@@ -6,14 +6,14 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewUserUsecase)
+var ProviderSet = wire.NewSet(NewPaymentUsecase)
 
 type PaymentUsecase struct {
 	repo PaymentRepo
 	log  *log.Helper
 }
 
-func NewUserUsecase(repo PaymentRepo, logger log.Logger) *PaymentUsecase {
+func NewPaymentUsecase(repo PaymentRepo, logger log.Logger) *PaymentUsecase {
 	return &PaymentUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
