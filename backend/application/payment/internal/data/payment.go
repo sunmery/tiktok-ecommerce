@@ -25,12 +25,20 @@ func NewPaymentRepo(data *Data, logger log.Logger) biz.PaymentRepo {
 func (r *PaymentRepo) Create(ctx context.Context, req *biz.CreateRequest) (*biz.CreateReply, error) {
 	r.log.Infof("Create request: %+v", req)
 	transactionID, _ := uuid.GenerateUUID()
+
+	// 确保 PayAt 字段正确设置
+	now := time.Now()
+	payAt := pgtype.Timestamptz{
+		Time:  now,
+		Valid: true,
+	}
+
 	record, err := r.data.db.CreatePayRecord(ctx, models.CreatePayRecordParams{
 		UserID:        req.UserID,
 		OrderID:       req.OrderID,
 		TranscationID: transactionID,
 		Amount:        req.Amount,
-		PayAt:         pgtype.Timestamptz{Time: time.Now()},
+		PayAt:         payAt,
 		Status:        "paid",
 	})
 	if err != nil {
