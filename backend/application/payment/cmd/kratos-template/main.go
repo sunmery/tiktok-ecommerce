@@ -58,6 +58,7 @@ func newApp(logger log.Logger, gs *grpc.Server,
 }
 
 func main() {
+	flag.Parse()
 	logger := log.With(log.NewStdLogger(os.Stdout),
 		"ts", log.DefaultTimestamp,
 		"caller", log.DefaultCaller,
