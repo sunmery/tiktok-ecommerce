@@ -111,8 +111,10 @@ INSERT INTO products.products (name,
                                description,
                                price,
                                status,
-                               merchant_id)
-VALUES ($1, $2, $3, $4, $5)
+                               merchant_id,
+                               category_id
+                               )
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at, updated_at
 `
 
@@ -122,6 +124,7 @@ type CreateProductParams struct {
 	Price       pgtype.Numeric `json:"price"`
 	Status      int16          `json:"status"`
 	MerchantID  int64          `json:"merchantID"`
+	CategoryID  int64          `json:"categoryID"`
 }
 
 type CreateProductRow struct {
@@ -141,8 +144,10 @@ type CreateProductRow struct {
 //	                               description,
 //	                               price,
 //	                               status,
-//	                               merchant_id)
-//	VALUES ($1, $2, $3, $4, $5)
+//	                               merchant_id,
+//	                               category_id
+//	                               )
+//	VALUES ($1, $2, $3, $4, $5, $6)
 //	RETURNING id, created_at, updated_at
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error) {
 	row := q.db.QueryRow(ctx, CreateProduct,
@@ -151,6 +156,7 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (C
 		arg.Price,
 		arg.Status,
 		arg.MerchantID,
+		arg.CategoryID,
 	)
 	var i CreateProductRow
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.UpdatedAt)

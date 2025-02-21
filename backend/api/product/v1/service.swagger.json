@@ -24,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Product"
+              "$ref": "#/definitions/v1CreateProductReply"
             }
           },
           "default": {
@@ -425,13 +425,33 @@
       "type": "object",
       "properties": {
         "categoryId": {
-          "type": "string"
+          "type": "string",
+          "format": "uint64"
         },
         "categoryName": {
           "type": "string"
         }
       },
       "title": "新增分类验证相关定义"
+    },
+    "v1CreateProductReply": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64",
+          "title": "商品唯一ID（系统生成）"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "创建商品的返回值"
     },
     "v1CreateProductRequest": {
       "type": "object",
@@ -474,11 +494,6 @@
           "type": "number",
           "format": "double",
           "title": "商品价格（单位：元）"
-        },
-        "stock": {
-          "type": "integer",
-          "format": "int32",
-          "title": "库存数量"
         },
         "status": {
           "$ref": "#/definitions/v1ProductStatus",

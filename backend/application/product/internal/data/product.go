@@ -1,6 +1,7 @@
 package data
 
 import (
+	"backend/api/category/v1"
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
@@ -18,7 +19,7 @@ type productRepo struct {
 	log  *log.Helper
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.Product, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.CreateProductReply, error) {
 	db := p.data.DB(ctx)
 
 	// 转换价格到pgtype.Numeric
@@ -26,30 +27,50 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	if err != nil {
 		return nil, fmt.Errorf("invalid price format: %w", err)
 	}
+	var categoryId int64 = 0
 
-	// TODO 创建分类
+	getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+		Id: int64(req.Product.Category.CategoryId),
+	})
+	var newCategory = &category.Category{}
+	if getCategoryErr != nil {
+		// if errors.Is(err, pgx.ErrNoRows) {
+		newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+			ParentId:  0,
+			Name:      req.Product.Category.CategoryName,
+			SortOrder: 0,
+		})
+		// }
+		// return nil, fmt.Errorf("get category failed: %w", err)
+	}
 
+	if getCategory != nil {
+		fmt.Printf("getCategory%+v", categoryId)
+		categoryId = getCategory.Id
+	}
+	if newCategory != nil {
+		fmt.Printf("newCategory%+v", categoryId)
+		categoryId = newCategory.Id
+	}
+
+	fmt.Printf("categoryId%+v", categoryId)
 	// 执行创建
 	result, err := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Product.Name,
 		Description: &req.Product.Description,
 		Price:       pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()},
-
-		Status:     int16(req.Product.Status),
-		MerchantID: int64(req.Product.MerchantId),
+		CategoryID:  categoryId,
+		Status:      int16(req.Product.Status),
+		MerchantID:  int64(req.Product.MerchantId),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 
 	// 转换基础信息
-	product := biz.Product{
-		ID: uint64(result.ID),
-		// MerchantId: uint64(result.MerchantID),
-		Name:      req.Product.Name,
-		Price:     req.Product.Price,
-		Stock:     req.Product.Stock,
-		Status:    req.Product.Status,
+	product := biz.CreateProductReply{
+		ID:        uint64(result.ID),
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
 	}
@@ -244,8 +265,7 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 
 	// 获取基础信息
 	product, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         int64(req.ID),
-		MerchantID: int64(req.MerchantID),
+		ID: int64(req.ID),
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -259,11 +279,14 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
-
-	return db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
+	_, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
 		ID:         int64(req.ID),
 		MerchantID: int64(req.MerchantID),
 	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 辅助方法：完整产品数据组装

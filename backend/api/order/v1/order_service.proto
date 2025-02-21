@@ -2,12 +2,27 @@ syntax = "proto3";
 
 package api.order.v1;
 
+import "google/api/annotations.proto";
 option go_package = "/api/order/v1;order";
 
 service OrderService {
-  rpc PlaceOrder(PlaceOrderReq) returns (PlaceOrderResp) {}
-  rpc ListOrder(ListOrderReq) returns (ListOrderResp) {}
-  rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {}
+  rpc PlaceOrder(PlaceOrderReq) returns (PlaceOrderResp) {
+    option (google.api.http) = {
+      post: "/v1/order"
+      body: "*"
+    };
+  }
+  rpc ListOrder(ListOrderReq) returns (ListOrderResp) {
+    option (google.api.http) = {
+      get: "/v1/order"
+    };
+  }
+  rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {
+    option (google.api.http) = {
+      post: "/v1/order/{order_id}/paid"
+      body: "*"
+    };
+  }
 }
 
 // 购物车商品

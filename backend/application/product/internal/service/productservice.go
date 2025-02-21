@@ -4,6 +4,8 @@ import (
 	pb "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"context"
+	"fmt"
+	"github.com/go-kratos/kratos/v2/metadata"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -19,13 +21,17 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 	return &ProductService{uc: uc}
 }
 
-func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.Product, error) {
+func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
 	bizProduct := convertPBToBizProduct(req.GetProduct())
 	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{Product: *bizProduct})
 	if err != nil {
 		return nil, err
 	}
-	return convertBizProductToPB(created), nil
+	return &pb.CreateProductReply{
+		Id:        created.ID,
+		CreatedAt: timestamppb.New(created.CreatedAt),
+		UpdatedAt: timestamppb.New(created.UpdatedAt),
+	}, nil
 }
 
 func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Product, error) {
@@ -42,10 +48,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	if pbProduct.Price > 0 {
 		updateReq.Price = &pbProduct.Price
 	}
-	if pbProduct.Stock >= 0 {
-		stock := int(pbProduct.Stock)
-		updateReq.Stock = &stock
-	}
+
 	if pbProduct.Description != "" {
 		updateReq.Description = pbProduct.Description
 	}
@@ -116,9 +119,16 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
+	// TODO service 层获取用户ID
+	// 层层传递下去
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
+	}
+	fmt.Printf("x-md-global-user-id %s\n", userId)
+
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
-		ID:         req.Id,
-		MerchantID: req.MerchantId,
+		ID: req.Id,
 	})
 	if err != nil {
 		return nil, err
@@ -148,7 +158,6 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
-		Stock:       p.Stock,
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId,
 		CreatedAt:   timestamppb.New(p.CreatedAt),
@@ -189,18 +198,18 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 func convertPBToBizProduct(p *pb.Product) *biz.Product {
 	return &biz.Product{
 		ID:          p.GetId(),
-		Name:        p.GetName(),
-		Description: p.GetDescription(),
-		Price:       p.GetPrice(),
-		Stock:       p.GetStock(),
-		Status:      convertPBStatusToBiz(p.GetStatus()),
 		MerchantId:  p.GetMerchantId(),
+		Name:        p.GetName(),
+		Price:       p.GetPrice(),
+		Description: p.GetDescription(),
+		Images:      convertPBImagesToBiz(p.GetImages()),
+		Status:      convertPBStatusToBiz(p.GetStatus()),
 		Category: biz.CategoryInfo{
 			CategoryId:   p.GetCategory().GetCategoryId(),
 			CategoryName: p.GetCategory().GetCategoryName(),
 		},
-		Images:    convertPBImagesToBiz(p.GetImages()),
-		AuditInfo: convertPBAuditInfoToBiz(p.GetAuditInfo()),
+		Attributes: nil,
+		AuditInfo:  convertPBAuditInfoToBiz(p.GetAuditInfo()),
 	}
 }
 func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {

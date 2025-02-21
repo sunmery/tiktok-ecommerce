@@ -45,8 +45,10 @@ type Querier interface {
 	//                                 description,
 	//                                 price,
 	//                                 status,
-	//                                 merchant_id)
-	//  VALUES ($1, $2, $3, $4, $5)
+	//                                 merchant_id,
+	//                                 category_id
+	//                                 )
+	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at, updated_at
 	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
 	//CreateProductImages

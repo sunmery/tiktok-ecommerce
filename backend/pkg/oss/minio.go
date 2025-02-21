@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
+)
+
 var MinioClientGlobal *MinioClient
 
 type MinioClient struct {
@@ -43,6 +47,35 @@ func NewMinioClient(endpoint, accessKey, secretKey string, secure bool) (*MinioC
 	}
 	MinioClientGlobal = client
 	return client, nil
+}
+
+func (m *MinioClient) PostPresignedUrl(ctx context.Context, bucketName, objectName string) (string, map[string]string, error) {
+	expiry := defaultExpiryTime
+
+	policy := minio.NewPostPolicy()
+	_ = policy.SetBucket(bucketName)
+	_ = policy.SetKey(objectName)
+	_ = policy.SetExpires(time.Now().UTC().Add(expiry))
+
+	presignedURL, formData, err := m.Client.PresignedPostPolicy(ctx, policy)
+	if err != nil {
+		log.Fatalln(err)
+		return "", map[string]string{}, err
+	}
+
+	return presignedURL.String(), formData, nil
+}
+
+func (m *MinioClient) PutPresignedUrl(ctx context.Context, bucketName, objectName string) (string, error) {
+	expiry := defaultExpiryTime
+
+	presignedURL, err := m.Client.PresignedPutObject(ctx, bucketName, objectName, expiry)
+	if err != nil {
+		log.Fatalln(err)
+		return "", err
+	}
+
+	return presignedURL.String(), nil
 }
 
 // UploadFile 上传文件

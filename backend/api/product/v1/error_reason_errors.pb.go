@@ -52,3 +52,15 @@ func IsInvalidAuditAction(err error) bool {
 func ErrorInvalidAuditAction(format string, args ...interface{}) *errors.Error {
 	return errors.New(400, ErrorReason_InvalidAuditAction.String(), fmt.Sprintf(format, args...))
 }
+
+func IsCategoryNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_CategoryNotFound.String() && e.Code == 404
+}
+
+func ErrorCategoryNotFound(format string, args ...interface{}) *errors.Error {
+	return errors.New(404, ErrorReason_CategoryNotFound.String(), fmt.Sprintf(format, args...))
+}

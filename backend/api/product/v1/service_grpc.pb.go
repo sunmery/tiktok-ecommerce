@@ -35,7 +35,7 @@ const (
 // 商品服务定义
 type ProductServiceClient interface {
 	// 创建商品（草稿状态）
-	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
+	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error)
 	// 更新商品信息
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// 提交商品审核
@@ -56,9 +56,9 @@ func NewProductServiceClient(cc grpc.ClientConnInterface) ProductServiceClient {
 	return &productServiceClient{cc}
 }
 
-func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error) {
+func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Product)
+	out := new(CreateProductReply)
 	err := c.cc.Invoke(ctx, ProductService_CreateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (c *productServiceClient) DeleteProduct(ctx context.Context, in *DeleteProd
 // 商品服务定义
 type ProductServiceServer interface {
 	// 创建商品（草稿状态）
-	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
+	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
 	// 更新商品信息
 	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
 	// 提交商品审核
@@ -144,7 +144,7 @@ type ProductServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProductServiceServer struct{}
 
-func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*Product, error) {
+func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
 func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {

@@ -15,4 +15,5 @@ enum ErrorReason {
   INVALID_STATUS = 1 [(errors.code) = 500];
   // 错误参数
   InvalidAuditAction = 2 [(errors.code) = 400];
+  CategoryNotFound = 3 [(errors.code) = 404];
 }

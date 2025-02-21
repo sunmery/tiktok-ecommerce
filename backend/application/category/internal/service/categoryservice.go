@@ -48,14 +48,8 @@ func (s *CategoryServiceService) CreateCategory(ctx context.Context, req *pb.Cre
 	// 转换响应格式
 	return &pb.Category{
 		Id:        category.ID,
-		ParentId:  category.ParentID,
-		Level:     int32(category.Level),
-		Path:      category.Path,
-		Name:      category.Name,
-		SortOrder: int32(category.SortOrder),
-		IsLeaf:    category.IsLeaf,
-		// CreatedAt: timestamppb.New(category.CreatedAt),
-		// UpdatedAt: timestamppb.New(category.UpdatedAt),
+		CreatedAt: timestamppb.New(category.CreatedAt),
+		UpdatedAt: timestamppb.New(category.UpdatedAt),
 	}, nil
 }
 

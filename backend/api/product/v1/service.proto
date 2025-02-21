@@ -26,7 +26,7 @@ enum AuditAction {
 // 商品服务定义
 service ProductService {
   // 创建商品（草稿状态）
-  rpc CreateProduct(CreateProductRequest) returns (Product) {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductReply) {
     option (google.api.http) = {
       post: "/v1/products"
       body: "*"
@@ -74,7 +74,7 @@ service ProductService {
 
 // 新增分类验证相关定义
 message CategoryInfo {
-  string category_id = 1 [(validate.rules).string = {min_len: 1}];
+  uint64 category_id = 1 [(validate.rules).string = {min_len: 1}];
   string category_name = 2;
 }
 
@@ -86,7 +86,6 @@ message Product {
   string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   double price = 4; // 商品价格（单位：元）
-  int32 stock = 5;  // 库存数量
   ProductStatus status = 6; // 当前状态
   uint64 merchant_id = 7;    // 所属商家ID
 
@@ -108,6 +107,15 @@ message Product {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
   CategoryInfo category = 13; // 替换原有category_id字段
+}
+
+// 创建商品的返回值
+message CreateProductReply {
+  uint64 id = 1[
+    (validate.rules).uint64.gt = 0
+  ];  // 商品唯一ID（系统生成）
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }
 
 // 属性值类型定义

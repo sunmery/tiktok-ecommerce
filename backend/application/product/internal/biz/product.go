@@ -66,7 +66,7 @@ type AuditInfo struct {
 }
 
 type CategoryInfo struct {
-	CategoryId   string
+	CategoryId   uint64
 	CategoryName string
 }
 type ProductImage struct {
@@ -82,7 +82,6 @@ type Product struct {
 	Name        string
 	Price       float64
 	Description string
-	Stock       int32
 	Images      []*ProductImage
 	Status      ProductStatus
 	Category    CategoryInfo
@@ -90,6 +89,12 @@ type Product struct {
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
 	AuditInfo   AuditInfo
+}
+
+type CreateProductReply struct {
+	ID        uint64
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type SubmitAuditRequest struct {
@@ -149,8 +154,7 @@ type DeleteProductRequest struct {
 
 // GetProductRequest 完善GetProductRequest
 type GetProductRequest struct {
-	ID         uint64
-	MerchantID uint64
+	ID uint64
 }
 
 // CreateProductRequest 完善CreateProductRequest
@@ -183,7 +187,7 @@ type AuditInfoModel struct {
 
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
-	CreateProduct(ctx context.Context, req *CreateProductRequest) (*Product, error)
+	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
@@ -202,7 +206,8 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	p.Status = newStatus
 	return nil
 }
-func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*Product, error) {
+func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
+	p.log.Debugf("CreateProduct: %+v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 func (p *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error) {

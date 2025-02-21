@@ -31,7 +31,7 @@ type ProductServiceHTTPServer interface {
 	// AuditProduct 审核商品
 	AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error)
 	// CreateProduct 创建商品（草稿状态）
-	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
+	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
 	// DeleteProduct 删除商品（软删除）
 	DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
 	// GetProduct 获取商品详情
@@ -69,7 +69,7 @@ func _ProductService_CreateProduct0_HTTP_Handler(srv ProductServiceHTTPServer) f
 		if err != nil {
 			return err
 		}
-		reply := out.(*Product)
+		reply := out.(*CreateProductReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -195,7 +195,7 @@ func _ProductService_DeleteProduct0_HTTP_Handler(srv ProductServiceHTTPServer) f
 
 type ProductServiceHTTPClient interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
-	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *Product, err error)
+	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *CreateProductReply, err error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *Product, err error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
@@ -223,8 +223,8 @@ func (c *ProductServiceHTTPClientImpl) AuditProduct(ctx context.Context, in *Aud
 	return &out, nil
 }
 
-func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...http.CallOption) (*Product, error) {
-	var out Product
+func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...http.CallOption) (*CreateProductReply, error) {
+	var out CreateProductReply
 	pattern := "/v1/products"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationProductServiceCreateProduct))
