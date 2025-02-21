@@ -55,9 +55,9 @@ docker-build:
 	@echo "Building Docker image for service: $(SERVICE)"
 	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
 	@echo "Docker image: $(REPOSITORY):dev"
-	REPOSITORY="ecommence/$(APP_RELATIVE_PATH)"
+	REPOSITORY="ecommence/$(SERVICE)"
 	cd ../.. && docker build . \
-	  -f application/$(APP_RELATIVE_PATH)/Dockerfile \
+	  -f application/$(SERVICE)/Dockerfile \
 	  --progress=plain \
 	  -t $(REPOSITORY):dev \
 	  --build-arg SERVICE=$(APP_RELATIVE_PATH) \
