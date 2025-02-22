@@ -169,7 +169,9 @@ func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveC
 		ProductId:  req.ProductId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to remove cart item")
+		return &pb.RemoveCartItemResp{
+			Success: resp.Success,
+		}, errors.New("failed to remove cart item")
 	}
 	return &pb.RemoveCartItemResp{
 		Success: resp.Success,

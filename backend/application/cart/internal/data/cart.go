@@ -30,7 +30,9 @@ func (c *cartRepo) CheckCartItem(ctx context.Context, req *biz.CheckCartItemReq)
 		CartName:   "cart",
 	})
 	if err != nil {
-		return nil, err
+		return &biz.CheckCartItemResp{
+			Success: false,
+		}, err
 	}
 	return &biz.CheckCartItemResp{
 		Success: true,
@@ -166,7 +168,9 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 		CartName:   "cart",
 	})
 	if err != nil || dreq == (models.CartSchemaCartItems{}) {
-		return nil, err
+		return &biz.RemoveCartItemResp{
+			Success: false,
+		}, err
 	}
 	c.log.WithContext(ctx).Infof("RemoveCartItem request2 : %+v", dreq)
 	return &biz.RemoveCartItemResp{
@@ -183,6 +187,11 @@ func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz
 		Quantity:   int32(req.Item.Quantity),
 		CartName:   "cart",
 	})
+	if resp == (models.CartSchemaCartItems{}) {
+		return &biz.UpsertItemResp{
+			Success: false,
+		}, err
+	}
 	if err != nil {
 		return nil, err
 	}
