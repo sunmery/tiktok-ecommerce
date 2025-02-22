@@ -44,14 +44,15 @@ WHERE ci.cart_id =
     AND ci.product_id = $4  -- 删除指定商品ID
 RETURNING *;
 
--- name: EmptyCart :exec
+-- name: EmptyCart :one
 DELETE FROM cart_schema.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM cart_schema.cart AS c
-     WHERE c.user_id = $1 AND c.cart_name = $2);  -- 获取用户的购物车ID
+     WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
+RETURNING 1;
 
--- name: CheckCartItem :exec
+-- name: CheckCartItem :one
 UPDATE cart_schema.cart_items AS ci
 SET selected = TRUE
 WHERE ci.cart_id = 
@@ -59,7 +60,8 @@ WHERE ci.cart_id =
      FROM cart_schema.cart AS c
      WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1) 
     AND ci.merchant_id = $3  -- 商家ID
-    AND ci.product_id = $4;
+    AND ci.product_id = $4
+RETURNING 1;  -- 返回 1 表示受影响的行数
 
 -- name: CreateCart :one
 INSERT INTO cart_schema.cart (user_id, cart_name)
@@ -80,7 +82,7 @@ SELECT c.cart_id, c.cart_name
 FROM cart_schema.cart AS c
 WHERE c.user_id = $1;
 
--- name: UncheckCartItem :exec
+-- name: UncheckCartItem :one
 UPDATE cart_schema.cart_items AS ci
 SET selected = FALSE
 WHERE ci.cart_id = 
@@ -88,4 +90,5 @@ WHERE ci.cart_id =
      FROM cart_schema.cart AS c
      WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1) 
     AND ci.merchant_id = $3  -- 商家ID
-    AND ci.product_id = $4;
+    AND ci.product_id = $4
+RETURNING 1;  -- 返回 1 表示受影响的行数

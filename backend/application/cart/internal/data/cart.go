@@ -23,7 +23,7 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 // CheckCartItem implements biz.CartRepo.
 func (c *cartRepo) CheckCartItem(ctx context.Context, req *biz.CheckCartItemReq) (*biz.CheckCartItemResp, error) {
 	c.log.WithContext(ctx).Infof("CheckCartItem request : %+v", req)
-	err := c.data.db.CheckCartItem(ctx, models.CheckCartItemParams{
+	effected, err := c.data.db.CheckCartItem(ctx, models.CheckCartItemParams{
 		UserID:     req.UserId,
 		MerchantID: req.MerchantId,
 		ProductID:  int32(req.ProductId),
@@ -33,6 +33,11 @@ func (c *cartRepo) CheckCartItem(ctx context.Context, req *biz.CheckCartItemReq)
 		return &biz.CheckCartItemResp{
 			Success: false,
 		}, err
+	}
+	if effected == 0 {
+		return &biz.CheckCartItemResp{
+			Success: false,
+		}, nil
 	}
 	return &biz.CheckCartItemResp{
 		Success: true,
@@ -103,7 +108,7 @@ func (c *cartRepo) ListCarts(ctx context.Context, req *biz.ListCartsReq) (*biz.L
 
 // UncheckCartItem implements biz.CartRepo.
 func (c *cartRepo) UncheckCartItem(ctx context.Context, req *biz.UncheckCartItemReq) (*biz.UncheckCartItemResp, error) {
-	err := c.data.db.UncheckCartItem(ctx, models.UncheckCartItemParams{
+	resp, err := c.data.db.UncheckCartItem(ctx, models.UncheckCartItemParams{
 		UserID:     req.UserId,
 		MerchantID: req.MerchantId,
 		ProductID:  int32(req.ProductId),
@@ -112,6 +117,12 @@ func (c *cartRepo) UncheckCartItem(ctx context.Context, req *biz.UncheckCartItem
 	if err != nil {
 		return nil, err
 	}
+	if resp == 0 {
+		return &biz.UncheckCartItemResp{
+			Success: false,
+		}, nil
+	}
+	c.log.WithContext(ctx).Infof("UncheckCartItem request********** : %+v", resp)
 	return &biz.UncheckCartItemResp{
 		Success: true,
 	}, nil
@@ -119,12 +130,17 @@ func (c *cartRepo) UncheckCartItem(ctx context.Context, req *biz.UncheckCartItem
 
 // EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
-	err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
+	effected, err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
 		UserID:   req.UserId,
 		CartName: "cart",
 	})
 	if err != nil {
 		return nil, err
+	}
+	if effected == 0 {
+		return &biz.EmptyCartResp{
+			Success: false,
+		}, nil
 	}
 	return &biz.EmptyCartResp{
 		Success: true,

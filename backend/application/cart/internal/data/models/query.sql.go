@@ -9,8 +9,7 @@ import (
 	"context"
 )
 
-const CheckCartItem = `-- name: CheckCartItem :exec
-
+const CheckCartItem = `-- name: CheckCartItem :one
 UPDATE cart_schema.cart_items AS ci
 SET selected = TRUE
 WHERE ci.cart_id = 
@@ -19,6 +18,7 @@ WHERE ci.cart_id =
      WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1) 
     AND ci.merchant_id = $3  -- 商家ID
     AND ci.product_id = $4
+RETURNING 1
 `
 
 type CheckCartItemParams struct {
@@ -28,7 +28,7 @@ type CheckCartItemParams struct {
 	ProductID  int32  `json:"productID"`
 }
 
-// 获取用户的购物车ID
+// CheckCartItem
 //
 //	UPDATE cart_schema.cart_items AS ci
 //	SET selected = TRUE
@@ -38,17 +38,21 @@ type CheckCartItemParams struct {
 //	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
 //	    AND ci.merchant_id = $3  -- 商家ID
 //	    AND ci.product_id = $4
-func (q *Queries) CheckCartItem(ctx context.Context, arg CheckCartItemParams) error {
-	_, err := q.db.Exec(ctx, CheckCartItem,
+//	RETURNING 1
+func (q *Queries) CheckCartItem(ctx context.Context, arg CheckCartItemParams) (int32, error) {
+	row := q.db.QueryRow(ctx, CheckCartItem,
 		arg.UserID,
 		arg.CartName,
 		arg.MerchantID,
 		arg.ProductID,
 	)
-	return err
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const CreateCart = `-- name: CreateCart :one
+
 INSERT INTO cart_schema.cart (user_id, cart_name)
 VALUES ($1, $2)
 RETURNING cart_id, user_id, cart_name, status, created_at, updated_at
@@ -59,7 +63,7 @@ type CreateCartParams struct {
 	CartName string `json:"cartName"`
 }
 
-// CreateCart
+// 返回 1 表示受影响的行数
 //
 //	INSERT INTO cart_schema.cart (user_id, cart_name)
 //	VALUES ($1, $2)
@@ -134,12 +138,13 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) ([]Cre
 	return items, nil
 }
 
-const EmptyCart = `-- name: EmptyCart :exec
+const EmptyCart = `-- name: EmptyCart :one
 DELETE FROM cart_schema.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM cart_schema.cart AS c
-     WHERE c.user_id = $1 AND c.cart_name = $2)
+     WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
+RETURNING 1
 `
 
 type EmptyCartParams struct {
@@ -153,10 +158,13 @@ type EmptyCartParams struct {
 //	WHERE ci.cart_id =
 //	    (SELECT c.cart_id
 //	     FROM cart_schema.cart AS c
-//	     WHERE c.user_id = $1 AND c.cart_name = $2)
-func (q *Queries) EmptyCart(ctx context.Context, arg EmptyCartParams) error {
-	_, err := q.db.Exec(ctx, EmptyCart, arg.UserID, arg.CartName)
-	return err
+//	     WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
+//	RETURNING 1
+func (q *Queries) EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, error) {
+	row := q.db.QueryRow(ctx, EmptyCart, arg.UserID, arg.CartName)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const GetCart = `-- name: GetCart :many
@@ -299,7 +307,7 @@ func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) 
 	return i, err
 }
 
-const UncheckCartItem = `-- name: UncheckCartItem :exec
+const UncheckCartItem = `-- name: UncheckCartItem :one
 UPDATE cart_schema.cart_items AS ci
 SET selected = FALSE
 WHERE ci.cart_id = 
@@ -308,6 +316,7 @@ WHERE ci.cart_id =
      WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1) 
     AND ci.merchant_id = $3  -- 商家ID
     AND ci.product_id = $4
+RETURNING 1
 `
 
 type UncheckCartItemParams struct {
@@ -327,14 +336,17 @@ type UncheckCartItemParams struct {
 //	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
 //	    AND ci.merchant_id = $3  -- 商家ID
 //	    AND ci.product_id = $4
-func (q *Queries) UncheckCartItem(ctx context.Context, arg UncheckCartItemParams) error {
-	_, err := q.db.Exec(ctx, UncheckCartItem,
+//	RETURNING 1
+func (q *Queries) UncheckCartItem(ctx context.Context, arg UncheckCartItemParams) (int32, error) {
+	row := q.db.QueryRow(ctx, UncheckCartItem,
 		arg.UserID,
 		arg.CartName,
 		arg.MerchantID,
 		arg.ProductID,
 	)
-	return err
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const UpsertItem = `-- name: UpsertItem :one

@@ -9,8 +9,7 @@ import (
 )
 
 type Querier interface {
-	// 获取用户的购物车ID
-	//
+	//CheckCartItem
 	//
 	//  UPDATE cart_schema.cart_items AS ci
 	//  SET selected = TRUE
@@ -20,8 +19,10 @@ type Querier interface {
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
 	//      AND ci.merchant_id = $3  -- 商家ID
 	//      AND ci.product_id = $4
-	CheckCartItem(ctx context.Context, arg CheckCartItemParams) error
-	//CreateCart
+	//  RETURNING 1
+	CheckCartItem(ctx context.Context, arg CheckCartItemParams) (int32, error)
+	// 返回 1 表示受影响的行数
+	//
 	//
 	//  INSERT INTO cart_schema.cart (user_id, cart_name)
 	//  VALUES ($1, $2)
@@ -43,8 +44,9 @@ type Querier interface {
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
 	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1 AND c.cart_name = $2)
-	EmptyCart(ctx context.Context, arg EmptyCartParams) error
+	//       WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
+	//  RETURNING 1
+	EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, error)
 	//GetCart
 	//
 	//  SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.selected
@@ -82,7 +84,8 @@ type Querier interface {
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
 	//      AND ci.merchant_id = $3  -- 商家ID
 	//      AND ci.product_id = $4
-	UncheckCartItem(ctx context.Context, arg UncheckCartItemParams) error
+	//  RETURNING 1
+	UncheckCartItem(ctx context.Context, arg UncheckCartItemParams) (int32, error)
 	//UpsertItem
 	//
 	//  WITH cart_id_cte AS (
