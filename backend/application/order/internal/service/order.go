@@ -22,10 +22,6 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, status.Error(codes.Internal, "获取购物车失败")
-	}
-
 	UserId, err := strconv.ParseUint(payload.ID, 10, 32)
 	if err != nil {
 		// 处理转换错误，例如返回错误信息给调用者
