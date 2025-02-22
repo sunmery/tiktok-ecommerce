@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.3
 // - protoc             v3.21.0
-// source: cart/v1/service.proto
+// source: service.proto
 
 package v1
 
@@ -52,7 +52,7 @@ func RegisterCartServiceHTTPServer(s *http.Server, srv CartServiceHTTPServer) {
 	r.POST("/v1/cart", _CartService_UpsertItem0_HTTP_Handler(srv))
 	r.GET("/v1/cart", _CartService_GetCart0_HTTP_Handler(srv))
 	r.DELETE("/v1/cart", _CartService_EmptyCart0_HTTP_Handler(srv))
-	r.DELETE("/v1/cart/item/{product_id}", _CartService_RemoveCartItem0_HTTP_Handler(srv))
+	r.DELETE("/v1/cart/item", _CartService_RemoveCartItem0_HTTP_Handler(srv))
 	r.POST("/v1/cart/item/check", _CartService_CheckCartItem0_HTTP_Handler(srv))
 	r.POST("/v1/cart/item/uncheck", _CartService_UncheckCartItem0_HTTP_Handler(srv))
 	r.POST("/v1/cart/order", _CartService_CreateOrder0_HTTP_Handler(srv))
@@ -162,10 +162,10 @@ func _CartService_EmptyCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx ht
 func _CartService_RemoveCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in RemoveCartItemReq
-		if err := ctx.BindQuery(&in); err != nil {
+		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
+		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationCartServiceRemoveCartItem)
@@ -347,11 +347,11 @@ func (c *CartServiceHTTPClientImpl) ListCarts(ctx context.Context, in *ListCarts
 
 func (c *CartServiceHTTPClientImpl) RemoveCartItem(ctx context.Context, in *RemoveCartItemReq, opts ...http.CallOption) (*RemoveCartItemResp, error) {
 	var out RemoveCartItemResp
-	pattern := "/v1/cart/item/{product_id}"
-	path := binding.EncodeURL(pattern, in, true)
+	pattern := "/v1/cart/item"
+	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationCartServiceRemoveCartItem))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
