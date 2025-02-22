@@ -24,10 +24,10 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 func (c *cartRepo) CheckCartItem(ctx context.Context, req *biz.CheckCartItemReq) (*biz.CheckCartItemResp, error) {
 	c.log.WithContext(ctx).Infof("CheckCartItem request : %+v", req)
 	err := c.data.db.CheckCartItem(ctx, models.CheckCartItemParams{
-		Owner:     req.Owner,
-		Name:      req.Name,
-		CartName:  "cart",
-		ProductID: int32(req.ProductId),
+		UserID:     req.UserId,
+		MerchantID: req.MerchantId,
+		ProductID:  int32(req.ProductId),
+		CartName:   "cart",
 	})
 	if err != nil {
 		return nil, err
@@ -40,8 +40,7 @@ func (c *cartRepo) CheckCartItem(ctx context.Context, req *biz.CheckCartItemReq)
 // CreateCart implements biz.CartRepo.
 func (c *cartRepo) CreateCart(ctx context.Context, req *biz.CreateCartReq) (*biz.CreateCartResp, error) {
 	resp, err := c.data.db.CreateCart(ctx, models.CreateCartParams{
-		Owner:    req.Owner,
-		Name:     req.Name,
+		UserID:   req.UserId,
 		CartName: req.CartName,
 	})
 	if err != nil {
@@ -58,8 +57,7 @@ func (c *cartRepo) CreateCart(ctx context.Context, req *biz.CreateCartReq) (*biz
 // CreateOrder implements biz.CartRepo.
 func (c *cartRepo) CreateOrder(ctx context.Context, req *biz.CreateOrderReq) (*biz.CreateOrderResp, error) {
 	resp, err := c.data.db.CreateOrder(ctx, models.CreateOrderParams{
-		Owner:    req.Owner,
-		Name:     req.Name,
+		UserID:   req.UserId,
 		CartName: "cart",
 	})
 	if err != nil {
@@ -68,8 +66,10 @@ func (c *cartRepo) CreateOrder(ctx context.Context, req *biz.CreateOrderReq) (*b
 	var cartItems []biz.CartItem
 	for _, item := range resp {
 		var cartitem biz.CartItem
+		cartitem.MerchantId = item.MerchantID
 		cartitem.ProductId = uint32(item.ProductID)
 		cartitem.Quantity = item.Quantity
+		cartitem.Selected = item.Selected
 		cartItems = append(cartItems, cartitem)
 	}
 	return &biz.CreateOrderResp{
@@ -80,10 +80,7 @@ func (c *cartRepo) CreateOrder(ctx context.Context, req *biz.CreateOrderReq) (*b
 
 // ListCarts implements biz.CartRepo.
 func (c *cartRepo) ListCarts(ctx context.Context, req *biz.ListCartsReq) (*biz.ListCartsResp, error) {
-	resp, err := c.data.db.ListCarts(ctx, models.ListCartsParams{
-		Owner: req.Owner,
-		Name:  req.Name,
-	})
+	resp, err := c.data.db.ListCarts(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +102,10 @@ func (c *cartRepo) ListCarts(ctx context.Context, req *biz.ListCartsReq) (*biz.L
 // UncheckCartItem implements biz.CartRepo.
 func (c *cartRepo) UncheckCartItem(ctx context.Context, req *biz.UncheckCartItemReq) (*biz.UncheckCartItemResp, error) {
 	err := c.data.db.UncheckCartItem(ctx, models.UncheckCartItemParams{
-		Owner:     req.Owner,
-		Name:      req.Name,
-		CartName:  "cart",
-		ProductID: int32(req.ProductId),
+		UserID:     req.UserId,
+		MerchantID: req.MerchantId,
+		ProductID:  int32(req.ProductId),
+		CartName:   "cart",
 	})
 	if err != nil {
 		return nil, err
@@ -121,8 +118,7 @@ func (c *cartRepo) UncheckCartItem(ctx context.Context, req *biz.UncheckCartItem
 // EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
 	err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
-		Owner:    req.Owner,
-		Name:     req.Name,
+		UserID:   req.UserId,
 		CartName: "cart",
 	})
 	if err != nil {
@@ -136,8 +132,7 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 // GetCart implements biz.CartRepo.
 func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartResp, error) {
 	cart, err := c.data.db.GetCart(ctx, models.GetCartParams{
-		Owner:    req.Owner,
-		Name:     req.Name,
+		UserID:   req.UserId,
 		CartName: "cart",
 	})
 	if err != nil {
@@ -146,16 +141,17 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 	var cartItems []biz.CartItem
 	for _, item := range cart {
 		var cartitem biz.CartItem
+		cartitem.MerchantId = item.MerchantID
 		cartitem.ProductId = uint32(item.ProductID)
 		cartitem.Quantity = item.Quantity
+		cartitem.Selected = item.Selected
 		cartItems = append(cartItems, cartitem)
 	}
 
 	return &biz.GetCartResp{
 		Cart: biz.Cart{
-			Owner: req.Owner,
-			Name:  req.Name,
-			Items: cartItems,
+			UserId: req.UserId,
+			Items:  cartItems,
 		},
 	}, nil
 }
@@ -164,10 +160,10 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemReq) (*biz.RemoveCartItemResp, error) {
 	c.log.WithContext(ctx).Infof("RemoveCartItem request1 : %+v", req)
 	dreq, err := c.data.db.RemoveCartItem(ctx, models.RemoveCartItemParams{
-		Owner:     req.Owner,
-		Name:      req.Name,
-		CartName:  "cart",
-		ProductID: int32(req.ProductId),
+		UserID:     req.UserId,
+		MerchantID: req.MerchantId,
+		ProductID:  int32(req.ProductId),
+		CartName:   "cart",
 	})
 	if err != nil || dreq == (models.CartSchemaCartItems{}) {
 		return nil, err
@@ -181,11 +177,11 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 // UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
 	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
-		Owner:     req.Owner,
-		Name:      req.Name,
-		CartName:  "cart",
-		ProductID: int32(req.Item.ProductId),
-		Quantity:  int32(req.Item.Quantity),
+		UserID:     req.UserId,
+		MerchantID: req.Item.MerchantId,
+		ProductID:  int32(req.Item.ProductId),
+		Quantity:   int32(req.Item.Quantity),
+		CartName:   "cart",
 	})
 	if err != nil {
 		return nil, err

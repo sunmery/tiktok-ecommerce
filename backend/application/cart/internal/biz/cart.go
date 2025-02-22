@@ -1,15 +1,15 @@
 package biz
 
 type CartItem struct {
-	ProductId uint32 `json:"product_id"`
-	Quantity  int32  `json:"quantity"`
-	Selected  bool   `json:"selected"` // 新增字段，表示商品是否被选中
+	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uint32 `json:"product_id"`  // 商品ID
+	Quantity   int32  `json:"quantity"`    // 商品数量
+	Selected   bool   `json:"selected"`    // 是否选中
 }
 
 type UpsertItemReq struct {
-	Owner string   `json:"owner"`
-	Name  string   `json:"name"`
-	Item  CartItem `json:"item"`
+	UserId string   `json:"user_id"` // 新增字段，表示用户ID
+	Item   CartItem `json:"item"`
 }
 
 type UpsertItemResp struct {
@@ -17,8 +17,7 @@ type UpsertItemResp struct {
 }
 
 type EmptyCartReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId string `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type EmptyCartResp struct {
@@ -26,8 +25,7 @@ type EmptyCartResp struct {
 }
 
 type GetCartReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId string `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type GetCartResp struct {
@@ -35,15 +33,14 @@ type GetCartResp struct {
 }
 
 type Cart struct {
-	Owner string     `json:"owner"`
-	Name  string     `json:"name"`
-	Items []CartItem `json:"items"`
+	UserId string     `json:"user_id"` // 新增字段，表示用户ID
+	Items  []CartItem `json:"items"`   // 购物车商品列表
 }
 
 type RemoveCartItemReq struct {
-	Owner     string `json:"owner"`
-	Name      string `json:"name"`
-	ProductId uint32 `json:"product_id"`
+	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uint32 `json:"product_id"`
 }
 
 type RemoveCartItemResp struct {
@@ -51,9 +48,9 @@ type RemoveCartItemResp struct {
 }
 
 type CheckCartItemReq struct {
-	Owner     string `json:"owner"`
-	Name      string `json:"name"`
-	ProductId uint32 `json:"product_id"`
+	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uint32 `json:"product_id"`
 }
 
 type CheckCartItemResp struct {
@@ -61,9 +58,9 @@ type CheckCartItemResp struct {
 }
 
 type UncheckCartItemReq struct {
-	Owner     string `json:"owner"`
-	Name      string `json:"name"`
-	ProductId uint32 `json:"product_id"`
+	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uint32 `json:"product_id"`
 }
 
 type UncheckCartItemResp struct {
@@ -71,19 +68,17 @@ type UncheckCartItemResp struct {
 }
 
 type CreateOrderReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId string `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type CreateOrderResp struct {
 	Success bool       `json:"success"`
-	Items   []CartItem `json:"items"`
+	Items   []CartItem `json:"items"` // 返回被选中的商品
 }
 
 type CreateCartReq struct {
-	Owner    string `json:"owner"`
-	Name     string `json:"name"`
-	CartName string `json:"cart_name"` // 新增字段，表示购物车名称
+	UserId   string `json:"user_id"`   // 新增字段，表示用户ID
+	CartName string `json:"cart_name"` // 购物车名称
 }
 
 type CreateCartResp struct {
@@ -92,8 +87,7 @@ type CreateCartResp struct {
 }
 
 type ListCartsReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId string `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type CartSummary struct {
