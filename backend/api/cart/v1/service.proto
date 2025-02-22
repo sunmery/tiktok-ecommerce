@@ -7,6 +7,17 @@ import "google/api/annotations.proto";
 option go_package = 'api/cart/v1';
 
 service CartService {
+  rpc CreateCart(CreateCartReq) returns (CreateCartResp) {
+    option (google.api.http) = {
+      post: "/v1/cart/create",
+      body: "*"
+    };
+  }
+  rpc ListCarts(ListCartsReq) returns (ListCartsResp) {
+    option (google.api.http) = {
+      get: "/v1/cart/list"
+    };
+  }
   //新增购物车商品
   rpc UpsertItem(UpsertItemReq) returns (UpsertItemResp) {
     option (google.api.http) = {
@@ -32,11 +43,91 @@ service CartService {
       delete: "/v1/cart/item/{product_id}"
     };
   }
+  rpc CheckCartItem(CheckCartItemReq) returns (CheckCartItemResp) {
+    option (google.api.http) = {
+      post: "/v1/cart/item/check",
+      body: "*"
+    };
+  }
+  rpc UncheckCartItem(UncheckCartItemReq) returns (UncheckCartItemResp) {
+    option (google.api.http) = {
+      post: "/v1/cart/item/uncheck",
+      body: "*"
+    };
+  }
+  rpc CreateOrder(CreateOrderReq) returns (CreateOrderResp) {
+    option (google.api.http) = {
+      post: "/v1/cart/order",
+      body: "*"
+    };
+  }
 }
+
+// 新建购物车
+message CreateCartReq {
+  string owner = 1;
+  string name = 2;
+  string cart_name = 3 [json_name = "cart_name"];
+}
+
+message CreateCartResp {
+  bool success = 1;
+  string message = 2;  // 购物车创建反馈信息
+}
+
+// 列出所有购物车
+message ListCartsReq {
+  string owner = 1;
+  string name = 2;
+}
+
+message ListCartsResp {
+  repeated CartSummary carts = 1; // 返回购物车列表
+}
+
+message CartSummary {
+  uint32 cart_id = 1; // 购物车ID
+  string cart_name = 2; // 购物车名称
+}
+// 选中购物车商品
+message CheckCartItemReq {
+  string owner = 1;
+  string name = 2;
+  uint32 product_id = 3 [json_name = "product_id"];
+}
+
+message CheckCartItemResp {
+  bool success = 1;
+}
+
+// 取消选中购物车商品
+message UncheckCartItemReq {
+  string owner = 1;
+  string name = 2;
+  uint32 product_id = 3 [json_name = "product_id"];
+}
+
+message UncheckCartItemResp {
+  bool success = 1;
+}
+
+// 创建订单
+message CreateOrderReq {
+  string owner = 1;
+  string name = 2;
+}
+
+message CreateOrderResp {
+  bool success = 1;
+  repeated CartItem items = 2;  // 返回被选中的商品
+}
+
+
 // 购物车商品
 message CartItem {
-  uint32 product_id = 1 ; // 商品ID
+  uint32 product_id = 1 [json_name = "product_id"]; // 商品ID
   int32 quantity = 2;       // 商品数量
+  bool selected = 3;        // 是否选中
 }
 
 // 新增购物车商品
@@ -81,7 +172,7 @@ message Cart {
 message RemoveCartItemReq {
   string owner = 1;
   string name = 2;
-  uint32 product_id = 3 ;
+  uint32 product_id = 3 [json_name = "product_id"];
 }
 message RemoveCartItemResp {
   bool success = 1;  // 操作是否成功

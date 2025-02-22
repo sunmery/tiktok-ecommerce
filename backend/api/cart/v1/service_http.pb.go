@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.3
 // - protoc             v3.21.0
-// source: service.proto
+// source: cart/v1/service.proto
 
 package v1
 
@@ -19,28 +19,84 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationCartServiceCheckCartItem = "/api.cart.v1.CartService/CheckCartItem"
+const OperationCartServiceCreateCart = "/api.cart.v1.CartService/CreateCart"
+const OperationCartServiceCreateOrder = "/api.cart.v1.CartService/CreateOrder"
 const OperationCartServiceEmptyCart = "/api.cart.v1.CartService/EmptyCart"
 const OperationCartServiceGetCart = "/api.cart.v1.CartService/GetCart"
+const OperationCartServiceListCarts = "/api.cart.v1.CartService/ListCarts"
 const OperationCartServiceRemoveCartItem = "/api.cart.v1.CartService/RemoveCartItem"
+const OperationCartServiceUncheckCartItem = "/api.cart.v1.CartService/UncheckCartItem"
 const OperationCartServiceUpsertItem = "/api.cart.v1.CartService/UpsertItem"
 
 type CartServiceHTTPServer interface {
+	CheckCartItem(context.Context, *CheckCartItemReq) (*CheckCartItemResp, error)
+	CreateCart(context.Context, *CreateCartReq) (*CreateCartResp, error)
+	CreateOrder(context.Context, *CreateOrderReq) (*CreateOrderResp, error)
 	// EmptyCart清空购物车
 	EmptyCart(context.Context, *EmptyCartReq) (*EmptyCartResp, error)
 	// GetCart获取购物车信息
 	GetCart(context.Context, *GetCartReq) (*GetCartResp, error)
+	ListCarts(context.Context, *ListCartsReq) (*ListCartsResp, error)
 	// RemoveCartItem删除购物车商品
 	RemoveCartItem(context.Context, *RemoveCartItemReq) (*RemoveCartItemResp, error)
+	UncheckCartItem(context.Context, *UncheckCartItemReq) (*UncheckCartItemResp, error)
 	// UpsertItem新增购物车商品
 	UpsertItem(context.Context, *UpsertItemReq) (*UpsertItemResp, error)
 }
 
 func RegisterCartServiceHTTPServer(s *http.Server, srv CartServiceHTTPServer) {
 	r := s.Route("/")
+	r.POST("/v1/cart/create", _CartService_CreateCart0_HTTP_Handler(srv))
+	r.GET("/v1/cart/list", _CartService_ListCarts0_HTTP_Handler(srv))
 	r.POST("/v1/cart", _CartService_UpsertItem0_HTTP_Handler(srv))
 	r.GET("/v1/cart", _CartService_GetCart0_HTTP_Handler(srv))
 	r.DELETE("/v1/cart", _CartService_EmptyCart0_HTTP_Handler(srv))
 	r.DELETE("/v1/cart/item/{product_id}", _CartService_RemoveCartItem0_HTTP_Handler(srv))
+	r.POST("/v1/cart/item/check", _CartService_CheckCartItem0_HTTP_Handler(srv))
+	r.POST("/v1/cart/item/uncheck", _CartService_UncheckCartItem0_HTTP_Handler(srv))
+	r.POST("/v1/cart/order", _CartService_CreateOrder0_HTTP_Handler(srv))
+}
+
+func _CartService_CreateCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateCartReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceCreateCart)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateCart(ctx, req.(*CreateCartReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateCartResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CartService_ListCarts0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListCartsReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceListCarts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListCarts(ctx, req.(*ListCartsReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListCartsResp)
+		return ctx.Result(200, reply)
+	}
 }
 
 func _CartService_UpsertItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
@@ -125,10 +181,81 @@ func _CartService_RemoveCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(c
 	}
 }
 
+func _CartService_CheckCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CheckCartItemReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceCheckCartItem)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CheckCartItem(ctx, req.(*CheckCartItemReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CheckCartItemResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CartService_UncheckCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UncheckCartItemReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceUncheckCartItem)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UncheckCartItem(ctx, req.(*UncheckCartItemReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UncheckCartItemResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CartService_CreateOrder0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateOrderReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceCreateOrder)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateOrder(ctx, req.(*CreateOrderReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateOrderResp)
+		return ctx.Result(200, reply)
+	}
+}
+
 type CartServiceHTTPClient interface {
+	CheckCartItem(ctx context.Context, req *CheckCartItemReq, opts ...http.CallOption) (rsp *CheckCartItemResp, err error)
+	CreateCart(ctx context.Context, req *CreateCartReq, opts ...http.CallOption) (rsp *CreateCartResp, err error)
+	CreateOrder(ctx context.Context, req *CreateOrderReq, opts ...http.CallOption) (rsp *CreateOrderResp, err error)
 	EmptyCart(ctx context.Context, req *EmptyCartReq, opts ...http.CallOption) (rsp *EmptyCartResp, err error)
 	GetCart(ctx context.Context, req *GetCartReq, opts ...http.CallOption) (rsp *GetCartResp, err error)
+	ListCarts(ctx context.Context, req *ListCartsReq, opts ...http.CallOption) (rsp *ListCartsResp, err error)
 	RemoveCartItem(ctx context.Context, req *RemoveCartItemReq, opts ...http.CallOption) (rsp *RemoveCartItemResp, err error)
+	UncheckCartItem(ctx context.Context, req *UncheckCartItemReq, opts ...http.CallOption) (rsp *UncheckCartItemResp, err error)
 	UpsertItem(ctx context.Context, req *UpsertItemReq, opts ...http.CallOption) (rsp *UpsertItemResp, err error)
 }
 
@@ -138,6 +265,45 @@ type CartServiceHTTPClientImpl struct {
 
 func NewCartServiceHTTPClient(client *http.Client) CartServiceHTTPClient {
 	return &CartServiceHTTPClientImpl{client}
+}
+
+func (c *CartServiceHTTPClientImpl) CheckCartItem(ctx context.Context, in *CheckCartItemReq, opts ...http.CallOption) (*CheckCartItemResp, error) {
+	var out CheckCartItemResp
+	pattern := "/v1/cart/item/check"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCartServiceCheckCartItem))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CartServiceHTTPClientImpl) CreateCart(ctx context.Context, in *CreateCartReq, opts ...http.CallOption) (*CreateCartResp, error) {
+	var out CreateCartResp
+	pattern := "/v1/cart/create"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCartServiceCreateCart))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CartServiceHTTPClientImpl) CreateOrder(ctx context.Context, in *CreateOrderReq, opts ...http.CallOption) (*CreateOrderResp, error) {
+	var out CreateOrderResp
+	pattern := "/v1/cart/order"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCartServiceCreateOrder))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *CartServiceHTTPClientImpl) EmptyCart(ctx context.Context, in *EmptyCartReq, opts ...http.CallOption) (*EmptyCartResp, error) {
@@ -166,6 +332,19 @@ func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *GetCartReq,
 	return &out, nil
 }
 
+func (c *CartServiceHTTPClientImpl) ListCarts(ctx context.Context, in *ListCartsReq, opts ...http.CallOption) (*ListCartsResp, error) {
+	var out ListCartsResp
+	pattern := "/v1/cart/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationCartServiceListCarts))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *CartServiceHTTPClientImpl) RemoveCartItem(ctx context.Context, in *RemoveCartItemReq, opts ...http.CallOption) (*RemoveCartItemResp, error) {
 	var out RemoveCartItemResp
 	pattern := "/v1/cart/item/{product_id}"
@@ -173,6 +352,19 @@ func (c *CartServiceHTTPClientImpl) RemoveCartItem(ctx context.Context, in *Remo
 	opts = append(opts, http.Operation(OperationCartServiceRemoveCartItem))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CartServiceHTTPClientImpl) UncheckCartItem(ctx context.Context, in *UncheckCartItemReq, opts ...http.CallOption) (*UncheckCartItemResp, error) {
+	var out UncheckCartItemResp
+	pattern := "/v1/cart/item/uncheck"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCartServiceUncheckCartItem))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
