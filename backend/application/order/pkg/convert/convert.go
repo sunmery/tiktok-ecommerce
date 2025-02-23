@@ -13,8 +13,8 @@ func ToPbOrderItems(items []biz.OrderItem) []*pb.OrderItem {
 	for _, item := range items {
 		pbItems = append(pbItems, &pb.OrderItem{
 			Item: &pb.CartItem{
-				ProductId: uint32(item.Id), // 传递商品ID
-				Quantity:  item.Quantity,   // 传递商品数量
+				ProductId: uint32(item.Id),       // 传递商品ID
+				Quantity:  uint32(item.Quantity), // 传递商品数量
 			},
 		})
 	}

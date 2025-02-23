@@ -122,7 +122,7 @@ func (o *orderRepo) ListOrders(ctx context.Context, req *biz.ListOrderReq) (*biz
 				City:          dbOrder.City,
 				State:         dbOrder.State,
 				Country:       dbOrder.Country,
-				ZipCode:       int32(dbOrder.ZipCode),
+				ZipCode:       uint32(dbOrder.ZipCode),
 			},
 			Status:       dbOrder.Status,
 			UserCurrency: dbOrder.Currency,

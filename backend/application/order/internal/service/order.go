@@ -89,7 +89,7 @@ func (s *OrderService) ListOrders(ctx context.Context, req *pb.ListOrderReq) (*p
 			UserId:       order.UserId,
 			UserCurrency: order.UserCurrency,
 			Email:        order.Email,
-			CreatedAt:    order.CreatedAt,
+			CreatedAt:    uint32(order.CreatedAt),
 			OrderItems:   convert.ToPbOrderItems(order.OrderItems),
 			Address: &pb.Address{
 				StreetAddress: order.Address.StreetAddress,
