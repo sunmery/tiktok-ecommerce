@@ -24,17 +24,19 @@ type OrdersOrders struct {
 	Email         string    `json:"email"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
+	PaymentStatus string    `json:"paymentStatus"`
 }
 
 // 子订单表，按商家分单存储
 type OrdersSubOrders struct {
-	ID          uuid.UUID      `json:"id"`
-	OrderID     uuid.UUID      `json:"orderID"`
-	MerchantID  uuid.UUID      `json:"merchantID"`
-	TotalAmount pgtype.Numeric `json:"totalAmount"`
-	Currency    string         `json:"currency"`
-	Status      string         `json:"status"`
-	Items       []byte         `json:"items"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
+	ID            uuid.UUID      `json:"id"`
+	OrderID       uuid.UUID      `json:"orderID"`
+	MerchantID    uuid.UUID      `json:"merchantID"`
+	TotalAmount   pgtype.Numeric `json:"totalAmount"`
+	Currency      string         `json:"currency"`
+	Status        string         `json:"status"`
+	Items         []byte         `json:"items"`
+	CreatedAt     time.Time      `json:"createdAt"`
+	UpdatedAt     time.Time      `json:"updatedAt"`
+	PaymentStatus string         `json:"paymentStatus"`
 }

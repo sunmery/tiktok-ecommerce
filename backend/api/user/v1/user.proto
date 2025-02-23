@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
+import "validate/validate.proto";
 
 service UserService {
   rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
@@ -110,18 +111,19 @@ message ListCreditCardsReply {
 
 message Address {
   uint32 id = 1;
-  string owner = 2 [(google.api.field_behavior) = REQUIRED];
-  string name = 3 [(google.api.field_behavior) = REQUIRED];
+  string user_id = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (validate.rules).string.len = 36,
+    (validate.rules).string.uuid = true
+  ];
   string city = 4 [(google.api.field_behavior) = REQUIRED];
   string state = 5 [(google.api.field_behavior) = REQUIRED];
   string country = 6 [(google.api.field_behavior) = REQUIRED];
   string zip_code = 7 [
-    (google.api.field_behavior) = REQUIRED,
-    json_name = "zip_code"
+    (google.api.field_behavior) = REQUIRED
   ];
   string street_address = 8 [
-    (google.api.field_behavior) = REQUIRED,
-    json_name = "street_address"
+    (google.api.field_behavior) = REQUIRED
   ];
 }
 

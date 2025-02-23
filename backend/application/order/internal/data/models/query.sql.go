@@ -17,7 +17,7 @@ const CreateOrder = `-- name: CreateOrder :one
 INSERT INTO orders.orders ( user_id, currency, street_address,
                            city, state, country, zip_code, email)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 `
 
 type CreateOrderParams struct {
@@ -36,7 +36,7 @@ type CreateOrderParams struct {
 //	INSERT INTO orders.orders ( user_id, currency, street_address,
 //	                           city, state, country, zip_code, email)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-//	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+//	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, CreateOrder,
 		arg.UserID,
@@ -61,6 +61,7 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
@@ -69,7 +70,7 @@ const CreateSubOrder = `-- name: CreateSubOrder :one
 INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
                                currency, status, items)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
+RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 `
 
 type CreateSubOrderParams struct {
@@ -86,7 +87,7 @@ type CreateSubOrderParams struct {
 //	INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
 //	                               currency, status, items)
 //	VALUES ($1, $2, $3, $4, $5, $6)
-//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
+//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error) {
 	row := q.db.QueryRow(ctx, CreateSubOrder,
 		arg.OrderID,
@@ -107,6 +108,7 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 		&i.Items,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
@@ -148,14 +150,14 @@ func (q *Queries) GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsPa
 }
 
 const GetOrderByID = `-- name: GetOrderByID :one
-SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 FROM orders.orders
 WHERE id = $1
 `
 
 // GetOrderByID
 //
-//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 //	FROM orders.orders
 //	WHERE id = $1
 func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error) {
@@ -173,12 +175,13 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders,
 		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
 
 const ListOrdersByUserWithDate = `-- name: ListOrdersByUserWithDate :many
-SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
        json_agg(so.*) AS sub_orders
 FROM orders.orders o
          LEFT JOIN orders.sub_orders so ON o.id = so.order_id
@@ -209,12 +212,13 @@ type ListOrdersByUserWithDateRow struct {
 	Email         string    `json:"email"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
+	PaymentStatus string    `json:"paymentStatus"`
 	SubOrders     []byte    `json:"subOrders"`
 }
 
 // 带日期过滤的查询
 //
-//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
 //	       json_agg(so.*) AS sub_orders
 //	FROM orders.orders o
 //	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
@@ -250,6 +254,7 @@ func (q *Queries) ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersBy
 			&i.Email,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PaymentStatus,
 			&i.SubOrders,
 		); err != nil {
 			return nil, err

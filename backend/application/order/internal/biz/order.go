@@ -8,10 +8,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// var (
-// 	// ErrUserNotFound is user not found.
-// 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
-// )
+type PaymentStatus string
+
+const (
+	PaymentPending    PaymentStatus = "pending"
+	PaymentPaid       PaymentStatus = "paid"
+	PaymentCancelled  PaymentStatus = "cancelled"
+	PaymentFailed     PaymentStatus = "failed"
+	PaymentProcessing PaymentStatus = "processing"
+)
 
 type Address struct {
 	StreetAddress string
@@ -21,21 +26,10 @@ type Address struct {
 	ZipCode       string
 }
 
-//	type Order struct {
-//		OrderItems []*OrderItem
-//		OrderId    string
-//		UserId     uuid.UUID
-//		Currency   string
-//		Address    *Address
-//		Email      string
-//		CreatedAt  time.Time
-//		// 新增支付状态
-//		PaymentStatus int
-//	}
 type SubOrder struct {
 	ID          string
 	MerchantID  uuid.UUID
-	TotalAmount string // 金额建议用字符串避免精度丢失
+	TotalAmount float64
 	Currency    string
 	Status      string
 	Items       []OrderItem
@@ -51,7 +45,7 @@ type Order struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	SubOrders     []*SubOrder
-	PaymentStatus int // 根据业务逻辑后续补充
+	PaymentStatus PaymentStatus // 支付状态 'pending', 'paid', 'cancelled', 'failed'
 }
 
 // CartItem 购物车商品

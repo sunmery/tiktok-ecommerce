@@ -416,10 +416,7 @@
           "type": "integer",
           "format": "int64"
         },
-        "owner": {
-          "type": "string"
-        },
-        "name": {
+        "userId": {
           "type": "string"
         },
         "city": {
@@ -431,21 +428,20 @@
         "country": {
           "type": "string"
         },
-        "zip_code": {
+        "zipCode": {
           "type": "string"
         },
-        "street_address": {
+        "streetAddress": {
           "type": "string"
         }
       },
       "required": [
-        "owner",
-        "name",
+        "userId",
         "city",
         "state",
         "country",
-        "zip_code",
-        "street_address"
+        "zipCode",
+        "streetAddress"
       ]
     },
     "v1CardsReply": {

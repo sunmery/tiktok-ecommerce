@@ -162,7 +162,7 @@ func (o *orderRepo) queryOrders(ctx context.Context, userID uuid.UUID, start, en
 			Email:         dbOrder.Email,
 			CreatedAt:     dbOrder.CreatedAt,
 			SubOrders:     subOrders,
-			PaymentStatus: dbOrder.PaymentStatus,
+			PaymentStatus: biz.PaymentStatus(dbOrder.PaymentStatus),
 		})
 	}
 
@@ -173,19 +173,16 @@ func (o *orderRepo) queryOrders(ctx context.Context, userID uuid.UUID, start, en
 func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	var dbSubOrders []struct {
 		ID          string    `json:"id"`
-		MerchantID  uuid.UUID `json:"merchant_id"`
-		TotalAmount string    `json:"total_amount"`
-		Currency    string    `json:"currency"`
-		Status      string    `json:"status"`
-		Items       []struct {
-			MerchantId uuid.UUID
-			// 商品ID
-			ProductId uuid.UUID
-			// 商品数量
-			Quantity uint32
+		MerchantID  uuid.UUID `json:"merchantId"`
+		TotalAmount float64   `json:"totalAmount"`
+		Items       struct {
+			Item struct {
+				MerchantId uuid.UUID `json:"merchantId"` // 注意字段名大写
+				ProductId  uuid.UUID `json:"productId"`
+				Quantity   uint32    `json:"quantity"`
+			} `json:"item"`
+			Cost float64 `json:"cost"`
 		} `json:"items"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	if err := json.Unmarshal(data, &dbSubOrders); err != nil {
@@ -194,30 +191,22 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 
 	subOrders := make([]*biz.SubOrder, 0, len(dbSubOrders))
 	for _, so := range dbSubOrders {
-		items := make([]biz.OrderItem, 0, len(so.Items))
-		for _, item := range so.Items {
-			items = append(items, biz.OrderItem{
-				Item: &biz.CartItem{
-					MerchantId: item.MerchantId,
-					ProductId:  item.ProductId,
-					Quantity:   item.Quantity,
-				},
-				Cost: 0,
-			})
-		}
-
 		subOrders = append(subOrders, &biz.SubOrder{
 			ID:          so.ID,
 			MerchantID:  so.MerchantID,
 			TotalAmount: so.TotalAmount,
-			Currency:    so.Currency,
-			Status:      so.Status,
-			Items:       items,
-			CreatedAt:   so.CreatedAt,
-			UpdatedAt:   so.UpdatedAt,
+			Items: []biz.OrderItem{ // 转换为业务层需要的数组格式
+				{
+					Item: &biz.CartItem{
+						MerchantId: so.Items.Item.MerchantId,
+						ProductId:  so.Items.Item.ProductId,
+						Quantity:   so.Items.Item.Quantity,
+					},
+					Cost: so.Items.Cost,
+				},
+			},
 		})
 	}
-
 	return subOrders, nil
 }
 

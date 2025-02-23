@@ -16,14 +16,14 @@ type Querier interface {
 	//  INSERT INTO orders.orders ( user_id, currency, street_address,
 	//                             city, state, country, zip_code, email)
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error)
 	//CreateSubOrder
 	//
 	//  INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
 	//                                 currency, status, items)
 	//  VALUES ($1, $2, $3, $4, $5, $6)
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
 	// -- name: ListOrdersByUser :many
 	// SELECT *
@@ -42,13 +42,13 @@ type Querier interface {
 	GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsParams) (interface{}, error)
 	//GetOrderByID
 	//
-	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
+	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 	//  FROM orders.orders
 	//  WHERE id = $1
 	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
 	// 带日期过滤的查询
 	//
-	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
 	//         json_agg(so.*) AS sub_orders
 	//  FROM orders.orders o
 	//           LEFT JOIN orders.sub_orders so ON o.id = so.order_id

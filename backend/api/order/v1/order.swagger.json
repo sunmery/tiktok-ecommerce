@@ -310,7 +310,7 @@
         },
         "paymentStatus": {
           "$ref": "#/definitions/v1PaymentStatus",
-          "description": "NOT_PAID/PROCESSING/PAID/FAILED",
+          "description": "NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED",
           "title": "支付状态"
         }
       }
@@ -361,10 +361,11 @@
         "NOT_PAID",
         "PROCESSING",
         "PAID",
-        "FAILED"
+        "FAILED",
+        "CANCELLED"
       ],
       "default": "NOT_PAID",
-      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败",
+      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
       "title": "支付状态"
     },
     "v1PlaceOrderReq": {

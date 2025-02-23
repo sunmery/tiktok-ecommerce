@@ -139,7 +139,7 @@ func (s *OrderServiceService) ListOrder(ctx context.Context, req *v1.ListOrderRe
 		}
 
 		// 确保支付状态正确映射
-		paymentStatus := mapPaymentStatus(order.PaymentStatus)
+		paymentStatus := mapBizStatusToProto(order.PaymentStatus)
 
 		// 创建 Order 对象
 		orders = append(orders, &v1.Order{
@@ -187,19 +187,38 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	return &v1.MarkOrderPaidResp{}, nil
 }
 
-// 辅助函数：将原始支付状态映射到 v1.PaymentStatus 枚举
-func mapPaymentStatus(status int) v1.PaymentStatus {
-	switch status {
-	case 0:
-		return v1.PaymentStatus_NOT_PAID
-	case 1:
-		return v1.PaymentStatus_PROCESSING
-	case 2:
-		return v1.PaymentStatus_PAID
-	case 3:
-		return v1.PaymentStatus_FAILED
+// 数据库模型到业务模型的转换
+func mapPaymentStatus(dbStatus string) biz.PaymentStatus {
+	switch dbStatus {
+	case "pending":
+		return biz.PaymentPending
+	case "processing":
+		return biz.PaymentProcessing
+	case "paid":
+		return biz.PaymentPaid
+	case "failed":
+		return biz.PaymentFailed
+	case "cancelled":
+		return biz.PaymentCancelled
 	default:
-		// 如果状态未知，默认返回 NOT_PAID
+		return biz.PaymentPending // 默认处理
+	}
+}
+
+// 转换业务层枚举到 Proto int
+func mapBizStatusToProto(status biz.PaymentStatus) v1.PaymentStatus {
+	switch status {
+	case biz.PaymentPending:
+		return v1.PaymentStatus_NOT_PAID
+	case biz.PaymentProcessing:
+		return v1.PaymentStatus_PROCESSING
+	case biz.PaymentPaid:
+		return v1.PaymentStatus_PAID
+	case biz.PaymentFailed:
+		return v1.PaymentStatus_FAILED
+	case biz.PaymentCancelled:
+		return v1.PaymentStatus_CANCELLED
+	default:
 		return v1.PaymentStatus_NOT_PAID
 	}
 }
