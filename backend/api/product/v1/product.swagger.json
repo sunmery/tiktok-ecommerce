@@ -1,0 +1,552 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/product.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ProductService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/products": {
+      "post": {
+        "summary": "创建商品（草稿状态）",
+        "operationId": "ProductService_CreateProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateProductReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateProductRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/v1/products/{id}": {
+      "get": {
+        "summary": "获取商品详情",
+        "operationId": "ProductService_GetProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "merchantId",
+            "description": "商家 ID, 用于分片路由",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
+      "delete": {
+        "summary": "删除商品（软删除）",
+        "operationId": "ProductService_DeleteProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "merchantId",
+            "description": "商家 ID, 用于分片路由",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
+      "put": {
+        "summary": "更新商品信息",
+        "operationId": "ProductService_UpdateProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductServiceUpdateProductBody"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/v1/products/{productId}/audit": {
+      "post": {
+        "summary": "审核商品",
+        "operationId": "ProductService_AuditProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AuditRecord"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductServiceAuditProductBody"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/v1/products/{productId}/submit-audit": {
+      "post": {
+        "summary": "提交商品审核",
+        "operationId": "ProductService_SubmitForAudit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AuditRecord"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductServiceSubmitForAuditBody"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ProductImage": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "图片URL"
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "title": "是否主图"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32",
+          "title": "排序顺序"
+        }
+      },
+      "title": "图片信息"
+    },
+    "ProductServiceAuditProductBody": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "用于分片路由"
+        },
+        "action": {
+          "$ref": "#/definitions/v1AuditAction"
+        },
+        "reason": {
+          "type": "string",
+          "title": "驳回时必填"
+        },
+        "operatorId": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "审核操作请求"
+    },
+    "ProductServiceSubmitForAuditBody": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "商家 ID, 用于分片路由"
+        }
+      },
+      "title": "提交审核请求"
+    },
+    "ProductServiceUpdateProductBody": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        }
+      },
+      "title": "更新商品请求"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AttributeValue": {
+      "type": "object",
+      "properties": {
+        "stringValue": {
+          "type": "string",
+          "title": "字符串类型值"
+        },
+        "arrayValue": {
+          "$ref": "#/definitions/v1StringArray",
+          "title": "数组类型值"
+        },
+        "objectValue": {
+          "$ref": "#/definitions/v1NestedObject",
+          "title": "嵌套对象"
+        }
+      },
+      "title": "属性值类型定义"
+    },
+    "v1AuditAction": {
+      "type": "string",
+      "enum": [
+        "AUDIT_ACTION_APPROVE",
+        "AUDIT_ACTION_REJECT"
+      ],
+      "default": "AUDIT_ACTION_APPROVE",
+      "description": "- AUDIT_ACTION_APPROVE: 通过审核\n - AUDIT_ACTION_REJECT: 驳回审核",
+      "title": "审核动作枚举"
+    },
+    "v1AuditInfo": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "title": "审核记录ID"
+        },
+        "reason": {
+          "type": "string",
+          "title": "审核意见/驳回原因"
+        },
+        "operatorId": {
+          "type": "string",
+          "format": "uint64",
+          "title": "操作人ID"
+        },
+        "operatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "操作时间"
+        }
+      },
+      "title": "审核信息"
+    },
+    "v1AuditRecord": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "productId": {
+          "type": "string"
+        },
+        "oldStatus": {
+          "$ref": "#/definitions/v1ProductStatus"
+        },
+        "newStatus": {
+          "$ref": "#/definitions/v1ProductStatus"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "operatorId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "operatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "审核记录返回结构"
+    },
+    "v1CategoryInfo": {
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "categoryName": {
+          "type": "string"
+        }
+      },
+      "title": "新增分类验证相关定义"
+    },
+    "v1CreateProductReply": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "商品唯一ID（系统生成）"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "创建商品的返回值"
+    },
+    "v1CreateProductRequest": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        }
+      },
+      "title": "创建商品请求"
+    },
+    "v1NestedObject": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1AttributeValue"
+          }
+        }
+      },
+      "title": "嵌套对象结构"
+    },
+    "v1Product": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "商品唯一ID（系统生成）"
+        },
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "商品描述"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "title": "商品价格（单位：元）"
+        },
+        "status": {
+          "$ref": "#/definitions/v1ProductStatus",
+          "title": "当前状态"
+        },
+        "merchantId": {
+          "type": "string",
+          "title": "所属商家ID"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ProductImage"
+          },
+          "title": "商品图片列表"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1AttributeValue"
+          },
+          "title": "商品属性（动态KV结构）"
+        },
+        "auditInfo": {
+          "$ref": "#/definitions/v1AuditInfo",
+          "title": "审核信息（仅当处于审核状态时有效）"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "时间戳"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "category": {
+          "$ref": "#/definitions/v1CategoryInfo",
+          "title": "替换原有category_id字段"
+        }
+      },
+      "title": "商品核心数据结构"
+    },
+    "v1ProductStatus": {
+      "type": "string",
+      "enum": [
+        "PRODUCT_STATUS_DRAFT",
+        "PRODUCT_STATUS_PENDING",
+        "PRODUCT_STATUS_APPROVED",
+        "PRODUCT_STATUS_REJECTED"
+      ],
+      "default": "PRODUCT_STATUS_DRAFT",
+      "description": "- PRODUCT_STATUS_DRAFT: 草稿状态\n - PRODUCT_STATUS_PENDING: 待审核\n - PRODUCT_STATUS_APPROVED: 审核通过\n - PRODUCT_STATUS_REJECTED: 审核驳回",
+      "title": "商品状态枚举定义"
+    },
+    "v1StringArray": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "字符串数组"
+    }
+  }
+}

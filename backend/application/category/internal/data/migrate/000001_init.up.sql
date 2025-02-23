@@ -20,13 +20,15 @@ CREATE SCHEMA IF NOT EXISTS categories;
 -- DB_SOURCE使用: search_path=categories,public
 CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
 -- 检查是否安装成功
-select * from pg_extension where extname = 'ltree';
+select *
+from pg_extension
+where extname = 'ltree';
 
 -- 核心分类表（树形结构核心）
 CREATE TABLE categories.categories
 (
-    id         BIGSERIAL PRIMARY KEY,              -- 分类ID（自增序列）
-    parent_id  BIGINT      NOT NULL DEFAULT 0,     -- 父分类ID（0表示根节点）
+    id         UUID PRIMARY KEY,                   -- 分类ID（自增序列）
+    parent_id  UUID        NULL,                   -- 父分类ID
     level      SMALLINT    NOT NULL DEFAULT 1
         CHECK (level BETWEEN 1 AND 3),             -- 层级深度（限制三级）
     path       LTREE       NOT NULL,               -- 层级路径（使用PostgreSQL专用ltree类型）
@@ -49,8 +51,8 @@ COMMENT ON TABLE categories.categories IS '商品分类主表（ltree路径+闭�
 -- 闭包关系表
 CREATE TABLE categories.category_closure
 (
-    ancestor   BIGINT   NOT NULL, -- 祖先节点ID
-    descendant BIGINT   NOT NULL, -- 后代节点ID
+    ancestor   UUID     NOT NULL, -- 祖先节点ID
+    descendant UUID     NOT NULL, -- 后代节点ID
     depth      SMALLINT NOT NULL  -- 层级间隔
         CHECK (depth >= 0),
     PRIMARY KEY (ancestor, descendant)

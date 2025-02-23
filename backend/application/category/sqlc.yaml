@@ -40,24 +40,11 @@ sql:
         # overrides: #它是定义的集合，用于指示使用哪些类型来映射数据库类型
         overrides:
           - db_type: "uuid"
-            go_type:
-              import: "backend/pkg/types"
-              type: "UUID"
-            nullable: false
-
-          - db_type: "uuid"
-            go_type:
-              import: "backend/pkg/types"
-              type: "NullUUID"
-              slice: false
-            nullable: true
+            go_type: "github.com/google/uuid.UUID"
 
           # 时间戳处理
           - db_type: "timestamptz"
             go_type: "time.Time"
-
-#          - db_type: "ltree"
-#            go_type: "github.com/jackc/pgtype.Text"
 
           - db_type: "public.ltree"
             go_type:
@@ -70,17 +57,3 @@ sql:
 
           - db_type: "OPERATOR(public.~)"
             go_type: "bool"
-
-#          - db_type: "text2ltree"
-#            go_type:
-#              import: "github.com/jackc/pgtype"
-#              package: "pgtype"
-#              type: "Text"
-
-
-        # 自定义类型重命名
-        rename:
-          timestamptz: "time.Time"
-          uuid: "uuid.UUID"
-          null_uuid: "uuid.NullUUID"
-

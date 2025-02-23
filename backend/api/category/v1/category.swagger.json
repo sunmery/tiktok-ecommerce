@@ -78,18 +78,9 @@
         "operationId": "CategoryService_GetClosureRelations",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1ClosureRelation"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1ClosureRelation"
+              "$ref": "#/definitions/v1ClosureRelation"
             }
           },
           "default": {
@@ -105,8 +96,7 @@
             "description": "分类的唯一标识符，用于获取其闭包关系。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -137,8 +127,7 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "body",
@@ -160,18 +149,9 @@
         "operationId": "CategoryService_GetCategoryPath",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1Category"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1Category"
+              "$ref": "#/definitions/v1Category"
             }
           },
           "default": {
@@ -187,8 +167,7 @@
             "description": "分类的唯一标识符，用于获取其完整路径。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -220,8 +199,7 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -252,8 +230,7 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -284,8 +261,7 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "body",
@@ -307,18 +283,9 @@
         "operationId": "CategoryService_GetSubTree",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1Category"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1Category"
+              "$ref": "#/definitions/v1Category"
             }
           },
           "default": {
@@ -334,8 +301,7 @@
             "description": "根节点的 ID，用于获取其子树。",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -399,12 +365,10 @@
       "properties": {
         "id": {
           "type": "string",
-          "format": "int64",
           "title": "分类的唯一标识符。"
         },
         "parentId": {
           "type": "string",
-          "format": "int64",
           "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "level": {
@@ -480,7 +444,6 @@
       "properties": {
         "parentId": {
           "type": "string",
-          "format": "int64",
           "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "name": {

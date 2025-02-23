@@ -12,9 +12,3 @@ services:
       - "30002:30002"
     container_name: ecommerce-user-v1
     restart: always
-    environment:
-      - DB_SOURCE="postgresql://postgres:postgres@192.168.3.121:5432/ecommerce?sslmode=disable&timezone=Asia/Shanghai"
-      - REDIS_ADDRESS=192.168.3.132:6379
-      - REDIS_USERNAME=default
-      - REDIS_PASSWORD=msdnmm
-

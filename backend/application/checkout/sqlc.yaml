@@ -1,0 +1,45 @@
+version: "2"
+sql:
+  - schema: "internal/data/migrate"
+    queries: "internal/data/queries"
+    engine: "postgresql"
+    database:
+      uri: ${DB_SOURCE}
+      # uri: postgresql://postgres:postgres@localhost:5432/database?sslmode=disable
+    gen:
+      go:
+        package: "models"
+        out: "internal/data/models"
+        sql_package: "pgx/v5"
+        emit_db_tags: false # 如果为 true，则将 DB 标记添加到生成的结构中。默认值为 false
+        emit_prepared_queries: true # 如果为 true，则包括对准备好的查询的支持。默认值为 false
+        emit_interface: true # 如果为 true，则在生成的包中输出接口 Querier 。默认值为 false
+        emit_exact_table_names: true # 如果为 true，则结构名称将使用复数表名称。否则，sqlc 会尝试单数化复数表名。默认值为 false 。
+        emit_empty_slices: false # 如果为 true， :many 则查询返回的切片将为空，而不是 nil 。默认值为 false 。
+        emit_exported_queries: true # 如果为 true，则可以导出自动生成的 SQL 语句以供其他包访问。
+        emit_json_tags: true # 如果为 true，则将 JSON 标记添加到生成的结构中。默认值为 false 。
+        emit_result_struct_pointers: false # 如果为 true，则查询结果将作为指向结构的指针返回。返回多个结果的查询将作为指针切片返回。默认值为 false 。
+        emit_params_struct_pointers: false # 如果为 true，则参数将作为指向结构的指针传递。默认值为 false 。
+        emit_methods_with_db_argument: false # 如果为 true，则生成的方法将接受 DBTX 参数，而不是在 *Queries 结构上存储 DBTX。默认值为 false 。
+        emit_pointers_for_null_types: true # 如果为 true，则为可为 null 列生成的类型将作为指针发出 （即 *string ） 而不是 database/sql null 类型（即。 NullString ）。目前仅支持 PostgreSQL if sql_package is pgx/v4 或 pgx/v5 和 SQLite。默认值为 false 。
+        emit_enum_valid_method: true # 如果为 true，则在枚举类型上生成 Valid 方法，指示字符串是否为有效的枚举值。
+        emit_all_enum_values: true # 如果为 true，则为每个枚举类型发出一个函数，该函数返回所有有效的枚举值。
+        emit_sql_as_comment: true # 如果为 true，则将 SQL 语句作为代码块注释发出，并附加到任何现有注释。默认值为 false 。
+        # build_tags: # 如果设置，则在每个生成的 Go 文件的开头添加一个 //go:build <build_tags> 指令。
+        json_tags_id_uppercase: true # 如果为 true，则 json 标记中的“Id”将为大写。如果为 false，则为 camelcase。默认值为 false
+        json_tags_case_style: camel # camel: 首字符小写、 pascal: 首字符大写、 snake: 蛇形 或 none 在数据库中使用列名。默认值为 none 。
+        omit_unused_structs: false # 如果 true ，sqlc 不会生成在给定包的查询中未使用的表和枚举结构。默认值为 false 。
+        output_batch_file_name: batch.go # 自定义批处理文件的名称。默认值为 batch.go 。
+        output_db_file_name: db.go # 自定义数据库文件的名称。默认值为 db.go 。
+        output_models_file_name: models.go # 自定义模型文件的名称。默认值为 models.go 。
+        output_querier_file_name: querier.go # 自定义查询器文件的名称。默认值为 querier.go 。
+        output_copyfrom_file_name: copyfrom.go # 自定义 copyfrom 文件的名称。默认值为 copyfrom.go 。
+        #output_files_suffix:# 如果指定，后缀将添加到生成的文件的名称中。
+        query_parameter_limit: 1 # 将为 Go 函数生成的位置参数数。若要始终发出参数结构，请将其设置为 0 。默认值为 1 。
+        # rename:# 自定义生成的结构字段的名称。有关使用信息，请参阅重命名字段。
+        # overrides: #它是定义的集合，用于指示使用哪些类型来映射数据库类型
+        overrides:
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"

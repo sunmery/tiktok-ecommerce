@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/user.proto
 
-package user
+package userv1
 
 import (
 	context "context"
@@ -19,16 +19,16 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationUserServiceCreateAddresses = "/api.user.v1.UserService/CreateAddresses"
-const OperationUserServiceCreateCreditCard = "/api.user.v1.UserService/CreateCreditCard"
-const OperationUserServiceDeleteAddresses = "/api.user.v1.UserService/DeleteAddresses"
-const OperationUserServiceDeleteCreditCard = "/api.user.v1.UserService/DeleteCreditCard"
-const OperationUserServiceGetAddresses = "/api.user.v1.UserService/GetAddresses"
-const OperationUserServiceGetCreditCard = "/api.user.v1.UserService/GetCreditCard"
-const OperationUserServiceGetUserProfile = "/api.user.v1.UserService/GetUserProfile"
-const OperationUserServiceListCreditCards = "/api.user.v1.UserService/ListCreditCards"
-const OperationUserServiceUpdateAddresses = "/api.user.v1.UserService/UpdateAddresses"
-const OperationUserServiceUpdateCreditCard = "/api.user.v1.UserService/UpdateCreditCard"
+const OperationUserServiceCreateAddresses = "/ecommerce.user.v1.UserService/CreateAddresses"
+const OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
+const OperationUserServiceDeleteAddresses = "/ecommerce.user.v1.UserService/DeleteAddresses"
+const OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
+const OperationUserServiceGetAddresses = "/ecommerce.user.v1.UserService/GetAddresses"
+const OperationUserServiceGetCreditCard = "/ecommerce.user.v1.UserService/GetCreditCard"
+const OperationUserServiceGetUserProfile = "/ecommerce.user.v1.UserService/GetUserProfile"
+const OperationUserServiceListCreditCards = "/ecommerce.user.v1.UserService/ListCreditCards"
+const OperationUserServiceUpdateAddresses = "/ecommerce.user.v1.UserService/UpdateAddresses"
+const OperationUserServiceUpdateCreditCard = "/ecommerce.user.v1.UserService/UpdateCreditCard"
 
 type UserServiceHTTPServer interface {
 	CreateAddresses(context.Context, *Address) (*Address, error)

@@ -1,0 +1,394 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/order.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "OrderService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/orders": {
+      "get": {
+        "operationId": "OrderService_ListOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListOrderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "startTime",
+            "description": "时间范围筛选（可选）",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "limit",
+            "description": "分页参数\n\n默认20，最大100",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "offset",
+            "description": "默认0",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      },
+      "post": {
+        "operationId": "OrderService_PlaceOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PlaceOrderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PlaceOrderReq"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
+    "/v1/orders/{orderId}/paid": {
+      "post": {
+        "operationId": "OrderService_MarkOrderPaid",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MarkOrderPaidResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceMarkOrderPaidBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "OrderServiceMarkOrderPaidBody": {
+      "type": "object"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Address": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "zip_code": {
+          "type": "string"
+        },
+        "street_address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "owner",
+        "name",
+        "city",
+        "state",
+        "country",
+        "zip_code",
+        "street_address"
+      ]
+    },
+    "v1CartItem": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "title": "商品ID"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品数量"
+        },
+        "merchantId": {
+          "type": "string",
+          "title": "商家 ID"
+        }
+      },
+      "title": "购物车商品"
+    },
+    "v1DateRangeStats": {
+      "type": "object",
+      "properties": {
+        "totalAmount": {
+          "type": "number",
+          "format": "double",
+          "title": "时间段内总金额"
+        },
+        "totalOrders": {
+          "type": "integer",
+          "format": "int64",
+          "title": "时间段内订单总数"
+        },
+        "currency": {
+          "type": "string",
+          "title": "主货币"
+        }
+      }
+    },
+    "v1ListOrderResp": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Order"
+          }
+        },
+        "stats": {
+          "$ref": "#/definitions/v1DateRangeStats",
+          "title": "日期统计信息"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1MarkOrderPaidResp": {
+      "type": "object"
+    },
+    "v1Order": {
+      "type": "object",
+      "properties": {
+        "orderItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          }
+        },
+        "orderId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/v1Address"
+        },
+        "email": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "description": "NOT_PAID/PROCESSING/PAID/FAILED",
+          "title": "支付状态"
+        }
+      }
+    },
+    "v1OrderItem": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1CartItem"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1OrderResult": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Pagination": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "title": "总记录数"
+        },
+        "currentPage": {
+          "type": "integer",
+          "format": "int64",
+          "title": "当前页码"
+        },
+        "totalPages": {
+          "type": "integer",
+          "format": "int64",
+          "title": "总页数"
+        }
+      }
+    },
+    "v1PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "NOT_PAID",
+        "PROCESSING",
+        "PAID",
+        "FAILED"
+      ],
+      "default": "NOT_PAID",
+      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败",
+      "title": "支付状态"
+    },
+    "v1PlaceOrderReq": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/v1Address"
+        },
+        "email": {
+          "type": "string"
+        },
+        "orderItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          }
+        }
+      }
+    },
+    "v1PlaceOrderResp": {
+      "type": "object",
+      "properties": {
+        "order": {
+          "$ref": "#/definitions/v1OrderResult"
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,14 @@
 package service
 
 import (
-	pb "backend/api/product/v1"
-	"backend/application/product/internal/biz"
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
+
+	pb "backend/api/product/v1"
+	"backend/application/product/internal/biz"
+
 	"github.com/go-kratos/kratos/v2/metadata"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,16 +32,25 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		return nil, err
 	}
 	return &pb.CreateProductReply{
-		Id:        created.ID,
+		Id:        created.ID.String(),
 		CreatedAt: timestamppb.New(created.CreatedAt),
 		UpdatedAt: timestamppb.New(created.UpdatedAt),
 	}, nil
 }
 
 func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Product, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	merchantId, err := uuid.Parse(req.Product.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+
 	updateReq := biz.UpdateProductRequest{
-		ID:         req.Id,
-		MerchantID: req.Product.MerchantId,
+		ID:         id,
+		MerchantID: merchantId,
 	}
 
 	// 使用指针实现字段掩码
@@ -54,7 +67,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	}
 	if pbProduct.Category != nil {
 		updateReq.Category = biz.CategoryInfo{
-			CategoryId:   pbProduct.Category.CategoryId,
+			CategoryId:   uint64(pbProduct.Category.CategoryId),
 			CategoryName: pbProduct.Category.CategoryName,
 		}
 	}
@@ -68,19 +81,27 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 }
 
 func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
+	productId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+
 	bizReq := biz.SubmitAuditRequest{
-		ProductID:  req.ProductId,
-		MerchantID: req.MerchantId,
+		ProductID:  productId,
+		MerchantID: merchantId,
 	}
 
 	record, err := s.uc.SubmitForAudit(ctx, &bizReq)
 	if err != nil {
 		return nil, err
 	}
-
 	return &pb.AuditRecord{
-		Id:         record.ID,
-		ProductId:  record.ProductID,
+		Id:         record.ID.String(),
+		ProductId:  productId.String(),
 		OldStatus:  convertBizStatusToPB(record.OldStatus),
 		NewStatus:  convertBizStatusToPB(record.NewStatus),
 		Reason:     record.Reason,
@@ -93,13 +114,25 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 	if req.Action == pb.AuditAction_AUDIT_ACTION_REJECT && req.Reason == "" {
 		return nil, status.Error(codes.InvalidArgument, "reject reason required")
 	}
+	productId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	operatorId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
 
 	bizReq := biz.AuditProductRequest{
-		ProductID:  req.ProductId,
-		MerchantID: req.MerchantId,
+		ProductID:  productId,
+		MerchantID: merchantId,
 		Action:     uint64(biz.AuditAction(req.Action)),
 		Reason:     req.Reason,
-		OperatorID: req.OperatorId,
+		OperatorID: operatorId,
 	}
 
 	record, err := s.uc.AuditProduct(ctx, &bizReq)
@@ -108,8 +141,8 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 	}
 
 	return &pb.AuditRecord{
-		Id:         record.ID,
-		ProductId:  record.ProductID,
+		Id:         record.ID.String(),
+		ProductId:  record.ProductID.String(),
 		OldStatus:  convertBizStatusToPB(record.OldStatus),
 		NewStatus:  convertBizStatusToPB(record.NewStatus),
 		Reason:     record.Reason,
@@ -127,8 +160,9 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 	}
 	fmt.Printf("x-md-global-user-id %s\n", userId)
 
+	id, err := uuid.Parse(req.Id)
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
-		ID: req.Id,
+		ID: id,
 	})
 	if err != nil {
 		return nil, err
@@ -138,12 +172,20 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 }
 
 func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*emptypb.Empty, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
 	bizReq := biz.DeleteProductRequest{
-		ID:         req.Id,
-		MerchantID: req.MerchantId,
+		ID:         id,
+		MerchantID: merchantId,
 	}
 
-	_, err := s.uc.DeleteProduct(ctx, bizReq)
+	_, err = s.uc.DeleteProduct(ctx, bizReq)
 	if err != nil {
 		return nil, err
 	}
@@ -154,16 +196,16 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 // 辅助转换方法
 func convertBizProductToPB(p *biz.Product) *pb.Product {
 	pbProduct := &pb.Product{
-		Id:          p.ID,
+		Id:          p.ID.String(),
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
 		Status:      convertBizStatusToPB(p.Status),
-		MerchantId:  p.MerchantId,
+		MerchantId:  p.MerchantId.String(),
 		CreatedAt:   timestamppb.New(p.CreatedAt),
 		UpdatedAt:   timestamppb.New(p.UpdatedAt),
 		Category: &pb.CategoryInfo{
-			CategoryId:   p.Category.CategoryId,
+			CategoryId:   uint32(p.Category.CategoryId),
 			CategoryName: p.Category.CategoryName,
 		},
 	}
@@ -183,9 +225,9 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		})
 	}
 
-	if p.AuditInfo.AuditId > 0 {
+	if p.AuditInfo.AuditId != uuid.Nil {
 		pbProduct.AuditInfo = &pb.AuditInfo{
-			AuditId:    p.AuditInfo.AuditId,
+			AuditId:    p.AuditInfo.AuditId.String(),
 			Reason:     p.AuditInfo.Reason,
 			OperatorId: p.AuditInfo.OperatorId,
 			OperatedAt: timestamppb.New(p.AuditInfo.OperatedAt),
@@ -196,22 +238,32 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 }
 
 func convertPBToBizProduct(p *pb.Product) *biz.Product {
+	id, err := uuid.Parse(p.Id)
+	if err != nil {
+		return nil
+	}
+	merchantId, err := uuid.Parse(p.MerchantId)
+	if err != nil {
+		return nil
+	}
+
 	return &biz.Product{
-		ID:          p.GetId(),
-		MerchantId:  p.GetMerchantId(),
+		ID:          id,
+		MerchantId:  merchantId,
 		Name:        p.GetName(),
 		Price:       p.GetPrice(),
 		Description: p.GetDescription(),
 		Images:      convertPBImagesToBiz(p.GetImages()),
 		Status:      convertPBStatusToBiz(p.GetStatus()),
 		Category: biz.CategoryInfo{
-			CategoryId:   p.GetCategory().GetCategoryId(),
+			CategoryId:   uint64(p.GetCategory().GetCategoryId()),
 			CategoryName: p.GetCategory().GetCategoryName(),
 		},
 		Attributes: nil,
 		AuditInfo:  convertPBAuditInfoToBiz(p.GetAuditInfo()),
 	}
 }
+
 func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {
 	var images []*biz.ProductImage
 	for _, img := range pbImages {
@@ -233,13 +285,18 @@ func convertPBAuditInfoToBiz(pbInfo *pb.AuditInfo) biz.AuditInfo {
 	if pbInfo == nil {
 		return biz.AuditInfo{}
 	}
+	auditId, err := uuid.Parse(pbInfo.AuditId)
+	if err != nil {
+		return biz.AuditInfo{}
+	}
 	return biz.AuditInfo{
-		AuditId:    pbInfo.AuditId,
+		AuditId:    auditId,
 		Reason:     pbInfo.Reason,
 		OperatorId: pbInfo.OperatorId,
 		OperatedAt: pbInfo.OperatedAt.AsTime(),
 	}
 }
+
 func convertBizStatusToPB(s biz.ProductStatus) pb.ProductStatus {
 	switch s {
 	case biz.ProductStatusDraft:

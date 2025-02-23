@@ -1,0 +1,215 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/payment.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "PaymentService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/payments": {
+      "post": {
+        "operationId": "PaymentService_CreatePayment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PaymentResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreatePaymentReq"
+            }
+          }
+        ],
+        "tags": [
+          "PaymentService"
+        ]
+      }
+    },
+    "/v1/payments/callback": {
+      "post": {
+        "operationId": "PaymentService_ProcessPaymentCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PaymentCallbackResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PaymentCallbackReq"
+            }
+          }
+        ],
+        "tags": [
+          "PaymentService"
+        ]
+      }
+    },
+    "/v1/payments/{paymentId}": {
+      "get": {
+        "operationId": "PaymentService_GetPayment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PaymentResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PaymentService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CreatePaymentReq": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "title": "主订单ID"
+        },
+        "currency": {
+          "type": "string",
+          "title": "支付货币"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "支付金额"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "title": "支付方式"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "扩展元数据"
+        }
+      }
+    },
+    "v1PaymentCallbackReq": {
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "gatewayResponse": {
+          "type": "string",
+          "title": "原始网关响应"
+        },
+        "processedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1PaymentCallbackResp": {
+      "type": "object"
+    },
+    "v1PaymentResp": {
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "title": "CREATED/PENDING/SUCCEEDED/FAILED"
+        },
+        "paymentUrl": {
+          "type": "string",
+          "title": "第三方支付链接（如需要）"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

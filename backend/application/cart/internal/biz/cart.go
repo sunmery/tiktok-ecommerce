@@ -1,14 +1,15 @@
 package biz
 
+import "github.com/google/uuid"
+
 type CartItem struct {
-	ProductId uint32 `json:"product_id"`
-	Quantity  int32  `json:"quantity"`
+	ProductId int32 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
 }
 
 type UpsertItemReq struct {
-	Owner string   `json:"owner"`
-	Name  string   `json:"name"`
-	Item  CartItem `json:"item"`
+	UserId uuid.UUID
+	Item   CartItem `json:"item"`
 }
 
 type UpsertItemResp struct {
@@ -16,8 +17,7 @@ type UpsertItemResp struct {
 }
 
 type EmptyCartReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId uuid.UUID
 }
 
 type EmptyCartResp struct {
@@ -25,8 +25,7 @@ type EmptyCartResp struct {
 }
 
 type GetCartReq struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId uuid.UUID
 }
 
 type GetCartResp struct {
@@ -34,14 +33,13 @@ type GetCartResp struct {
 }
 
 type Cart struct {
-	Owner string     `json:"owner"`
-	Name  string     `json:"name"`
+	UserId uuid.UUID
+
 	Items []CartItem `json:"items"`
 }
 
 type RemoveCartItemReq struct {
-	Owner     string `json:"owner"`
-	Name      string `json:"name"`
+	UserId    uuid.UUID
 	ProductId uint32 `json:"product_id"`
 }
 

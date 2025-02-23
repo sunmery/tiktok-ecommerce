@@ -6,6 +6,9 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -25,15 +28,15 @@ type Querier interface {
 	//
 	//  WITH root_check AS (
 	//    INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-	//    VALUES (0, 0, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+	//    VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
 	//    ON CONFLICT (id) DO NOTHING
 	//  ),
 	//  parent_info AS (
 	//    SELECT
-	//      COALESCE(c.id, 0) AS effective_parent_id,
+	//      COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
 	//      COALESCE(c.path, 'root'::public.ltree) AS parent_path,
 	//      COALESCE(c.level, 0) AS parent_level
-	//    FROM (SELECT $1::BIGINT AS pid) AS input
+	//    FROM (SELECT $1::UUID AS pid) AS input
 	//    LEFT JOIN categories.categories c ON c.id = input.pid
 	//  ),
 	//  level_validation AS (
@@ -47,9 +50,7 @@ type Querier interface {
 	//    FROM parent_info
 	//  ),
 	//  insert_main AS (
-	//    INSERT INTO categories.categories (
-	//      parent_id, level, path, name, sort_order, is_leaf
-	//    ) SELECT
+	//    INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
 	//      lv.effective_parent_id,
 	//      lv.new_level,
 	//      CASE
@@ -84,7 +85,7 @@ type Querier interface {
 	//    0
 	//  FROM insert_main im
 	//  RETURNING descendant
-	CreateCategory(ctx context.Context, arg CreateCategoryParams) (int64, error)
+	CreateCategory(ctx context.Context, arg CreateCategoryParams) (uuid.UUID, error)
 	//DeleteCategory
 	//
 	//  WITH deleted AS (
@@ -98,7 +99,7 @@ type Querier interface {
 	//      FROM categories.category_closure
 	//      WHERE ancestor = $1
 	//  )
-	DeleteCategory(ctx context.Context, id *int64) error
+	DeleteCategory(ctx context.Context, id pgtype.UUID) error
 	// 确保深度不超过 3
 	// 删除指定分类及其所有后代节点的闭包关系
 	//
@@ -109,12 +110,12 @@ type Querier interface {
 	//      FROM categories.category_closure
 	//      WHERE ancestor = $1
 	//  )
-	DeleteClosureRelations(ctx context.Context, categoryID *int64) error
+	DeleteClosureRelations(ctx context.Context, categoryID pgtype.UUID) error
 	//GetCategoryByID
 	//
 	//  SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
 	//  WHERE id = $1 LIMIT 1
-	GetCategoryByID(ctx context.Context, id int64) (CategoriesCategories, error)
+	GetCategoryByID(ctx context.Context, id uuid.UUID) (CategoriesCategories, error)
 	//GetCategoryPath
 	//
 	//  SELECT ancestor.id, ancestor.parent_id, ancestor.level, ancestor.path, ancestor.name, ancestor.sort_order, ancestor.is_leaf, ancestor.created_at, ancestor.updated_at
@@ -122,12 +123,12 @@ type Querier interface {
 	//           JOIN categories.categories ancestor ON cc.ancestor = ancestor.id
 	//  WHERE cc.descendant = $1
 	//  ORDER BY cc.depth DESC
-	GetCategoryPath(ctx context.Context, categoryID int64) ([]CategoriesCategories, error)
+	GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategories, error)
 	//GetClosureRelations
 	//
 	//  SELECT ancestor, descendant, depth FROM categories.category_closure
 	//  WHERE descendant = $1
-	GetClosureRelations(ctx context.Context, categoryID int64) ([]CategoriesCategoryClosure, error)
+	GetClosureRelations(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategoryClosure, error)
 	//GetLeafCategories
 	//
 	//  SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
@@ -146,7 +147,7 @@ type Querier interface {
 	//  FROM categories.categories c
 	//  WHERE c.path <@ (SELECT path FROM categories.categories WHERE id = $1)
 	//  ORDER BY c.path
-	GetSubTree(ctx context.Context, rootID *int64) ([]CategoriesCategories, error)
+	GetSubTree(ctx context.Context, rootID pgtype.UUID) ([]CategoriesCategories, error)
 	//UpdateCategoryName
 	//
 	//  UPDATE categories.categories
@@ -176,7 +177,7 @@ type Querier interface {
 	//      ),
 	//      updated_at = NOW()
 	//  WHERE id = $1
-	UpdateParentLeafStatus(ctx context.Context, parentID *int64) error
+	UpdateParentLeafStatus(ctx context.Context, parentID pgtype.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)

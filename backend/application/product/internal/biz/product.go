@@ -1,12 +1,16 @@
 package biz
 
 import (
-	pb "backend/api/product/v1"
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+
+	pb "backend/api/product/v1"
+
 	"github.com/go-kratos/kratos/v2/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"time"
 )
 
 type ProductStatus uint
@@ -40,8 +44,10 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 }
 
 // AuditAction 添加AuditAction类型
-type AuditAction int
-type AttributeValue struct{}
+type (
+	AuditAction    int
+	AttributeValue struct{}
+)
 
 const (
 	AuditActionApprove AuditAction = 0
@@ -50,8 +56,8 @@ const (
 
 // AuditRecord 完善AuditRecord定义
 type AuditRecord struct {
-	ID         uint64
-	ProductID  uint64
+	ID         uuid.UUID
+	ProductID  uuid.UUID
 	OldStatus  ProductStatus
 	NewStatus  ProductStatus
 	Reason     string
@@ -59,7 +65,7 @@ type AuditRecord struct {
 	OperatedAt time.Time
 }
 type AuditInfo struct {
-	AuditId    uint64    // 审核记录ID
+	AuditId    uuid.UUID // 审核记录ID
 	Reason     string    // 审核意见/驳回原因
 	OperatorId uint64    // 操作人ID
 	OperatedAt time.Time // 操作时间
@@ -68,6 +74,7 @@ type AuditInfo struct {
 type CategoryInfo struct {
 	CategoryId   uint64
 	CategoryName string
+	SortOrder    int32
 }
 type ProductImage struct {
 	URL       string
@@ -77,8 +84,8 @@ type ProductImage struct {
 
 // Product 商品领域模型
 type Product struct {
-	ID          uint64
-	MerchantId  uint64
+	ID          uuid.UUID
+	MerchantId  uuid.UUID
 	Name        string
 	Price       float64
 	Description string
@@ -92,24 +99,24 @@ type Product struct {
 }
 
 type CreateProductReply struct {
-	ID        uint64
+	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 type SubmitAuditRequest struct {
-	ProductID  uint64
-	MerchantID uint64
-	ID         uint64
+	ProductID  uuid.UUID
+	MerchantID uuid.UUID
+	ID         uuid.UUID
 	Reason     string
-	OperatorID uint64
+	OperatorID uuid.UUID
 	OperatedAt time.Time
 }
 
 // UpdateProductRequest 更新商品请求结构体
 type UpdateProductRequest struct {
-	ID          uint64
-	MerchantID  uint64 // 添加缺失字段
+	ID          uuid.UUID
+	MerchantID  uuid.UUID // 添加缺失字段
 	Name        *string
 	Price       *float64
 	Description string
@@ -139,22 +146,22 @@ type SearchProductsResp struct {
 }
 
 type AuditProductRequest struct {
-	ProductID  uint64
-	MerchantID uint64
+	ProductID  uuid.UUID
+	MerchantID uuid.UUID
 	Action     uint64
 	Reason     string
-	OperatorID uint64
+	OperatorID uuid.UUID
 }
 
 // DeleteProductRequest 完善DeleteProductRequest
 type DeleteProductRequest struct {
-	ID         uint64
-	MerchantID uint64
+	ID         uuid.UUID
+	MerchantID uuid.UUID
 }
 
 // GetProductRequest 完善GetProductRequest
 type GetProductRequest struct {
-	ID uint64
+	ID uuid.UUID
 }
 
 // CreateProductRequest 完善CreateProductRequest
@@ -199,6 +206,7 @@ type ProductRepo interface {
 func (p *Product) CanTransitionTo(newStatus ProductStatus) bool {
 	return validTransitions[p.Status][newStatus]
 }
+
 func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	if !validTransitions[p.Status][newStatus] {
 		return fmt.Errorf("invalid status transition from %d to %d", p.Status, newStatus)
@@ -206,23 +214,29 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	p.Status = newStatus
 	return nil
 }
+
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
 	p.log.Debugf("CreateProduct: %+v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
+
 func (p *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error) {
 	return p.repo.UpdateProduct(ctx, req)
 }
+
 func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error) {
 	return p.repo.SubmitForAudit(ctx, req)
 }
+
 func (p *ProductUsecase) AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error) {
 	return p.repo.AuditProduct(ctx, req)
 }
+
 func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error) {
 	p.log.Debugf("GetProduct: %+v", req)
 	return p.repo.GetProduct(ctx, req)
 }
+
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
 	p.log.Debugf("DeleteProduct: %+v", req)
 	return &emptypb.Empty{}, nil

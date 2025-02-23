@@ -74,8 +74,8 @@ INSERT INTO products.product_images
     (merchant_id, product_id, url, is_primary, sort_order)
 SELECT m_id, p_id, u, is_p, s_ord
 FROM unnest(
-             @merchant_ids::bigint[],
-             @product_ids::bigint[],
+             @merchant_ids::uuid[],
+             @product_ids::uuid[],
              @urls::text[],
              @is_primary::boolean[],
              @sort_orders::smallint[]

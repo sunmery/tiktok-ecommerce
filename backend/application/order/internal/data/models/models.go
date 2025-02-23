@@ -5,34 +5,36 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // 主订单表，记录订单汇总信息
 type OrdersOrders struct {
-	ID            string    `json:"id"`
+	ID            uuid.UUID `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
 	Currency      string    `json:"currency"`
 	StreetAddress string    `json:"streetAddress"`
 	City          string    `json:"city"`
 	State         string    `json:"state"`
 	Country       string    `json:"country"`
-	ZipCode       int32     `json:"zipCode"`
+	ZipCode       string    `json:"zipCode"`
 	Email         string    `json:"email"`
-	CreatedAt     int64     `json:"createdAt"`
-	UpdatedAt     int64     `json:"updatedAt"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 // 子订单表，按商家分单存储
 type OrdersSubOrders struct {
-	ID          string         `json:"id"`
-	OrderID     string         `json:"orderID"`
-	MerchantID  int32          `json:"merchantID"`
+	ID          uuid.UUID      `json:"id"`
+	OrderID     uuid.UUID      `json:"orderID"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
 	TotalAmount pgtype.Numeric `json:"totalAmount"`
 	Currency    string         `json:"currency"`
 	Status      string         `json:"status"`
 	Items       []byte         `json:"items"`
-	CreatedAt   int64          `json:"createdAt"`
-	UpdatedAt   int64          `json:"updatedAt"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
 }

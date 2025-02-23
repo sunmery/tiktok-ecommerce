@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/auth.proto
 
-package auth
+package authv1
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAuthServiceGetUserInfo = "/api.auth.v1.AuthService/GetUserInfo"
-const OperationAuthServiceSignin = "/api.auth.v1.AuthService/Signin"
+const OperationAuthServiceGetUserInfo = "/ecommerce.auth.v1.AuthService/GetUserInfo"
+const OperationAuthServiceSignin = "/ecommerce.auth.v1.AuthService/Signin"
 
 type AuthServiceHTTPServer interface {
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)

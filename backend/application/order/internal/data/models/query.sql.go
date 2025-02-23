@@ -7,43 +7,38 @@ package models
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateOrder = `-- name: CreateOrder :one
-INSERT INTO orders.orders (id, user_id, currency, street_address,
-                           city, state, country, zip_code, email,
-                           created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO orders.orders ( user_id, currency, street_address,
+                           city, state, country, zip_code, email)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 `
 
 type CreateOrderParams struct {
-	ID            string    `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
 	Currency      string    `json:"currency"`
 	StreetAddress string    `json:"streetAddress"`
 	City          string    `json:"city"`
 	State         string    `json:"state"`
 	Country       string    `json:"country"`
-	ZipCode       int32     `json:"zipCode"`
+	ZipCode       string    `json:"zipCode"`
 	Email         string    `json:"email"`
-	CreatedAt     int64     `json:"createdAt"`
-	UpdatedAt     int64     `json:"updatedAt"`
 }
 
 // CreateOrder
 //
-//	INSERT INTO orders.orders (id, user_id, currency, street_address,
-//	                           city, state, country, zip_code, email,
-//	                           created_at, updated_at)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+//	INSERT INTO orders.orders ( user_id, currency, street_address,
+//	                           city, state, country, zip_code, email)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 //	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, CreateOrder,
-		arg.ID,
 		arg.UserID,
 		arg.Currency,
 		arg.StreetAddress,
@@ -52,8 +47,6 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		arg.Country,
 		arg.ZipCode,
 		arg.Email,
-		arg.CreatedAt,
-		arg.UpdatedAt,
 	)
 	var i OrdersOrders
 	err := row.Scan(
@@ -73,41 +66,35 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 }
 
 const CreateSubOrder = `-- name: CreateSubOrder :one
-INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
-                               currency, status, items, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+                               currency, status, items)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 `
 
 type CreateSubOrderParams struct {
-	ID          string          `json:"id"`
-	OrderID     string          `json:"orderID"`
-	MerchantID  int32           `json:"merchantID"`
-	TotalAmount decimal.Decimal `json:"totalAmount"`
-	Currency    string          `json:"currency"`
-	Status      string          `json:"status"`
-	Items       []byte          `json:"items"`
-	CreatedAt   int64           `json:"createdAt"`
-	UpdatedAt   int64           `json:"updatedAt"`
+	OrderID     uuid.UUID      `json:"orderID"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	TotalAmount pgtype.Numeric `json:"totalAmount"`
+	Currency    string         `json:"currency"`
+	Status      string         `json:"status"`
+	Items       []byte         `json:"items"`
 }
 
 // CreateSubOrder
 //
-//	INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
-//	                               currency, status, items, created_at, updated_at)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+//	INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+//	                               currency, status, items)
+//	VALUES ($1, $2, $3, $4, $5, $6)
 //	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error) {
 	row := q.db.QueryRow(ctx, CreateSubOrder,
-		arg.ID,
 		arg.OrderID,
 		arg.MerchantID,
 		arg.TotalAmount,
 		arg.Currency,
 		arg.Status,
 		arg.Items,
-		arg.CreatedAt,
-		arg.UpdatedAt,
 	)
 	var i OrdersSubOrders
 	err := row.Scan(
@@ -124,6 +111,42 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 	return i, err
 }
 
+const GetDateRangeStats = `-- name: GetDateRangeStats :one
+
+SELECT get_date_range_stats
+FROM orders.get_date_range_stats(
+        p_user_id => $1,
+        p_start => $2,
+        p_end => $3
+     )
+`
+
+type GetDateRangeStatsParams struct {
+	PUserID uuid.UUID          `json:"pUserID"`
+	PStart  pgtype.Timestamptz `json:"pStart"`
+	PEnd    pgtype.Timestamptz `json:"pEnd"`
+}
+
+// -- name: ListOrdersByUser :many
+// SELECT *
+// FROM orders.orders
+// WHERE user_id = $1
+// ORDER BY created_at DESC
+// LIMIT $2 OFFSET $3;
+//
+//	SELECT get_date_range_stats
+//	FROM orders.get_date_range_stats(
+//	        p_user_id => $1,
+//	        p_start => $2,
+//	        p_end => $3
+//	     )
+func (q *Queries) GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsParams) (interface{}, error) {
+	row := q.db.QueryRow(ctx, GetDateRangeStats, arg.PUserID, arg.PStart, arg.PEnd)
+	var get_date_range_stats interface{}
+	err := row.Scan(&get_date_range_stats)
+	return get_date_range_stats, err
+}
+
 const GetOrderByID = `-- name: GetOrderByID :one
 SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 FROM orders.orders
@@ -135,7 +158,7 @@ WHERE id = $1
 //	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 //	FROM orders.orders
 //	WHERE id = $1
-func (q *Queries) GetOrderByID(ctx context.Context, id string) (OrdersOrders, error) {
+func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, GetOrderByID, id)
 	var i OrdersOrders
 	err := row.Scan(
@@ -154,36 +177,67 @@ func (q *Queries) GetOrderByID(ctx context.Context, id string) (OrdersOrders, er
 	return i, err
 }
 
-const ListOrdersByUser = `-- name: ListOrdersByUser :many
-SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
-FROM orders.orders
-WHERE user_id = $1
-ORDER BY created_at DESC
-LIMIT $2 OFFSET $3
+const ListOrdersByUserWithDate = `-- name: ListOrdersByUserWithDate :many
+SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+       json_agg(so.*) AS sub_orders
+FROM orders.orders o
+         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+WHERE o.user_id = $1::uuid
+  AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
+GROUP BY o.id
+ORDER BY o.created_at DESC
+LIMIT $5 OFFSET $4
 `
 
-type ListOrdersByUserParams struct {
-	UserID uuid.UUID `json:"userID"`
-	Limit  int64     `json:"limit"`
-	Offset int64     `json:"offset"`
+type ListOrdersByUserWithDateParams struct {
+	UsedID    uuid.UUID `json:"usedID"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	Offsets   int64     `json:"offsets"`
+	Limits    int64     `json:"limits"`
 }
 
-// ListOrdersByUser
+type ListOrdersByUserWithDateRow struct {
+	ID            uuid.UUID `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
+	Currency      string    `json:"currency"`
+	StreetAddress string    `json:"streetAddress"`
+	City          string    `json:"city"`
+	State         string    `json:"state"`
+	Country       string    `json:"country"`
+	ZipCode       string    `json:"zipCode"`
+	Email         string    `json:"email"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	SubOrders     []byte    `json:"subOrders"`
+}
+
+// 带日期过滤的查询
 //
-//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
-//	FROM orders.orders
-//	WHERE user_id = $1
-//	ORDER BY created_at DESC
-//	LIMIT $2 OFFSET $3
-func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error) {
-	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.UserID, arg.Limit, arg.Offset)
+//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+//	       json_agg(so.*) AS sub_orders
+//	FROM orders.orders o
+//	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+//	WHERE o.user_id = $1::uuid
+//	  AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
+//	GROUP BY o.id
+//	ORDER BY o.created_at DESC
+//	LIMIT $5 OFFSET $4
+func (q *Queries) ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersByUserWithDateParams) ([]ListOrdersByUserWithDateRow, error) {
+	rows, err := q.db.Query(ctx, ListOrdersByUserWithDate,
+		arg.UsedID,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Offsets,
+		arg.Limits,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OrdersOrders
+	var items []ListOrdersByUserWithDateRow
 	for rows.Next() {
-		var i OrdersOrders
+		var i ListOrdersByUserWithDateRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -196,6 +250,7 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 			&i.Email,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SubOrders,
 		); err != nil {
 			return nil, err
 		}
@@ -215,9 +270,9 @@ WHERE id = $1
 `
 
 type UpdateSubOrderStatusParams struct {
-	ID        string `json:"id"`
-	Status    string `json:"status"`
-	UpdatedAt int64  `json:"updatedAt"`
+	ID        uuid.UUID          `json:"id"`
+	Status    string             `json:"status"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 // UpdateSubOrderStatus

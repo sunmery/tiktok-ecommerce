@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package ecommerce.order.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+import "backend/api/cart/v1/cart.proto";
+import "backend/api/user/v1/user.proto";
+
+option go_package = "backend/api/order/v1;orderv1";
+
+service OrderService {
+  rpc PlaceOrder(PlaceOrderReq) returns (PlaceOrderResp) {
+    option (google.api.http) = {
+      post: "/v1/orders"
+      body: "*"
+    };
+  }
+  rpc ListOrder(ListOrderReq) returns (ListOrderResp) {
+    option (google.api.http) = {
+      get: "/v1/orders"
+    };
+  }
+  rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {
+    option (google.api.http) = {
+      post: "/v1/orders/{order_id}/paid"
+      body: "*"
+    };
+  }
+}
+
+message PlaceOrderReq {
+
+  string currency = 2 [(validate.rules).string.len = 3];
+
+  user.v1.Address address = 3;
+  string email = 4;
+  repeated OrderItem order_items = 5;
+}
+
+message OrderItem {
+  cart.v1.CartItem item = 1;
+  double cost = 2;
+}
+
+message OrderResult {
+  string order_id = 1;
+}
+
+message PlaceOrderResp {
+  OrderResult order = 1;
+}
+
+// 支付状态
+enum PaymentStatus {
+  NOT_PAID = 0; // 未支付
+  PROCESSING = 1; // 处理中
+  PAID = 2; // 已支付
+  FAILED = 3; // 支付失败
+}
+
+message Order {
+  repeated OrderItem order_items = 1;
+  string order_id = 2;
+  string user_id = 3;
+  string currency = 4[(validate.rules).string.len = 3];
+  user.v1.Address address = 5;
+  string email = 6;
+  google.protobuf.Timestamp created_at = 7;
+
+  // 支付状态
+  PaymentStatus payment_status = 8; // NOT_PAID/PROCESSING/PAID/FAILED
+}
+
+// 根据日期和分页查询订单
+message ListOrderReq {
+  // 时间范围筛选（可选）
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+
+  // 分页参数
+  uint32 limit = 3;  // 默认20，最大100
+  uint32 offset = 4; // 默认0
+}
+
+message DateRangeStats {
+  double total_amount = 1;    // 时间段内总金额
+  uint32 total_orders = 2;    // 时间段内订单总数
+  string currency = 3[(validate.rules).string.len = 3];        // 主货币
+}
+
+message Pagination {
+  uint32 total = 1;           // 总记录数
+  uint32 current_page = 2;    // 当前页码
+  uint32 total_pages = 3;     // 总页数
+}
+message ListOrderResp {
+  repeated Order orders = 1;
+  DateRangeStats stats = 2; // 日期统计信息
+  Pagination pagination = 3;
+}
+
+message MarkOrderPaidReq {
+  string order_id = 2;
+}
+
+message MarkOrderPaidResp {}
+

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ecommerce.assistant.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "backend/api/assistant/v1;assistantv1";
+
+service AssistantService {
+  rpc Query (QueryRequest) returns (QueryReply) {
+    option (google.api.http) = {
+      get: "/v1/query/{question}"
+    };
+  }
+}
+
+message QueryRequest {
+  string question = 1;
+}
+
+message QueryReply {
+  string message = 1;
+}

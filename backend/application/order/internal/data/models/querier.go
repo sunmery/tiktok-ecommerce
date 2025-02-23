@@ -6,38 +6,58 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	//CreateOrder
 	//
-	//  INSERT INTO orders.orders (id, user_id, currency, street_address,
-	//                             city, state, country, zip_code, email,
-	//                             created_at, updated_at)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	//  INSERT INTO orders.orders ( user_id, currency, street_address,
+	//                             city, state, country, zip_code, email)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error)
 	//CreateSubOrder
 	//
-	//  INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
-	//                                 currency, status, items, created_at, updated_at)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	//  INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+	//                                 currency, status, items)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
+	// -- name: ListOrdersByUser :many
+	// SELECT *
+	// FROM orders.orders
+	// WHERE user_id = $1
+	// ORDER BY created_at DESC
+	// LIMIT $2 OFFSET $3;
+	//
+	//
+	//  SELECT get_date_range_stats
+	//  FROM orders.get_date_range_stats(
+	//          p_user_id => $1,
+	//          p_start => $2,
+	//          p_end => $3
+	//       )
+	GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsParams) (interface{}, error)
 	//GetOrderByID
 	//
 	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
 	//  FROM orders.orders
 	//  WHERE id = $1
-	GetOrderByID(ctx context.Context, id string) (OrdersOrders, error)
-	//ListOrdersByUser
+	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
+	// 带日期过滤的查询
 	//
-	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at
-	//  FROM orders.orders
-	//  WHERE user_id = $1
-	//  ORDER BY created_at DESC
-	//  LIMIT $2 OFFSET $3
-	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error)
+	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at,
+	//         json_agg(so.*) AS sub_orders
+	//  FROM orders.orders o
+	//           LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+	//  WHERE o.user_id = $1::uuid
+	//    AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
+	//  GROUP BY o.id
+	//  ORDER BY o.created_at DESC
+	//  LIMIT $5 OFFSET $4
+	ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersByUserWithDateParams) ([]ListOrdersByUserWithDateRow, error)
 	//UpdateSubOrderStatus
 	//
 	//  UPDATE orders.sub_orders

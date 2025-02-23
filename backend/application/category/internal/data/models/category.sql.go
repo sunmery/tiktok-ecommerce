@@ -7,6 +7,9 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateCategory = `-- name: CreateCategory :one
@@ -24,15 +27,15 @@ const CreateCategory = `-- name: CreateCategory :one
 
 WITH root_check AS (
   INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-  VALUES (0, 0, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+  VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
   ON CONFLICT (id) DO NOTHING
 ),
 parent_info AS (
   SELECT
-    COALESCE(c.id, 0) AS effective_parent_id,
+    COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
     COALESCE(c.path, 'root'::public.ltree) AS parent_path,
     COALESCE(c.level, 0) AS parent_level
-  FROM (SELECT $1::BIGINT AS pid) AS input
+  FROM (SELECT $1::UUID AS pid) AS input
   LEFT JOIN categories.categories c ON c.id = input.pid
 ),
 level_validation AS (
@@ -46,9 +49,7 @@ level_validation AS (
   FROM parent_info
 ),
 insert_main AS (
-  INSERT INTO categories.categories (
-    parent_id, level, path, name, sort_order, is_leaf
-  ) SELECT
+  INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
     lv.effective_parent_id,
     lv.new_level,
     CASE
@@ -86,9 +87,9 @@ RETURNING descendant
 `
 
 type CreateCategoryParams struct {
-	ParentID  int64  `json:"parent_id"`
-	Name      string `json:"name"`
-	SortOrder int16  `json:"sort_order"`
+	ParentID  uuid.UUID `json:"parent_id"`
+	Name      string    `json:"name"`
+	SortOrder int16     `json:"sort_order"`
 }
 
 // CreateCategory
@@ -107,15 +108,15 @@ type CreateCategoryParams struct {
 //
 //	WITH root_check AS (
 //	  INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-//	  VALUES (0, 0, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+//	  VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
 //	  ON CONFLICT (id) DO NOTHING
 //	),
 //	parent_info AS (
 //	  SELECT
-//	    COALESCE(c.id, 0) AS effective_parent_id,
+//	    COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
 //	    COALESCE(c.path, 'root'::public.ltree) AS parent_path,
 //	    COALESCE(c.level, 0) AS parent_level
-//	  FROM (SELECT $1::BIGINT AS pid) AS input
+//	  FROM (SELECT $1::UUID AS pid) AS input
 //	  LEFT JOIN categories.categories c ON c.id = input.pid
 //	),
 //	level_validation AS (
@@ -129,9 +130,7 @@ type CreateCategoryParams struct {
 //	  FROM parent_info
 //	),
 //	insert_main AS (
-//	  INSERT INTO categories.categories (
-//	    parent_id, level, path, name, sort_order, is_leaf
-//	  ) SELECT
+//	  INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
 //	    lv.effective_parent_id,
 //	    lv.new_level,
 //	    CASE
@@ -166,9 +165,9 @@ type CreateCategoryParams struct {
 //	  0
 //	FROM insert_main im
 //	RETURNING descendant
-func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (int64, error) {
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, CreateCategory, arg.ParentID, arg.Name, arg.SortOrder)
-	var descendant int64
+	var descendant uuid.UUID
 	err := row.Scan(&descendant)
 	return descendant, err
 }
@@ -200,7 +199,7 @@ WHERE descendant IN (
 //	    FROM categories.category_closure
 //	    WHERE ancestor = $1
 //	)
-func (q *Queries) DeleteCategory(ctx context.Context, id *int64) error {
+func (q *Queries) DeleteCategory(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, DeleteCategory, id)
 	return err
 }
@@ -224,7 +223,7 @@ WHERE descendant IN (
 //	    FROM categories.category_closure
 //	    WHERE ancestor = $1
 //	)
-func (q *Queries) DeleteClosureRelations(ctx context.Context, categoryID *int64) error {
+func (q *Queries) DeleteClosureRelations(ctx context.Context, categoryID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, DeleteClosureRelations, categoryID)
 	return err
 }
@@ -238,7 +237,7 @@ WHERE id = $1 LIMIT 1
 //
 //	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
 //	WHERE id = $1 LIMIT 1
-func (q *Queries) GetCategoryByID(ctx context.Context, id int64) (CategoriesCategories, error) {
+func (q *Queries) GetCategoryByID(ctx context.Context, id uuid.UUID) (CategoriesCategories, error) {
 	row := q.db.QueryRow(ctx, GetCategoryByID, id)
 	var i CategoriesCategories
 	err := row.Scan(
@@ -270,7 +269,7 @@ ORDER BY cc.depth DESC
 //	         JOIN categories.categories ancestor ON cc.ancestor = ancestor.id
 //	WHERE cc.descendant = $1
 //	ORDER BY cc.depth DESC
-func (q *Queries) GetCategoryPath(ctx context.Context, categoryID int64) ([]CategoriesCategories, error) {
+func (q *Queries) GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetCategoryPath, categoryID)
 	if err != nil {
 		return nil, err
@@ -309,7 +308,7 @@ WHERE descendant = $1
 //
 //	SELECT ancestor, descendant, depth FROM categories.category_closure
 //	WHERE descendant = $1
-func (q *Queries) GetClosureRelations(ctx context.Context, categoryID int64) ([]CategoriesCategoryClosure, error) {
+func (q *Queries) GetClosureRelations(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategoryClosure, error) {
 	rows, err := q.db.Query(ctx, GetClosureRelations, categoryID)
 	if err != nil {
 		return nil, err
@@ -395,7 +394,7 @@ ORDER BY c.path
 //	FROM categories.categories c
 //	WHERE c.path <@ (SELECT path FROM categories.categories WHERE id = $1)
 //	ORDER BY c.path
-func (q *Queries) GetSubTree(ctx context.Context, rootID *int64) ([]CategoriesCategories, error) {
+func (q *Queries) GetSubTree(ctx context.Context, rootID pgtype.UUID) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetSubTree, rootID)
 	if err != nil {
 		return nil, err
@@ -432,8 +431,8 @@ WHERE id = $2
 `
 
 type UpdateCategoryNameParams struct {
-	Name string `json:"name"`
-	ID   int64  `json:"id"`
+	Name string    `json:"name"`
+	ID   uuid.UUID `json:"id"`
 }
 
 // UpdateCategoryName
@@ -458,8 +457,8 @@ AND depth + $1 <= 3
 `
 
 type UpdateClosureDepthParams struct {
-	Delta      *int16 `json:"delta"`
-	CategoryID *int64 `json:"category_id"`
+	Delta      *int16      `json:"delta"`
+	CategoryID pgtype.UUID `json:"category_id"`
 }
 
 // UpdateClosureDepth
@@ -502,7 +501,7 @@ WHERE id = $1
 //	    ),
 //	    updated_at = NOW()
 //	WHERE id = $1
-func (q *Queries) UpdateParentLeafStatus(ctx context.Context, parentID *int64) error {
+func (q *Queries) UpdateParentLeafStatus(ctx context.Context, parentID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, UpdateParentLeafStatus, parentID)
 	return err
 }

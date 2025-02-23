@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: v1/user.proto
 
-package user
+package userv1
 
 import (
 	context "context"
@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUserProfile_FullMethodName   = "/api.user.v1.UserService/GetUserProfile"
-	UserService_CreateAddresses_FullMethodName  = "/api.user.v1.UserService/CreateAddresses"
-	UserService_UpdateAddresses_FullMethodName  = "/api.user.v1.UserService/UpdateAddresses"
-	UserService_DeleteAddresses_FullMethodName  = "/api.user.v1.UserService/DeleteAddresses"
-	UserService_GetAddresses_FullMethodName     = "/api.user.v1.UserService/GetAddresses"
-	UserService_ListCreditCards_FullMethodName  = "/api.user.v1.UserService/ListCreditCards"
-	UserService_CreateCreditCard_FullMethodName = "/api.user.v1.UserService/CreateCreditCard"
-	UserService_UpdateCreditCard_FullMethodName = "/api.user.v1.UserService/UpdateCreditCard"
-	UserService_DeleteCreditCard_FullMethodName = "/api.user.v1.UserService/DeleteCreditCard"
-	UserService_GetCreditCard_FullMethodName    = "/api.user.v1.UserService/GetCreditCard"
+	UserService_GetUserProfile_FullMethodName   = "/ecommerce.user.v1.UserService/GetUserProfile"
+	UserService_CreateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/CreateAddresses"
+	UserService_UpdateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/UpdateAddresses"
+	UserService_DeleteAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/DeleteAddresses"
+	UserService_GetAddresses_FullMethodName     = "/ecommerce.user.v1.UserService/GetAddresses"
+	UserService_ListCreditCards_FullMethodName  = "/ecommerce.user.v1.UserService/ListCreditCards"
+	UserService_CreateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/CreateCreditCard"
+	UserService_UpdateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/UpdateCreditCard"
+	UserService_DeleteCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/DeleteCreditCard"
+	UserService_GetCreditCard_FullMethodName    = "/ecommerce.user.v1.UserService/GetCreditCard"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -414,7 +414,7 @@ func _UserService_GetCreditCard_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.user.v1.UserService",
+	ServiceName: "ecommerce.user.v1.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -2,8 +2,8 @@ package main
 
 import (
 	"backend/application/order/internal/conf"
-	"backend/application/order/pkg"
 	"backend/constants"
+	"backend/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"

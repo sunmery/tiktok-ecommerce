@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -17,8 +18,8 @@ INSERT INTO products.product_images
     (merchant_id, product_id, url, is_primary, sort_order)
 SELECT m_id, p_id, u, is_p, s_ord
 FROM unnest(
-             $1::bigint[],
-             $2::bigint[],
+             $1::uuid[],
+             $2::uuid[],
              $3::text[],
              $4::boolean[],
              $5::smallint[]
@@ -26,11 +27,11 @@ FROM unnest(
 `
 
 type BulkCreateProductImagesParams struct {
-	MerchantIds []int64  `json:"merchantIds"`
-	ProductIds  []int64  `json:"productIds"`
-	Urls        []string `json:"urls"`
-	IsPrimary   []bool   `json:"isPrimary"`
-	SortOrders  []int16  `json:"sortOrders"`
+	MerchantIds []uuid.UUID `json:"merchantIds"`
+	ProductIds  []uuid.UUID `json:"productIds"`
+	Urls        []string    `json:"urls"`
+	IsPrimary   []bool      `json:"isPrimary"`
+	SortOrders  []int16     `json:"sortOrders"`
 }
 
 // 批量插入图片
@@ -39,8 +40,8 @@ type BulkCreateProductImagesParams struct {
 //	    (merchant_id, product_id, url, is_primary, sort_order)
 //	SELECT m_id, p_id, u, is_p, s_ord
 //	FROM unnest(
-//	             $1::bigint[],
-//	             $2::bigint[],
+//	             $1::uuid[],
+//	             $2::uuid[],
 //	             $3::text[],
 //	             $4::boolean[],
 //	             $5::smallint[]
@@ -68,16 +69,16 @@ RETURNING id, created_at
 `
 
 type CreateAuditRecordParams struct {
-	ProductID  int64   `json:"productID"`
-	MerchantID int64   `json:"merchantID"`
-	OldStatus  int16   `json:"oldStatus"`
-	NewStatus  int16   `json:"newStatus"`
-	Reason     *string `json:"reason"`
-	OperatorID int64   `json:"operatorID"`
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	OldStatus  int16     `json:"oldStatus"`
+	NewStatus  int16     `json:"newStatus"`
+	Reason     *string   `json:"reason"`
+	OperatorID uuid.UUID `json:"operatorID"`
 }
 
 type CreateAuditRecordRow struct {
-	ID        int64     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -123,12 +124,12 @@ type CreateProductParams struct {
 	Description *string        `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
 	Status      int16          `json:"status"`
-	MerchantID  int64          `json:"merchantID"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
 	CategoryID  int64          `json:"categoryID"`
 }
 
 type CreateProductRow struct {
-	ID        int64     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -164,11 +165,11 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (C
 }
 
 type CreateProductImagesParams struct {
-	MerchantID int64  `json:"merchantID"`
-	ProductID  int64  `json:"productID"`
-	Url        string `json:"url"`
-	IsPrimary  bool   `json:"isPrimary"`
-	SortOrder  *int16 `json:"sortOrder"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
+	Url        string    `json:"url"`
+	IsPrimary  bool      `json:"isPrimary"`
+	SortOrder  *int16    `json:"sortOrder"`
 }
 
 const GetLatestAudit = `-- name: GetLatestAudit :one
@@ -183,16 +184,16 @@ RETURNING id, created_at
 `
 
 type GetLatestAuditParams struct {
-	MerchantID int64   `json:"merchantID"`
-	ProductID  int64   `json:"productID"`
-	OldStatus  int16   `json:"oldStatus"`
-	NewStatus  int16   `json:"newStatus"`
-	Reason     *string `json:"reason"`
-	OperatorID int64   `json:"operatorID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
+	OldStatus  int16     `json:"oldStatus"`
+	NewStatus  int16     `json:"newStatus"`
+	Reason     *string   `json:"reason"`
+	OperatorID uuid.UUID `json:"operatorID"`
 }
 
 type GetLatestAuditRow struct {
-	ID        int64     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -237,17 +238,17 @@ WHERE id = $1
 `
 
 type GetProductParams struct {
-	ID         int64 `json:"id"`
-	MerchantID int64 `json:"merchantID"`
+	ID         uuid.UUID `json:"id"`
+	MerchantID uuid.UUID `json:"merchantID"`
 }
 
 type GetProductRow struct {
-	ID          int64          `json:"id"`
+	ID          uuid.UUID      `json:"id"`
 	Name        string         `json:"name"`
 	Description *string        `json:"description"`
 	Price       pgtype.Numeric `json:"price"`
 	Status      int16          `json:"status"`
-	MerchantID  int64          `json:"merchantID"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
 }
@@ -292,8 +293,8 @@ ORDER BY sort_order
 `
 
 type GetProductImagesParams struct {
-	MerchantID int64 `json:"merchantID"`
-	ProductID  int64 `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
 }
 
 // 获取商品图片列表，按排序顺序返回
@@ -340,8 +341,8 @@ RETURNING id, merchant_id, name, description, price, status, current_audit_id, c
 `
 
 type SoftDeleteProductParams struct {
-	MerchantID int64 `json:"merchantID"`
-	ID         int64 `json:"id"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ID         uuid.UUID `json:"id"`
 }
 
 // 软删除商品，设置删除时间戳
@@ -383,12 +384,12 @@ WHERE id = $1
 `
 
 type UpdateProductParams struct {
-	ID          int64              `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	Name        string             `json:"name"`
 	Description *string            `json:"description"`
 	Price       pgtype.Numeric     `json:"price"`
 	Status      int16              `json:"status"`
-	MerchantID  int64              `json:"merchantID"`
+	MerchantID  uuid.UUID          `json:"merchantID"`
 	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 }
 
@@ -426,10 +427,10 @@ WHERE id = $1
 `
 
 type UpdateProductStatusParams struct {
-	ID             int64  `json:"id"`
-	Status         int16  `json:"status"`
-	CurrentAuditID *int64 `json:"currentAuditID"`
-	MerchantID     int64  `json:"merchantID"`
+	ID             uuid.UUID   `json:"id"`
+	Status         int16       `json:"status"`
+	CurrentAuditID pgtype.UUID `json:"currentAuditID"`
+	MerchantID     uuid.UUID   `json:"merchantID"`
 }
 
 // 更新商品状态并记录当前审核ID

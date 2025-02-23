@@ -1,13 +1,18 @@
 package data
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+
 	"backend/api/category/v1"
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
-	"context"
-	"errors"
-	"fmt"
+	"backend/pkg/types"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,23 +28,24 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	db := p.data.DB(ctx)
 
 	// 转换价格到pgtype.Numeric
-	price, err := decimal.NewFromString(fmt.Sprintf("%.2f", req.Product.Price))
+	price, err := types.Float64ToNumeric(req.Product.Price)
 	if err != nil {
 		return nil, fmt.Errorf("invalid price format: %w", err)
 	}
+
 	var categoryId int64 = 0
 
 	getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		Id: int64(req.Product.Category.CategoryId),
 	})
-	var newCategory = &category.Category{}
+	newCategory := &category.Category{}
 	if getCategoryErr != nil {
 		// if errors.Is(err, pgx.ErrNoRows) {
 		newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-			ParentId:  0,
+			ParentId:  req.Product.ID,
 			Name:      req.Product.Category.CategoryName,
-			SortOrder: 0,
+			SortOrder: req.Product.Category.SortOrder,
 		})
 		// }
 		// return nil, fmt.Errorf("get category failed: %w", err)
@@ -56,28 +62,28 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 
 	fmt.Printf("categoryId%+v", categoryId)
 	// 执行创建
-	result, err := db.CreateProduct(ctx, models.CreateProductParams{
+	result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Product.Name,
 		Description: &req.Product.Description,
-		Price:       pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()},
+		Price:       price,
 		CategoryID:  categoryId,
 		Status:      int16(req.Product.Status),
-		MerchantID:  int64(req.Product.MerchantId),
+		MerchantID:  req.Product.MerchantId,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create product: %w", err)
+	if createErr != nil {
+		return nil, fmt.Errorf("failed to create product: %w", createErr)
 	}
 
 	// 转换基础信息
 	product := biz.CreateProductReply{
-		ID:        uint64(result.ID),
+		ID:        result.ID,
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
 	}
 
 	// 创建图片记录
 	if len(req.Product.Images) > 0 {
-		if err := p.createProductImages(ctx, uint64(result.ID), req.Product.MerchantId, req.Product.Images); err != nil {
+		if err := p.createProductImages(ctx, result.ID, req.Product.MerchantId, req.Product.Images); err != nil {
 			p.log.Warnf("created product but failed to create images: %v", err)
 		}
 	}
@@ -90,8 +96,8 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 
 	// 获取当前版本
 	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         int64(req.ID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ID,
+		MerchantID: req.MerchantID,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -102,8 +108,8 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 
 	// 准备更新参数
 	params := models.UpdateProductParams{
-		ID:         int64(req.ID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ID,
+		MerchantID: req.MerchantID,
 		UpdatedAt:  pgtype.Timestamptz{Time: current.UpdatedAt, Valid: true},
 	}
 
@@ -144,8 +150,8 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 
 	// 获取更新后的数据
 	updated, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         int64(req.ID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ID,
+		MerchantID: req.MerchantID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get updated product: %w", err)
@@ -159,8 +165,8 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRe
 
 	// 获取当前产品状态
 	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         int64(req.ProductID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ProductID,
+		MerchantID: req.MerchantID,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -170,12 +176,12 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRe
 
 	// 创建审核记录
 	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
-		MerchantID: int64(req.MerchantID),
-		ProductID:  int64(req.ProductID),
+		MerchantID: req.MerchantID,
+		ProductID:  req.ProductID,
 		OldStatus:  current.Status,
 		NewStatus:  int16(biz.ProductStatusPending),
 		Reason:     nil,
-		OperatorID: 0, // 从上下文中获取实际操作人
+		OperatorID: req.OperatorID, // 从上下文中获取实际操作人
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create audit record: %w", err)
@@ -183,16 +189,16 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRe
 
 	// 更新产品状态
 	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
-		ID:             int64(req.ProductID),
+		ID:             req.ProductID,
 		Status:         int16(biz.ProductStatusPending),
-		CurrentAuditID: &auditRecord.ID,
-		MerchantID:     int64(req.MerchantID),
+		CurrentAuditID: types.ToPgUUID(auditRecord.ID),
+		MerchantID:     req.MerchantID,
 	}); err != nil {
 		return nil, fmt.Errorf("failed to update product status: %w", err)
 	}
 
 	return &biz.AuditRecord{
-		ID:         uint64(auditRecord.ID),
+		ID:         auditRecord.ID,
 		ProductID:  req.ProductID,
 		OldStatus:  biz.ProductStatus(current.Status),
 		NewStatus:  biz.ProductStatusPending,
@@ -205,8 +211,8 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 
 	// 获取当前产品状态
 	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         int64(req.ProductID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ProductID,
+		MerchantID: req.MerchantID,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -228,34 +234,35 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 
 	// 创建审核记录
 	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
-		MerchantID: int64(req.MerchantID),
-		ProductID:  int64(req.ProductID),
+		MerchantID: req.MerchantID,
+		ProductID:  req.ProductID,
 		OldStatus:  current.Status,
 		NewStatus:  int16(newStatus),
 		Reason:     &req.Reason,
-		OperatorID: int64(req.OperatorID),
+		OperatorID: req.OperatorID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create audit record: %w", err)
 	}
 
 	// 更新产品状态
+	currentAuditID := types.ToPgUUID(auditRecord.ID)
 	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
-		ID:             int64(req.ProductID),
+		ID:             req.ProductID,
 		Status:         int16(newStatus),
-		CurrentAuditID: &auditRecord.ID,
-		MerchantID:     int64(req.MerchantID),
+		CurrentAuditID: currentAuditID,
+		MerchantID:     req.MerchantID,
 	}); err != nil {
 		return nil, fmt.Errorf("failed to update product status: %w", err)
 	}
 
 	return &biz.AuditRecord{
-		ID:         uint64(auditRecord.ID),
-		ProductID:  req.ProductID,
-		OldStatus:  biz.ProductStatus(current.Status),
-		NewStatus:  newStatus,
-		Reason:     req.Reason,
-		OperatorID: req.OperatorID,
+		ID:        auditRecord.ID,
+		ProductID: req.ProductID,
+		OldStatus: biz.ProductStatus(current.Status),
+		NewStatus: newStatus,
+		Reason:    req.Reason,
+		// OperatorID: req.OperatorID,
 		OperatedAt: auditRecord.CreatedAt,
 	}, nil
 }
@@ -265,7 +272,7 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 
 	// 获取基础信息
 	product, err := db.GetProduct(ctx, models.GetProductParams{
-		ID: int64(req.ID),
+		ID: req.ID,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -280,8 +287,8 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
 	_, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
-		ID:         int64(req.ID),
-		MerchantID: int64(req.MerchantID),
+		ID:         req.ID,
+		MerchantID: req.MerchantID,
 	})
 	if err != nil {
 		return err
@@ -305,8 +312,8 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 
 	// 组装返回结果
 	return &biz.Product{
-		ID:          uint64(product.ID),
-		MerchantId:  uint64(product.MerchantID),
+		ID:          product.ID,
+		MerchantId:  product.MerchantID,
 		Name:        product.Name,
 		Description: *product.Description,
 		Price:       float64(price.IntPart()),
@@ -333,22 +340,22 @@ func (p *productRepo) convertImages(images []models.ProductsProductImages) []*bi
 }
 
 // 创建产品图片
-func (p *productRepo) createProductImages(ctx context.Context, productID uint64, merchantID uint64, images []*biz.ProductImage) error {
+func (p *productRepo) createProductImages(ctx context.Context, productID uuid.UUID, merchantID uuid.UUID, images []*biz.ProductImage) error {
 	if len(images) == 0 {
 		return nil
 	}
 
 	bulkParams := models.BulkCreateProductImagesParams{
-		MerchantIds: make([]int64, len(images)),
-		ProductIds:  make([]int64, len(images)),
+		MerchantIds: make([]uuid.UUID, len(images)),
+		ProductIds:  make([]uuid.UUID, len(images)),
 		Urls:        make([]string, len(images)),
 		IsPrimary:   make([]bool, len(images)),
 		SortOrders:  make([]int16, len(images)), // 数据库字段类型为 SMALLINT
 	}
 
 	for i, img := range images {
-		bulkParams.MerchantIds[i] = int64(merchantID)
-		bulkParams.ProductIds[i] = int64(productID)
+		bulkParams.MerchantIds[i] = merchantID
+		bulkParams.ProductIds[i] = productID
 		bulkParams.Urls[i] = img.URL
 		bulkParams.IsPrimary[i] = img.IsPrimary
 

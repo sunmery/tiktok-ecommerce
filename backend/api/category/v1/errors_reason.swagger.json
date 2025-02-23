@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "v1/errors_reason.proto",
+    "title": "定义包名，用于区分不同的服务模块。",
     "version": "version not set"
   },
   "consumes": [

@@ -1,12 +1,11 @@
 syntax = "proto3";
 
 // 定义包名，用于区分不同的服务模块。
-package api.category.v1;
+package ecommerce.category.v1;
 
 // 指定 Go 语言生成的代码包路径。
-option go_package = "api/category/v1;category";
+option go_package = "backend/api/category/v1;categoryv1";
 
-// 导入必要的 Protobuf 和 Google API 扩展文件。
 import "google/api/annotations.proto"; // 用于定义 HTTP 映射规则。
 import "google/protobuf/timestamp.proto"; // 用于处理时间戳。
 import "google/protobuf/empty.proto"; // 用于表示空响应。
@@ -44,14 +43,14 @@ service CategoryService {
   }
 
   // 获取分类的子树结构（树形结构操作）
-  rpc GetSubTree(GetSubTreeRequest) returns (stream Category) {
+  rpc GetSubTree(GetSubTreeRequest) returns (Category) {
     option (google.api.http) = {
       get: "/v1/categories/{root_id}/subtree" // HTTP GET 请求路径，获取指定根节点的子树。
     };
   }
 
   // 获取分类的完整路径（从根节点到当前分类的路径）
-  rpc GetCategoryPath(GetCategoryPathRequest) returns (stream Category) {
+  rpc GetCategoryPath(GetCategoryPathRequest) returns (Category) {
     option (google.api.http) = {
       get: "/v1/categories/{category_id}/path" // HTTP GET 请求路径，获取分类的路径。
     };
@@ -65,7 +64,7 @@ service CategoryService {
   }
 
   // 获取分类闭包关系（Closure Table 实现的层级关系）
-  rpc GetClosureRelations(GetClosureRequest) returns (stream ClosureRelation) {
+  rpc GetClosureRelations(GetClosureRequest) returns (ClosureRelation) {
     option (google.api.http) = {
       get: "/v1/categories/{category_id}/closure" // HTTP GET 请求路径，获取分类的闭包关系。
     };
@@ -86,8 +85,8 @@ message Categorys {
 
 // 基础数据结构：分类（Category）
 message Category {
-  int64 id = 1; // 分类的唯一标识符。
-  int64 parent_id = 2; // 父分类的 ID，根节点的 parent_id 为 0。
+  string id = 1; // 分类的唯一标识符。
+  string parent_id = 2; // 父分类的 ID，根节点的 parent_id 为 0。
   int32 level = 3; // 分类的层级（例如：1 表示一级分类，2 表示二级分类）。
   string path = 4; // 分类路径（ltree 序列化为字符串，用于快速查询层级关系）。
   string name = 5; // 分类名称。
@@ -108,44 +107,44 @@ message ClosureRelation {
 
 // 创建分类请求
 message CreateCategoryRequest {
-  int64 parent_id = 1; // 父分类的 ID，根节点的 parent_id 为 0。
+  string parent_id = 1; // 父分类的 ID，根节点的 parent_id 为 0。
   string name = 2; // 分类名称。
   int32 sort_order = 3; // 排序值。
 }
 
 // 获取单个分类请求
 message GetCategoryRequest {
-  int64 id = 1; // 分类的唯一标识符。
+  string id = 1; // 分类的唯一标识符。
 }
 
 // 更新分类请求
 message UpdateCategoryRequest {
-  int64 id = 1; // 分类的唯一标识符。
+  string id = 1; // 分类的唯一标识符。
   string name = 2; // 新的分类名称。
 }
 
 // 删除分类请求
 message DeleteCategoryRequest {
-  int64 id = 1; // 分类的唯一标识符。
+  string id = 1; // 分类的唯一标识符。
 }
 
 // 获取子树请求
 message GetSubTreeRequest {
-  int64 root_id = 1; // 根节点的 ID，用于获取其子树。
+  string root_id = 1; // 根节点的 ID，用于获取其子树。
 }
 
 // 获取分类路径请求
 message GetCategoryPathRequest {
-  int64 category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
+  string category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
 }
 
 // 获取闭包关系请求
 message GetClosureRequest {
-  int64 category_id = 1; // 分类的唯一标识符，用于获取其闭包关系。
+  string category_id = 1; // 分类的唯一标识符，用于获取其闭包关系。
 }
 
 // 更新闭包关系深度请求
 message UpdateClosureDepthRequest {
-  int64 category_id = 1; // 分类的唯一标识符。
+  string category_id = 1; // 分类的唯一标识符。
   int32 delta = 2; // 深度变化值（正数表示增加深度，负数表示减少深度）。
 }

@@ -2,8 +2,8 @@ package main
 
 import (
 	"backend/application/product/internal/conf"
-	"backend/application/product/pkg"
 	"backend/constants"
+	"backend/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
@@ -85,12 +85,6 @@ func main() {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
 
-	// 认证和授权
-	var ac conf.Auth
-	if err := c.Scan(&ac); err != nil {
-		log.Fatal(fmt.Errorf("load auth config failed:%w", err))
-	}
-
 	var bc conf.Bootstrap
 	if err := c.Scan(&bc); err != nil {
 		log.Fatal(fmt.Errorf("load bootstrap config failed:%w", err))
@@ -108,7 +102,7 @@ func main() {
 		log.Fatal(fmt.Errorf("load observability config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &obs, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &cc, &obs, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}

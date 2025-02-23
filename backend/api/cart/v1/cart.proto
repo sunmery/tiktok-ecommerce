@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package ecommerce.cart.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option go_package = 'backend/api/cart/v1;cartv1';
+
+service CartService {
+  //新增购物车商品
+  rpc UpsertItem(UpsertItemReq) returns (UpsertItemResp) {
+    option (google.api.http) = {
+      post: "/v1/cart",
+      body: "*"
+    };
+  }
+  //获取购物车信息
+  rpc GetCart(google.protobuf.Empty) returns (GetCartResp) {
+    option (google.api.http) = {
+      get: "/v1/cart"
+    };
+  }
+  //清空购物车
+  rpc EmptyCart(google.protobuf.Empty) returns (EmptyCartResp) {
+    option (google.api.http) = {
+      delete: "/v1/cart"
+    };
+  }
+  //删除购物车商品
+  rpc RemoveCartItem(RemoveCartItemReq) returns (RemoveCartItemResp) {
+    option (google.api.http) = {
+      delete: "/v1/cart/item/{product_id}"
+    };
+  }
+}
+// 购物车商品
+message CartItem {
+  // 商品ID
+  string product_id = 1[
+    (validate.rules).string.len = 36, // 明确长度限制
+    (validate.rules).string.uuid = true // 强制UUID格式
+  ];
+  // 商品数量
+  uint32 quantity = 2;
+  // 商家 ID
+  string merchant_id = 3[
+    (validate.rules).string.len = 36, // 明确长度限制
+    (validate.rules).string.uuid = true // 强制UUID格式
+  ];
+}
+
+// 新增购物车商品
+message UpsertItemReq {
+  CartItem item = 3;
+}
+
+message UpsertItemResp {
+  bool success = 1;  // 操作是否成功
+}
+
+message EmptyCartResp {
+  bool success = 1;  // 操作是否成功
+}
+
+message GetCartResp {
+  Cart cart = 1;
+}
+
+// 购物车信息
+message Cart {
+  string user_id = 1;
+  repeated CartItem items = 3;   // 购物车商品列表
+}
+
+// 删除购物车商品
+message RemoveCartItemReq {
+  uint32 product_id = 1;
+}
+message RemoveCartItemResp {
+  bool success = 1;  // 操作是否成功
+}

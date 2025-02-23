@@ -6,7 +6,7 @@
 
 // 定义包名，用于区分不同的服务模块。
 
-package category
+package categoryv1
 
 import (
 	context "context"
@@ -22,15 +22,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CategoryService_CreateCategory_FullMethodName      = "/api.category.v1.CategoryService/CreateCategory"
-	CategoryService_GetCategory_FullMethodName         = "/api.category.v1.CategoryService/GetCategory"
-	CategoryService_UpdateCategory_FullMethodName      = "/api.category.v1.CategoryService/UpdateCategory"
-	CategoryService_DeleteCategory_FullMethodName      = "/api.category.v1.CategoryService/DeleteCategory"
-	CategoryService_GetSubTree_FullMethodName          = "/api.category.v1.CategoryService/GetSubTree"
-	CategoryService_GetCategoryPath_FullMethodName     = "/api.category.v1.CategoryService/GetCategoryPath"
-	CategoryService_GetLeafCategories_FullMethodName   = "/api.category.v1.CategoryService/GetLeafCategories"
-	CategoryService_GetClosureRelations_FullMethodName = "/api.category.v1.CategoryService/GetClosureRelations"
-	CategoryService_UpdateClosureDepth_FullMethodName  = "/api.category.v1.CategoryService/UpdateClosureDepth"
+	CategoryService_CreateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/CreateCategory"
+	CategoryService_GetCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/GetCategory"
+	CategoryService_UpdateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/UpdateCategory"
+	CategoryService_DeleteCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/DeleteCategory"
+	CategoryService_GetSubTree_FullMethodName          = "/ecommerce.category.v1.CategoryService/GetSubTree"
+	CategoryService_GetCategoryPath_FullMethodName     = "/ecommerce.category.v1.CategoryService/GetCategoryPath"
+	CategoryService_GetLeafCategories_FullMethodName   = "/ecommerce.category.v1.CategoryService/GetLeafCategories"
+	CategoryService_GetClosureRelations_FullMethodName = "/ecommerce.category.v1.CategoryService/GetClosureRelations"
+	CategoryService_UpdateClosureDepth_FullMethodName  = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
 )
 
 // CategoryServiceClient is the client API for CategoryService service.
@@ -48,13 +48,13 @@ type CategoryServiceClient interface {
 	// 删除分类及关联关系
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取分类的子树结构（树形结构操作）
-	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error)
+	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Category, error)
 	// 获取分类的完整路径（从根节点到当前分类的路径）
-	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error)
+	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Category, error)
 	// 获取所有叶子分类（三级分类）
 	GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categorys, error)
 	// 获取分类闭包关系（Closure Table 实现的层级关系）
-	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClosureRelation], error)
+	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelation, error)
 	// 更新闭包关系深度（调整分类层级）
 	UpdateClosureDepth(ctx context.Context, in *UpdateClosureDepthRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -107,43 +107,25 @@ func (c *categoryServiceClient) DeleteCategory(ctx context.Context, in *DeleteCa
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error) {
+func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Category, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CategoryService_ServiceDesc.Streams[0], CategoryService_GetSubTree_FullMethodName, cOpts...)
+	out := new(Category)
+	err := c.cc.Invoke(ctx, CategoryService_GetSubTree_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetSubTreeRequest, Category]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetSubTreeClient = grpc.ServerStreamingClient[Category]
-
-func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Category], error) {
+func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Category, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CategoryService_ServiceDesc.Streams[1], CategoryService_GetCategoryPath_FullMethodName, cOpts...)
+	out := new(Category)
+	err := c.cc.Invoke(ctx, CategoryService_GetCategoryPath_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetCategoryPathRequest, Category]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetCategoryPathClient = grpc.ServerStreamingClient[Category]
 
 func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categorys, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -155,24 +137,15 @@ func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *empty
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClosureRelation], error) {
+func (c *categoryServiceClient) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelation, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CategoryService_ServiceDesc.Streams[2], CategoryService_GetClosureRelations_FullMethodName, cOpts...)
+	out := new(ClosureRelation)
+	err := c.cc.Invoke(ctx, CategoryService_GetClosureRelations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetClosureRequest, ClosureRelation]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetClosureRelationsClient = grpc.ServerStreamingClient[ClosureRelation]
 
 func (c *categoryServiceClient) UpdateClosureDepth(ctx context.Context, in *UpdateClosureDepthRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -199,13 +172,13 @@ type CategoryServiceServer interface {
 	// 删除分类及关联关系
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
 	// 获取分类的子树结构（树形结构操作）
-	GetSubTree(*GetSubTreeRequest, grpc.ServerStreamingServer[Category]) error
+	GetSubTree(context.Context, *GetSubTreeRequest) (*Category, error)
 	// 获取分类的完整路径（从根节点到当前分类的路径）
-	GetCategoryPath(*GetCategoryPathRequest, grpc.ServerStreamingServer[Category]) error
+	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Category, error)
 	// 获取所有叶子分类（三级分类）
 	GetLeafCategories(context.Context, *emptypb.Empty) (*Categorys, error)
 	// 获取分类闭包关系（Closure Table 实现的层级关系）
-	GetClosureRelations(*GetClosureRequest, grpc.ServerStreamingServer[ClosureRelation]) error
+	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelation, error)
 	// 更新闭包关系深度（调整分类层级）
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCategoryServiceServer()
@@ -230,17 +203,17 @@ func (UnimplementedCategoryServiceServer) UpdateCategory(context.Context, *Updat
 func (UnimplementedCategoryServiceServer) DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCategory not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetSubTree(*GetSubTreeRequest, grpc.ServerStreamingServer[Category]) error {
-	return status.Errorf(codes.Unimplemented, "method GetSubTree not implemented")
+func (UnimplementedCategoryServiceServer) GetSubTree(context.Context, *GetSubTreeRequest) (*Category, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubTree not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetCategoryPath(*GetCategoryPathRequest, grpc.ServerStreamingServer[Category]) error {
-	return status.Errorf(codes.Unimplemented, "method GetCategoryPath not implemented")
+func (UnimplementedCategoryServiceServer) GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Category, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryPath not implemented")
 }
 func (UnimplementedCategoryServiceServer) GetLeafCategories(context.Context, *emptypb.Empty) (*Categorys, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLeafCategories not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetClosureRelations(*GetClosureRequest, grpc.ServerStreamingServer[ClosureRelation]) error {
-	return status.Errorf(codes.Unimplemented, "method GetClosureRelations not implemented")
+func (UnimplementedCategoryServiceServer) GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelation, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClosureRelations not implemented")
 }
 func (UnimplementedCategoryServiceServer) UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateClosureDepth not implemented")
@@ -338,27 +311,41 @@ func _CategoryService_DeleteCategory_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CategoryService_GetSubTree_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetSubTreeRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _CategoryService_GetSubTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubTreeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(CategoryServiceServer).GetSubTree(m, &grpc.GenericServerStream[GetSubTreeRequest, Category]{ServerStream: stream})
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).GetSubTree(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_GetSubTree_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).GetSubTree(ctx, req.(*GetSubTreeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetSubTreeServer = grpc.ServerStreamingServer[Category]
-
-func _CategoryService_GetCategoryPath_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetCategoryPathRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _CategoryService_GetCategoryPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCategoryPathRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(CategoryServiceServer).GetCategoryPath(m, &grpc.GenericServerStream[GetCategoryPathRequest, Category]{ServerStream: stream})
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).GetCategoryPath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_GetCategoryPath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).GetCategoryPath(ctx, req.(*GetCategoryPathRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetCategoryPathServer = grpc.ServerStreamingServer[Category]
 
 func _CategoryService_GetLeafCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
@@ -378,16 +365,23 @@ func _CategoryService_GetLeafCategories_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CategoryService_GetClosureRelations_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetClosureRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _CategoryService_GetClosureRelations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClosureRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(CategoryServiceServer).GetClosureRelations(m, &grpc.GenericServerStream[GetClosureRequest, ClosureRelation]{ServerStream: stream})
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).GetClosureRelations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_GetClosureRelations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).GetClosureRelations(ctx, req.(*GetClosureRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CategoryService_GetClosureRelationsServer = grpc.ServerStreamingServer[ClosureRelation]
 
 func _CategoryService_UpdateClosureDepth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateClosureDepthRequest)
@@ -411,7 +405,7 @@ func _CategoryService_UpdateClosureDepth_Handler(srv interface{}, ctx context.Co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CategoryService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.category.v1.CategoryService",
+	ServiceName: "ecommerce.category.v1.CategoryService",
 	HandlerType: (*CategoryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -431,30 +425,26 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CategoryService_DeleteCategory_Handler,
 		},
 		{
+			MethodName: "GetSubTree",
+			Handler:    _CategoryService_GetSubTree_Handler,
+		},
+		{
+			MethodName: "GetCategoryPath",
+			Handler:    _CategoryService_GetCategoryPath_Handler,
+		},
+		{
 			MethodName: "GetLeafCategories",
 			Handler:    _CategoryService_GetLeafCategories_Handler,
+		},
+		{
+			MethodName: "GetClosureRelations",
+			Handler:    _CategoryService_GetClosureRelations_Handler,
 		},
 		{
 			MethodName: "UpdateClosureDepth",
 			Handler:    _CategoryService_UpdateClosureDepth_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "GetSubTree",
-			Handler:       _CategoryService_GetSubTree_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "GetCategoryPath",
-			Handler:       _CategoryService_GetCategoryPath_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "GetClosureRelations",
-			Handler:       _CategoryService_GetClosureRelations_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "v1/category.proto",
 }

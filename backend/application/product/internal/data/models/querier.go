@@ -15,8 +15,8 @@ type Querier interface {
 	//      (merchant_id, product_id, url, is_primary, sort_order)
 	//  SELECT m_id, p_id, u, is_p, s_ord
 	//  FROM unnest(
-	//               $1::bigint[],
-	//               $2::bigint[],
+	//               $1::uuid[],
+	//               $2::uuid[],
 	//               $3::text[],
 	//               $4::boolean[],
 	//               $5::smallint[]

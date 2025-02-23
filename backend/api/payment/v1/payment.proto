@@ -1,5 +1,58 @@
 syntax = "proto3";
 
-// File overview 文件概述
+package ecommerce.payment.v1;
 
-package 
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "backend/api/payment/v1;paymentv1";
+
+service PaymentService {
+  rpc CreatePayment(CreatePaymentReq) returns (PaymentResp) {
+    option (google.api.http) = {
+      post: "/v1/payments"
+      body: "*"
+    };
+  }
+
+  rpc GetPayment(GetPaymentReq) returns (PaymentResp) {
+    option (google.api.http) = {
+      get: "/v1/payments/{payment_id}"
+    };
+  }
+
+  rpc ProcessPaymentCallback(PaymentCallbackReq) returns (PaymentCallbackResp) {
+    option (google.api.http) = {
+      post: "/v1/payments/callback"
+      body: "*"
+    };
+  }
+}
+
+message CreatePaymentReq {
+  string order_id = 1;       // 主订单ID
+  string currency = 2;       // 支付货币
+  double amount = 3;         // 支付金额
+  string payment_method = 4; // 支付方式
+  map<string, string> metadata = 5; // 扩展元数据
+}
+
+message PaymentResp {
+  string payment_id = 1;
+  string status = 2;         // CREATED/PENDING/SUCCEEDED/FAILED
+  string payment_url = 3;    // 第三方支付链接（如需要）
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message GetPaymentReq {
+  string payment_id = 1;
+}
+
+message PaymentCallbackReq {
+  string payment_id = 1;
+  string status = 2;
+  string gateway_response = 3; // 原始网关响应
+  google.protobuf.Timestamp processed_at = 4;
+}
+
+message PaymentCallbackResp {}

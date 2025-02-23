@@ -1,6 +1,5 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
-
 # 定义基础镜像的 Golang 版本
 ARG GOIMAGE=golang:1.23.3-alpine3.20
 ARG GOOS=

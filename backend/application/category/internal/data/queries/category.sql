@@ -13,15 +13,15 @@
 -- name: CreateCategory :one
 WITH root_check AS (
   INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-  VALUES (0, 0, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+  VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
   ON CONFLICT (id) DO NOTHING
 ),
 parent_info AS (
   SELECT
-    COALESCE(c.id, 0) AS effective_parent_id,
+    COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
     COALESCE(c.path, 'root'::public.ltree) AS parent_path,
     COALESCE(c.level, 0) AS parent_level
-  FROM (SELECT @parent_id::BIGINT AS pid) AS input
+  FROM (SELECT @parent_id::UUID AS pid) AS input
   LEFT JOIN categories.categories c ON c.id = input.pid
 ),
 level_validation AS (
@@ -35,9 +35,7 @@ level_validation AS (
   FROM parent_info
 ),
 insert_main AS (
-  INSERT INTO categories.categories (
-    parent_id, level, path, name, sort_order, is_leaf
-  ) SELECT
+  INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
     lv.effective_parent_id,
     lv.new_level,
     CASE

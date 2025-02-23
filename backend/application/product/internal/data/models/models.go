@@ -7,38 +7,39 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type ProductsInventory struct {
-	ProductID int32 `json:"productID"`
-	SellerID  int32 `json:"sellerID"`
-	Stock     int32 `json:"stock"`
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	Stock      int32     `json:"stock"`
 }
 
 type ProductsProductAttributes struct {
-	MerchantID int64     `json:"merchantID"`
-	ProductID  int64     `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
 	Attributes []byte    `json:"attributes"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 type ProductsProductAudits struct {
-	ID         int64     `json:"id"`
-	MerchantID int64     `json:"merchantID"`
-	ProductID  int64     `json:"productID"`
+	ID         uuid.UUID `json:"id"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
 	OldStatus  int16     `json:"oldStatus"`
 	NewStatus  int16     `json:"newStatus"`
 	Reason     *string   `json:"reason"`
-	OperatorID int64     `json:"operatorID"`
+	OperatorID uuid.UUID `json:"operatorID"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
 type ProductsProductImages struct {
-	ID         int64     `json:"id"`
-	MerchantID int64     `json:"merchantID"`
-	ProductID  int64     `json:"productID"`
+	ID         uuid.UUID `json:"id"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
 	Url        string    `json:"url"`
 	IsPrimary  bool      `json:"isPrimary"`
 	SortOrder  *int16    `json:"sortOrder"`
@@ -46,13 +47,13 @@ type ProductsProductImages struct {
 }
 
 type ProductsProducts struct {
-	ID             int64              `json:"id"`
-	MerchantID     int64              `json:"merchantID"`
+	ID             uuid.UUID          `json:"id"`
+	MerchantID     uuid.UUID          `json:"merchantID"`
 	Name           string             `json:"name"`
 	Description    *string            `json:"description"`
 	Price          pgtype.Numeric     `json:"price"`
 	Status         int16              `json:"status"`
-	CurrentAuditID *int64             `json:"currentAuditID"`
+	CurrentAuditID pgtype.UUID        `json:"currentAuditID"`
 	CategoryID     int64              `json:"categoryID"`
 	CreatedAt      time.Time          `json:"createdAt"`
 	UpdatedAt      time.Time          `json:"updatedAt"`
