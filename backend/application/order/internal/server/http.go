@@ -121,6 +121,5 @@ func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 	// 		return errors.BadRequest("CODEC", err.Error())
 	// 	}
 	// }
-
 	return nil
 }

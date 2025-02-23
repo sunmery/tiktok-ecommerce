@@ -1,0 +1,202 @@
+GOHOSTOS := $(shell go env GOHOSTOS)
+GOPATH := $(shell go env GOPATH)
+VERSION := $(shell git describe --tags --always)
+KRATOS_VERSION := $(shell go mod graph | grep go-kratos/kratos/v2 | head -n 1 | awk -F '@' '{print $$2}')
+KRATOS := $(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
+
+ifeq ($(GOHOSTOS), windows)
+Git_Bash = "$(subst \,/,$(subst cmd\git.exe,bin\bash.exe,$(shell where git)))"
+APP_RELATIVE_PATH := $(shell $(Git_Bash) -c "cd ../../application/$$(basename $$PWD) && basename $$PWD")
+API_PROTO_FILES := $(shell $(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && find . -name '*.proto'")
+INTERNAL_PROTO_FILES := $(shell $(Git_Bash) -c "find internal -name '*.proto'")
+else
+APP_RELATIVE_PATH := $(shell basename $$PWD)
+API_PROTO_FILES := $(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+INTERNAL_PROTO_FILES := $(shell find internal -name *.proto)
+endif
+
+# 公共配置
+APP_NAME := $(APP_RELATIVE_PATH)
+GOIMAGE ?= golang:1.23.3-alpine3.20
+GOOS ?= linux
+GOARCH ?= amd64
+CGOENABLED ?= 0
+HTTP_PORT ?= 30001
+GRPC_PORT ?= 30002
+DOCKER_IMAGE := e-commence/$(APP_NAME):dev
+SERVICE := $(APP_RELATIVE_PATH)
+REPOSITORY := e-commence/$(SERVICE)
+REGISTER := "ccr.ccs.tencentyun.com"
+
+.PHONY: infra
+infra:
+	docker compose -f infrastructure/consul/compose.yaml up -d
+	docker compose -f infrastructure/citus/compose.yaml up -d
+	docker compose -f infrastructure/dragonflydb/compose.yaml up -d
+	docker compose -f infrastructure/minio/compose.yaml up -d
+
+.PHONY: grpc
+grpc:
+	$(Git_Bash) -c "cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    --go-grpc_out=paths=source_relative:. \
+    $(API_PROTO_FILES)"
+
+.PHONY: http
+http:
+	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    --go-http_out=paths=source_relative:. \
+    $(API_PROTO_FILES)
+
+.PHONY: errors
+errors:
+	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+    --proto_path=../../third_party \
+    --go_out=paths=source_relative:. \
+    --go-errors_out=paths=source_relative:. \
+    $(API_PROTO_FILES)
+
+.PHONY: swagger
+swagger:
+	cd ../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+	 --proto_path=../../third_party \
+	 --openapiv2_out . \
+	 --openapiv2_opt logtostderr=true \
+    $(API_PROTO_FILES)
+
+.PHONY: config
+config:
+	protoc --proto_path=. \
+           --proto_path=../../third_party \
+           --go_out=paths=source_relative:. \
+           $(INTERNAL_PROTO_FILES)
+
+.PHONY: api
+api:
+	@make http
+	@make grpc
+	@make errors
+	@make swagger
+	@make config
+
+# 构建镜像
+.PHONY: docker-build
+docker-build:
+	@echo "Building Docker image for service: $(SERVICE)"
+	@echo "Docker image: $(REPOSITORY):dev"
+	REPOSITORY="ecommence/$(APP_RELATIVE_PATH)"
+	cd ../.. && docker build . \
+	  -f application/$(APP_RELATIVE_PATH)/Dockerfile \
+	  --progress=plain \
+	  -t $(REPOSITORY):dev \
+	  --build-arg SERVICE=$(APP_RELATIVE_PATH) \
+	  --build-arg CGOENABLED=$(CGOENABLED) \
+	  --build-arg GOIMAGE=$(GOIMAGE) \
+	  --build-arg GOOS=$(GOOS) \
+	  --build-arg GOARCH=$(GOARCH) \
+	  --build-arg VERSION=$(VERSION) \
+	  --build-arg HTTP_PORT=$(HTTP_PORT) \
+	  --build-arg GRPC_PORT=$(GRPC_PORT)
+
+# 推送 Docker 镜像
+.PHONY: docker-push
+docker-push:
+	@echo "Pushing Docker image for service: $(SERVICE)"
+	@echo "Docker image: $(REPOSITORY):dev"
+	docker tag $(REPOSITORY):dev $(REGISTER)/$(REPOSITORY):$(VERSION)
+	docker push $(REGISTER)/$(REPOSITORY):dev
+
+# 推送 Docker 镜像
+.PHONY: docker-run
+docker-run:
+	docker run \
+	  --rm \
+	  -e config_path=ecommerce/user/account/config.yaml \
+	  -e config_center=159.75.231.54:8500 \
+	  -p $(HTTP_PORT):$(HTTP_PORT) \
+	  -p $(GRPC_PORT):$(GRPC_PORT) \
+	  $(REGISTER)/$(REPOSITORY):dev
+
+.PHONY: wire
+# generate client code
+wire:
+	go generate ./...
+
+.PHONY: build
+# build
+build:
+	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./...
+
+.PHONY: test
+# test
+test:
+	go test -v ./... -cover
+
+.PHONY: run
+run:
+	cd cmd/server/ && go run .
+
+.PHONY: wire
+# generate wire
+wire:
+	cd cmd/server && wire
+
+# 生成迁移文件
+# 使用: make new-migrate name=verify_emails
+migrate-new:
+	migrate create -dir internal/data/migrate -ext sql -seq $(name)
+
+# 升级全部的迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
+migrate-up:
+	#export DB_SOURCE="postgresql://postgres:postgres@localhost:5432/ecommerce?sslmode=disable"
+	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up
+
+# 向上迁移一个版本, 根据数据库的表schema_migrations的version来决定
+migrate-up1:
+	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose up 1
+
+# 向下全部降级迁移文件, 先安装https://github.com/golang-migrate/migrate/tree/master
+migrate-down:
+	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose down
+
+# 向下降级一个版本, 根据数据库的表schema_migrations的version来决定
+migrate-down1:
+	migrate -database "${DB_SOURCE}" -path internal/data/migrate -verbose down 1
+
+# Mock DB
+# -package 包名
+# -destination 包含生成的mock文件位置
+# simple_bank/worker TaskDistributor
+# 最后参数: 包路径与要生成的interface接口的名称
+mock:
+	#mockgen -package mockdb -destination mock/store.go example/sqlc Store
+
+# grpc的命令行测试工具
+evans:
+	evans -r repl --host localhost -p 30002
+
+# 生成sql代码
+sqlc:
+	sqlc generate
+
+# show help
+help:
+	@echo ''
+	@echo 'Usage:'
+	@echo ' make [target]'
+	@echo ''
+	@echo 'Targets:'
+	@awk '/^[a-zA-Z\-\_0-9]+:/ { \
+	helpMessage = match(lastLine, /^# (.*)/); \
+		if (helpMessage) { \
+			helpCommand = substr($$1, 0, index($$1, ":")-1); \
+			helpMessage = substr(lastLine, RSTART + 2, RLENGTH); \
+			printf "\033[36m%-22s\033[0m %s\n", helpCommand,helpMessage; \
+		} \
+	} \
+	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+
+.DEFAULT_GOAL := help

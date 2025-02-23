@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrderService_PlaceOrder_FullMethodName    = "/order.service.v1.OrderService/PlaceOrder"
-	OrderService_ListOrder_FullMethodName     = "/order.service.v1.OrderService/ListOrder"
-	OrderService_MarkOrderPaid_FullMethodName = "/order.service.v1.OrderService/MarkOrderPaid"
+	OrderService_PlaceOrder_FullMethodName    = "/api.order.v1.OrderService/PlaceOrder"
+	OrderService_ListOrder_FullMethodName     = "/api.order.v1.OrderService/ListOrder"
+	OrderService_MarkOrderPaid_FullMethodName = "/api.order.v1.OrderService/MarkOrderPaid"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -176,7 +176,7 @@ func _OrderService_MarkOrderPaid_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var OrderService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "order.service.v1.OrderService",
+	ServiceName: "api.order.v1.OrderService",
 	HandlerType: (*OrderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

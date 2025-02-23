@@ -13,12 +13,11 @@ paths:
             description: 获取购物车信息
             operationId: CartService_GetCart
             parameters:
-                - name: owner
+                - name: user_id
                   in: query
-                  schema:
-                    type: string
-                - name: name
-                  in: query
+                  description: |-
+                    string owner = 1;
+                     string name = 2;
                   schema:
                     type: string
             responses:
@@ -64,12 +63,11 @@ paths:
             description: 清空购物车
             operationId: CartService_EmptyCart
             parameters:
-                - name: owner
+                - name: user_id
                   in: query
-                  schema:
-                    type: string
-                - name: name
-                  in: query
+                  description: |-
+                    string owner = 1;
+                     string name = 2;
                   schema:
                     type: string
             responses:
@@ -85,27 +83,42 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /v1/cart/item/{product_id}:
+    /v1/cart/create:
+        post:
+            tags:
+                - CartService
+            operationId: CartService_CreateCart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateCartReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateCartResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/cart/item:
         delete:
             tags:
                 - CartService
             description: 删除购物车商品
             operationId: CartService_RemoveCartItem
-            parameters:
-                - name: product_id
-                  in: path
-                  required: true
-                  schema:
-                    type: integer
-                    format: uint32
-                - name: owner
-                  in: query
-                  schema:
-                    type: string
-                - name: name
-                  in: query
-                  schema:
-                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RemoveCartItemReq'
+                required: true
             responses:
                 "200":
                     description: OK
@@ -119,15 +132,115 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /v1/cart/item/check:
+        post:
+            tags:
+                - CartService
+            operationId: CartService_CheckCartItem
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CheckCartItemReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CheckCartItemResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/cart/item/uncheck:
+        post:
+            tags:
+                - CartService
+            operationId: CartService_UncheckCartItem
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UncheckCartItemReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UncheckCartItemResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/cart/list:
+        get:
+            tags:
+                - CartService
+            operationId: CartService_ListCarts
+            parameters:
+                - name: user_id
+                  in: query
+                  description: |-
+                    string owner = 1;
+                     string name = 2;
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListCartsResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/cart/order:
+        post:
+            tags:
+                - CartService
+            operationId: CartService_CreateOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateOrderReq'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateOrderResp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
         Cart:
             type: object
             properties:
-                owner:
+                user_id:
                     type: string
-                name:
-                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;      // 用户ID
+                         repeated CartItem items = 3;   // 购物车商品列表
                 items:
                     type: array
                     items:
@@ -136,13 +249,86 @@ components:
         CartItem:
             type: object
             properties:
+                merchant_id:
+                    type: string
+                    description: |-
+                        uint32 product_id = 1 [json_name = "product_id"]; // 商品ID
+                         int32 quantity = 2;       // 商品数量
+                         bool selected = 3;        // 是否选中
                 product_id:
                     type: integer
                     format: uint32
                 quantity:
                     type: integer
                     format: int32
+                selected:
+                    type: boolean
             description: 购物车商品
+        CartSummary:
+            type: object
+            properties:
+                cart_id:
+                    type: integer
+                    format: uint32
+                cart_name:
+                    type: string
+        CheckCartItemReq:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+                         uint32 product_id = 3 [json_name = "product_id"];
+                merchant_id:
+                    type: string
+                product_id:
+                    type: integer
+                    format: uint32
+            description: 选中购物车商品
+        CheckCartItemResp:
+            type: object
+            properties:
+                success:
+                    type: boolean
+        CreateCartReq:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+                         string cart_name = 3 [json_name = "cart_name"];
+                cart_name:
+                    type: string
+            description: 新建购物车
+        CreateCartResp:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                message:
+                    type: string
+        CreateOrderReq:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+            description: 创建订单
+        CreateOrderResp:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/CartItem'
         EmptyCartResp:
             type: object
             properties:
@@ -161,6 +347,28 @@ components:
                     description: The type of the serialized message.
             additionalProperties: true
             description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        ListCartsResp:
+            type: object
+            properties:
+                carts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/CartSummary'
+        RemoveCartItemReq:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+                         uint32 product_id = 3 [json_name = "product_id"];
+                merchant_id:
+                    type: string
+                product_id:
+                    type: integer
+                    format: uint32
+            description: 删除购物车商品
         RemoveCartItemResp:
             type: object
             properties:
@@ -182,13 +390,35 @@ components:
                         $ref: '#/components/schemas/GoogleProtobufAny'
                     description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
             description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        UncheckCartItemReq:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+                         uint32 product_id = 3 [json_name = "product_id"];
+                merchant_id:
+                    type: string
+                product_id:
+                    type: integer
+                    format: uint32
+            description: 取消选中购物车商品
+        UncheckCartItemResp:
+            type: object
+            properties:
+                success:
+                    type: boolean
         UpsertItemReq:
             type: object
             properties:
-                owner:
+                user_id:
                     type: string
-                name:
-                    type: string
+                    description: |-
+                        string owner = 1;
+                         string name = 2;
+                         CartItem item = 3;
                 item:
                     $ref: '#/components/schemas/CartItem'
             description: 新增购物车商品

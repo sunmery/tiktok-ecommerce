@@ -2,66 +2,68 @@ syntax = "proto3";
 
 package api.user.v1;
 
+option go_package = "api/user/v1;user";
+
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
 
-option go_package = "api/user/v1;user";
-
 service UserService {
   rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
     option (google.api.http) = {
-      get: "/v1/user/profile"
+      get: "/v1/users/profile"
     };
   };
+
   rpc CreateAddresses (Address) returns (Address) {
     option (google.api.http) = {
-      post: "/v1/user/address",
+      post: "/v1/users/address",
       body: "*"
     };
   };
   rpc UpdateAddresses (Address) returns (Address) {
     option (google.api.http) = {
-      patch: "/v1/user/address",
+      patch: "/v1/users/address",
       body: "*"
     };
   };
   rpc DeleteAddresses (DeleteAddressesRequest) returns (DeleteAddressesReply) {
     option (google.api.http) = {
-      delete: "/v1/user/address"
+      delete: "/v1/users/address"
     };
   };
   rpc GetAddresses (GetAddressesRequest) returns (GetAddressesReply) {
     option (google.api.http) = {
-      get: "/v1/user/address"
+      get: "/v1/users/address"
     };
   };
+  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
+    option (google.api.http) = {
+      get: "/v1/users/credit_cards/all"
+    };
+  };
+
   rpc CreateCreditCard (CreditCards) returns (CardsReply){
     option (google.api.http) = {
-      post: "/v1/credit_cards",
+      post: "/v1/users/credit_cards",
       body: "*"
     };
   };
   rpc UpdateCreditCard (CreditCards) returns (CardsReply){
     option (google.api.http) = {
-      patch: "/v1/credit_cards",
+      patch: "/v1/users/credit_cards",
       body: "*"
     };
   };
   rpc DeleteCreditCard (DeleteCreditCardsRequest) returns (CardsReply){
     option (google.api.http) = {
-      delete: "/v1/credit_cards/{id}"
+      delete: "/v1/users/credit_cards/{id}"
     };
   };
   rpc GetCreditCard (GetCreditCardsRequest) returns (GetCreditCardsReply){
     option (google.api.http) = {
-      get: "/v1/credit_cards/{number}"
-    };
-  };
-  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
-    option (google.api.http) = {
-      get: "/v1/credit_cards/all"
+      get: "/v1/users/credit_cards/{number}"
     };
   };
 }
@@ -104,15 +106,6 @@ message ListCreditCardsRequest {
 
 message ListCreditCardsReply {
   repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
-}
-
-message GetProfileRequest {
-  string authorization = 1;
-}
-
-message GetProfileResponse {
-  string state = 1 [json_name = "state"];
-  Data data = 2 [json_name = "data"];
 }
 
 message Address {
@@ -165,7 +158,16 @@ message DeleteAddressesReply {
   uint32 code = 3 [(google.api.field_behavior) = REQUIRED];
 }
 
-message Data {
+message GetProfileRequest {
+  string authorization = 1;
+}
+
+message GetProfileResponse {
+  string state = 1 [json_name = "state"];
+  UserInfo data = 2 [json_name = "data"];
+}
+
+message UserInfo {
 
   message Properties {
     string no = 1;

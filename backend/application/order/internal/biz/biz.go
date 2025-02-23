@@ -11,7 +11,6 @@ import (
 var ProviderSet = wire.NewSet(NewOrderUsecase)
 
 // var (
-// 	// ErrUserNotFound is user not found.
 // 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 // )
 

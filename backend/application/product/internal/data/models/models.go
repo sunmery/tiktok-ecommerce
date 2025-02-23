@@ -6,42 +6,49 @@ package models
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type ProductsCategories struct {
-	ID        int32     `json:"id"`
-	Name      string    `json:"name"`
-	ParentID  *int32    `json:"parentID"`
-	IsActive  bool      `json:"isActive"`
-	CreatedAt time.Time `json:"createdAt"`
+type ProductsProductAttributes struct {
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	Attributes []byte    `json:"attributes"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
-type ProductsInventoryHistory struct {
-	ID           int64     `json:"id"`
-	ProductID    int32     `json:"productID"`
-	OldStock     int32     `json:"oldStock"`
-	NewStock     int32     `json:"newStock"`
-	ChangeReason string    `json:"changeReason"`
-	CreatedAt    time.Time `json:"createdAt"`
+type ProductsProductAudits struct {
+	ID         int64     `json:"id"`
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	OldStatus  int16     `json:"oldStatus"`
+	NewStatus  int16     `json:"newStatus"`
+	Reason     *string   `json:"reason"`
+	OperatorID int64     `json:"operatorID"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
-type ProductsProductCategories struct {
-	ProductID  int32 `json:"productID"`
-	CategoryID int32 `json:"categoryID"`
+type ProductsProductImages struct {
+	ID         int64     `json:"id"`
+	MerchantID int64     `json:"merchantID"`
+	ProductID  int64     `json:"productID"`
+	Url        string    `json:"url"`
+	IsPrimary  bool      `json:"isPrimary"`
+	SortOrder  *int16    `json:"sortOrder"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 type ProductsProducts struct {
-	ID                int32     `json:"id"`
-	Name              string    `json:"name"`
-	Description       string    `json:"description"`
-	Picture           string    `json:"picture"`
-	Price             float32   `json:"price"`
-	TotalStock        int32     `json:"totalStock"`
-	AvailableStock    *int32    `json:"availableStock"`
-	ReservedStock     int32     `json:"reservedStock"`
-	LowStockThreshold int32     `json:"lowStockThreshold"`
-	AllowNegative     bool      `json:"allowNegative"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	Version           int32     `json:"version"`
+	ID             int64              `json:"id"`
+	MerchantID     int64              `json:"merchantID"`
+	Name           string             `json:"name"`
+	Description    *string            `json:"description"`
+	Price          pgtype.Numeric     `json:"price"`
+	Stock          *int32             `json:"stock"`
+	Status         int16              `json:"status"`
+	CurrentAuditID *int64             `json:"currentAuditID"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	UpdatedAt      time.Time          `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }

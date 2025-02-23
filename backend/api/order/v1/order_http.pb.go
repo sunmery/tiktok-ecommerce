@@ -19,9 +19,9 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationOrderServiceListOrder = "/order.service.v1.OrderService/ListOrder"
-const OperationOrderServiceMarkOrderPaid = "/order.service.v1.OrderService/MarkOrderPaid"
-const OperationOrderServicePlaceOrder = "/order.service.v1.OrderService/PlaceOrder"
+const OperationOrderServiceListOrder = "/api.order.v1.OrderService/ListOrder"
+const OperationOrderServiceMarkOrderPaid = "/api.order.v1.OrderService/MarkOrderPaid"
+const OperationOrderServicePlaceOrder = "/api.order.v1.OrderService/PlaceOrder"
 
 type OrderServiceHTTPServer interface {
 	ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error)

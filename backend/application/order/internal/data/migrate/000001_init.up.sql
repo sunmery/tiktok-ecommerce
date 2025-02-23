@@ -1,37 +1,34 @@
 CREATE SCHEMA IF NOT EXISTS orders;
 
-SET search_path TO orders;
 
-CREATE SCHEMA IF NOT EXISTS orders;
-
-CREATE TABLE orders.orders
+-- 主订单表，记录订单全局信息
+CREATE TABLE orders.main_orders
 (
-    id         SERIAL PRIMARY KEY,
-    email      VARCHAR(255)                  NOT NULL,
-    owner      VARCHAR(100)                  NOT NULL,
-    name       VARCHAR(100)                  NOT NULL,
-    address_id INT                           NOT NULL, -- 地址id, 关联地址微服务
-    currency   CHAR(3)                       NOT NULL, -- 货币类型, ISO 4217 标准
-    status     VARCHAR(10) DEFAULT 'pending' NOT NULL, -- 支付状态, pending已创建订单但未支付、paid已支付、cancelled已取消订单
-    created_at timestamptz                   NOT NULL,
-    updated_at timestamptz DEFAULT now()     NOT NULL
+    order_id     SERIAL PRIMARY KEY,            -- 主订单唯一标识
+    user_id      INT            NOT NULL,       -- 用户ID（关联用户表）
+    total_amount NUMERIC(10, 2) NOT NULL,-- 订单总金额（含缺货商品）
+    status       VARCHAR(20) DEFAULT 'pending', -- 状态：pending/paid/cancelled
+    created_at   TIMESTAMP   DEFAULT NOW()      -- 订单创建时间
 );
 
-CREATE TABLE orders.order_items
+-- 子订单表，按商家拆分订单
+CREATE TABLE sub_orders
 (
-    id         SERIAL PRIMARY KEY,
-    order_id   INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity   INT NOT NULL,
-    cost       INT NOT NULL
+    sub_order_id  SERIAL PRIMARY KEY,                           -- 子订单唯一标识
+    main_order_id INT REFERENCES orders.main_orders (order_id), -- 关联主订单
+    seller_id     INT            NOT NULL,                      -- 商家ID（关联商家表）
+    status        VARCHAR(20)    NOT NULL,                      -- 状态：pending/shipped/out_of_stock/cancelled
+    amount        NUMERIC(10, 2) NOT NULL,                      -- 子订单金额（仅含可发货商品）
+    created_at    TIMESTAMP DEFAULT NOW()                       -- 子订单创建时间
 );
 
--- 通过order_items的order_id可以查询是哪个用户创建的订单
-ALTER TABLE orders.order_items
-    ADD
-        CONSTRAINT fk_order_items_order_id
-            FOREIGN KEY (order_id) REFERENCES orders.orders (id)
-                ON DELETE CASCADE;
+-- 订单商品关联表, 记录子订单中的商品明细
+CREATE TABLE order_items
+(
+    item_id      SERIAL PRIMARY KEY,                       -- 关联项唯一标识
+    sub_order_id INT REFERENCES sub_orders (sub_order_id), -- 关联子订单
+    product_id   INT            NOT NULL,                  -- 商品ID
+    quantity     INT            NOT NULL,                  -- 购买数量
+    price        NUMERIC(10, 2) NOT NULL                   -- 商品单价（快照）
+);
 
-CREATE INDEX idx_order_user ON orders.orders (owner, name);
-CREATE INDEX idx_order_items_order_id ON orders.order_items (order_id);

@@ -1,7 +1,8 @@
 services:
 
   citus:
-    image: citusdata/citus:postgres_16
+#    image: citusdata/citus:postgres_16
+    image: citusdata/citus:latest
     container_name: citus
     platform: linux/amd64
     restart: on-failure:5
@@ -11,7 +12,13 @@ services:
       - data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: citus
-      POSTGRES_DB: ecommence
+      POSTGRES_USER: postgres
+      POSTGRES_DB: ecommerce
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ecommerce" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       app-network:
 

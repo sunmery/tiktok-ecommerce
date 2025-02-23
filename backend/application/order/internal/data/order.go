@@ -23,8 +23,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	fmt.Println(extra)
 	// 获取购物车商品
 	cartItems, err := o.data.cartClient.GetCart(ctx, &cartv1.GetCartReq{
-		Owner: "test",
-		Name:  "test",
+		UserId: fmt.Sprintf("%d", req.UserId),
 	})
 
 	if err != nil {

@@ -15,7 +15,7 @@ type Address struct {
 	City          string // 城市
 	State         string // 州/省
 	Country       string // 国家
-	ZipCode       int32  // 邮政编码
+	ZipCode       uint32 // 邮政编码
 }
 
 type PlaceOrderResp struct {

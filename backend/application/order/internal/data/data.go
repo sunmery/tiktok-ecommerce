@@ -85,11 +85,6 @@ func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 	return client
 }
 
-type orderRepo struct {
-	data *Data
-	log  *log.Helper
-}
-
 func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	c := consulAPI.DefaultConfig()
 	c.Address = conf.RegistryCenter.Address
@@ -118,4 +113,9 @@ func NewCartServiceClient(c registry.Discovery, logger log.Logger) (cartV1.CartS
 		return nil, err
 	}
 	return cartV1.NewCartServiceClient(conn), nil
+}
+
+type orderRepo struct {
+	data *Data
+	log  *log.Helper
 }

@@ -30,7 +30,7 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*
 
 	// 调用购物车服务获取购物车商品
 	cartResp, err := s.cartClient.GetCart(ctx, &v1.GetCartReq{
-		Owner: payload.ID, // 使用用户ID作为Owner
+		UserId: payload.ID,
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, "获取购物车失败: "+err.Error())

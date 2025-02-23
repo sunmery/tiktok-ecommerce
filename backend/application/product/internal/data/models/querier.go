@@ -9,79 +9,122 @@ import (
 )
 
 type Querier interface {
-	// 创建分类数据
+	// 批量插入图片
 	//
-	//  INSERT INTO products.categories (name, parent_id)
-	//  VALUES ($1, $2)
-	//  RETURNING id, name, parent_id, is_active, created_at
-	CreateCategories(ctx context.Context, arg CreateCategoriesParams) (ProductsCategories, error)
-	// 创建商品
+	//  INSERT INTO products.product_images
+	//      (merchant_id, product_id, url, is_primary, sort_order)
+	//  SELECT m_id, p_id, u, is_p, s_ord
+	//  FROM ROWS FROM (
+	//           unnest($1::bigint[]),
+	//           unnest($2::bigint[]),
+	//           unnest($3::text[]),
+	//           unnest($4::boolean[]),
+	//           unnest($5::smallint[])
+	//           ) AS t(m_id, p_id, u, is_p, s_ord)
+	BulkCreateProductImages(ctx context.Context, arg BulkCreateProductImagesParams) error
+	// 创建审核记录，返回新记录ID
 	//
-	//  INSERT INTO products.products(name,
-	//                                description,
-	//                                picture,
-	//                                price,
-	//                                total_stock)
+	//  INSERT INTO product_audits (product_id,
+	//                              merchant_id,
+	//                              old_status,
+	//                              new_status,
+	//                              reason,
+	//                              operator_id)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  RETURNING id, created_at
+	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) (CreateAuditRecordRow, error)
+	// 所有分片表必须：
+	// 1. 包含分片键列（merchant_id）
+	// 2. 主键必须包含分片键
+	// 3. 外键约束需要特殊处理（Citus 不支持跨节点外键）
+	// 创建商品主记录，返回生成的ID
+	// merchant_id 作为分片键，必须提供
+	//
+	//
+	//  INSERT INTO products.products (name,
+	//                                 description,
+	//                                 price,
+	//                                 stock,
+	//                                 status,
+	//                                 merchant_id)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  RETURNING id, created_at, updated_at
+	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
+	//CreateProductImages
+	//
+	//  INSERT INTO products.product_images (merchant_id, -- 新增分片键
+	//                                       product_id,
+	//                                       url,
+	//                                       is_primary,
+	//                                       sort_order)
 	//  VALUES ($1, $2, $3, $4, $5)
-	//  RETURNING id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-	CreateProduct(ctx context.Context, arg CreateProductParams) (ProductsProducts, error)
-	// 关联商品与分类
-	// 将商品1关联到分类2（Smartphones）
+	CreateProductImages(ctx context.Context, arg []CreateProductImagesParams) (int64, error)
+	// 获取最新审核记录
 	//
-	//  INSERT INTO products.product_categories (product_id, category_id)
-	//  VALUES ($1, $2)
-	//  RETURNING product_id, category_id
-	CreateProductCategories(ctx context.Context, arg CreateProductCategoriesParams) (ProductsProductCategories, error)
-	// 记录库存变更
+	//  INSERT INTO products.product_audits (merchant_id, -- 新增分片键
+	//                                       product_id,
+	//                                       old_status,
+	//                                       new_status,
+	//                                       reason,
+	//                                       operator_id)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  RETURNING id, created_at
+	GetLatestAudit(ctx context.Context, arg GetLatestAuditParams) (GetLatestAuditRow, error)
+	// 乐观锁版本控制
+	// 获取商品详情，包含软删除检查
 	//
-	//  INSERT INTO products.inventory_history (product_id,
-	//                                          old_stock,
-	//                                          new_stock,
-	//                                          change_reason)
-	//  VALUES ($1,
-	//          (SELECT total_stock FROM products.products WHERE id = $1),
-	//          (SELECT total_stock FROM products.products WHERE id = $1) - $2,
-	//          'ORDER_RESERVED')
-	//  RETURNING id, product_id, old_stock, new_stock, change_reason, created_at
-	CreateProductInventoryHistory(ctx context.Context, arg CreateProductInventoryHistoryParams) (ProductsInventoryHistory, error)
-	//GetProduct
 	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
+	//  SELECT id,
+	//         name,
+	//         description,
+	//         price,
+	//         stock,
+	//         status,
+	//         merchant_id,
+	//         created_at,
+	//         updated_at
 	//  FROM products.products
 	//  WHERE id = $1
-	//  LIMIT 1
-	GetProduct(ctx context.Context, id int32) (ProductsProducts, error)
-	// 查询某分类下的所有商品
+	//    AND merchant_id = $2
+	//    AND deleted_at IS NULL
+	GetProduct(ctx context.Context, arg GetProductParams) (GetProductRow, error)
+	// 获取商品图片列表，按排序顺序返回
 	//
-	//  SELECT p.id, p.name, p.description, p.picture, p.price, p.total_stock, p.available_stock, p.reserved_stock, p.low_stock_threshold, p.allow_negative, p.created_at, p.updated_at, p.version
-	//  FROM products.products p
-	//           JOIN products.product_categories pc ON p.id = pc.product_id
-	//  WHERE pc.category_id = $1
-	GetProductCategories(ctx context.Context, categoryID int32) ([]ProductsProducts, error)
-	// -- name: CreateAuditLog :one
-	// INSERT INTO products.audit_log (action, product_id, owner, name)
-	// VALUES ($1, $2, $3, $4)
-	// RETURNING *;
-	//
-	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-	//  FROM products.products
-	//  ORDER BY id
-	//  OFFSET $1 LIMIT $2
-	ListProducts(ctx context.Context, arg ListProductsParams) ([]ProductsProducts, error)
-	//SearchProducts
-	//
-	//  SELECT id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-	//  FROM products.products
-	//  WHERE name ILIKE '%' || $1 || '%'
-	SearchProducts(ctx context.Context, dollar_1 *string) ([]ProductsProducts, error)
-	// 预留库存（下单时）
+	//  SELECT id, merchant_id, product_id, url, is_primary, sort_order, created_at
+	//  FROM products.product_images
+	//  WHERE merchant_id = $1
+	//    AND product_id = $2 -- 查询必须包含分片键
+	//  ORDER BY sort_order
+	GetProductImages(ctx context.Context, arg GetProductImagesParams) ([]ProductsProductImages, error)
+	// 软删除商品，设置删除时间戳
 	//
 	//  UPDATE products.products
-	//  SET reserved_stock = reserved_stock + 2
-	//  WHERE id = 1
-	//  RETURNING id, name, description, picture, price, total_stock, available_stock, reserved_stock, low_stock_threshold, allow_negative, created_at, updated_at, version
-	UpdateProductsReservedStock(ctx context.Context) (ProductsProducts, error)
+	//  SET deleted_at = NOW()
+	//  WHERE id = $1
+	//    AND merchant_id = $2
+	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) error
+	// 更新商品基础信息，使用乐观锁控制并发
+	//
+	//  UPDATE products.products
+	//  SET name        = $2,
+	//      description = $3,
+	//      price       = $4,
+	//      stock       = $5,
+	//      status      = $6,
+	//      updated_at  = NOW()
+	//  WHERE id = $1
+	//    AND merchant_id = $7
+	//    AND updated_at = $8
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
+	// 更新商品状态并记录当前审核ID
+	//
+	//  UPDATE products.products
+	//  SET status           = $2,
+	//      current_audit_id = $3,
+	//      updated_at       = NOW()
+	//  WHERE id = $1
+	//    AND merchant_id = $4
+	UpdateProductStatus(ctx context.Context, arg UpdateProductStatusParams) error
 }
 
 var _ Querier = (*Queries)(nil)

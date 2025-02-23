@@ -1,0 +1,18 @@
+services:
+
+  mongo:
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    image: mongo
+    privileged: true
+    restart: on-failure:5
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongo
+      TZ: "Asia/Shanghai"
+    volumes:
+      - data:/data/mongo
+
+volumes:
+  data:
