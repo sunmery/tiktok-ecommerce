@@ -190,7 +190,7 @@ LIMIT $5 OFFSET $4
 `
 
 type ListOrdersByUserWithDateParams struct {
-	UsedID    uuid.UUID `json:"usedID"`
+	UserID    uuid.UUID `json:"userID"`
 	StartTime time.Time `json:"startTime"`
 	EndTime   time.Time `json:"endTime"`
 	Offsets   int64     `json:"offsets"`
@@ -225,7 +225,7 @@ type ListOrdersByUserWithDateRow struct {
 //	LIMIT $5 OFFSET $4
 func (q *Queries) ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersByUserWithDateParams) ([]ListOrdersByUserWithDateRow, error) {
 	rows, err := q.db.Query(ctx, ListOrdersByUserWithDate,
-		arg.UsedID,
+		arg.UserID,
 		arg.StartTime,
 		arg.EndTime,
 		arg.Offsets,

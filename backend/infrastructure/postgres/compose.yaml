@@ -1,10 +1,9 @@
 services:
 
-  citus:
-    # image: citusdata/citus:13
-    image: citusdata/citus:latest
-    container_name: citus
-    platform: linux/amd64
+  postgres17:
+    image: postgres:17.4-alpine3.21
+    container_name: postgres17
+#    platform: linux/amd64
     restart: on-failure:5
     ports:
       - "5432:5432"

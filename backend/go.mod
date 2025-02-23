@@ -3,6 +3,7 @@ module backend
 go 1.22.0
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/casdoor/casdoor-go-sdk v1.3.0
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/exaring/otelpgx v0.9.0
@@ -17,7 +18,6 @@ require (
 	github.com/google/wire v0.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/hashicorp/consul/api v1.31.0
-	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/minio/minio-go/v7 v7.0.84
 	github.com/redis/go-redis/v9 v9.7.0
@@ -62,7 +62,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

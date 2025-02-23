@@ -2,12 +2,23 @@
 CREATE SCHEMA IF NOT EXISTS products;
 SET SEARCH_PATH TO products;
 
+CREATE FUNCTION uuidv7_sub_ms() RETURNS uuid
+AS
+$$
+select encode(
+               substring(int8send(floor(t_ms)::int8) from 3) ||
+               int2send((7 << 12)::int2 | ((t_ms - floor(t_ms)) * 4096)::int2) ||
+               substring(uuid_send(gen_random_uuid()) from 9 for 8)
+           , 'hex')::uuid
+from (select extract(epoch from clock_timestamp()) * 1000 as t_ms) s
+$$ LANGUAGE sql volatile;
+
 -----------------------------
 -- 商品主表（分布式分片表）
 -----------------------------
 CREATE TABLE products.products
 (
-    id               UUID,                  -- 分布式环境下建议使用 snowflake 等分布式ID
+    id               UUID  DEFAULT uuidv7_sub_ms(),
     merchant_id      UUID         NOT NULL, -- 分片键（必须）
     name             VARCHAR(255) NOT NULL,
     description      TEXT,

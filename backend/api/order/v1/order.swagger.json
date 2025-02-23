@@ -50,7 +50,7 @@
             "format": "date-time"
           },
           {
-            "name": "limit",
+            "name": "page",
             "description": "分页参数\n\n默认20，最大100",
             "in": "query",
             "required": false,
@@ -58,12 +58,18 @@
             "format": "int64"
           },
           {
-            "name": "offset",
+            "name": "pageSize",
             "description": "默认0",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "dateRangeType",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

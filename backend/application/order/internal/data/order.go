@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -115,35 +114,23 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 }
 
 func (o *orderRepo) calculateTimeRange(req *biz.ListOrderReq) (start, end time.Time, err error) {
-	now := time.Now().UTC()
 	switch req.DateRangeType {
 	case "today":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-		end = start.Add(24*time.Hour - 1*time.Nanosecond)
-	case "yesterday":
-		yesterday := now.Add(-24 * time.Hour)
-		start = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, time.UTC)
-		end = start.Add(24*time.Hour - 1*time.Nanosecond)
-	case "last7days":
-		start = now.AddDate(0, 0, -7)
-		end = now
+		return time.Now().Truncate(24 * time.Hour), time.Now(), nil
+	case "week":
+		return time.Now().AddDate(0, 0, -7), time.Now(), nil
 	case "custom":
-		start = req.StartTime.UTC()
-		end = req.EndTime.UTC()
-		if start.After(end) {
-			return time.Time{}, time.Time{}, errors.New("start time cannot be after end time")
-		}
+		return req.StartTime, req.EndTime, nil
 	default:
-		return time.Time{}, time.Time{}, fmt.Errorf("unsupported date range type: %s", req.DateRangeType)
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid date range type")
 	}
-	return start, end, nil
 }
 
 func (o *orderRepo) queryOrders(ctx context.Context, userID uuid.UUID, start, end time.Time, page, pageSize int) ([]*biz.Order, error) {
 	offset := (page - 1) * pageSize
 
 	rows, err := o.data.DB(ctx).ListOrdersByUserWithDate(ctx, models.ListOrdersByUserWithDateParams{
-		UsedID:    userID,
+		UserID:    userID,
 		StartTime: start,
 		EndTime:   end,
 		Offsets:   int64(pageSize),
@@ -172,9 +159,10 @@ func (o *orderRepo) queryOrders(ctx context.Context, userID uuid.UUID, start, en
 				Country:       dbOrder.Country,
 				ZipCode:       dbOrder.ZipCode,
 			},
-			Email:     dbOrder.Email,
-			CreatedAt: dbOrder.CreatedAt,
-			SubOrders: subOrders,
+			Email:         dbOrder.Email,
+			CreatedAt:     dbOrder.CreatedAt,
+			SubOrders:     subOrders,
+			PaymentStatus: dbOrder.PaymentStatus,
 		})
 	}
 

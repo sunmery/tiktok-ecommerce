@@ -101,12 +101,12 @@ func (s *OrderServiceService) ListOrder(ctx context.Context, req *v1.ListOrderRe
 	}
 
 	listOrder, orderErr := s.uc.ListOrder(ctx, &biz.ListOrderReq{
-		UserID: UserMock,
-		// DateRangeType: req.DateRangeType,
-		StartTime: req.StartTime.AsTime(),
-		EndTime:   req.EndTime.AsTime(),
-		Page:      int(req.Limit),
-		PageSize:  int(req.Offset),
+		UserID:        UserMock,
+		DateRangeType: req.DateRangeType,
+		StartTime:     req.StartTime.AsTime(),
+		EndTime:       req.EndTime.AsTime(),
+		Page:          int(req.Page),
+		PageSize:      int(req.PageSize),
 	})
 	if orderErr != nil {
 		return nil, fmt.Errorf("获取订单列表失败: %w", orderErr)

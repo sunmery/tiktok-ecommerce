@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "kratos-template/internal/conf;conf";
+option go_package = "assistant/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -21,8 +21,13 @@ message Server {
     string addr = 2;
     google.protobuf.Duration timeout = 3;
   }
+  // 分布式节点
+  message Snowflake {
+    uint32 node_id = 1;
+  }
   HTTP http = 1;
   GRPC grpc = 2;
+  Snowflake snowflake = 3;
 }
 
 message Data {
