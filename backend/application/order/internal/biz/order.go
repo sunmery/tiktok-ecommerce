@@ -3,7 +3,7 @@ package biz
 type PlaceOrderReq struct {
 	OrderId      int32       // 订单ID
 	Name         string      // 订单名称
-	UserId       uint32      // 用户ID
+	UserId       string      // 用户ID
 	UserCurrency string      // 货币类型
 	Address      Address     // 地址信息
 	Items        []OrderItem // 商品列表
@@ -23,7 +23,8 @@ type PlaceOrderResp struct {
 }
 
 type OrderResult struct {
-	OrderId int32 // 订单ID
+	OrderId int32  // 订单ID
+	Status  string // 订单状态
 }
 type ListOrderReq struct {
 	UserId uint32 `json:"user_id"` // 用户ID

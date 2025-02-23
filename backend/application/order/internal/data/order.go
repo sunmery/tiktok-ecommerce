@@ -12,22 +12,23 @@ import (
 	"strconv"
 
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/metadata"
 )
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
-	var extra string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		extra = md.Get("x-md-global-userid")
-	}
-	fmt.Println(extra)
-	// 获取购物车商品
-	cartItems, err := o.data.cartClient.GetCart(ctx, &cartv1.GetCartReq{
-		UserId: fmt.Sprintf("%d", req.UserId),
-	})
 
+	// var extra string
+	// if md, ok := metadata.FromServerContext(ctx); ok {
+	// 	extra = md.Get("x-md-global-userid")
+	// }
+	// fmt.Println(extra)
+	// // 获取购物车商品
+	cartItems, err := o.data.cartClient.GetCart(ctx, &cartv1.GetCartReq{
+		UserId: req.UserId,
+	})
 	if err != nil {
-		return nil, err
+		if cartItems == nil || cartItems.Cart == nil || len(cartItems.Cart.Items) == 0 {
+			return nil, errors.New("cart is empty")
+		}
 	}
 	// 将购物车商品映射到订单商品项
 	orderItems := make([]biz.OrderItem, len(cartItems.Cart.Items))
@@ -44,7 +45,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 	// 创建订单
 	orderID, err := o.data.db.CreateOrder(ctx, models.CreateOrderParams{
-		Owner:         fmt.Sprintf("%d", req.UserId),
+		Owner:         req.UserId,
 		Name:          req.Name,
 		Email:         req.Email,
 		StreetAddress: req.Address.StreetAddress,
@@ -54,7 +55,9 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		Currency:      req.UserCurrency,
 	})
 	if err != nil {
-		return nil, err
+		if req.Items == nil || len(req.Items) == 0 {
+			return nil, errors.New("items is empty")
+		}
 	}
 
 	// 创建订单商品
@@ -80,6 +83,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	return &biz.PlaceOrderResp{
 		Order: biz.OrderResult{
 			OrderId: orderID,
+			Status:  "created",
 		},
 	}, nil
 }

@@ -52,6 +52,7 @@ func NewData(
 
 // NewDB 关系型数据库
 func NewDB(c *conf.Data) *pgxpool.Pool {
+	fmt.Printf("connecting to the database: %s\n", c.Database.Source)
 	cfg, err := pgxpool.ParseConfig(c.Database.Source)
 	if err != nil {
 		panic(fmt.Errorf("parse database config failed: %v", err))

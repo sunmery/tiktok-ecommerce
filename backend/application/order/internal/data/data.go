@@ -112,7 +112,7 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	return r, nil
 }
 
-// NewCartServiceClient 认证微服务
+// NewCartServiceClient cart微服务
 func NewCartServiceClient(d registry.Discovery, logger log.Logger) (cartv1.CartServiceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),

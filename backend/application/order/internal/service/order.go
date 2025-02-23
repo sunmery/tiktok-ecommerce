@@ -1,64 +1,45 @@
 package service
 
 import (
-	v1 "backend/api/cart/v1"
 	pb "backend/api/order/v1"
 	"backend/application/order/internal/biz"
 	"backend/application/order/pkg/convert"
-	"backend/application/order/pkg/token"
 	"context"
 	"log"
-	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*pb.PlaceOrderResp, error) {
+	// 将请求中的OrderItems转换为业务层需要的结构
+	var bizItems []biz.OrderItem
+	for _, pbItem := range req.OrderItems {
+		if pbItem.Item == nil {
+			return nil, status.Error(codes.InvalidArgument, "购物车商品信息不完整")
+		}
 
-	// 从上下文获取荷载
-	payload, err := token.ExtractPayload(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	UserId, err := strconv.ParseUint(payload.ID, 10, 32)
-	if err != nil {
-		// 处理转换错误，例如返回错误信息给调用者
-		return nil, status.Error(codes.Internal, "用户ID转换失败")
-	}
-
-	// 调用购物车服务获取购物车商品
-	cartResp, err := s.cartClient.GetCart(ctx, &v1.GetCartReq{
-		UserId: payload.ID,
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, "获取购物车失败: "+err.Error())
-	}
-
-	// 将购物车商品转换为 biz.OrderItem
-	var items []biz.OrderItem
-	for _, cartItem := range cartResp.Cart.Items {
-		items = append(items, biz.OrderItem{
-			Id:        int32(cartItem.ProductId),
-			Name:      "dorr",
-			Price:     133,
-			Quantity:  cartItem.Quantity,
-			OrderId:   0,
-			ProductId: int32(cartItem.ProductId),
+		bizItems = append(bizItems, biz.OrderItem{
+			ProductId: int32(pbItem.Item.ProductId), // 假设CartItem包含ProductId字段
+			Name:      pbItem.Item.Name,             // 假设CartItem包含Name字段
+			Price:     pbItem.Item.Price,            // 假设CartItem包含Price字段
+			Quantity:  pbItem.Item.Quantity,         // 假设CartItem包含Quantity字段
+			// OrderId 会在业务层自动生成，无需赋值
 		})
 	}
 
+	// 调用业务层创建订单
 	result, err := s.oc.PlaceOrder(ctx, &biz.PlaceOrderReq{
-		UserId:       uint32(UserId),
+		UserId:       "123456", // 使用请求中的用户ID
 		UserCurrency: req.UserCurrency,
 		Address: biz.Address{
 			StreetAddress: req.Address.StreetAddress,
 			City:          req.Address.City,
 			State:         req.Address.State,
+			Country:       req.Address.Country, // 添加国家字段
 			ZipCode:       req.Address.ZipCode,
 		},
-		Items: items,
+		Items: bizItems,
 		Email: req.Email,
 	})
 	if err != nil {
@@ -70,7 +51,6 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*
 			OrderId: string(result.Order.OrderId),
 		},
 	}, nil
-
 }
 
 func (s *OrderService) ListOrders(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
