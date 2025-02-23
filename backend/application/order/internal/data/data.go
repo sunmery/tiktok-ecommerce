@@ -1,11 +1,11 @@
 package data
 
 import (
-	"backend/constants"
-
-	cartV1 "backend/api/cart/v1"
+	cartv1 "backend/api/cart/v1"
+	"backend/application/order/internal/biz"
 	"backend/application/order/internal/conf"
 	"backend/application/order/internal/data/models"
+	"backend/constants"
 	"context"
 	"fmt"
 
@@ -23,27 +23,40 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor, NewDiscovery, NewCartServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor)
 
 type Data struct {
-	db         *models.Queries
-	rdb        *redis.Client
-	cartClient cartV1.CartServiceClient
+	db  *models.Queries
+	rdb *redis.Client
+	//cs         *casdoorsdk.Client
+	cartClient cartv1.CartServiceClient
+}
+
+type orderRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
+// ListOrder implements biz.OrderRepo.
+func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.ListOrderResp, error) {
+	panic("unimplemented")
 }
 
 // NewData .
 func NewData(
 	pgx *pgxpool.Pool,
 	rdb *redis.Client,
-	cartClient cartV1.CartServiceClient,
+	cartClient cartv1.CartServiceClient,
+	//cs *casdoorsdk.Client,
 	logger log.Logger,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:         models.New(pgx),
-		rdb:        rdb,
+		db:  models.New(pgx),
+		rdb: rdb,
+		//cs:         cs,
 		cartClient: cartClient,
 	}, cleanup, nil
 }
@@ -85,6 +98,7 @@ func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 	return client
 }
 
+// NewDiscovery 配置服务发现功能
 func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	c := consulAPI.DefaultConfig()
 	c.Address = conf.RegistryCenter.Address
@@ -98,12 +112,12 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	return r, nil
 }
 
-// 购物车微服务
-func NewCartServiceClient(c registry.Discovery, logger log.Logger) (cartV1.CartServiceClient, error) {
+// NewCartServiceClient 认证微服务
+func NewCartServiceClient(d registry.Discovery, logger log.Logger) (cartv1.CartServiceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),
-		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.CartServiceV1)),
-		grpc.WithDiscovery(c),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.AuthServiceV1)),
+		grpc.WithDiscovery(d),
 		grpc.WithMiddleware(
 			recovery.Recovery(),
 			logging.Client(logger),
@@ -112,10 +126,5 @@ func NewCartServiceClient(c registry.Discovery, logger log.Logger) (cartV1.CartS
 	if err != nil {
 		return nil, err
 	}
-	return cartV1.NewCartServiceClient(conn), nil
-}
-
-type orderRepo struct {
-	data *Data
-	log  *log.Helper
+	return cartv1.NewCartServiceClient(conn), nil
 }

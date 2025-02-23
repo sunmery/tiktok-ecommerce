@@ -50,7 +50,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		StreetAddress: req.Address.StreetAddress,
 		City:          req.Address.City,
 		State:         req.Address.State,
-		ZipCode:       string(req.Address.ZipCode),
+		ZipCode:       strconv.FormatUint(uint64(req.Address.ZipCode), 10),
 		Currency:      req.UserCurrency,
 	})
 	if err != nil {
