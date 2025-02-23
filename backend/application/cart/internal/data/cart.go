@@ -153,9 +153,11 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 		UserID:   req.UserId,
 		CartName: "cart",
 	})
+	c.log.WithContext(ctx).Infof("GetCarterr________________ : %+v", err)
 	if err != nil {
 		return nil, err
 	}
+	c.log.WithContext(ctx).Infof("GetCart request : %+v", cart)
 	var cartItems []biz.CartItem
 	for _, item := range cart {
 		var cartitem biz.CartItem

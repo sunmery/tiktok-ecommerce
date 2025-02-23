@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"errors"
 
+	apiErrors "backend/api/cart/v1" // 导入错误包
 	pb "backend/api/cart/v1"
 	"backend/application/cart/internal/biz"
 )
@@ -24,7 +24,7 @@ func (s *CartServiceService) CheckCartItem(ctx context.Context, req *pb.CheckCar
 		ProductId:  req.ProductId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to check cart item")
+		return nil, apiErrors.ErrorCartitemNotFound("failed to check cart item: %v", err)
 	}
 	return &pb.CheckCartItemResp{
 		Success: resp.Success,
@@ -38,7 +38,7 @@ func (s *CartServiceService) UncheckCartItem(ctx context.Context, req *pb.Unchec
 		ProductId:  req.ProductId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to uncheck cart item")
+		return nil, apiErrors.ErrorCartitemNotFound("failed to uncheck cart item: %v", err)
 	}
 	return &pb.UncheckCartItemResp{
 		Success: resp.Success,
@@ -50,7 +50,7 @@ func (s *CartServiceService) CreateOrder(ctx context.Context, req *pb.CreateOrde
 		UserId: req.UserId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to create order")
+		return nil, apiErrors.ErrorInvalidStatus("failed to create order: %v", err)
 	}
 	items := make([]*pb.CartItem, len(resp.Items))
 	for i, item := range resp.Items {
@@ -73,7 +73,7 @@ func (s *CartServiceService) CreateCart(ctx context.Context, req *pb.CreateCartR
 		CartName: req.CartName,
 	})
 	if err != nil {
-		return nil, errors.New("failed to create cart")
+		return nil, apiErrors.ErrorInvalidAuditAction("failed to create cart: %v", err)
 	}
 	return &pb.CreateCartResp{
 		Success: resp.Success,
@@ -86,7 +86,7 @@ func (s *CartServiceService) ListCarts(ctx context.Context, req *pb.ListCartsReq
 		UserId: req.UserId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to list carts")
+		return nil, apiErrors.ErrorInvalidAuditAction("failed to list carts: %v", err)
 	}
 	cartList := make([]*pb.CartSummary, len(carts.Carts))
 	for i, cart := range carts.Carts {
@@ -111,7 +111,7 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 		},
 	})
 	if err != nil {
-		return nil, errors.New("failed to upsert item")
+		return nil, apiErrors.ErrorInvalidAuditAction("failed to upsert item: %v", err)
 	}
 	return &pb.UpsertItemResp{
 		Success: resp.Success,
@@ -128,7 +128,7 @@ func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*
 		UserId: req.UserId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to get cart")
+		return nil, apiErrors.ErrorCartitemNotFound("failed to get cart: %v", err)
 	}
 	items := make([]*pb.CartItem, len(cart.Cart.Items))
 	for i, item := range cart.Cart.Items {
@@ -152,10 +152,10 @@ func (s *CartServiceService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq
 		UserId: req.UserId,
 	})
 	if err != nil {
-		return nil, errors.New("failed to empty cart")
+		return nil, apiErrors.ErrorInvalidStatus("failed to empty cart: %v", err)
 	}
 	if !resp.Success {
-		return nil, errors.New("failed to empty cart")
+		return nil, apiErrors.ErrorInvalidStatus("failed to empty cart")
 	}
 	return &pb.EmptyCartResp{
 		Success: resp.Success,
@@ -171,7 +171,7 @@ func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveC
 	if err != nil {
 		return &pb.RemoveCartItemResp{
 			Success: resp.Success,
-		}, errors.New("failed to remove cart item")
+		}, apiErrors.ErrorCartitemNotFound("failed to remove cart item: %v", err)
 	}
 	return &pb.RemoveCartItemResp{
 		Success: resp.Success,
