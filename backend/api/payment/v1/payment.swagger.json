@@ -18,6 +18,7 @@
   "paths": {
     "/v1/payments": {
       "post": {
+        "summary": "创建支付记录",
         "operationId": "PaymentService_CreatePayment",
         "responses": {
           "200": {
@@ -50,6 +51,7 @@
     },
     "/v1/payments/callback": {
       "post": {
+        "summary": "支付宝回调",
         "operationId": "PaymentService_ProcessPaymentCallback",
         "responses": {
           "200": {
@@ -80,8 +82,42 @@
         ]
       }
     },
+    "/v1/payments/notify": {
+      "post": {
+        "summary": "异步通知",
+        "operationId": "PaymentService_PaymentNotify",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PaymentNotifyResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PaymentNotifyReq"
+            }
+          }
+        ],
+        "tags": [
+          "PaymentService"
+        ]
+      }
+    },
     "/v1/payments/{paymentId}": {
       "get": {
+        "summary": "获取支付信息",
         "operationId": "PaymentService_GetPayment",
         "responses": {
           "200": {
@@ -158,13 +194,6 @@
         "paymentMethod": {
           "type": "string",
           "title": "支付方式"
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "扩展元数据"
         }
       }
     },
@@ -184,11 +213,39 @@
         "processedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "requestForm": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1StringList"
+          }
         }
       }
     },
     "v1PaymentCallbackResp": {
       "type": "object"
+    },
+    "v1PaymentNotifyReq": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1StringList"
+          }
+        }
+      }
+    },
+    "v1PaymentNotifyResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "msg": {
+          "type": "string"
+        }
+      }
     },
     "v1PaymentResp": {
       "type": "object",
@@ -207,6 +264,18 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "v1StringList": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "表示 []string"
         }
       }
     }

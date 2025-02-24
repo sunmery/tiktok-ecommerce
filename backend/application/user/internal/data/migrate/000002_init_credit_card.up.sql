@@ -1,14 +1,14 @@
-CREATE SCHEMA credit_cards;
+CREATE SCHEMA IF NOT EXISTS users;
+SET search_path TO users;
 
-CREATE TABLE credit_cards.credit_cards
+CREATE TABLE users.credit_cards
 (
     id               SERIAL PRIMARY KEY,
-    owner            VARCHAR(100) NOT NULL DEFAULT 'tiktok',
-    name             VARCHAR(100) NOT NULL,
-    number           VARCHAR(20)  NOT NULL,
-    cvv              VARCHAR(4)   NOT NULL,
-    expiration_year  CHAR(4)      NOT NULL,
-    expiration_month CHAR(2)      NOT NULL
+    user_id          UUID        NOT NULL,
+    number           VARCHAR(20) NOT NULL,
+    cvv              VARCHAR(4)  NOT NULL,
+    expiration_year  CHAR(4)     NOT NULL,
+    expiration_month CHAR(2)     NOT NULL
 );
 
-CREATE INDEX idx_credit_cards_id ON credit_cards.credit_cards (id);
+CREATE INDEX idx_credit_cards_id ON users.credit_cards (id);

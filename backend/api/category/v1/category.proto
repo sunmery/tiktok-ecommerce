@@ -85,8 +85,8 @@ message Categorys {
 
 // 基础数据结构：分类（Category）
 message Category {
-  string id = 1; // 分类的唯一标识符。
-  string parent_id = 2; // 父分类的 ID，根节点的 parent_id 为 0。
+  uint64 id = 1; // 分类的唯一标识符。
+  uint64 parent_id = 2; // 父分类的 ID，根节点的 parent_id 为 0。
   int32 level = 3; // 分类的层级（例如：1 表示一级分类，2 表示二级分类）。
   string path = 4; // 分类路径（ltree 序列化为字符串，用于快速查询层级关系）。
   string name = 5; // 分类名称。
@@ -107,44 +107,44 @@ message ClosureRelation {
 
 // 创建分类请求
 message CreateCategoryRequest {
-  string parent_id = 1; // 父分类的 ID，根节点的 parent_id 为 0。
+  uint64 parent_id = 1; // 父分类的 ID，根节点的 parent_id 为 0。
   string name = 2; // 分类名称。
   int32 sort_order = 3; // 排序值。
 }
 
 // 获取单个分类请求
 message GetCategoryRequest {
-  string id = 1; // 分类的唯一标识符。
+  uint64 id = 1; // 分类的唯一标识符。
 }
 
 // 更新分类请求
 message UpdateCategoryRequest {
-  string id = 1; // 分类的唯一标识符。
+  uint64 id = 1; // 分类的唯一标识符。
   string name = 2; // 新的分类名称。
 }
 
 // 删除分类请求
 message DeleteCategoryRequest {
-  string id = 1; // 分类的唯一标识符。
+  uint64 id = 1; // 分类的唯一标识符。
 }
 
 // 获取子树请求
 message GetSubTreeRequest {
-  string root_id = 1; // 根节点的 ID，用于获取其子树。
+  uint64 root_id = 1; // 根节点的 ID，用于获取其子树。
 }
 
 // 获取分类路径请求
 message GetCategoryPathRequest {
-  string category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
+  uint64 category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
 }
 
 // 获取闭包关系请求
 message GetClosureRequest {
-  string category_id = 1; // 分类的唯一标识符，用于获取其闭包关系。
+  uint64 category_id = 1; // 分类的唯一标识符，用于获取其闭包关系。
 }
 
 // 更新闭包关系深度请求
 message UpdateClosureDepthRequest {
-  string category_id = 1; // 分类的唯一标识符。
+  uint64 category_id = 1; // 分类的唯一标识符。
   int32 delta = 2; // 深度变化值（正数表示增加深度，负数表示减少深度）。
 }

@@ -6,31 +6,31 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	//CreatAddress
 	//
-	//  INSERT INTO users.addresses(owner, name, street_address, city, state, country, zip_code)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
+	//  INSERT INTO users.addresses(user_id, street_address, city, state, country, zip_code)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  RETURNING id, user_id, street_address, city, state, country, zip_code
 	CreatAddress(ctx context.Context, arg CreatAddressParams) (UsersAddresses, error)
 	//DeleteAddress
 	//
 	//  DELETE
 	//  FROM users.addresses
 	//  WHERE id = $1
-	//    AND owner = $2
-	//    AND name = $3
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
+	//    AND user_id = $2
+	//  RETURNING id, user_id, street_address, city, state, country, zip_code
 	DeleteAddress(ctx context.Context, arg DeleteAddressParams) (UsersAddresses, error)
 	//GetAddresses
 	//
-	//  SELECT id, owner, name, street_address, city, state, country, zip_code
+	//  SELECT id, user_id, street_address, city, state, country, zip_code
 	//  FROM users.addresses
-	//  WHERE owner = $1
-	//    AND name = $2
-	GetAddresses(ctx context.Context, arg GetAddressesParams) ([]UsersAddresses, error)
+	//  WHERE user_id = $1
+	GetAddresses(ctx context.Context, userID uuid.UUID) ([]UsersAddresses, error)
 	//UpdateAddress
 	//
 	//  UPDATE users.addresses
@@ -40,9 +40,9 @@ type Querier interface {
 	//      country        = coalesce($4, country),
 	//      zip_code       = coalesce($5, zip_code)
 	//  WHERE id = $6
-	//    AND owner = $7
-	//    AND name = $8
-	//  RETURNING id, owner, name, street_address, city, state, country, zip_code
+	//    AND user_id = $7
+	//
+	//  RETURNING id, user_id, street_address, city, state, country, zip_code
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (UsersAddresses, error)
 }
 

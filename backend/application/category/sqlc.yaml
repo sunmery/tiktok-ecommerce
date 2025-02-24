@@ -39,6 +39,12 @@ sql:
         # rename:# 自定义生成的结构字段的名称。有关使用信息，请参阅重命名字段。
         # overrides: #它是定义的集合，用于指示使用哪些类型来映射数据库类型
         overrides:
+          - db_type: "pg_catalog.int8"
+            go_type: "uint64"
+
+          - db_type: "pg_catalog.int4"
+            go_type: "uint32"
+
           - db_type: "uuid"
             go_type: "github.com/google/uuid.UUID"
 
@@ -47,10 +53,7 @@ sql:
             go_type: "time.Time"
 
           - db_type: "public.ltree"
-            go_type:
-              import: "github.com/jackc/pgtype"
-              package: "pgtype"
-              type: "Text"
+            go_type: "string"
 
           - db_type: "OPERATOR(public.<@)"
             go_type: "bool"

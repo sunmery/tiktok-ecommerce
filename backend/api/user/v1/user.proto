@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
 import "validate/validate.proto";
+import "google/protobuf/empty.proto";
 
 service UserService {
   rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
@@ -34,12 +35,12 @@ service UserService {
       delete: "/v1/users/address"
     };
   };
-  rpc GetAddresses (GetAddressesRequest) returns (GetAddressesReply) {
+  rpc GetAddresses (google.protobuf.Empty) returns (GetAddressesReply) {
     option (google.api.http) = {
       get: "/v1/users/address"
     };
   };
-  rpc ListCreditCards (ListCreditCardsRequest) returns (ListCreditCardsReply){
+  rpc ListCreditCards (google.protobuf.Empty) returns (ListCreditCardsReply){
     option (google.api.http) = {
       get: "/v1/users/credit_cards/all"
     };
@@ -93,8 +94,7 @@ message DeleteCreditCardsRequest {
 }
 
 message GetCreditCardsRequest {
-  string owner = 1;
-  string name = 2;
+  string user_id = 1;
   string number = 3 [json_name = "number"];
 }
 message GetCreditCardsReply {
@@ -102,11 +102,6 @@ message GetCreditCardsReply {
 }
 message SearchCreditCardsReply {
   repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
-}
-
-message ListCreditCardsRequest {
-  string owner = 1;
-  string name = 2;
 }
 
 message ListCreditCardsReply {
@@ -140,13 +135,7 @@ message DeleteAddressesRequest {
     (google.api.field_behavior) = REQUIRED,
     json_name = "addresses_id"
   ];
-  string name = 2 [(google.api.field_behavior) = REQUIRED];
-  string owner = 3 [(google.api.field_behavior) = REQUIRED];
-}
-
-message GetAddressesRequest {
-  string name = 1 [(google.api.field_behavior) = REQUIRED];
-  string owner = 2 [(google.api.field_behavior) = REQUIRED];
+  string user_id = 2;
 }
 
 message AddressReply {

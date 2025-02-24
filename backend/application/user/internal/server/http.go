@@ -1,14 +1,17 @@
 package server
 
 import (
+	"context"
+	"fmt"
+
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
 	"backend/constants"
-	"context"
-	"fmt"
+
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
@@ -56,8 +59,9 @@ func NewHTTPServer(
 		log.Fatal(err)
 	}
 	// trace end
-	var opts = []http.ServerOption{
+	opts := []http.ServerOption{
 		http.Middleware(
+			metadata.Server(),
 			validate.Validator(), // 参数校验
 			tracing.Server(),
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed

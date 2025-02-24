@@ -7,9 +7,6 @@ package models
 
 import (
 	"context"
-
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateCategory = `-- name: CreateCategory :one
@@ -26,70 +23,62 @@ const CreateCategory = `-- name: CreateCategory :one
 */
 
 WITH root_check AS (
-  INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-  VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
-  ON CONFLICT (id) DO NOTHING
-),
-parent_info AS (
-  SELECT
-    COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
-    COALESCE(c.path, 'root'::public.ltree) AS parent_path,
-    COALESCE(c.level, 0) AS parent_level
-  FROM (SELECT $1::UUID AS pid) AS input
-  LEFT JOIN categories.categories c ON c.id = input.pid
-),
-level_validation AS (
-  SELECT
-    effective_parent_id,
-    parent_path,
-    CASE
-      WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
-      ELSE parent_level + 1
-    END AS new_level
-  FROM parent_info
-),
-insert_main AS (
-  INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
-    lv.effective_parent_id,
-    lv.new_level,
-    CASE
-      WHEN lv.parent_path OPERATOR(public.=) 'root'::public.ltree
-      THEN lv.parent_path || ('node_' || gen_random_uuid())::public.ltree
-      ELSE lv.parent_path || (REPLACE(gen_random_uuid()::text, '-', '_'))::public.ltree
-    END,
-    $2,   -- Name 参数
-    $3,   -- SortOrder 参数
-    CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
-  FROM level_validation lv
-  WHERE lv.new_level IS NOT NULL
-  RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
-),
-update_parent_leaf AS (
-  UPDATE categories.categories
-  SET is_leaf = FALSE
-  WHERE id = (SELECT effective_parent_id FROM parent_info)
-  AND is_leaf = TRUE
-)
-INSERT INTO categories.category_closure (ancestor, descendant, depth)
-SELECT
-  cc.ancestor,
-  im.id,
-  cc.depth + 1
+    INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
+        VALUES ($1, NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+        ON CONFLICT (id) DO NOTHING),
+     parent_info AS (SELECT COALESCE(c.id, 0)                      AS effective_parent_id,
+                            COALESCE(c.path, 'root'::public.ltree) AS parent_path,
+                            COALESCE(c.level, 0)                   AS parent_level
+                     FROM (SELECT $4::BIGINT AS pid) AS input
+                              LEFT JOIN categories.categories c ON c.id = input.pid),
+     level_validation AS (SELECT effective_parent_id,
+                                 parent_path,
+                                 CASE
+                                     WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
+                                     ELSE parent_level + 1
+                                     END AS new_level
+                          FROM parent_info),
+     insert_main AS (
+         INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT lv.effective_parent_id,
+                                                                                                      lv.new_level,
+                                                                                                      CASE
+                                                                                                          WHEN lv.parent_path OPERATOR (public.=) 'root'::public.ltree
+                                                                                                              THEN lv.parent_path || ('node_' || gen_random_uuid())::public.ltree
+                                                                                                          ELSE
+                                                                                                              lv.parent_path ||
+                                                                                                              (REPLACE($1::text, '-', '_'))::public.ltree
+                                                                                                          END,
+                                                                                                      $2,                                                 -- Name 参数
+                                                                                                      $3,                                                 -- SortOrder 参数
+                                                                                                      CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
+                                                                                               FROM level_validation lv
+                                                                                               WHERE lv.new_level IS NOT NULL
+             RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at),
+     update_parent_leaf AS (
+         UPDATE categories.categories
+             SET is_leaf = FALSE
+             WHERE id = (SELECT effective_parent_id FROM parent_info)
+                 AND is_leaf = TRUE)
+INSERT
+INTO categories.category_closure (ancestor, descendant, depth)
+SELECT cc.ancestor,
+       im.id,
+       cc.depth + 1
 FROM insert_main im
-JOIN categories.category_closure cc ON cc.descendant = im.parent_id
+         JOIN categories.category_closure cc ON cc.descendant = im.parent_id
 UNION ALL
-SELECT
-  im.id,
-  im.id,
-  0
+SELECT im.id,
+       im.id,
+       0
 FROM insert_main im
 RETURNING descendant
 `
 
 type CreateCategoryParams struct {
-	ParentID  uuid.UUID `json:"parent_id"`
-	Name      string    `json:"name"`
-	SortOrder int16     `json:"sort_order"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	SortOrder int16  `json:"sort_order"`
+	ParentID  uint64 `json:"parent_id"`
 }
 
 // CreateCategory
@@ -107,67 +96,63 @@ type CreateCategoryParams struct {
 //	*/
 //
 //	WITH root_check AS (
-//	  INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-//	  VALUES ('00000000-0000-0000-0000-000000000000', NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
-//	  ON CONFLICT (id) DO NOTHING
-//	),
-//	parent_info AS (
-//	  SELECT
-//	    COALESCE(c.id, '00000000-0000-0000-0000-000000000000') AS effective_parent_id,
-//	    COALESCE(c.path, 'root'::public.ltree) AS parent_path,
-//	    COALESCE(c.level, 0) AS parent_level
-//	  FROM (SELECT $1::UUID AS pid) AS input
-//	  LEFT JOIN categories.categories c ON c.id = input.pid
-//	),
-//	level_validation AS (
-//	  SELECT
-//	    effective_parent_id,
-//	    parent_path,
-//	    CASE
-//	      WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
-//	      ELSE parent_level + 1
-//	    END AS new_level
-//	  FROM parent_info
-//	),
-//	insert_main AS (
-//	  INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT
-//	    lv.effective_parent_id,
-//	    lv.new_level,
-//	    CASE
-//	      WHEN lv.parent_path OPERATOR(public.=) 'root'::public.ltree
-//	      THEN lv.parent_path || ('node_' || gen_random_uuid())::public.ltree
-//	      ELSE lv.parent_path || (REPLACE(gen_random_uuid()::text, '-', '_'))::public.ltree
-//	    END,
-//	    $2,   -- Name 参数
-//	    $3,   -- SortOrder 参数
-//	    CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
-//	  FROM level_validation lv
-//	  WHERE lv.new_level IS NOT NULL
-//	  RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
-//	),
-//	update_parent_leaf AS (
-//	  UPDATE categories.categories
-//	  SET is_leaf = FALSE
-//	  WHERE id = (SELECT effective_parent_id FROM parent_info)
-//	  AND is_leaf = TRUE
-//	)
-//	INSERT INTO categories.category_closure (ancestor, descendant, depth)
-//	SELECT
-//	  cc.ancestor,
-//	  im.id,
-//	  cc.depth + 1
+//	    INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
+//	        VALUES ($1, NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
+//	        ON CONFLICT (id) DO NOTHING),
+//	     parent_info AS (SELECT COALESCE(c.id, 0)                      AS effective_parent_id,
+//	                            COALESCE(c.path, 'root'::public.ltree) AS parent_path,
+//	                            COALESCE(c.level, 0)                   AS parent_level
+//	                     FROM (SELECT $4::BIGINT AS pid) AS input
+//	                              LEFT JOIN categories.categories c ON c.id = input.pid),
+//	     level_validation AS (SELECT effective_parent_id,
+//	                                 parent_path,
+//	                                 CASE
+//	                                     WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
+//	                                     ELSE parent_level + 1
+//	                                     END AS new_level
+//	                          FROM parent_info),
+//	     insert_main AS (
+//	         INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT lv.effective_parent_id,
+//	                                                                                                      lv.new_level,
+//	                                                                                                      CASE
+//	                                                                                                          WHEN lv.parent_path OPERATOR (public.=) 'root'::public.ltree
+//	                                                                                                              THEN lv.parent_path || ('node_' || gen_random_uuid())::public.ltree
+//	                                                                                                          ELSE
+//	                                                                                                              lv.parent_path ||
+//	                                                                                                              (REPLACE($1::text, '-', '_'))::public.ltree
+//	                                                                                                          END,
+//	                                                                                                      $2,                                                 -- Name 参数
+//	                                                                                                      $3,                                                 -- SortOrder 参数
+//	                                                                                                      CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
+//	                                                                                               FROM level_validation lv
+//	                                                                                               WHERE lv.new_level IS NOT NULL
+//	             RETURNING id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at),
+//	     update_parent_leaf AS (
+//	         UPDATE categories.categories
+//	             SET is_leaf = FALSE
+//	             WHERE id = (SELECT effective_parent_id FROM parent_info)
+//	                 AND is_leaf = TRUE)
+//	INSERT
+//	INTO categories.category_closure (ancestor, descendant, depth)
+//	SELECT cc.ancestor,
+//	       im.id,
+//	       cc.depth + 1
 //	FROM insert_main im
-//	JOIN categories.category_closure cc ON cc.descendant = im.parent_id
+//	         JOIN categories.category_closure cc ON cc.descendant = im.parent_id
 //	UNION ALL
-//	SELECT
-//	  im.id,
-//	  im.id,
-//	  0
+//	SELECT im.id,
+//	       im.id,
+//	       0
 //	FROM insert_main im
 //	RETURNING descendant
-func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, CreateCategory, arg.ParentID, arg.Name, arg.SortOrder)
-	var descendant uuid.UUID
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (uint64, error) {
+	row := q.db.QueryRow(ctx, CreateCategory,
+		arg.ID,
+		arg.Name,
+		arg.SortOrder,
+		arg.ParentID,
+	)
+	var descendant uint64
 	err := row.Scan(&descendant)
 	return descendant, err
 }
@@ -176,14 +161,12 @@ const DeleteCategory = `-- name: DeleteCategory :exec
 WITH deleted AS (
     DELETE FROM categories.categories
         WHERE id = $1
-        RETURNING path
-)
-DELETE FROM categories.category_closure
-WHERE descendant IN (
-    SELECT descendant
-    FROM categories.category_closure
-    WHERE ancestor = $1
-)
+        RETURNING path)
+DELETE
+FROM categories.category_closure
+WHERE descendant IN (SELECT descendant
+                     FROM categories.category_closure
+                     WHERE ancestor = $1)
 `
 
 // DeleteCategory
@@ -191,53 +174,53 @@ WHERE descendant IN (
 //	WITH deleted AS (
 //	    DELETE FROM categories.categories
 //	        WHERE id = $1
-//	        RETURNING path
-//	)
-//	DELETE FROM categories.category_closure
-//	WHERE descendant IN (
-//	    SELECT descendant
-//	    FROM categories.category_closure
-//	    WHERE ancestor = $1
-//	)
-func (q *Queries) DeleteCategory(ctx context.Context, id pgtype.UUID) error {
+//	        RETURNING path)
+//	DELETE
+//	FROM categories.category_closure
+//	WHERE descendant IN (SELECT descendant
+//	                     FROM categories.category_closure
+//	                     WHERE ancestor = $1)
+func (q *Queries) DeleteCategory(ctx context.Context, id *int64) error {
 	_, err := q.db.Exec(ctx, DeleteCategory, id)
 	return err
 }
 
 const DeleteClosureRelations = `-- name: DeleteClosureRelations :exec
 
-DELETE FROM categories.category_closure
-WHERE descendant IN (
-    SELECT descendant
-    FROM categories.category_closure
-    WHERE ancestor = $1
-)
+DELETE
+FROM categories.category_closure
+WHERE descendant IN (SELECT descendant
+                     FROM categories.category_closure
+                     WHERE ancestor = $1)
 `
 
 // 确保深度不超过 3
 // 删除指定分类及其所有后代节点的闭包关系
 //
-//	DELETE FROM categories.category_closure
-//	WHERE descendant IN (
-//	    SELECT descendant
-//	    FROM categories.category_closure
-//	    WHERE ancestor = $1
-//	)
-func (q *Queries) DeleteClosureRelations(ctx context.Context, categoryID pgtype.UUID) error {
+//	DELETE
+//	FROM categories.category_closure
+//	WHERE descendant IN (SELECT descendant
+//	                     FROM categories.category_closure
+//	                     WHERE ancestor = $1)
+func (q *Queries) DeleteClosureRelations(ctx context.Context, categoryID *int64) error {
 	_, err := q.db.Exec(ctx, DeleteClosureRelations, categoryID)
 	return err
 }
 
 const GetCategoryByID = `-- name: GetCategoryByID :one
-SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-WHERE id = $1 LIMIT 1
+SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
+FROM categories.categories
+WHERE id = $1
+LIMIT 1
 `
 
 // GetCategoryByID
 //
-//	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-//	WHERE id = $1 LIMIT 1
-func (q *Queries) GetCategoryByID(ctx context.Context, id uuid.UUID) (CategoriesCategories, error) {
+//	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
+//	FROM categories.categories
+//	WHERE id = $1
+//	LIMIT 1
+func (q *Queries) GetCategoryByID(ctx context.Context, id int64) (CategoriesCategories, error) {
 	row := q.db.QueryRow(ctx, GetCategoryByID, id)
 	var i CategoriesCategories
 	err := row.Scan(
@@ -269,7 +252,7 @@ ORDER BY cc.depth DESC
 //	         JOIN categories.categories ancestor ON cc.ancestor = ancestor.id
 //	WHERE cc.descendant = $1
 //	ORDER BY cc.depth DESC
-func (q *Queries) GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategories, error) {
+func (q *Queries) GetCategoryPath(ctx context.Context, categoryID int64) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetCategoryPath, categoryID)
 	if err != nil {
 		return nil, err
@@ -300,15 +283,17 @@ func (q *Queries) GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]
 }
 
 const GetClosureRelations = `-- name: GetClosureRelations :many
-SELECT ancestor, descendant, depth FROM categories.category_closure
+SELECT ancestor, descendant, depth
+FROM categories.category_closure
 WHERE descendant = $1
 `
 
 // GetClosureRelations
 //
-//	SELECT ancestor, descendant, depth FROM categories.category_closure
+//	SELECT ancestor, descendant, depth
+//	FROM categories.category_closure
 //	WHERE descendant = $1
-func (q *Queries) GetClosureRelations(ctx context.Context, categoryID uuid.UUID) ([]CategoriesCategoryClosure, error) {
+func (q *Queries) GetClosureRelations(ctx context.Context, categoryID int64) ([]CategoriesCategoryClosure, error) {
 	rows, err := q.db.Query(ctx, GetClosureRelations, categoryID)
 	if err != nil {
 		return nil, err
@@ -329,14 +314,18 @@ func (q *Queries) GetClosureRelations(ctx context.Context, categoryID uuid.UUID)
 }
 
 const GetLeafCategories = `-- name: GetLeafCategories :many
-SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-WHERE is_leaf = TRUE AND level = 4
+SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
+FROM categories.categories
+WHERE is_leaf = TRUE
+  AND level = 4
 `
 
 // GetLeafCategories
 //
-//	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at FROM categories.categories
-//	WHERE is_leaf = TRUE AND level = 4
+//	SELECT id, parent_id, level, path, name, sort_order, is_leaf, created_at, updated_at
+//	FROM categories.categories
+//	WHERE is_leaf = TRUE
+//	  AND level = 4
 func (q *Queries) GetLeafCategories(ctx context.Context) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetLeafCategories)
 	if err != nil {
@@ -394,7 +383,7 @@ ORDER BY c.path
 //	FROM categories.categories c
 //	WHERE c.path <@ (SELECT path FROM categories.categories WHERE id = $1)
 //	ORDER BY c.path
-func (q *Queries) GetSubTree(ctx context.Context, rootID pgtype.UUID) ([]CategoriesCategories, error) {
+func (q *Queries) GetSubTree(ctx context.Context, rootID *int64) ([]CategoriesCategories, error) {
 	rows, err := q.db.Query(ctx, GetSubTree, rootID)
 	if err != nil {
 		return nil, err
@@ -426,19 +415,21 @@ func (q *Queries) GetSubTree(ctx context.Context, rootID pgtype.UUID) ([]Categor
 
 const UpdateCategoryName = `-- name: UpdateCategoryName :exec
 UPDATE categories.categories
-SET name = $1, updated_at = NOW()
+SET name       = $1,
+    updated_at = NOW()
 WHERE id = $2
 `
 
 type UpdateCategoryNameParams struct {
-	Name string    `json:"name"`
-	ID   uuid.UUID `json:"id"`
+	Name string `json:"name"`
+	ID   int64  `json:"id"`
 }
 
 // UpdateCategoryName
 //
 //	UPDATE categories.categories
-//	SET name = $1, updated_at = NOW()
+//	SET name       = $1,
+//	    updated_at = NOW()
 //	WHERE id = $2
 func (q *Queries) UpdateCategoryName(ctx context.Context, arg UpdateCategoryNameParams) error {
 	_, err := q.db.Exec(ctx, UpdateCategoryName, arg.Name, arg.ID)
@@ -448,29 +439,25 @@ func (q *Queries) UpdateCategoryName(ctx context.Context, arg UpdateCategoryName
 const UpdateClosureDepth = `-- name: UpdateClosureDepth :exec
 UPDATE categories.category_closure
 SET depth = depth + $1
-WHERE descendant IN (
-    SELECT descendant
-    FROM categories.category_closure
-    WHERE ancestor = $2
-)
-AND depth + $1 <= 3
+WHERE descendant IN (SELECT descendant
+                     FROM categories.category_closure
+                     WHERE ancestor = $2)
+  AND depth + $1 <= 3
 `
 
 type UpdateClosureDepthParams struct {
-	Delta      *int16      `json:"delta"`
-	CategoryID pgtype.UUID `json:"category_id"`
+	Delta      *int16 `json:"delta"`
+	CategoryID *int64 `json:"category_id"`
 }
 
 // UpdateClosureDepth
 //
 //	UPDATE categories.category_closure
 //	SET depth = depth + $1
-//	WHERE descendant IN (
-//	    SELECT descendant
-//	    FROM categories.category_closure
-//	    WHERE ancestor = $2
-//	)
-//	AND depth + $1 <= 3
+//	WHERE descendant IN (SELECT descendant
+//	                     FROM categories.category_closure
+//	                     WHERE ancestor = $2)
+//	  AND depth + $1 <= 3
 func (q *Queries) UpdateClosureDepth(ctx context.Context, arg UpdateClosureDepthParams) error {
 	_, err := q.db.Exec(ctx, UpdateClosureDepth, arg.Delta, arg.CategoryID)
 	return err
@@ -478,13 +465,10 @@ func (q *Queries) UpdateClosureDepth(ctx context.Context, arg UpdateClosureDepth
 
 const UpdateParentLeafStatus = `-- name: UpdateParentLeafStatus :exec
 UPDATE categories.categories
-SET
-    is_leaf = NOT EXISTS (
-        SELECT 1
-        FROM categories
-        WHERE parent_id = $1
-        LIMIT 1
-    ),
+SET is_leaf    = NOT EXISTS (SELECT 1
+                             FROM categories
+                             WHERE parent_id = $1
+                             LIMIT 1),
     updated_at = NOW()
 WHERE id = $1
 `
@@ -492,16 +476,13 @@ WHERE id = $1
 // 更新父分类的叶子节点状态
 //
 //	UPDATE categories.categories
-//	SET
-//	    is_leaf = NOT EXISTS (
-//	        SELECT 1
-//	        FROM categories
-//	        WHERE parent_id = $1
-//	        LIMIT 1
-//	    ),
+//	SET is_leaf    = NOT EXISTS (SELECT 1
+//	                             FROM categories
+//	                             WHERE parent_id = $1
+//	                             LIMIT 1),
 //	    updated_at = NOW()
 //	WHERE id = $1
-func (q *Queries) UpdateParentLeafStatus(ctx context.Context, parentID pgtype.UUID) error {
+func (q *Queries) UpdateParentLeafStatus(ctx context.Context, parentID *int64) error {
 	_, err := q.db.Exec(ctx, UpdateParentLeafStatus, parentID)
 	return err
 }

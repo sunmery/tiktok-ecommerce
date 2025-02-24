@@ -9,6 +9,7 @@
 - checkout: 30011, 300012
 - payment: 30013, 30014
 - category: 30015, 30016
+- assistant: 30017, 30018
 
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 

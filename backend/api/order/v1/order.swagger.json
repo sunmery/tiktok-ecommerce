@@ -324,6 +324,9 @@
       "properties": {
         "order": {
           "$ref": "#/definitions/v1OrderResult"
+        },
+        "url": {
+          "type": "string"
         }
       }
     }

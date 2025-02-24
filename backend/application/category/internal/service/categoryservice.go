@@ -4,13 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-
-	"github.com/google/uuid"
 
 	"backend/application/category/internal/biz"
 
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -41,7 +37,7 @@ func (s *CategoryServiceService) CreateCategory(ctx context.Context, req *pb.Cre
 
 	// 调用业务逻辑层
 	category, err := s.uc.CreateCategory(ctx, &biz.CreateCategoryReq{
-		ParentID:  toUUID(req.ParentId),
+		ParentID:  req.ParentId,
 		Name:      req.Name,
 		SortOrder: int(req.SortOrder),
 	})
@@ -51,7 +47,7 @@ func (s *CategoryServiceService) CreateCategory(ctx context.Context, req *pb.Cre
 
 	// 转换响应格式
 	return &pb.Category{
-		Id:        category.ID.String(),
+		Id:        category.ID,
 		CreatedAt: timestamppb.New(category.CreatedAt),
 		UpdatedAt: timestamppb.New(category.UpdatedAt),
 	}, nil
@@ -61,12 +57,12 @@ func (s *CategoryServiceService) CreateCategory(ctx context.Context, req *pb.Cre
 // 接口文档：GET /v1/category/{id}
 func (s *CategoryServiceService) GetCategory(ctx context.Context, req *pb.GetCategoryRequest) (*pb.Category, error) {
 	// 参数校验
-	if req.Id == "" {
+	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "分类ID不能为空")
 	}
 
 	// 调用业务逻辑层
-	category, err := s.uc.GetCategory(ctx, toUUID(req.Id))
+	category, err := s.uc.GetCategory(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, biz.ErrCategoryNotFound) {
 			return nil, status.Error(codes.NotFound, "分类不存在")
@@ -76,8 +72,8 @@ func (s *CategoryServiceService) GetCategory(ctx context.Context, req *pb.GetCat
 
 	// 转换响应格式
 	return &pb.Category{
-		Id:        category.ID.String(),
-		ParentId:  category.ParentID.String(),
+		Id:        category.ID,
+		ParentId:  category.ParentID,
 		Level:     int32(category.Level),
 		Path:      category.Path,
 		Name:      category.Name,
@@ -92,16 +88,16 @@ func (s *CategoryServiceService) GetCategory(ctx context.Context, req *pb.GetCat
 // 接口文档：PUT /v1/category/{id}
 func (s *CategoryServiceService) UpdateCategory(ctx context.Context, req *pb.UpdateCategoryRequest) (*emptypb.Empty, error) {
 	// 参数校验
-	if req.Id == uuid.Nil.String() {
+	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "分类ID不能为空")
 	}
-	if req.Name == uuid.Nil.String() {
+	if req.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "分类名称不能为空")
 	}
 
 	// 构造业务对象
 	category := &biz.Category{
-		ID:   toUUID(req.Id),
+		ID:   req.Id,
 		Name: req.Name,
 	}
 
@@ -123,12 +119,12 @@ func (s *CategoryServiceService) UpdateCategory(ctx context.Context, req *pb.Upd
 // 接口文档：DELETE /v1/category/{id}
 func (s *CategoryServiceService) DeleteCategory(ctx context.Context, req *pb.DeleteCategoryRequest) (*emptypb.Empty, error) {
 	// 参数校验
-	if req.Id == uuid.Nil.String() {
+	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "分类ID不能为空")
 	}
 
 	// 调用业务逻辑层
-	if err := s.uc.DeleteCategory(ctx, toUUID(req.Id)); err != nil {
+	if err := s.uc.DeleteCategory(ctx, req.Id); err != nil {
 		if errors.Is(err, biz.ErrCategoryNotFound) {
 			return nil, status.Error(codes.NotFound, "分类不存在")
 		}
@@ -143,67 +139,48 @@ func (s *CategoryServiceService) DeleteCategory(ctx context.Context, req *pb.Del
 
 // GetSubTree 获取子树
 // 接口文档：GET /v1/category/{root_id}/subtree
-func (s *CategoryServiceService) GetSubTree(req *pb.GetSubTreeRequest, stream pb.CategoryService_GetSubTreeServer) error {
+func (s *CategoryServiceService) GetSubTree(ctx context.Context, req *pb.GetSubTreeRequest) (*pb.Category, error) {
 	// 参数校验
-	if req.RootId == uuid.Nil.String() {
-		return status.Error(codes.InvalidArgument, "根分类ID不能为空")
+	if req.RootId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "根分类ID不能为空")
 	}
 
 	// 获取子树数据
-	categories, err := s.uc.GetSubTree(stream.Context(), toUUID(req.RootId))
+	categories, err := s.uc.GetSubTree(ctx, req.RootId)
 	if err != nil {
 		if errors.Is(err, biz.ErrCategoryNotFound) {
-			return status.Error(codes.NotFound, "根分类不存在")
+			return nil, status.Error(codes.NotFound, "根分类不存在")
 		}
-		return status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// 流式返回结果
-	for _, category := range categories {
-		if err := stream.Send(&pb.Category{
-			Id:        category.ID.String(),
-			ParentId:  category.ParentID.String(),
-			Level:     int32(category.Level),
-			Path:      category.Path,
-			Name:      category.Name,
-			SortOrder: int32(category.SortOrder),
-			IsLeaf:    category.IsLeaf,
-			CreatedAt: timestamppb.New(category.CreatedAt),
-			UpdatedAt: timestamppb.New(category.UpdatedAt),
-		}); err != nil {
-			// 处理客户端断开连接的情况
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return status.Error(codes.Internal, "流式传输中断")
-		}
-	}
-	return nil
+	fmt.Printf("GetSubTree res: %+v", categories)
+	return nil, nil
 }
 
 // GetCategoryPath 获取分类路径
 // 接口文档：GET /v1/category/{category_id}/path
 func (s *CategoryServiceService) GetCategoryPath(ctx context.Context, req *pb.GetCategoryPathRequest) (*pb.Category, error) {
 	// 参数校验
-	if req.CategoryId == uuid.Nil.String() {
+	if req.CategoryId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "分类ID不能为空")
 	}
 
 	// 获取路径数据
-	pathCategories, err := s.uc.GetCategoryPath(ctx, toUUID(req.CategoryId))
-	if err != nil {
-		if errors.Is(err, biz.ErrCategoryNotFound) {
-			return nil, status.Error(codes.NotFound, "分类不存在")
-		}
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	// pathCategories, err := s.uc.GetCategoryPath(ctx, toUUID(req.CategoryId))
+	// if err != nil {
+	// 	if errors.Is(err, biz.ErrCategoryNotFound) {
+	// 		return nil, status.Error(codes.NotFound, "分类不存在")
+	// 	}
+	// 	return nil, status.Error(codes.Internal, err.Error())
+	// }
 
 	// 流式返回路径节点（从根到当前）
 	// var paths []*pb.Category
 	// for _, category := range pathCategories {
 	// 	paths = append(&pb.Category{
-	// 		Id:        category.ID.String(),
-	// 		ParentId:  category.ParentID.String(),
+	// 		Id:        category.ID,
+	// 		ParentId:  category.ParentID,
 	// 		Level:     int32(category.Level),
 	// 		Path:      category.Path,
 	// 		Name:      category.Name,
@@ -213,17 +190,18 @@ func (s *CategoryServiceService) GetCategoryPath(ctx context.Context, req *pb.Ge
 	// 		UpdatedAt: timestamppb.New(category.UpdatedAt),
 	// 	}
 	// }
-	return &pb.Category{
-		Id:        category.ID.String(),
-		ParentId:  category.ParentID.String(),
-		Level:     int32(category.Level),
-		Path:      category.Path,
-		Name:      category.Name,
-		SortOrder: int32(category.SortOrder),
-		IsLeaf:    category.IsLeaf,
-		CreatedAt: timestamppb.New(category.CreatedAt),
-		UpdatedAt: timestamppb.New(category.UpdatedAt),
-	}, nil
+	// return &pb.Category{
+	// 	Id:        category.ID,
+	// 	ParentId:  category.ParentID,
+	// 	Level:     int32(category.Level),
+	// 	Path:      category.Path,
+	// 	Name:      category.Name,
+	// 	SortOrder: int32(category.SortOrder),
+	// 	IsLeaf:    category.IsLeaf,
+	// 	CreatedAt: timestamppb.New(category.CreatedAt),
+	// 	UpdatedAt: timestamppb.New(category.UpdatedAt),
+	// }, nil
+	return nil, nil
 }
 
 // GetLeafCategories 获取所有叶子分类
@@ -240,8 +218,8 @@ func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *empty
 	// 流式返回结果
 	for _, category := range leafCategories {
 		categories = append(categories, &pb.Category{
-			Id:        category.ID.String(),
-			ParentId:  category.ParentID.String(),
+			Id:        category.ID,
+			ParentId:  category.ParentID,
 			Level:     int32(category.Level),
 			Path:      category.Path,
 			Name:      category.Name,
@@ -261,18 +239,18 @@ func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *empty
 // 接口文档：GET /v1/category/{category_id}/closure
 func (s *CategoryServiceService) GetClosureRelations(ctx context.Context, req *pb.GetClosureRequest) (*pb.ClosureRelation, error) {
 	// 参数校验
-	if req.CategoryId == uuid.Nil.String() {
+	if req.CategoryId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "分类ID不能为空")
 	}
 
 	// 获取闭包关系
-	relations, err := s.uc.GetClosureRelations(ctx, toUUID(req.CategoryId))
-	if err != nil {
-		if errors.Is(err, biz.ErrCategoryNotFound) {
-			return nil, status.Error(codes.NotFound, "分类不存在")
-		}
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	// relations, err := s.uc.GetClosureRelations(ctx, toUUID(req.CategoryId))
+	// if err != nil {
+	// 	if errors.Is(err, biz.ErrCategoryNotFound) {
+	// 		return nil, status.Error(codes.NotFound, "分类不存在")
+	// 	}
+	// 	return nil, status.Error(codes.Internal, err.Error())
+	// }
 	// var relationsPb []*pb.ClosureRelation
 	// for _, relation := range relations {
 	// 	relationsPb = append(relationsPb, &pb.ClosureRelation{
@@ -281,11 +259,12 @@ func (s *CategoryServiceService) GetClosureRelations(ctx context.Context, req *p
 	// 		Depth:      relation.Depth,
 	// 	})
 	// }
-	return &pb.ClosureRelation{
-		Ancestor:   relations.Ancestor,
-		Descendant: relations.Descendant,
-		Depth:      relations.Depth,
-	}, nil
+	// return &pb.ClosureRelation{
+	// 	Ancestor:   relations.Ancestor,
+	// 	Descendant: relations.Descendant,
+	// 	Depth:      relations.Depth,
+	// }, nil
+	return nil, nil
 }
 
 // UpdateClosureDepth 更新闭包关系深度
@@ -300,7 +279,13 @@ func (s *CategoryServiceService) UpdateClosureDepth(ctx context.Context, req *pb
 	}
 
 	// 调用业务逻辑层
-	if err := s.uc.UpdateClosureDepth(ctx, toUUID(req.CategoryId), int32(int(req.Delta))); err != nil {
+	if err := s.uc.UpdateClosureDepth(
+		ctx,
+		&biz.UpdateClosureDepth{
+			Delta:      req.Delta,
+			CategoryID: req.CategoryId,
+		},
+	); err != nil {
 		if errors.Is(err, biz.ErrCategoryNotFound) {
 			return nil, status.Error(codes.NotFound, "分类不存在")
 		}
@@ -308,8 +293,4 @@ func (s *CategoryServiceService) UpdateClosureDepth(ctx context.Context, req *pb
 	}
 
 	return &emptypb.Empty{}, nil
-}
-
-func toUUID(v string) uuid.UUID {
-	return uuid.MustParse(v)
 }

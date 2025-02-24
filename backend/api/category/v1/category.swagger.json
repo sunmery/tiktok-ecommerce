@@ -96,7 +96,8 @@
             "description": "分类的唯一标识符，用于获取其闭包关系。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -127,7 +128,8 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "body",
@@ -167,7 +169,8 @@
             "description": "分类的唯一标识符，用于获取其完整路径。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -199,7 +202,8 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -230,7 +234,8 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -261,7 +266,8 @@
             "description": "分类的唯一标识符。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "body",
@@ -301,7 +307,8 @@
             "description": "根节点的 ID，用于获取其子树。",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -365,10 +372,12 @@
       "properties": {
         "id": {
           "type": "string",
+          "format": "uint64",
           "title": "分类的唯一标识符。"
         },
         "parentId": {
           "type": "string",
+          "format": "uint64",
           "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "level": {
@@ -444,6 +453,7 @@
       "properties": {
         "parentId": {
           "type": "string",
+          "format": "uint64",
           "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "name": {

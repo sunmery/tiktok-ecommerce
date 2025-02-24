@@ -16,25 +16,16 @@ const (
 	PaymentFailed    PaymentStatus = "FAILED"    // 支付失败
 )
 
-type PaymentCallbackReq struct {
-	PaymentId       string
-	Status          string
-	GatewayResponse string
-	ProcessedAt     time.Time
-}
-
-type PaymentCallbackResp struct{}
-
-type CreatePaymentReq struct {
-	OrderId       uuid.UUID
-	Currency      string
-	Amount        string
-	PaymentMethod string
-	Method        string
-	Status        string
-	GatewayTxID   *string
-	Metadata      map[string]string
-}
+type (
+	PaymentCallbackReq struct {
+		PaymentId       string
+		Status          PaymentStatus
+		GatewayResponse string
+		ProcessedAt     time.Time
+		RequestForm     map[string][]string
+	}
+	PaymentCallbackResp struct{}
+)
 
 type Payment struct {
 	PaymentID   uuid.UUID
@@ -48,10 +39,18 @@ type Payment struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
-type UpdateStatusReq struct{}
 
 type (
-	UpdateStatusRes  struct{}
+	CreatePaymentReq struct {
+		OrderId       uuid.UUID
+		Currency      string
+		Amount        string
+		PaymentMethod string
+		Method        string
+		Status        PaymentStatus
+		GatewayTxID   *string
+		Metadata      map[string]string
+	}
 	CreatePaymentRes struct {
 		PaymentId  string
 		Status     string
@@ -66,9 +65,21 @@ type PaymentResp struct {
 	PaymentUrl string
 	CreatedAt  time.Time
 }
+
+type (
+	PaymentNotifyReq struct {
+		Values map[string][]string
+	}
+	PaymentNotifyResp struct {
+		Code int
+		Msg  string
+	}
+)
+
 type PaymentRepo interface {
 	CreatePayment(ctx context.Context, req *CreatePaymentReq) (*CreatePaymentRes, error)
 	GetPayment(ctx context.Context, id uuid.UUID) (*PaymentResp, error)
+	PaymentNotify(ctx context.Context, req *PaymentNotifyReq) (*PaymentNotifyResp, error)
 	ProcessPaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error)
 }
 
@@ -82,6 +93,10 @@ func (pc *PaymentUsecase) GetPayment(ctx context.Context, id uuid.UUID) (*Paymen
 
 func (pc *PaymentUsecase) ProcessPaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error) {
 	return pc.repo.ProcessPaymentCallback(ctx, req)
+}
+
+func (pc *PaymentUsecase) PaymentNotify(ctx context.Context, req *PaymentNotifyReq) (*PaymentNotifyResp, error) {
+	return pc.repo.PaymentNotify(ctx, req)
 }
 
 type PaymentUsecase struct {

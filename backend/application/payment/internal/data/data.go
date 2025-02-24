@@ -27,6 +27,7 @@ type Data struct {
 	rdb    *redis.Client
 	logger *log.Helper
 	alipay *alipay.Client
+	pay    *conf.Pay
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -38,6 +39,7 @@ func NewData(
 	rdb *redis.Client,
 	logger log.Logger,
 	alipay *alipay.Client,
+	pay *conf.Pay,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -48,6 +50,7 @@ func NewData(
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
 		alipay: alipay,
+		pay:    pay,
 	}, cleanup, nil
 }
 

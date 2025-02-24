@@ -51,6 +51,7 @@ message OrderResult {
 
 message PlaceOrderResp {
   OrderResult order = 1;
+  string url = 2;
 }
 
 // 支付状态

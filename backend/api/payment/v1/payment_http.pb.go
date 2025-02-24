@@ -21,19 +21,26 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationPaymentServiceCreatePayment = "/ecommerce.payment.v1.PaymentService/CreatePayment"
 const OperationPaymentServiceGetPayment = "/ecommerce.payment.v1.PaymentService/GetPayment"
+const OperationPaymentServicePaymentNotify = "/ecommerce.payment.v1.PaymentService/PaymentNotify"
 const OperationPaymentServiceProcessPaymentCallback = "/ecommerce.payment.v1.PaymentService/ProcessPaymentCallback"
 
 type PaymentServiceHTTPServer interface {
+	// CreatePayment 创建支付记录
 	CreatePayment(context.Context, *CreatePaymentReq) (*PaymentResp, error)
+	// GetPayment 获取支付信息
 	GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error)
+	// PaymentNotify 异步通知
+	PaymentNotify(context.Context, *PaymentNotifyReq) (*PaymentNotifyResp, error)
+	// ProcessPaymentCallback 支付宝回调
 	ProcessPaymentCallback(context.Context, *PaymentCallbackReq) (*PaymentCallbackResp, error)
 }
 
 func RegisterPaymentServiceHTTPServer(s *http.Server, srv PaymentServiceHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/payments", _PaymentService_CreatePayment0_HTTP_Handler(srv))
-	r.GET("/v1/payments/{payment_id}", _PaymentService_GetPayment0_HTTP_Handler(srv))
+	r.POST("/v1/payments/notify", _PaymentService_PaymentNotify0_HTTP_Handler(srv))
 	r.POST("/v1/payments/callback", _PaymentService_ProcessPaymentCallback0_HTTP_Handler(srv))
+	r.GET("/v1/payments/{payment_id}", _PaymentService_GetPayment0_HTTP_Handler(srv))
 }
 
 func _PaymentService_CreatePayment0_HTTP_Handler(srv PaymentServiceHTTPServer) func(ctx http.Context) error {
@@ -58,24 +65,24 @@ func _PaymentService_CreatePayment0_HTTP_Handler(srv PaymentServiceHTTPServer) f
 	}
 }
 
-func _PaymentService_GetPayment0_HTTP_Handler(srv PaymentServiceHTTPServer) func(ctx http.Context) error {
+func _PaymentService_PaymentNotify0_HTTP_Handler(srv PaymentServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in GetPaymentReq
+		var in PaymentNotifyReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationPaymentServiceGetPayment)
+		http.SetOperation(ctx, OperationPaymentServicePaymentNotify)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetPayment(ctx, req.(*GetPaymentReq))
+			return srv.PaymentNotify(ctx, req.(*PaymentNotifyReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*PaymentResp)
+		reply := out.(*PaymentNotifyResp)
 		return ctx.Result(200, reply)
 	}
 }
@@ -102,9 +109,32 @@ func _PaymentService_ProcessPaymentCallback0_HTTP_Handler(srv PaymentServiceHTTP
 	}
 }
 
+func _PaymentService_GetPayment0_HTTP_Handler(srv PaymentServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetPaymentReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPaymentServiceGetPayment)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetPayment(ctx, req.(*GetPaymentReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PaymentResp)
+		return ctx.Result(200, reply)
+	}
+}
+
 type PaymentServiceHTTPClient interface {
 	CreatePayment(ctx context.Context, req *CreatePaymentReq, opts ...http.CallOption) (rsp *PaymentResp, err error)
 	GetPayment(ctx context.Context, req *GetPaymentReq, opts ...http.CallOption) (rsp *PaymentResp, err error)
+	PaymentNotify(ctx context.Context, req *PaymentNotifyReq, opts ...http.CallOption) (rsp *PaymentNotifyResp, err error)
 	ProcessPaymentCallback(ctx context.Context, req *PaymentCallbackReq, opts ...http.CallOption) (rsp *PaymentCallbackResp, err error)
 }
 
@@ -136,6 +166,19 @@ func (c *PaymentServiceHTTPClientImpl) GetPayment(ctx context.Context, in *GetPa
 	opts = append(opts, http.Operation(OperationPaymentServiceGetPayment))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *PaymentServiceHTTPClientImpl) PaymentNotify(ctx context.Context, in *PaymentNotifyReq, opts ...http.CallOption) (*PaymentNotifyResp, error) {
+	var out PaymentNotifyResp
+	pattern := "/v1/payments/notify"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationPaymentServicePaymentNotify))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

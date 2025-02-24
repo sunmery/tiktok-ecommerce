@@ -20,7 +20,7 @@ GRPC_PORT ?= 30002
 DOCKER_IMAGE=e-commerce/$(APP_NAME):dev
 SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = e-commence/$(SERVICE)
-REGISTER="ccr.ccs.tencentyun.com"
+REGISTER = ccr.ccs.tencentyun.com
 
 .PHONY: api
 api:
@@ -52,31 +52,29 @@ config:
 # 使用 docker 构建镜像, 需要传递该服务的HTTP_PORT, GRPC_PORT 变量
 .PHONY: docker-build
 docker-build:
-	@echo "Building Docker image for service: $(SERVICE)"
-	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
-	@echo "Docker image: $(REPOSITORY):dev"
+	@echo "构建的微服务: $(SERVICE)"
+	@echo "系统: $(GOOS) | CPU架构: $(GOARCH)"
+	@echo "镜像名: $(REPOSITORY):dev"
 	REPOSITORY="ecommence/$(SERVICE)"
-	cd ../.. && docker build . \
+	docker build . \
 	  -f application/$(SERVICE)/Dockerfile \
 	  --progress=plain \
-	  -t $(REPOSITORY):dev \
-	  --build-arg SERVICE=$(APP_RELATIVE_PATH) \
+	  -t ecommerce/$(SERVICE):dev \
+	  --build-arg SERVICE=$(SERVICE) \
 	  --build-arg CGOENABLED=$(CGOENABLED) \
 	  --build-arg GOIMAGE=$(GOIMAGE) \
 	  --build-arg GOOS=$(GOOS) \
 	  --build-arg GOARCH=$(GOARCH) \
 	  --build-arg VERSION=$(VERSION) \
-	  --build-arg HTTP_PORT=$(HTTP_PORT) \
-	  --build-arg GRPC_PORT=$(GRPC_PORT) \
 	  --platform $(GOOS)/$(GOARCH)
 
-# 推送 Docker 镜像, 需要传递REPOSITORY变量, 例如
+# 使用方式: make docker-push SERVICE=微服务名
 .PHONY: docker-push
 docker-push:
-	@echo "Pushing Docker image for service: $(SERVICE)"
+	@echo "使用方式: make docker-push SERVICE=微服务名"
 	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
 	@echo "Docker image: $(REPOSITORY):dev"
-	docker tag $(REPOSITORY):dev $(REGISTER)/$(REPOSITORY):dev
+	docker tag ecommerce/$(SERVICE):dev $(REGISTER)/$(REPOSITORY):dev
 	docker push $(REGISTER)/$(REPOSITORY):dev
 
 # 运行Docker 镜像, 需要传递该服务的HTTP_PORT, GRPC_PORT 变量
@@ -89,6 +87,11 @@ docker-run:
 	  -p $(HTTP_PORT):$(HTTP_PORT) \
 	  -p $(GRPC_PORT):$(GRPC_PORT) \
 	  $(REGISTER)/$(REPOSITORY):dev
+
+.PHONY: docker-run
+docker-deploy:
+	make docker-build SERVICE=$(SERVICE)
+	make docker-push SERVICE=$(SERVICE)
 
 .PHONY: generate
 # generate client code

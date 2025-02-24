@@ -1,12 +1,15 @@
 package server
 
 import (
+	"context"
+
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
 	"backend/constants"
-	"context"
+
 	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	sentrykratos "github.com/go-kratos/sentry"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -43,8 +46,9 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, oc *conf.Observabi
 	}
 	// trace end
 
-	var opts = []grpc.ServerOption{
+	opts := []grpc.ServerOption{
 		grpc.Middleware(
+			metadata.Server(),
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				// recovery.WithLogger(log.DefaultLogger),

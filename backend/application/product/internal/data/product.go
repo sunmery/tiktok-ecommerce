@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	category "backend/api/category/v1"
+
 	"github.com/google/uuid"
 
-	"backend/api/category/v1"
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
@@ -33,17 +34,17 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		return nil, fmt.Errorf("invalid price format: %w", err)
 	}
 
-	var categoryId int64 = 0
+	var categoryId uint64 = 0
 
 	getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-		Id: int64(req.Product.Category.CategoryId),
+		Id: req.Product.Category.CategoryId,
 	})
 	newCategory := &category.Category{}
 	if getCategoryErr != nil {
 		// if errors.Is(err, pgx.ErrNoRows) {
 		newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-			ParentId:  req.Product.ID,
+			// ParentId:  req.Product.ID,
 			Name:      req.Product.Category.CategoryName,
 			SortOrder: req.Product.Category.SortOrder,
 		})
@@ -62,11 +63,15 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 
 	fmt.Printf("categoryId%+v", categoryId)
 	// 执行创建
+
+	if err != nil {
+		return nil, err
+	}
 	result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
 		Name:        req.Product.Name,
 		Description: &req.Product.Description,
 		Price:       price,
-		CategoryID:  categoryId,
+		CategoryID:  int64(categoryId),
 		Status:      int16(req.Product.Status),
 		MerchantID:  req.Product.MerchantId,
 	})

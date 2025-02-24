@@ -33,20 +33,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "name",
-            "in": "query",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "owner",
-            "in": "query",
-            "required": true,
-            "type": "string"
-          }
-        ],
         "tags": [
           "UserService"
         ]
@@ -76,15 +62,9 @@
             "format": "int32"
           },
           {
-            "name": "name",
+            "name": "userId",
             "in": "query",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "owner",
-            "in": "query",
-            "required": true,
+            "required": false,
             "type": "string"
           }
         ],
@@ -232,20 +212,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "owner",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "UserService"
         ]
@@ -307,13 +273,7 @@
             "type": "string"
           },
           {
-            "name": "owner",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "name",
+            "name": "userId",
             "in": "query",
             "required": false,
             "type": "string"
@@ -460,26 +420,48 @@
       "type": "object",
       "properties": {
         "number": {
-          "type": "string"
+          "type": "string",
+          "title": "卡号"
         },
         "cvv": {
-          "type": "string"
+          "type": "string",
+          "title": "安全码"
         },
-        "expiration_year": {
-          "type": "string"
+        "expYear": {
+          "type": "string",
+          "title": "过期年份"
         },
-        "expiration_month": {
-          "type": "string"
+        "expMonth": {
+          "type": "string",
+          "title": "过期月份"
         },
         "owner": {
-          "type": "string"
+          "type": "string",
+          "title": "持卡人"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "卡名"
         },
         "id": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "卡id"
+        },
+        "type": {
+          "type": "string",
+          "title": "卡类型"
+        },
+        "brand": {
+          "type": "string",
+          "title": "卡品牌"
+        },
+        "country": {
+          "type": "string",
+          "title": "卡所属国家"
+        },
+        "createdTime": {
+          "type": "string"
         }
       }
     },

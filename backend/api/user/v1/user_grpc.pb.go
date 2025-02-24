@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -39,8 +40,8 @@ type UserServiceClient interface {
 	CreateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
 	UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
 	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error)
-	GetAddresses(ctx context.Context, in *GetAddressesRequest, opts ...grpc.CallOption) (*GetAddressesReply, error)
-	ListCreditCards(ctx context.Context, in *ListCreditCardsRequest, opts ...grpc.CallOption) (*ListCreditCardsReply, error)
+	GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error)
+	ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListCreditCardsReply, error)
 	CreateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
 	UpdateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
 	DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...grpc.CallOption) (*CardsReply, error)
@@ -95,7 +96,7 @@ func (c *userServiceClient) DeleteAddresses(ctx context.Context, in *DeleteAddre
 	return out, nil
 }
 
-func (c *userServiceClient) GetAddresses(ctx context.Context, in *GetAddressesRequest, opts ...grpc.CallOption) (*GetAddressesReply, error) {
+func (c *userServiceClient) GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAddressesReply)
 	err := c.cc.Invoke(ctx, UserService_GetAddresses_FullMethodName, in, out, cOpts...)
@@ -105,7 +106,7 @@ func (c *userServiceClient) GetAddresses(ctx context.Context, in *GetAddressesRe
 	return out, nil
 }
 
-func (c *userServiceClient) ListCreditCards(ctx context.Context, in *ListCreditCardsRequest, opts ...grpc.CallOption) (*ListCreditCardsReply, error) {
+func (c *userServiceClient) ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListCreditCardsReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListCreditCardsReply)
 	err := c.cc.Invoke(ctx, UserService_ListCreditCards_FullMethodName, in, out, cOpts...)
@@ -163,8 +164,8 @@ type UserServiceServer interface {
 	CreateAddresses(context.Context, *Address) (*Address, error)
 	UpdateAddresses(context.Context, *Address) (*Address, error)
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
-	GetAddresses(context.Context, *GetAddressesRequest) (*GetAddressesReply, error)
-	ListCreditCards(context.Context, *ListCreditCardsRequest) (*ListCreditCardsReply, error)
+	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
+	ListCreditCards(context.Context, *emptypb.Empty) (*ListCreditCardsReply, error)
 	CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
 	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
@@ -191,10 +192,10 @@ func (UnimplementedUserServiceServer) UpdateAddresses(context.Context, *Address)
 func (UnimplementedUserServiceServer) DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddresses not implemented")
 }
-func (UnimplementedUserServiceServer) GetAddresses(context.Context, *GetAddressesRequest) (*GetAddressesReply, error) {
+func (UnimplementedUserServiceServer) GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddresses not implemented")
 }
-func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *ListCreditCardsRequest) (*ListCreditCardsReply, error) {
+func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *emptypb.Empty) (*ListCreditCardsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCreditCards not implemented")
 }
 func (UnimplementedUserServiceServer) CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error) {
@@ -303,7 +304,7 @@ func _UserService_DeleteAddresses_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAddressesRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -315,13 +316,13 @@ func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: UserService_GetAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetAddresses(ctx, req.(*GetAddressesRequest))
+		return srv.(UserServiceServer).GetAddresses(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _UserService_ListCreditCards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListCreditCardsRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -333,7 +334,7 @@ func _UserService_ListCreditCards_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: UserService_ListCreditCards_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ListCreditCards(ctx, req.(*ListCreditCardsRequest))
+		return srv.(UserServiceServer).ListCreditCards(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

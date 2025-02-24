@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 option go_package = "backend/api/payment/v1;paymentv1";
 
 service PaymentService {
+  // 创建支付记录
   rpc CreatePayment(CreatePaymentReq) returns (PaymentResp) {
     option (google.api.http) = {
       post: "/v1/payments"
@@ -15,26 +16,47 @@ service PaymentService {
     };
   }
 
-  rpc GetPayment(GetPaymentReq) returns (PaymentResp) {
+  // 异步通知
+  rpc PaymentNotify(PaymentNotifyReq) returns (PaymentNotifyResp) {
     option (google.api.http) = {
-      get: "/v1/payments/{payment_id}"
+      post: "/v1/payments/notify"
+      body: "*"
     };
   }
 
+  // 支付宝回调
   rpc ProcessPaymentCallback(PaymentCallbackReq) returns (PaymentCallbackResp) {
     option (google.api.http) = {
       post: "/v1/payments/callback"
       body: "*"
     };
   }
+
+  // 获取支付信息
+  rpc GetPayment(GetPaymentReq) returns (PaymentResp) {
+    option (google.api.http) = {
+      get: "/v1/payments/{payment_id}"
+    };
+  }
 }
 
+message StringList {
+  repeated string values = 1; // 表示 []string
+}
+
+message PaymentNotifyReq {
+  map<string, StringList> values = 1;
+}
+
+message PaymentNotifyResp {
+  string code = 1;
+  string msg = 2;
+}
 message CreatePaymentReq {
   string order_id = 1;       // 主订单ID
   string currency = 2;       // 支付货币
   string amount = 3;         // 支付金额
   string payment_method = 4; // 支付方式
-  map<string, string> metadata = 5; // 扩展元数据
 }
 
 message PaymentResp {
@@ -53,6 +75,7 @@ message PaymentCallbackReq {
   string status = 2;
   string gateway_response = 3; // 原始网关响应
   google.protobuf.Timestamp processed_at = 4;
+  map<string, StringList> request_form = 5;
 }
 
 message PaymentCallbackResp {}

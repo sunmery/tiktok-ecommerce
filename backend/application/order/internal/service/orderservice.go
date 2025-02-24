@@ -75,6 +75,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 		Order: &v1.OrderResult{
 			OrderId: order.Order.OrderId,
 		},
+		Url: order.URL,
 	}, nil
 }
 

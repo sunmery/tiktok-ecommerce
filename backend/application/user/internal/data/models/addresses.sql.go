@@ -7,33 +7,33 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const CreatAddress = `-- name: CreatAddress :one
-INSERT INTO users.addresses(owner, name, street_address, city, state, country, zip_code)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, owner, name, street_address, city, state, country, zip_code
+INSERT INTO users.addresses(user_id, street_address, city, state, country, zip_code)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, user_id, street_address, city, state, country, zip_code
 `
 
 type CreatAddressParams struct {
-	Owner         string `json:"owner"`
-	Name          string `json:"name"`
-	StreetAddress string `json:"streetAddress"`
-	City          string `json:"city"`
-	State         string `json:"state"`
-	Country       string `json:"country"`
-	ZipCode       string `json:"zipCode"`
+	UserID        uuid.UUID `json:"userID"`
+	StreetAddress string    `json:"streetAddress"`
+	City          string    `json:"city"`
+	State         string    `json:"state"`
+	Country       string    `json:"country"`
+	ZipCode       string    `json:"zipCode"`
 }
 
 // CreatAddress
 //
-//	INSERT INTO users.addresses(owner, name, street_address, city, state, country, zip_code)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7)
-//	RETURNING id, owner, name, street_address, city, state, country, zip_code
+//	INSERT INTO users.addresses(user_id, street_address, city, state, country, zip_code)
+//	VALUES ($1, $2, $3, $4, $5, $6)
+//	RETURNING id, user_id, street_address, city, state, country, zip_code
 func (q *Queries) CreatAddress(ctx context.Context, arg CreatAddressParams) (UsersAddresses, error) {
 	row := q.db.QueryRow(ctx, CreatAddress,
-		arg.Owner,
-		arg.Name,
+		arg.UserID,
 		arg.StreetAddress,
 		arg.City,
 		arg.State,
@@ -43,8 +43,7 @@ func (q *Queries) CreatAddress(ctx context.Context, arg CreatAddressParams) (Use
 	var i UsersAddresses
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
-		&i.Name,
+		&i.UserID,
 		&i.StreetAddress,
 		&i.City,
 		&i.State,
@@ -58,15 +57,13 @@ const DeleteAddress = `-- name: DeleteAddress :one
 DELETE
 FROM users.addresses
 WHERE id = $1
-  AND owner = $2
-  AND name = $3
-RETURNING id, owner, name, street_address, city, state, country, zip_code
+  AND user_id = $2
+RETURNING id, user_id, street_address, city, state, country, zip_code
 `
 
 type DeleteAddressParams struct {
-	ID    int32  `json:"id"`
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	ID     int32     `json:"id"`
+	UserID uuid.UUID `json:"userID"`
 }
 
 // DeleteAddress
@@ -74,16 +71,14 @@ type DeleteAddressParams struct {
 //	DELETE
 //	FROM users.addresses
 //	WHERE id = $1
-//	  AND owner = $2
-//	  AND name = $3
-//	RETURNING id, owner, name, street_address, city, state, country, zip_code
+//	  AND user_id = $2
+//	RETURNING id, user_id, street_address, city, state, country, zip_code
 func (q *Queries) DeleteAddress(ctx context.Context, arg DeleteAddressParams) (UsersAddresses, error) {
-	row := q.db.QueryRow(ctx, DeleteAddress, arg.ID, arg.Owner, arg.Name)
+	row := q.db.QueryRow(ctx, DeleteAddress, arg.ID, arg.UserID)
 	var i UsersAddresses
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
-		&i.Name,
+		&i.UserID,
 		&i.StreetAddress,
 		&i.City,
 		&i.State,
@@ -94,25 +89,18 @@ func (q *Queries) DeleteAddress(ctx context.Context, arg DeleteAddressParams) (U
 }
 
 const GetAddresses = `-- name: GetAddresses :many
-SELECT id, owner, name, street_address, city, state, country, zip_code
+SELECT id, user_id, street_address, city, state, country, zip_code
 FROM users.addresses
-WHERE owner = $1
-  AND name = $2
+WHERE user_id = $1
 `
-
-type GetAddressesParams struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-}
 
 // GetAddresses
 //
-//	SELECT id, owner, name, street_address, city, state, country, zip_code
+//	SELECT id, user_id, street_address, city, state, country, zip_code
 //	FROM users.addresses
-//	WHERE owner = $1
-//	  AND name = $2
-func (q *Queries) GetAddresses(ctx context.Context, arg GetAddressesParams) ([]UsersAddresses, error) {
-	rows, err := q.db.Query(ctx, GetAddresses, arg.Owner, arg.Name)
+//	WHERE user_id = $1
+func (q *Queries) GetAddresses(ctx context.Context, userID uuid.UUID) ([]UsersAddresses, error) {
+	rows, err := q.db.Query(ctx, GetAddresses, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +110,7 @@ func (q *Queries) GetAddresses(ctx context.Context, arg GetAddressesParams) ([]U
 		var i UsersAddresses
 		if err := rows.Scan(
 			&i.ID,
-			&i.Owner,
-			&i.Name,
+			&i.UserID,
 			&i.StreetAddress,
 			&i.City,
 			&i.State,
@@ -148,20 +135,19 @@ SET street_address = coalesce($1, street_address),
     country        = coalesce($4, country),
     zip_code       = coalesce($5, zip_code)
 WHERE id = $6
-  AND owner = $7
-  AND name = $8
-RETURNING id, owner, name, street_address, city, state, country, zip_code
+  AND user_id = $7
+
+RETURNING id, user_id, street_address, city, state, country, zip_code
 `
 
 type UpdateAddressParams struct {
-	StreetAddress *string `json:"streetAddress"`
-	City          *string `json:"city"`
-	State         *string `json:"state"`
-	Country       *string `json:"country"`
-	ZipCode       *string `json:"zipCode"`
-	ID            int32   `json:"id"`
-	Owner         string  `json:"owner"`
-	Name          string  `json:"name"`
+	StreetAddress *string   `json:"streetAddress"`
+	City          *string   `json:"city"`
+	State         *string   `json:"state"`
+	Country       *string   `json:"country"`
+	ZipCode       *string   `json:"zipCode"`
+	ID            int32     `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
 }
 
 // UpdateAddress
@@ -173,9 +159,9 @@ type UpdateAddressParams struct {
 //	    country        = coalesce($4, country),
 //	    zip_code       = coalesce($5, zip_code)
 //	WHERE id = $6
-//	  AND owner = $7
-//	  AND name = $8
-//	RETURNING id, owner, name, street_address, city, state, country, zip_code
+//	  AND user_id = $7
+//
+//	RETURNING id, user_id, street_address, city, state, country, zip_code
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (UsersAddresses, error) {
 	row := q.db.QueryRow(ctx, UpdateAddress,
 		arg.StreetAddress,
@@ -184,14 +170,12 @@ func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (U
 		arg.Country,
 		arg.ZipCode,
 		arg.ID,
-		arg.Owner,
-		arg.Name,
+		arg.UserID,
 	)
 	var i UsersAddresses
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
-		&i.Name,
+		&i.UserID,
 		&i.StreetAddress,
 		&i.City,
 		&i.State,

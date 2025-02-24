@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/google/uuid"
 )
 
 var (
@@ -28,8 +27,8 @@ var (
 
 // Category 分类
 type Category struct {
-	ID        uuid.UUID
-	ParentID  uuid.UUID
+	ID        uint64
+	ParentID  uint64
 	Level     int
 	Path      string
 	Name      string
@@ -40,7 +39,7 @@ type Category struct {
 }
 
 type CreateCategoryReq struct {
-	ParentID  uuid.UUID
+	ParentID  uint64
 	Name      string
 	SortOrder int
 }
@@ -52,18 +51,18 @@ type DeleteCategoryReply struct {
 type CategoryRepo interface {
 	// CreateCategory 基础操作
 	CreateCategory(ctx context.Context, req *CreateCategoryReq) (*Category, error)
-	GetCategory(ctx context.Context, id uuid.UUID) (*Category, error)
+	GetCategory(ctx context.Context, id uint64) (*Category, error)
 	UpdateCategoryName(ctx context.Context, req *Category) error
-	DeleteCategory(ctx context.Context, id uuid.UUID) error
+	DeleteCategory(ctx context.Context, id uint64) error
 
 	// GetSubTree 树形操作
-	GetSubTree(ctx context.Context, rootID uuid.UUID) ([]*Category, error)
-	GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]*Category, error)
+	GetSubTree(ctx context.Context, rootID uint64) ([]*Category, error)
+	GetCategoryPath(ctx context.Context, categoryId uint64) ([]*Category, error)
 	GetLeafCategories(ctx context.Context) ([]*Category, error)
 
 	// GetClosureRelations 闭包关系
-	GetClosureRelations(ctx context.Context, categoryID uuid.UUID) ([]*ClosureRelation, error)
-	UpdateClosureDepth(ctx context.Context, categoryID uuid.UUID, delta int32) error
+	GetClosureRelations(ctx context.Context, categoryId uint64) ([]*ClosureRelation, error)
+	UpdateClosureDepth(ctx context.Context, req *UpdateClosureDepth) error
 }
 
 type CategoryUsecase struct {
@@ -80,9 +79,13 @@ func NewCategoryUsecase(repo CategoryRepo, logger log.Logger) *CategoryUsecase {
 
 // ClosureRelation 闭包关系业务对象
 type ClosureRelation struct {
-	Ancestor   int64
-	Descendant int64
-	Depth      int32
+	Ancestor   uint64
+	Descendant uint64
+	Depth      uint32
+}
+type UpdateClosureDepth struct {
+	Delta      int32
+	CategoryID uint64
 }
 
 // CreateCategory 创建分类
@@ -98,7 +101,7 @@ func (uc *CategoryUsecase) UpdateCategoryName(ctx context.Context, req *Category
 }
 
 // GetCategory 获取单个分类详情
-func (uc *CategoryUsecase) GetCategory(ctx context.Context, id uuid.UUID) (*Category, error) {
+func (uc *CategoryUsecase) GetCategory(ctx context.Context, id uint64) (*Category, error) {
 	uc.log.WithContext(ctx).Debugf("GetCategory request: %d", id)
 	return uc.repo.GetCategory(ctx, id)
 }
@@ -110,19 +113,19 @@ func (uc *CategoryUsecase) UpdateCategory(ctx context.Context, req *Category) er
 }
 
 // DeleteCategory 删除分类（包含子树）
-func (uc *CategoryUsecase) DeleteCategory(ctx context.Context, id uuid.UUID) error {
+func (uc *CategoryUsecase) DeleteCategory(ctx context.Context, id uint64) error {
 	uc.log.WithContext(ctx).Debugf("DeleteCategory request: %d", id)
 	return uc.repo.DeleteCategory(ctx, id)
 }
 
 // GetSubTree 获取子树
-func (uc *CategoryUsecase) GetSubTree(ctx context.Context, rootID uuid.UUID) ([]*Category, error) {
+func (uc *CategoryUsecase) GetSubTree(ctx context.Context, rootID uint64) ([]*Category, error) {
 	uc.log.WithContext(ctx).Debugf("GetSubTree request: %d", rootID)
 	return uc.repo.GetSubTree(ctx, rootID)
 }
 
 // GetCategoryPath 获取分类路径
-func (uc *CategoryUsecase) GetCategoryPath(ctx context.Context, categoryID uuid.UUID) ([]*Category, error) {
+func (uc *CategoryUsecase) GetCategoryPath(ctx context.Context, categoryID uint64) ([]*Category, error) {
 	uc.log.WithContext(ctx).Debugf("GetCategoryPath request: %d", categoryID)
 	return uc.repo.GetCategoryPath(ctx, categoryID)
 }
@@ -134,13 +137,13 @@ func (uc *CategoryUsecase) GetLeafCategories(ctx context.Context) ([]*Category, 
 }
 
 // GetClosureRelations 获取闭包关系
-func (uc *CategoryUsecase) GetClosureRelations(ctx context.Context, categoryID uuid.UUID) (*ClosureRelation, error) {
+func (uc *CategoryUsecase) GetClosureRelations(ctx context.Context, categoryID uint64) ([]*ClosureRelation, error) {
 	uc.log.WithContext(ctx).Debugf("GetClosureRelations request: %d", categoryID)
 	return uc.repo.GetClosureRelations(ctx, categoryID)
 }
 
 // UpdateClosureDepth 更新闭包深度
-func (uc *CategoryUsecase) UpdateClosureDepth(ctx context.Context, categoryID uuid.UUID, delta int32) error {
-	uc.log.WithContext(ctx).Debugf("UpdateClosureDepth request: %d delta:%d", categoryID, delta)
-	return uc.repo.UpdateClosureDepth(ctx, categoryID, delta)
+func (uc *CategoryUsecase) UpdateClosureDepth(ctx context.Context, req *UpdateClosureDepth) error {
+	uc.log.WithContext(ctx).Debugf("UpdateClosureDepth request: %d delta:%d", req)
+	return uc.repo.UpdateClosureDepth(ctx, req)
 }

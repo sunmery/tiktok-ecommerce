@@ -2,10 +2,10 @@ package data
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 
 	"backend/application/category/internal/biz"
 	"backend/application/category/internal/data/models"
@@ -26,11 +26,10 @@ func NewCategoryRepo(data *Data, logger log.Logger) biz.CategoryRepo {
 }
 
 // GetCategory 获取单个分类详情
-func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category, error) {
-	dbCategory, err := r.data.DB(ctx).GetCategoryByID(ctx, id)
+func (r *categoryRepo) GetCategory(ctx context.Context, id uint64) (*biz.Category, error) {
+	dbCategory, err := r.data.DB(ctx).GetCategoryByID(ctx, int64(id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, biz.ErrCategoryNotFound
 		}
 		return nil, fmt.Errorf("get category failed: %w", err)
 	}
@@ -43,73 +42,76 @@ func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category
 // 2. 删除所有关联闭包记录
 // 3. 删除分类记录
 // 4. 更新父分类叶子状态
-func (r *categoryRepo) DeleteCategory(ctx context.Context, id int64) error {
+func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
 	// tx, err := r.data.pool.BeginTx(ctx, pgx.TxOptions{
 	// 	IsoLevel: pgx.Serializable, // 需要最高级别隔离
 	// })
-	qtx := r.data.DB(ctx)
-
-	// 获取被删分类信息用于后续处理
-	category, err := qtx.GetCategoryByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return biz.ErrCategoryNotFound
-		}
-		return fmt.Errorf("get category failed: %w", err)
-	}
-
-	// 删除闭包关系
-	if err := qtx.DeleteClosureRelations(ctx, &id); err != nil {
-		return fmt.Errorf("delete closure relations failed: %w", err)
-	}
-
-	// 删除分类记录
-	if err := qtx.DeleteCategory(ctx, &id); err != nil {
-		return fmt.Errorf("delete category failed: %w", err)
-	}
-
-	// 更新父分类的叶子状态
-	if category.ParentID != 0 { // 根分类无父分类
-		if err := qtx.UpdateParentLeafStatus(ctx, &category.ParentID); err != nil {
-			return fmt.Errorf("update parent leaf status failed: %w", err)
-		}
-	}
-
-	return err
+	// qtx := r.data.DB(ctx)
+	//
+	// // 获取被删分类信息用于后续处理
+	// category, err := qtx.GetCategoryByID(ctx, id)
+	// if err != nil {
+	// 	if errors.Is(err, pgx.ErrNoRows) {
+	// 		return biz.ErrCategoryNotFound
+	// 	}
+	// 	return fmt.Errorf("get category failed: %w", err)
+	// }
+	//
+	// // 删除闭包关系
+	// if err := qtx.DeleteClosureRelations(ctx, &id); err != nil {
+	// 	return fmt.Errorf("delete closure relations failed: %w", err)
+	// }
+	//
+	// // 删除分类记录
+	// if err := qtx.DeleteCategory(ctx, id); err != nil {
+	// 	return fmt.Errorf("delete category failed: %w", err)
+	// }
+	//
+	// // 更新父分类的叶子状态
+	// // if category.ParentID != "" { // 根分类无父分类
+	// // 	if err := qtx.UpdateParentLeafStatus(ctx, &category.ParentID); err != nil {
+	// // 		return fmt.Errorf("update parent leaf status failed: %w", err)
+	// // 	}
+	// // }
+	//
+	// return err
+	panic("TODO")
 }
 
 // GetSubTree 获取指定分类的子树
-func (r *categoryRepo) GetSubTree(ctx context.Context, rootID int64) ([]*biz.Category, error) {
-	dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, &rootID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, biz.ErrCategoryNotFound
-		}
-		return nil, fmt.Errorf("get subtree failed: %w", err)
-	}
-
-	result := make([]*biz.Category, 0, len(dbCategories))
-	for _, c := range dbCategories {
-		result = append(result, convertDBCategory(c))
-	}
-	return result, nil
+func (r *categoryRepo) GetSubTree(ctx context.Context, rootId uint64) ([]*biz.Category, error) {
+	// dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, &rootID)
+	// if err != nil {
+	// 	if errors.Is(err, pgx.ErrNoRows) {
+	// 		return nil, biz.ErrCategoryNotFound
+	// 	}
+	// 	return nil, fmt.Errorf("get subtree failed: %w", err)
+	// }
+	//
+	// result := make([]*biz.Category, 0, len(dbCategories))
+	// for _, c := range dbCategories {
+	// 	result = append(result, convertDBCategory(c))
+	// }
+	// return result, nil
+	panic("TODO")
 }
 
 // GetCategoryPath 获取分类的完整路径
-func (r *categoryRepo) GetCategoryPath(ctx context.Context, categoryID int64) ([]*biz.Category, error) {
-	dbCategories, err := r.data.DB(ctx).GetCategoryPath(ctx, categoryID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, biz.ErrCategoryNotFound
-		}
-		return nil, fmt.Errorf("get category path failed: %w", err)
-	}
-
-	result := make([]*biz.Category, 0, len(dbCategories))
-	for _, c := range dbCategories {
-		result = append(result, convertDBCategory(c))
-	}
-	return result, nil
+func (r *categoryRepo) GetCategoryPath(ctx context.Context, categoryID uint64) ([]*biz.Category, error) {
+	// dbCategories, err := r.data.DB(ctx).GetCategoryPath(ctx, categoryID)
+	// if err != nil {
+	// 	if errors.Is(err, pgx.ErrNoRows) {
+	// 		return nil, biz.ErrCategoryNotFound
+	// 	}
+	// 	return nil, fmt.Errorf("get category path failed: %w", err)
+	// }
+	//
+	// result := make([]*biz.Category, 0, len(dbCategories))
+	// for _, c := range dbCategories {
+	// 	result = append(result, convertDBCategory(c))
+	// }
+	// return result, nil
+	panic("TODO")
 }
 
 // GetLeafCategories 获取所有叶子分类（三级分类）
@@ -127,8 +129,8 @@ func (r *categoryRepo) GetLeafCategories(ctx context.Context) ([]*biz.Category, 
 }
 
 // GetClosureRelations 获取分类闭包关系
-func (r *categoryRepo) GetClosureRelations(ctx context.Context, categoryID int64) ([]*biz.ClosureRelation, error) {
-	dbRelations, err := r.data.DB(ctx).GetClosureRelations(ctx, categoryID)
+func (r *categoryRepo) GetClosureRelations(ctx context.Context, categoryId uint64) ([]*biz.ClosureRelation, error) {
+	dbRelations, err := r.data.DB(ctx).GetClosureRelations(ctx, int64(categoryId))
 	if err != nil {
 		return nil, fmt.Errorf("get closure relations failed: %w", err)
 	}
@@ -138,22 +140,24 @@ func (r *categoryRepo) GetClosureRelations(ctx context.Context, categoryID int64
 		result = append(result, &biz.ClosureRelation{
 			Ancestor:   r.Ancestor,
 			Descendant: r.Descendant,
-			Depth:      int32(int(r.Depth)),
+			Depth:      uint32(r.Depth),
 		})
 	}
 	return result, nil
 }
 
 // UpdateClosureDepth 更新闭包关系深度
-func (r *categoryRepo) UpdateClosureDepth(ctx context.Context, categoryID int64, delta int32) error {
-	var deltaType = int16(delta)
-	if err := r.data.DB(ctx).UpdateClosureDepth(ctx, models.UpdateClosureDepthParams{
-		CategoryID: &categoryID,
-		Delta:      &deltaType,
-	}); err != nil {
-		return fmt.Errorf("update closure depth failed: %w", err)
-	}
-	return nil
+func (r *categoryRepo) UpdateClosureDepth(ctx context.Context, req *biz.UpdateClosureDepth) error {
+	// deltaType := int16(delta)
+	//
+	// if err := r.data.DB(ctx).UpdateClosureDepth(ctx, models.UpdateClosureDepthParams{
+	// 	CategoryID: &categoryID,
+	// 	Delta:      &deltaType,
+	// }); err != nil {
+	// 	return fmt.Errorf("update closure depth failed: %w", err)
+	// }
+	// return nil
+	panic("TODO")
 }
 
 // CreateCategory 创建分类
@@ -173,7 +177,8 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, req *biz.CreateCatego
 	// ParentID为 0 即视为创建一个根分类
 	// 不为 0 就去查询该根类
 	if req.ParentID != 0 {
-		_, err := r.data.db.GetCategoryByID(ctx, req.ParentID)
+		parentID := int32(req.ParentID)
+		_, err := r.data.db.GetCategoryByID(ctx, int64(parentID))
 		if err != nil {
 			return nil, biz.ErrParentIdUnprocessableEntiy
 		}
@@ -199,7 +204,7 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, req *biz.CreateCatego
 		return nil, errors.New(500, "Failed", "failed to create category")
 	}
 
-	dbCategory, err := qtx.GetCategoryByID(ctx, id)
+	dbCategory, err := qtx.GetCategoryByID(ctx, int64(id))
 	if err != nil {
 		return nil, fmt.Errorf("get created category failed: %w", err)
 	}
@@ -208,30 +213,31 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, req *biz.CreateCatego
 }
 
 func (r *categoryRepo) UpdateCategoryName(ctx context.Context, req *biz.Category) error {
-	params := models.UpdateCategoryNameParams{
-		ID:   req.ID,
-		Name: req.Name,
-	}
-
-	err := r.data.DB(ctx).UpdateCategoryName(ctx, params)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return biz.ErrCategoryNameNotFound
-		}
-		if strings.Contains(err.Error(), "unique constraint") {
-			return biz.ErrCategoryNameConflict
-		}
-		return biz.ErrCategoryFailed
-	}
-
-	return err
+	// params := models.UpdateCategoryNameParams{
+	// 	ID:   req.ID,
+	// 	Name: req.Name,
+	// }
+	//
+	// err := r.data.DB(ctx).UpdateCategoryName(ctx, params)
+	// if err != nil {
+	// 	if errors.Is(err, pgx.ErrNoRows) {
+	// 		return biz.ErrCategoryNameNotFound
+	// 	}
+	// 	if strings.Contains(err.Error(), "unique constraint") {
+	// 		return biz.ErrCategoryNameConflict
+	// 	}
+	// 	return biz.ErrCategoryFailed
+	// }
+	//
+	// return err
+	panic("TODO")
 }
 
 // convertDBCategory 转换数据库模型到业务模型
 func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
 	return &biz.Category{
-		ID:        dbCategory.ID,
-		ParentID:  dbCategory.ParentID,
+		ID:        uint64(*dbCategory.ParentID),
+		ParentID:  uint64(*dbCategory.ParentID),
 		Level:     int(dbCategory.Level),
 		Path:      dbCategory.Path,
 		Name:      dbCategory.Name,

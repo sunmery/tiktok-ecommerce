@@ -2,8 +2,12 @@ package data
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"time"
+
+	"backend/pkg/types"
 
 	"backend/application/payment/internal/conf"
 
@@ -19,65 +23,94 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-func NewPaymentRepo(data *Data, logger log.Logger) biz.PaymentRepo {
+func NewPaymentRepo(data *Data, logger log.Logger, pay *conf.Pay) biz.PaymentRepo {
 	return &paymentRepo{
 		data: data,
 		log:  log.NewHelper(logger),
+		pay:  pay,
 	}
 }
 
 type paymentRepo struct {
 	data *Data
 	log  *log.Helper
-	conf *conf.Pay
+	pay  *conf.Pay
+}
+
+func (r *paymentRepo) PaymentNotify(ctx context.Context, req *biz.PaymentNotifyReq) (*biz.PaymentNotifyResp, error) {
+	requestForm := map[string][]string{}
+	for k, v := range req.Values {
+		requestForm[k] = v
+	}
+	fmt.Printf("requestForm: %v\n", requestForm)
+	return &biz.PaymentNotifyResp{
+		Code: 200,
+		Msg:  "success",
+	}, nil
 }
 
 func (r *paymentRepo) GetPayment(ctx context.Context, id uuid.UUID) (*biz.PaymentResp, error) {
-	// TODO implement me
-	panic("implement me")
+	panic("TODO")
 }
 
 func (r *paymentRepo) ProcessPaymentCallback(ctx context.Context, req *biz.PaymentCallbackReq) (*biz.PaymentCallbackResp, error) {
-	// TODO implement me
-	panic("implement me")
+	err := r.data.alipay.VerifySign(req.RequestForm)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("failed to verify sign: %v", err))
+	}
+	requestForm := map[string][]string{}
+	for k, v := range req.RequestForm {
+		requestForm[k] = v
+	}
+	fmt.Printf("requestForm: %v\n", requestForm)
+	return &biz.PaymentCallbackResp{}, nil
 }
 
 func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentReq) (*biz.CreatePaymentRes, error) {
 	// types.Float64ToNumeric(req.Amount)
 
+	// fmt.Printf("req: %v\n", r.pay.Alipay)
 	tradeNo := fmt.Sprintf("%d", xid.Next())
 	pay := alipay.TradePagePay{ // 电脑网站支付
 		Trade: alipay.Trade{
-			Subject:     "支付测试:" + tradeNo,                    // 订单主题
-			OutTradeNo:  fmt.Sprintf("%d", time.Now().Unix()), // 商户订单号，必须唯一
-			TotalAmount: req.Amount,                           // 订单金额
-			ProductCode: "FAST_INSTANT_TRADE_PAY",             // 电脑网站支付，产品码为固定值
-			NotifyURL:   r.conf.Alipay.NotifyUrl,              // 异步通知地址
-			ReturnURL:   r.conf.Alipay.ReturnUrl,              // 回调地址
+			Subject: "支付测试:" + tradeNo, // 订单主题
+			// OutTradeNo:  fmt.Sprintf("%d", time.Now().Unix()), // 商户订单号，必须唯一
+			OutTradeNo:  req.OrderId.String(),     // 商户订单号，必须唯一
+			TotalAmount: req.Amount,               // 订单金额
+			ProductCode: "FAST_INSTANT_TRADE_PAY", // 电脑网站支付，产品码为固定值
+			NotifyURL:   r.pay.Alipay.NotifyUrl,   // 异步通知地址
+			ReturnURL:   r.pay.Alipay.ReturnUrl,   // 回调地址
+			// NotifyURL: "http://localhost:30013/v1/payments/notify",   // 异步通知地址
+			// ReturnURL: "http://localhost:30013/v1/payments/callback", // 回调地址
 		},
 	}
 	url, err := r.data.alipay.TradePagePay(pay) // 生成支付链接
 	if err != nil {
 		return nil, fmt.Errorf("failed to create payment: %v", err)
 	}
-	// amount,_ := types.Float64ToNumeric(req.Amount)
-	payments, err := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
-		// PaymentID:   ,
-		OrderID: req.OrderId,
-		// Amount:      amount,
+	numeric, err := strconv.ParseFloat(req.Amount, 64)
+	if err != nil {
+		return nil, errors.New("转换字符串为数值失败")
+	}
+	amount, err := types.Float64ToNumeric(numeric)
+	if err != nil {
+		return nil, errors.New("转换数值为数据库类型失败")
+	}
+
+	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
+		PaymentID:   uuid.New(),
+		OrderID:     req.OrderId,
+		Amount:      amount,
 		Currency:    req.Currency,
 		Method:      req.Method,
-		Status:      req.Status,
+		Status:      string(biz.PaymentPending),
 		GatewayTxID: req.GatewayTxID,
-		// Metadata:    req.Metadata,
-		// CreatedAt:   pgtype.Timestamptz{},
-		// UpdatedAt:   pgtype.Timestamptz{},
+		Metadata:    nil,
 	})
-
-	fmt.Printf("payments: %v\n", payments)
-	if err != nil {
-		return nil, err
+	if paymentsErr != nil {
+		return nil, fmt.Errorf("failed to create payment: %v", paymentsErr)
 	}
+	fmt.Printf("payments: %v\n", payments)
 
 	return &biz.CreatePaymentRes{
 		PaymentId:  payments.PaymentID.String(),

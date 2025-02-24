@@ -1,18 +1,19 @@
 package data
 
 import (
-	"backend/application/user/internal/biz"
-	"backend/application/user/internal/data/models"
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v5"
 	"net/http"
+
+	"backend/application/user/internal/biz"
+	"backend/application/user/internal/data/models"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (u *userRepo) CreateAddress(ctx context.Context, req *biz.Address) (*biz.Address, error) {
 	address, err := u.data.db.CreatAddress(ctx, models.CreatAddressParams{
-		Owner:         req.Owner,
-		Name:          req.Name,
+		UserID:        req.UserId,
 		StreetAddress: req.StreetAddress,
 		City:          req.City,
 		State:         req.State,
@@ -25,8 +26,7 @@ func (u *userRepo) CreateAddress(ctx context.Context, req *biz.Address) (*biz.Ad
 
 	return &biz.Address{
 		Id:            uint32(address.ID),
-		Owner:         address.Owner,
-		Name:          address.Name,
+		UserId:        req.UserId,
 		City:          address.City,
 		State:         address.State,
 		Country:       address.Country,
@@ -43,16 +43,14 @@ func (u *userRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Ad
 		Country:       &req.Country,
 		ZipCode:       &req.ZipCode,
 		ID:            int32(req.Id),
-		Owner:         req.Owner,
-		Name:          req.Name,
+		UserID:        req.UserId,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &biz.Address{
 		Id:            uint32(address.ID),
-		Owner:         address.Owner,
-		Name:          address.Name,
+		UserId:        address.UserID,
 		City:          address.City,
 		State:         address.State,
 		Country:       address.Country,
@@ -63,9 +61,8 @@ func (u *userRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Ad
 
 func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRequest) (*biz.DeleteAddressesReply, error) {
 	reply, err := u.data.db.DeleteAddress(ctx, models.DeleteAddressParams{
-		Owner: req.Owner,
-		Name:  req.Name,
-		ID:    int32(req.AddressId),
+		UserID: req.UserId,
+		ID:     int32(req.AddressId),
 	})
 	if err != nil {
 		return nil, err
@@ -78,10 +75,7 @@ func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRe
 }
 
 func (u *userRepo) GetAddresses(ctx context.Context, req *biz.Request) (*biz.Addresses, error) {
-	addresses, aErr := u.data.db.GetAddresses(ctx, models.GetAddressesParams{
-		Owner: req.Owner,
-		Name:  req.Name,
-	})
+	addresses, aErr := u.data.db.GetAddresses(ctx, req.UserId)
 	if aErr != nil {
 		if errors.Is(aErr, pgx.ErrNoRows) {
 			return &biz.Addresses{Addresses: []*biz.Address{}}, nil // 返回空列表
@@ -93,8 +87,7 @@ func (u *userRepo) GetAddresses(ctx context.Context, req *biz.Request) (*biz.Add
 	for i, address := range addresses {
 		addressList[i] = &biz.Address{
 			Id:            uint32(address.ID),
-			Owner:         address.Owner,
-			Name:          address.Name,
+			UserId:        address.UserID,
 			StreetAddress: address.StreetAddress,
 			City:          address.City,
 			State:         address.State,

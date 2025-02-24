@@ -1,22 +1,23 @@
 package biz
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type Request struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	UserId uuid.UUID
 }
 
 type DeleteAddressesRequest struct {
 	AddressId uint32 `json:"address_id"`
-	Owner     string `json:"owner"`
-	Name      string `json:"name"`
+	UserId    uuid.UUID
 }
 
 type Address struct {
 	Id            uint32 `json:"id"`
-	Owner         string `json:"owner"`
-	Name          string `json:"name"`
+	UserId        uuid.UUID
 	StreetAddress string `json:"street_address"`
 	City          string `json:"city"`
 	State         string `json:"state"`

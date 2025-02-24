@@ -27,11 +27,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	pool := data.NewDB(confData)
 	client := data.NewCache(confData)
 	alipayClient := data.NewAlipay(pay)
-	dataData, cleanup, err := data.NewData(pool, client, logger, alipayClient)
+	dataData, cleanup, err := data.NewData(pool, client, logger, alipayClient, pay)
 	if err != nil {
 		return nil, nil, err
 	}
-	paymentRepo := data.NewPaymentRepo(dataData, logger)
+	paymentRepo := data.NewPaymentRepo(dataData, logger, pay)
 	paymentUsecase := biz.NewPaymentUsecase(paymentRepo, logger)
 	paymentServiceService := service.NewPaymentServiceService(paymentUsecase)
 	grpcServer := server.NewGRPCServer(paymentServiceService, confServer, observability, logger)

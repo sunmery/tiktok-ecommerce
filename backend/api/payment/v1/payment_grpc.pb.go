@@ -20,17 +20,23 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	PaymentService_CreatePayment_FullMethodName          = "/ecommerce.payment.v1.PaymentService/CreatePayment"
-	PaymentService_GetPayment_FullMethodName             = "/ecommerce.payment.v1.PaymentService/GetPayment"
+	PaymentService_PaymentNotify_FullMethodName          = "/ecommerce.payment.v1.PaymentService/PaymentNotify"
 	PaymentService_ProcessPaymentCallback_FullMethodName = "/ecommerce.payment.v1.PaymentService/ProcessPaymentCallback"
+	PaymentService_GetPayment_FullMethodName             = "/ecommerce.payment.v1.PaymentService/GetPayment"
 )
 
 // PaymentServiceClient is the client API for PaymentService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PaymentServiceClient interface {
+	// 创建支付记录
 	CreatePayment(ctx context.Context, in *CreatePaymentReq, opts ...grpc.CallOption) (*PaymentResp, error)
-	GetPayment(ctx context.Context, in *GetPaymentReq, opts ...grpc.CallOption) (*PaymentResp, error)
+	// 异步通知
+	PaymentNotify(ctx context.Context, in *PaymentNotifyReq, opts ...grpc.CallOption) (*PaymentNotifyResp, error)
+	// 支付宝回调
 	ProcessPaymentCallback(ctx context.Context, in *PaymentCallbackReq, opts ...grpc.CallOption) (*PaymentCallbackResp, error)
+	// 获取支付信息
+	GetPayment(ctx context.Context, in *GetPaymentReq, opts ...grpc.CallOption) (*PaymentResp, error)
 }
 
 type paymentServiceClient struct {
@@ -51,10 +57,10 @@ func (c *paymentServiceClient) CreatePayment(ctx context.Context, in *CreatePaym
 	return out, nil
 }
 
-func (c *paymentServiceClient) GetPayment(ctx context.Context, in *GetPaymentReq, opts ...grpc.CallOption) (*PaymentResp, error) {
+func (c *paymentServiceClient) PaymentNotify(ctx context.Context, in *PaymentNotifyReq, opts ...grpc.CallOption) (*PaymentNotifyResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PaymentResp)
-	err := c.cc.Invoke(ctx, PaymentService_GetPayment_FullMethodName, in, out, cOpts...)
+	out := new(PaymentNotifyResp)
+	err := c.cc.Invoke(ctx, PaymentService_PaymentNotify_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,13 +77,28 @@ func (c *paymentServiceClient) ProcessPaymentCallback(ctx context.Context, in *P
 	return out, nil
 }
 
+func (c *paymentServiceClient) GetPayment(ctx context.Context, in *GetPaymentReq, opts ...grpc.CallOption) (*PaymentResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PaymentResp)
+	err := c.cc.Invoke(ctx, PaymentService_GetPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
 type PaymentServiceServer interface {
+	// 创建支付记录
 	CreatePayment(context.Context, *CreatePaymentReq) (*PaymentResp, error)
-	GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error)
+	// 异步通知
+	PaymentNotify(context.Context, *PaymentNotifyReq) (*PaymentNotifyResp, error)
+	// 支付宝回调
 	ProcessPaymentCallback(context.Context, *PaymentCallbackReq) (*PaymentCallbackResp, error)
+	// 获取支付信息
+	GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error)
 	mustEmbedUnimplementedPaymentServiceServer()
 }
 
@@ -91,11 +112,14 @@ type UnimplementedPaymentServiceServer struct{}
 func (UnimplementedPaymentServiceServer) CreatePayment(context.Context, *CreatePaymentReq) (*PaymentResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePayment not implemented")
 }
-func (UnimplementedPaymentServiceServer) GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPayment not implemented")
+func (UnimplementedPaymentServiceServer) PaymentNotify(context.Context, *PaymentNotifyReq) (*PaymentNotifyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PaymentNotify not implemented")
 }
 func (UnimplementedPaymentServiceServer) ProcessPaymentCallback(context.Context, *PaymentCallbackReq) (*PaymentCallbackResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessPaymentCallback not implemented")
+}
+func (UnimplementedPaymentServiceServer) GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPayment not implemented")
 }
 func (UnimplementedPaymentServiceServer) mustEmbedUnimplementedPaymentServiceServer() {}
 func (UnimplementedPaymentServiceServer) testEmbeddedByValue()                        {}
@@ -136,20 +160,20 @@ func _PaymentService_CreatePayment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PaymentService_GetPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPaymentReq)
+func _PaymentService_PaymentNotify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PaymentNotifyReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PaymentServiceServer).GetPayment(ctx, in)
+		return srv.(PaymentServiceServer).PaymentNotify(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PaymentService_GetPayment_FullMethodName,
+		FullMethod: PaymentService_PaymentNotify_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PaymentServiceServer).GetPayment(ctx, req.(*GetPaymentReq))
+		return srv.(PaymentServiceServer).PaymentNotify(ctx, req.(*PaymentNotifyReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -172,6 +196,24 @@ func _PaymentService_ProcessPaymentCallback_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PaymentService_GetPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPaymentReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).GetPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_GetPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).GetPayment(ctx, req.(*GetPaymentReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PaymentService_ServiceDesc is the grpc.ServiceDesc for PaymentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -184,12 +226,16 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PaymentService_CreatePayment_Handler,
 		},
 		{
-			MethodName: "GetPayment",
-			Handler:    _PaymentService_GetPayment_Handler,
+			MethodName: "PaymentNotify",
+			Handler:    _PaymentService_PaymentNotify_Handler,
 		},
 		{
 			MethodName: "ProcessPaymentCallback",
 			Handler:    _PaymentService_ProcessPaymentCallback_Handler,
+		},
+		{
+			MethodName: "GetPayment",
+			Handler:    _PaymentService_GetPayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

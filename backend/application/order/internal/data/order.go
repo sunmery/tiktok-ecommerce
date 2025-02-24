@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	paymentv1 "backend/api/payment/v1"
@@ -58,9 +59,9 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		}
 
 		// 转换价格到pgtype.Numeric
-		totalAmount, err := types.Float64ToNumeric(item.Cost)
-		if err != nil {
-			return nil, fmt.Errorf("invalid price format: %w", err)
+		totalAmount, totalAmountErr := types.Float64ToNumeric(item.Cost)
+		if totalAmountErr != nil {
+			return nil, fmt.Errorf("invalid price format: %w", totalAmountErr)
 		}
 		fmt.Printf("totalAmount: %v", totalAmount)
 
@@ -85,15 +86,15 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}
 	// 将 totalAmount 转换为字符串，并保留两位小数
 	amountStr := fmt.Sprintf("%.2f", totalAmount)
-	payment, err := o.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
+	fmt.Printf("order.ID.String(): %v", order.ID.String())
+	payment, paymentErr := o.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
 		OrderId:       order.ID.String(),
 		Currency:      req.Currency,
 		Amount:        amountStr,
-		PaymentMethod: "",
-		Metadata:      nil,
+		PaymentMethod: "AliPay",
 	})
-	if err != nil {
-		return nil, err
+	if paymentErr != nil {
+		return nil, errors.New(fmt.Sprintf("创建支付失败: %v", paymentErr))
 	}
 	fmt.Printf("payment: %v", payment)
 
@@ -101,6 +102,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		Order: &biz.OrderResult{
 			OrderId: order.ID.String(),
 		},
+		URL: payment.PaymentUrl,
 	}, nil
 }
 
