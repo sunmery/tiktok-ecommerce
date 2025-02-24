@@ -6,10 +6,8 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
 	v1 "backend/api/payment/v1"
-
-	"backend/application/payment/internal/service"
-
 	"backend/application/payment/internal/conf"
+	"backend/application/payment/internal/service"
 	"backend/constants"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -55,7 +53,7 @@ func NewGRPCServer(
 
 	opts := []grpc.ServerOption{
 		grpc.Middleware(
-			metadata.Server(),
+			metadata.Server(),    // 元信息
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
@@ -76,7 +74,7 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	// v1.RegisterUserServiceServer(srv, user)
 	v1.RegisterPaymentServiceServer(srv, payment)
+
 	return srv
 }

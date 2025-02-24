@@ -91,6 +91,11 @@ func main() {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
 
+	var pc conf.Pay
+	if err := c.Scan(&pc); err != nil {
+		log.Fatal(fmt.Errorf("load pay config failed:%w", err))
+	}
+
 	var bc conf.Bootstrap
 	if err := c.Scan(&bc); err != nil {
 		log.Fatal(fmt.Errorf("load bootstrap config failed:%w", err))
@@ -108,7 +113,7 @@ func main() {
 		log.Fatal(fmt.Errorf("load observability config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &cc, &obs, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &cc, &pc, &obs, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}

@@ -152,8 +152,7 @@
           "title": "支付货币"
         },
         "amount": {
-          "type": "number",
-          "format": "double",
+          "type": "string",
           "title": "支付金额"
         },
         "paymentMethod": {
@@ -203,7 +202,7 @@
         },
         "paymentUrl": {
           "type": "string",
-          "title": "第三方支付链接（如需要）"
+          "title": "第三方支付链接"
         },
         "createdAt": {
           "type": "string",

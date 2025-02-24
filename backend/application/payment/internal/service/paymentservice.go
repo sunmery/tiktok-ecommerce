@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"backend/application/payment/internal/biz"
 
@@ -22,43 +25,55 @@ func NewPaymentServiceService(uc *biz.PaymentUsecase) *PaymentServiceService {
 }
 
 func (s *PaymentServiceService) CreatePayment(ctx context.Context, req *pb.CreatePaymentReq) (*pb.PaymentResp, error) {
-	err := s.uc.CreatePayment(ctx, &biz.Payment{
-		PaymentID:   uuid.UUID{},
-		OrderID:     uuid.UUID{},
-		Amount:      0,
-		Currency:    "",
-		Method:      "",
-		Status:      "",
-		GatewayTxID: "",
-		Metadata:    nil,
-		CreatedAt:   time.Time{},
-		UpdatedAt:   time.Time{},
+	orderId, err := uuid.Parse(req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.uc.CreatePayment(ctx, &biz.CreatePaymentReq{
+		OrderId:       orderId,
+		Currency:      req.Currency,
+		Amount:        req.Amount,
+		PaymentMethod: req.PaymentMethod,
+		Metadata:      req.Metadata,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.PaymentResp{
-		PaymentId:  "",
-		Status:     "",
-		PaymentUrl: "",
-		CreatedAt:  nil,
+		PaymentId:  result.PaymentId,
+		Status:     result.Status,
+		PaymentUrl: result.PaymentUrl,
+		CreatedAt:  timestamppb.New(result.CreatedAt),
 	}, nil
 }
 
 func (s *PaymentServiceService) GetPayment(ctx context.Context, req *pb.GetPaymentReq) (*pb.PaymentResp, error) {
-	payment, err := s.uc.GetByID(ctx, uuid.UUID{})
+	paymentId, err := uuid.Parse(req.PaymentId)
+	if err != nil {
+		return nil, err
+	}
+	payment, err := s.uc.GetPayment(ctx, paymentId)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.PaymentResp{
-		PaymentId:  payment.PaymentID.String(),
-		Status:     string(payment.Status),
-		PaymentUrl: "",
-		CreatedAt:  nil,
+		PaymentId:  payment.PaymentId,
+		Status:     payment.Status,
+		PaymentUrl: payment.PaymentUrl,
+		CreatedAt:  timestamppb.New(payment.CreatedAt),
 	}, nil
 }
 
 func (s *PaymentServiceService) ProcessPaymentCallback(ctx context.Context, req *pb.PaymentCallbackReq) (*pb.PaymentCallbackResp, error) {
-	s.uc.
+	callback, err := s.uc.ProcessPaymentCallback(ctx, &biz.PaymentCallbackReq{
+		PaymentId:       "",
+		Status:          "",
+		GatewayResponse: "",
+		ProcessedAt:     time.Time{},
+	})
+	fmt.Printf("callback: %v\n", callback)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 }

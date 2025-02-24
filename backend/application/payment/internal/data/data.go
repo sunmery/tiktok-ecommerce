@@ -6,6 +6,8 @@ import (
 
 	"backend/application/payment/internal/data/models"
 
+	"github.com/smartwalle/alipay/v3"
+
 	"backend/application/payment/internal/conf"
 
 	"github.com/exaring/otelpgx"
@@ -17,13 +19,14 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewPaymentRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewPaymentRepo)
 
 type Data struct {
 	db     *models.Queries
 	pgx    *pgxpool.Pool
 	rdb    *redis.Client
 	logger *log.Helper
+	alipay *alipay.Client
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -34,6 +37,7 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	logger log.Logger,
+	alipay *alipay.Client,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -43,6 +47,7 @@ func NewData(
 		pgx:    db,                    // 数据库事务
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
+		alipay: alipay,
 	}, cleanup, nil
 }
 
@@ -59,6 +64,27 @@ func NewCache(c *conf.Data) *redis.Client {
 	})
 
 	return rdb
+}
+
+// NewAlipay 支付宝
+func NewAlipay(c *conf.Pay) *alipay.Client {
+	client, err := alipay.New(c.Alipay.AppId, c.Alipay.PrivateKey, false)
+	if err != nil {
+		panic(fmt.Errorf("new alipay client failed: %v", err))
+	}
+	// 加载应用公钥证书
+	if err := client.LoadAppCertPublicKey(c.Alipay.AppPublicCert); err != nil {
+		panic(fmt.Errorf("load app public cert failed: %v", err))
+	}
+	// 加载支付宝根证书
+	if err := client.LoadAliPayRootCert(c.Alipay.AlipayRootCert); err != nil {
+		panic(fmt.Errorf("load alipay root cert failed: %v", err))
+	}
+	// 加载支付宝公钥证书
+	if err := client.LoadAlipayCertPublicKey(c.Alipay.AliPublicKey); err != nil {
+		panic(fmt.Errorf("load alipay public cert failed: %v", err))
+	}
+	return client
 }
 
 // NewDB 数据库

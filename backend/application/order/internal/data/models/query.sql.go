@@ -14,7 +14,7 @@ import (
 )
 
 const CreateOrder = `-- name: CreateOrder :one
-INSERT INTO orders.orders ( user_id, currency, street_address,
+INSERT INTO orders.orders (user_id, currency, street_address,
                            city, state, country, zip_code, email)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
@@ -33,7 +33,7 @@ type CreateOrderParams struct {
 
 // CreateOrder
 //
-//	INSERT INTO orders.orders ( user_id, currency, street_address,
+//	INSERT INTO orders.orders (user_id, currency, street_address,
 //	                           city, state, country, zip_code, email)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 //	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
@@ -113,42 +113,6 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 	return i, err
 }
 
-const GetDateRangeStats = `-- name: GetDateRangeStats :one
-
-SELECT get_date_range_stats
-FROM orders.get_date_range_stats(
-        p_user_id => $1,
-        p_start => $2,
-        p_end => $3
-     )
-`
-
-type GetDateRangeStatsParams struct {
-	PUserID uuid.UUID          `json:"pUserID"`
-	PStart  pgtype.Timestamptz `json:"pStart"`
-	PEnd    pgtype.Timestamptz `json:"pEnd"`
-}
-
-// -- name: ListOrdersByUser :many
-// SELECT *
-// FROM orders.orders
-// WHERE user_id = $1
-// ORDER BY created_at DESC
-// LIMIT $2 OFFSET $3;
-//
-//	SELECT get_date_range_stats
-//	FROM orders.get_date_range_stats(
-//	        p_user_id => $1,
-//	        p_start => $2,
-//	        p_end => $3
-//	     )
-func (q *Queries) GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsParams) (interface{}, error) {
-	row := q.db.QueryRow(ctx, GetDateRangeStats, arg.PUserID, arg.PStart, arg.PEnd)
-	var get_date_range_stats interface{}
-	err := row.Scan(&get_date_range_stats)
-	return get_date_range_stats, err
-}
-
 const GetOrderByID = `-- name: GetOrderByID :one
 SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 FROM orders.orders
@@ -180,82 +144,102 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders,
 	return i, err
 }
 
-const ListOrdersByUserWithDate = `-- name: ListOrdersByUserWithDate :many
-SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
-       json_agg(so.*) AS sub_orders
+const GetUserOrdersWithSuborders = `-- name: GetUserOrdersWithSuborders :many
+
+SELECT o.id         AS order_id,
+       o.currency   AS order_currency,
+       o.street_address,
+       o.city,
+       o.state,
+       o.country,
+       o.zip_code,
+       o.email,
+       o.created_at AS order_created,
+       jsonb_agg(
+               jsonb_build_object(
+                       'suborder_id', so.id,
+                       'merchant_id', so.merchant_id,
+                       'total_amount', so.total_amount,
+                       'currency', so.currency,
+                       'status', so.status,
+                       'items', so.items,
+                       'created_at', so.created_at,
+                       'updated_at', so.updated_at
+               ) ORDER BY so.created_at
+       )            AS suborders
 FROM orders.orders o
          LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 WHERE o.user_id = $1::uuid
-  AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
 GROUP BY o.id
 ORDER BY o.created_at DESC
-LIMIT $5 OFFSET $4
 `
 
-type ListOrdersByUserWithDateParams struct {
-	UserID    uuid.UUID `json:"userID"`
-	StartTime time.Time `json:"startTime"`
-	EndTime   time.Time `json:"endTime"`
-	Offsets   int64     `json:"offsets"`
-	Limits    int64     `json:"limits"`
-}
-
-type ListOrdersByUserWithDateRow struct {
-	ID            uuid.UUID `json:"id"`
-	UserID        uuid.UUID `json:"userID"`
-	Currency      string    `json:"currency"`
+type GetUserOrdersWithSubordersRow struct {
+	OrderID       uuid.UUID `json:"orderID"`
+	OrderCurrency string    `json:"orderCurrency"`
 	StreetAddress string    `json:"streetAddress"`
 	City          string    `json:"city"`
 	State         string    `json:"state"`
 	Country       string    `json:"country"`
 	ZipCode       string    `json:"zipCode"`
 	Email         string    `json:"email"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	PaymentStatus string    `json:"paymentStatus"`
-	SubOrders     []byte    `json:"subOrders"`
+	OrderCreated  time.Time `json:"orderCreated"`
+	Suborders     []byte    `json:"suborders"`
 }
 
-// 带日期过滤的查询
+// -- name: ListOrdersByUser :many
+// SELECT *
+// FROM orders.orders
+// WHERE user_id = $1
+// ORDER BY created_at DESC
+// LIMIT $2 OFFSET $3;
 //
-//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
-//	       json_agg(so.*) AS sub_orders
+//	SELECT o.id         AS order_id,
+//	       o.currency   AS order_currency,
+//	       o.street_address,
+//	       o.city,
+//	       o.state,
+//	       o.country,
+//	       o.zip_code,
+//	       o.email,
+//	       o.created_at AS order_created,
+//	       jsonb_agg(
+//	               jsonb_build_object(
+//	                       'suborder_id', so.id,
+//	                       'merchant_id', so.merchant_id,
+//	                       'total_amount', so.total_amount,
+//	                       'currency', so.currency,
+//	                       'status', so.status,
+//	                       'items', so.items,
+//	                       'created_at', so.created_at,
+//	                       'updated_at', so.updated_at
+//	               ) ORDER BY so.created_at
+//	       )            AS suborders
 //	FROM orders.orders o
 //	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 //	WHERE o.user_id = $1::uuid
-//	  AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
 //	GROUP BY o.id
 //	ORDER BY o.created_at DESC
-//	LIMIT $5 OFFSET $4
-func (q *Queries) ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersByUserWithDateParams) ([]ListOrdersByUserWithDateRow, error) {
-	rows, err := q.db.Query(ctx, ListOrdersByUserWithDate,
-		arg.UserID,
-		arg.StartTime,
-		arg.EndTime,
-		arg.Offsets,
-		arg.Limits,
-	)
+func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error) {
+	rows, err := q.db.Query(ctx, GetUserOrdersWithSuborders, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListOrdersByUserWithDateRow
+	var items []GetUserOrdersWithSubordersRow
 	for rows.Next() {
-		var i ListOrdersByUserWithDateRow
+		var i GetUserOrdersWithSubordersRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Currency,
+			&i.OrderID,
+			&i.OrderCurrency,
 			&i.StreetAddress,
 			&i.City,
 			&i.State,
 			&i.Country,
 			&i.ZipCode,
 			&i.Email,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.PaymentStatus,
-			&i.SubOrders,
+			&i.OrderCreated,
+			&i.Suborders,
 		); err != nil {
 			return nil, err
 		}

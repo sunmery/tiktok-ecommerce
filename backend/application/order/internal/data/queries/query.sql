@@ -1,5 +1,5 @@
 -- name: CreateOrder :one
-INSERT INTO orders.orders ( user_id, currency, street_address,
+INSERT INTO orders.orders (user_id, currency, street_address,
                            city, state, country, zip_code, email)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
@@ -16,25 +16,33 @@ WHERE id = $1;
 -- ORDER BY created_at DESC
 -- LIMIT $2 OFFSET $3;
 
--- name: GetDateRangeStats :one
-SELECT *
-FROM orders.get_date_range_stats(
-        p_user_id => $1,
-        p_start => $2,
-        p_end => $3
-     );
-
--- 带日期过滤的查询
--- name: ListOrdersByUserWithDate :many
-SELECT o.*,
-       json_agg(so.*) AS sub_orders
+-- name: GetUserOrdersWithSuborders :many
+SELECT o.id         AS order_id,
+       o.currency   AS order_currency,
+       o.street_address,
+       o.city,
+       o.state,
+       o.country,
+       o.zip_code,
+       o.email,
+       o.created_at AS order_created,
+       jsonb_agg(
+               jsonb_build_object(
+                       'suborder_id', so.id,
+                       'merchant_id', so.merchant_id,
+                       'total_amount', so.total_amount,
+                       'currency', so.currency,
+                       'status', so.status,
+                       'items', so.items,
+                       'created_at', so.created_at,
+                       'updated_at', so.updated_at
+               ) ORDER BY so.created_at
+       )            AS suborders
 FROM orders.orders o
          LEFT JOIN orders.sub_orders so ON o.id = so.order_id
-WHERE o.user_id = @user_id::uuid
-  AND o.created_at BETWEEN @start_time::timestamptz AND @end_time::timestamptz
+WHERE o.user_id = $1::uuid
 GROUP BY o.id
-ORDER BY o.created_at DESC
-LIMIT @limits OFFSET @offsets;
+ORDER BY o.created_at DESC;
 
 -- name: CreateSubOrder :one
 INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,

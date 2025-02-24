@@ -32,7 +32,7 @@ type SubOrder struct {
 	TotalAmount float64
 	Currency    string
 	Status      string
-	Items       []OrderItem
+	Items       []*OrderItem
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -50,16 +50,14 @@ type Order struct {
 
 // CartItem 购物车商品
 type CartItem struct {
-	MerchantId uuid.UUID
-	// 商品ID
-	ProductId uuid.UUID
-	// 商品数量
-	Quantity uint32
+	MerchantId uuid.UUID `json:"merchant_id"`
+	ProductId  uuid.UUID `json:"product_id"`
+	Quantity   uint32    `json:"quantity"`
 }
 
 type OrderItem struct {
-	Item *CartItem
-	Cost float64
+	Item *CartItem `json:"item"`
+	Cost float64   `json:"cost"`
 }
 type OrderResult struct {
 	OrderId string
@@ -74,20 +72,11 @@ type PlaceOrderReq struct {
 type PlaceOrderResp struct {
 	Order *OrderResult
 }
-type Pagination struct {
-	Total       uint32 // 总记录数
-	CurrentPage uint32 // 当前页码
-	PageSize    uint32 // 每页数量
-	TotalPages  uint32 // 总页数
-}
 
 type ListOrderReq struct {
-	UserID        uuid.UUID
-	DateRangeType string    // 支持：today/yesterday/last7days/custom
-	StartTime     time.Time // 当DateRangeType=custom时必填
-	EndTime       time.Time // 当DateRangeType=custom时必填
-	Page          int       // 分页页码，从1开始
-	PageSize      int       // 每页数量
+	UserID   uuid.UUID
+	Page     uint32 // 分页页码，从1开始
+	PageSize uint32 // 每页数量
 }
 
 type ListOrderResp struct {

@@ -7,13 +7,13 @@
 package main
 
 import (
-	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"backend/application/payment/internal/biz"
 	"backend/application/payment/internal/conf"
 	"backend/application/payment/internal/data"
 	"backend/application/payment/internal/server"
 	"backend/application/payment/internal/service"
+	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 import (
@@ -23,19 +23,19 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, consul *conf.Consul, trace *conf.Trace, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, pay *conf.Pay, observability *conf.Observability, logger log.Logger) (*kratos.App, func(), error) {
 	pool := data.NewDB(confData)
 	client := data.NewCache(confData)
-	casdoorsdkClient := data.NewCasdoor(auth)
-	dataData, cleanup, err := data.NewData(pool, client, casdoorsdkClient, logger)
+	alipayClient := data.NewAlipay(pay)
+	dataData, cleanup, err := data.NewData(pool, client, logger, alipayClient)
 	if err != nil {
 		return nil, nil, err
 	}
-	userRepo := data.NewUserRepo(dataData, logger)
-	userUsecase := biz.NewUserUsecase(userRepo, logger)
-	userService := service.NewUserService(userUsecase)
-	grpcServer := server.NewGRPCServer(confServer, userService, trace, logger)
-	httpServer := server.NewHTTPServer(confServer, userService, auth, trace, logger)
+	paymentRepo := data.NewPaymentRepo(dataData, logger)
+	paymentUsecase := biz.NewPaymentUsecase(paymentRepo, logger)
+	paymentServiceService := service.NewPaymentServiceService(paymentUsecase)
+	grpcServer := server.NewGRPCServer(paymentServiceService, confServer, observability, logger)
+	httpServer := server.NewHTTPServer(confServer, paymentServiceService, observability, logger)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {

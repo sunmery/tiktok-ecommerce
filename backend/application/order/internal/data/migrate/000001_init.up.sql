@@ -17,7 +17,7 @@ CREATE TABLE orders.orders
 (
     id             UUID PRIMARY KEY DEFAULT uuidv7_sub_ms(), -- UUID格式订单ID，避免顺序暴露业务量
     user_id        UUID                           NOT NULL,  -- 关联用户ID
-    currency       VARCHAR(3)                     NOT NULL,  -- 用户下单时使用的货币类型（ISO 4217）
+    currency       VARCHAR(3)       DEFAULT 'CNY' NOT NULL,  -- 用户下单时使用的货币类型（ISO 4217）
     street_address TEXT                           NOT NULL,  -- 反范式化存储地址信息，避免关联查询
     city           VARCHAR(100)                   NOT NULL,
     state          VARCHAR(100)                   NOT NULL,
@@ -49,30 +49,3 @@ COMMENT
 -- 创建索引优化查询性能
 CREATE INDEX idx_orders_user ON orders.orders (user_id, created_at DESC); -- 用户订单列表查询
 CREATE INDEX idx_sub_orders_merchant ON orders.sub_orders (merchant_id, status);
--- 商家后台查询
-
--- 统计函数, 用于获取用户在指定日期范围内的订单统计信息
-CREATE
-    OR REPLACE FUNCTION orders.get_date_range_stats(
-    p_user_id UUID,
-    p_start TIMESTAMPTZ,
-    p_end TIMESTAMPTZ
-)
-    RETURNS TABLE
-            (
-                total_amount NUMERIC,
-                total_orders BIGINT
-            )
-AS
-$$
-BEGIN
-    RETURN QUERY
-        SELECT COALESCE(SUM(so.total_amount), 0) AS total_amount,
-               COUNT(DISTINCT o.id)              AS total_orders
-        FROM orders.orders o
-                 JOIN orders.sub_orders so ON o.id = so.order_id
-        WHERE o.user_id = p_user_id
-          AND o.created_at BETWEEN p_start AND p_end;
-END;
-$$
-    LANGUAGE plpgsql;

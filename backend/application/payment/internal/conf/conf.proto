@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "kratos-template/internal/conf;conf";
+option go_package = "payment/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -23,6 +23,19 @@ message Server {
   }
   HTTP http = 1;
   GRPC grpc = 2;
+}
+
+message Pay {
+  message Alipay {
+    string app_id = 1;
+    string private_key = 2;
+    string ali_public_key = 3;
+    string notify_url = 4;
+    string return_url = 5;
+    string app_public_cert = 6;
+    string alipay_root_cert = 7;
+  }
+  Alipay alipay = 1;
 }
 
 message Data {
@@ -49,31 +62,6 @@ message Data {
   }
   Database database = 1;
   Cache cache = 2;
-}
-
-// SaaS 软件即服务
-message SaaS {
-  // 用户管理平台
-  message Casdoor {
-    message Server {
-      string endpoint = 1;
-      string client_id = 2 [json_name = "client_id"];
-      string client_secret = 3 [json_name = "client_secret"];
-      string organization = 4;
-      string application = 5;
-    }
-    Server server = 1;
-  }
-
-  Casdoor casdoor = 1;
-}
-
-// 认证
-message Auth {
-  message JWT {
-    string certificate = 1 [json_name = "service_key"];
-  }
-  JWT jwt = 1;
 }
 
 // 可观测性

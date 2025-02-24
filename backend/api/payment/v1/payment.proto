@@ -32,7 +32,7 @@ service PaymentService {
 message CreatePaymentReq {
   string order_id = 1;       // 主订单ID
   string currency = 2;       // 支付货币
-  double amount = 3;         // 支付金额
+  string amount = 3;         // 支付金额
   string payment_method = 4; // 支付方式
   map<string, string> metadata = 5; // 扩展元数据
 }
@@ -40,7 +40,7 @@ message CreatePaymentReq {
 message PaymentResp {
   string payment_id = 1;
   string status = 2;         // CREATED/PENDING/SUCCEEDED/FAILED
-  string payment_url = 3;    // 第三方支付链接（如需要）
+  string payment_url = 3;    // 第三方支付链接
   google.protobuf.Timestamp created_at = 4;
 }
 

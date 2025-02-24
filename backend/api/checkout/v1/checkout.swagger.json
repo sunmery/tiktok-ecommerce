@@ -50,26 +50,6 @@
     }
   },
   "definitions": {
-    "ecommercecheckoutv1Address": {
-      "type": "object",
-      "properties": {
-        "streetAddress": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
-        },
-        "country": {
-          "type": "string"
-        },
-        "zipCode": {
-          "type": "string"
-        }
-      }
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -116,9 +96,8 @@
         "email": {
           "type": "string"
         },
-        "address": {
-          "$ref": "#/definitions/ecommercecheckoutv1Address",
-          "title": "user.service.v1.CreditCards credit_card = 6;"
+        "creditCard": {
+          "$ref": "#/definitions/v1CreditCards"
         }
       }
     },
@@ -130,6 +109,33 @@
         },
         "transactionId": {
           "type": "string"
+        }
+      }
+    },
+    "v1CreditCards": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string"
+        },
+        "cvv": {
+          "type": "string"
+        },
+        "expiration_year": {
+          "type": "string"
+        },
+        "expiration_month": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     }

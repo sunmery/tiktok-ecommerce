@@ -7,9 +7,6 @@ import (
 
 	"github.com/google/uuid"
 
-	pb "backend/api/product/v1"
-
-	"github.com/go-kratos/kratos/v2/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -21,14 +18,6 @@ const (
 	ProductStatusApproved
 	ProductStatusRejected
 )
-
-// 补充状态映射
-var pbStatusMapping = map[ProductStatus]pb.ProductStatus{
-	ProductStatusDraft:    pb.ProductStatus_PRODUCT_STATUS_DRAFT,
-	ProductStatusPending:  pb.ProductStatus_PRODUCT_STATUS_PENDING,
-	ProductStatusApproved: pb.ProductStatus_PRODUCT_STATUS_APPROVED,
-	ProductStatusRejected: pb.ProductStatus_PRODUCT_STATUS_REJECTED,
-}
 
 var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	ProductStatusDraft: {
@@ -240,15 +229,4 @@ func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest)
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
 	p.log.Debugf("DeleteProduct: %+v", req)
 	return &emptypb.Empty{}, nil
-}
-
-// 辅助验证函数
-func validateProduct(p *Product) error {
-	if p.Name == "" {
-		return errors.New(403, "", "product name required")
-	}
-	if p.Price <= 0 {
-		return errors.New(403, "", "invalid price")
-	}
-	return nil
 }

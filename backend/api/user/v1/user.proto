@@ -70,13 +70,17 @@ service UserService {
 }
 
 message CreditCards {
-  string number = 1 [json_name = "number"];
-  string cvv = 2 [json_name = "cvv"];
-  string expiration_year = 3 [json_name = "expiration_year"];
-  string expiration_month = 4 [json_name = "expiration_month"];
-  string owner = 5;
-  string name = 6;
-  uint32 id = 7;
+  string number = 1; // 卡号
+  string cvv = 2; // 安全码
+  string exp_year = 3; // 过期年份
+  string exp_month = 4; // 过期月份
+  string owner = 5; // 持卡人
+  string name = 6; // 卡名
+  uint32 id = 7; // 卡id
+  string type = 8; // 卡类型
+  string brand = 9; // 卡品牌
+  string country = 10; // 卡所属国家
+  string created_time = 11;
 }
 
 message CardsReply {

@@ -3,21 +3,20 @@ package server
 import (
 	"context"
 
-	"github.com/go-kratos/kratos/v2/middleware/metadata"
-
 	v1 "backend/api/payment/v1"
 
-	"backend/application/payment/internal/service"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
 	"backend/application/payment/internal/conf"
+	"backend/application/payment/internal/service"
 	"backend/constants"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
+
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
@@ -53,16 +52,18 @@ func NewHTTPServer(c *conf.Server,
 	// trace end
 	opts := []http.ServerOption{
 		http.Middleware(
-			metadata.Server(),
+			metadata.Server(),    // 元信息
 			validate.Validator(), // 参数校验
-			tracing.Server(),
+			tracing.Server(),     // 链路追踪
 			recovery.Recovery(
 				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
 					// do someting
 					return nil
 				}),
 			),
-			logging.Server(logger)), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 HTTP 请求的时候打印详细请求信息
+			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 HTTP 请求的时候打印详细请求信息
+		),
+		// khttp.Filter(data.RedirectFilter),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))

@@ -42,7 +42,7 @@ message PlaceOrderReq {
 
 message OrderItem {
   cart.v1.CartItem item = 1;
-  double cost = 2;
+  double cost = 2; // 价格
 }
 
 message OrderResult {
@@ -65,7 +65,10 @@ enum PaymentStatus {
 message Order {
   repeated OrderItem order_items = 1;
   string order_id = 2;
-  string user_id = 3;
+  string user_id = 3 [
+    (validate.rules).string.len = 32,
+    (validate.rules).string.uuid = true
+  ];
   string currency = 4[(validate.rules).string.len = 3];
   user.v1.Address address = 5;
   string email = 6;
@@ -77,32 +80,13 @@ message Order {
 
 // 根据日期和分页查询订单
 message ListOrderReq {
-  // 时间范围筛选（可选）
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
-
   // 分页参数
   uint32 page = 3;  // 默认20，最大100
   uint32 page_size = 4; // 默认0
-
-  string dateRangeType = 5;
 }
 
-message DateRangeStats {
-  double total_amount = 1;    // 时间段内总金额
-  uint32 total_orders = 2;    // 时间段内订单总数
-  string currency = 3[(validate.rules).string.len = 3];        // 主货币
-}
-
-message Pagination {
-  uint32 total = 1;           // 总记录数
-  uint32 current_page = 2;    // 当前页码
-  uint32 total_pages = 3;     // 总页数
-}
 message ListOrderResp {
   repeated Order orders = 1;
-  DateRangeStats stats = 2; // 日期统计信息
-  Pagination pagination = 3;
 }
 
 message MarkOrderPaidReq {
@@ -110,4 +94,3 @@ message MarkOrderPaidReq {
 }
 
 message MarkOrderPaidResp {}
-

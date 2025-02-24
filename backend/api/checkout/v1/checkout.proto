@@ -17,24 +17,16 @@ service CheckoutService {
   }
 }
 
-message Address {
-  string street_address = 1;
-  string city = 2;
-  string state = 3;
-  string country = 4;
-  string zip_code = 5;
-}
-
+// firstname+lastname+email 允许非注册用户直接填写信息下单
 message CheckoutReq {
   uint32 user_id = 1;
   string firstname = 2;
   string lastname = 3;
   string email = 4;
-  Address address = 5;
-//  user.service.v1.CreditCards credit_card = 6;
+  user.v1.CreditCards credit_card = 6;
 }
 
 message CheckoutResp {
-  string order_id = 1;
-  string transaction_id = 2;
+  string order_id = 1; // 唯一标识订单，用于后续查询、退换货。
+  string transaction_id = 2;// 支付事务唯一标识，用于与支付网关对账。
 }

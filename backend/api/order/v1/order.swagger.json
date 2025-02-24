@@ -35,21 +35,6 @@
         },
         "parameters": [
           {
-            "name": "startTime",
-            "description": "时间范围筛选（可选）",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "endTime",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
             "name": "page",
             "description": "分页参数\n\n默认20，最大100",
             "in": "query",
@@ -64,12 +49,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "dateRangeType",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -187,10 +166,7 @@
           "type": "integer",
           "format": "int64"
         },
-        "owner": {
-          "type": "string"
-        },
-        "name": {
+        "userId": {
           "type": "string"
         },
         "city": {
@@ -202,21 +178,20 @@
         "country": {
           "type": "string"
         },
-        "zip_code": {
+        "zipCode": {
           "type": "string"
         },
-        "street_address": {
+        "streetAddress": {
           "type": "string"
         }
       },
       "required": [
-        "owner",
-        "name",
+        "userId",
         "city",
         "state",
         "country",
-        "zip_code",
-        "street_address"
+        "zipCode",
+        "streetAddress"
       ]
     },
     "v1CartItem": {
@@ -238,25 +213,6 @@
       },
       "title": "购物车商品"
     },
-    "v1DateRangeStats": {
-      "type": "object",
-      "properties": {
-        "totalAmount": {
-          "type": "number",
-          "format": "double",
-          "title": "时间段内总金额"
-        },
-        "totalOrders": {
-          "type": "integer",
-          "format": "int64",
-          "title": "时间段内订单总数"
-        },
-        "currency": {
-          "type": "string",
-          "title": "主货币"
-        }
-      }
-    },
     "v1ListOrderResp": {
       "type": "object",
       "properties": {
@@ -266,13 +222,6 @@
             "type": "object",
             "$ref": "#/definitions/v1Order"
           }
-        },
-        "stats": {
-          "$ref": "#/definitions/v1DateRangeStats",
-          "title": "日期统计信息"
-        },
-        "pagination": {
-          "$ref": "#/definitions/v1Pagination"
         }
       }
     },
@@ -323,7 +272,8 @@
         },
         "cost": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "title": "价格"
         }
       }
     },
@@ -332,26 +282,6 @@
       "properties": {
         "orderId": {
           "type": "string"
-        }
-      }
-    },
-    "v1Pagination": {
-      "type": "object",
-      "properties": {
-        "total": {
-          "type": "integer",
-          "format": "int64",
-          "title": "总记录数"
-        },
-        "currentPage": {
-          "type": "integer",
-          "format": "int64",
-          "title": "当前页码"
-        },
-        "totalPages": {
-          "type": "integer",
-          "format": "int64",
-          "title": "总页数"
         }
       }
     },

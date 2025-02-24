@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
+
+	paymentv1 "backend/api/payment/v1"
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
@@ -43,16 +44,21 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}
 
 	// 分单
-	for _, items := range req.OrderItems {
+	for _, item := range req.OrderItems {
 
 		// 序列化订单项
+		type SubOrderItem struct {
+			Item *biz.CartItem `json:"item"`
+			Cost float64       `json:"cost"`
+		}
+		items := []SubOrderItem{{Item: item.Item, Cost: item.Cost}}
 		itemsJSON, err := json.Marshal(items)
 		if err != nil {
 			return nil, fmt.Errorf("序列化订单项失败: %w", err)
 		}
 
 		// 转换价格到pgtype.Numeric
-		totalAmount, err := types.Float64ToNumeric(items.Cost)
+		totalAmount, err := types.Float64ToNumeric(item.Cost)
 		if err != nil {
 			return nil, fmt.Errorf("invalid price format: %w", err)
 		}
@@ -60,7 +66,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 		subOrder, subOrderErr := o.data.DB(ctx).CreateSubOrder(ctx, models.CreateSubOrderParams{
 			OrderID:     order.ID,
-			MerchantID:  items.Item.MerchantId,
+			MerchantID:  item.Item.MerchantId,
 			TotalAmount: totalAmount,
 			Currency:    req.Currency,
 			Status:      "created",
@@ -70,7 +76,26 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			return nil, fmt.Errorf("创建子订单失败: %w", subOrderErr)
 		}
 		fmt.Printf("subOrder: %v", subOrder)
+
 	}
+	// 调用支付
+	totalAmount := 0.0
+	for _, item := range req.OrderItems {
+		totalAmount += item.Cost * float64(item.Item.Quantity)
+	}
+	// 将 totalAmount 转换为字符串，并保留两位小数
+	amountStr := fmt.Sprintf("%.2f", totalAmount)
+	payment, err := o.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
+		OrderId:       order.ID.String(),
+		Currency:      req.Currency,
+		Amount:        amountStr,
+		PaymentMethod: "",
+		Metadata:      nil,
+	})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("payment: %v", payment)
 
 	return &biz.PlaceOrderResp{
 		Order: &biz.OrderResult{
@@ -80,134 +105,52 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 }
 
 func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.ListOrderResp, error) {
-	// 参数校验
-	if req.Page < 1 {
-		req.Page = defaultPage
-	}
-	if req.PageSize < 1 || req.PageSize > maxPageSize {
-		req.PageSize = defaultPageSize
+	return &biz.ListOrderResp{Orders: nil}, nil
+}
+
+// 自定义JSON解析
+func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
+	type dbSubOrder struct {
+		ID          string          `json:"id"`
+		MerchantID  string          `json:"merchant_id"`
+		TotalAmount float64         `json:"total_amount"`
+		Currency    string          `json:"currency"`
+		Status      string          `json:"status"`
+		Items       json.RawMessage `json:"items"`
 	}
 
-	// 计算时间范围
-	start, end, err := o.calculateTimeRange(req)
-	if err != nil {
-		return nil, fmt.Errorf("invalid time range: %w", err)
+	var dbSubs []dbSubOrder
+	if err := json.Unmarshal(data, &dbSubs); err != nil {
+		return nil, fmt.Errorf("json unmarshal failed: %w", err)
 	}
 
-	// 执行数据库查询
-	orders, err := o.queryOrders(ctx, req.UserID, start, end, req.Page, req.PageSize)
-	// orders, err := o.data.DB(ctx).ListOrdersByUserWithDate(ctx, models.ListOrdersByUserWithDateParams{
-	// 	UserID: req.UserID,
-	// 	Limit:  int64(req.PageSize),
-	// 	Offset: int64((req.Page - 1) * req.PageSize),
-	// })
-	if err != nil {
-		return nil, fmt.Errorf("database query failed: %w", err)
-	}
+	subOrders := make([]*biz.SubOrder, 0, len(dbSubs))
+	for _, d := range dbSubs {
+		merchantID, err := uuid.Parse(d.MerchantID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid merchant id: %w", err)
+		}
 
-	return &biz.ListOrderResp{Orders: orders}, nil
+		var items []*biz.OrderItem
+		if err := json.Unmarshal(d.Items, &items); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal items: %w", err)
+		}
+
+		subOrders = append(subOrders, &biz.SubOrder{
+			ID:          d.ID,
+			MerchantID:  merchantID,
+			TotalAmount: d.TotalAmount,
+			Currency:    d.Currency,
+			Status:      d.Status,
+			Items:       items,
+		})
+	}
+	return subOrders, nil
 }
 
 func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
 	// TODO implement me
 	panic("implement me")
-}
-
-func (o *orderRepo) calculateTimeRange(req *biz.ListOrderReq) (start, end time.Time, err error) {
-	switch req.DateRangeType {
-	case "today":
-		return time.Now().Truncate(24 * time.Hour), time.Now(), nil
-	case "week":
-		return time.Now().AddDate(0, 0, -7), time.Now(), nil
-	case "custom":
-		return req.StartTime, req.EndTime, nil
-	default:
-		return time.Time{}, time.Time{}, fmt.Errorf("invalid date range type")
-	}
-}
-
-func (o *orderRepo) queryOrders(ctx context.Context, userID uuid.UUID, start, end time.Time, page, pageSize int) ([]*biz.Order, error) {
-	offset := (page - 1) * pageSize
-
-	rows, err := o.data.DB(ctx).ListOrdersByUserWithDate(ctx, models.ListOrdersByUserWithDateParams{
-		UserID:    userID,
-		StartTime: start,
-		EndTime:   end,
-		Offsets:   int64(pageSize),
-		Limits:    int64(offset),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("query failed: %w", err)
-	}
-
-	var orders []*biz.Order
-	for _, dbOrder := range rows {
-		// 解析子订单
-		subOrders, err := parseSubOrders(dbOrder.SubOrders)
-		if err != nil {
-			return nil, fmt.Errorf("parse sub_orders failed: %w", err)
-		}
-
-		orders = append(orders, &biz.Order{
-			OrderID:  dbOrder.ID.String(),
-			UserID:   dbOrder.UserID,
-			Currency: dbOrder.Currency,
-			Address: &biz.Address{
-				StreetAddress: dbOrder.StreetAddress,
-				City:          dbOrder.City,
-				State:         dbOrder.State,
-				Country:       dbOrder.Country,
-				ZipCode:       dbOrder.ZipCode,
-			},
-			Email:         dbOrder.Email,
-			CreatedAt:     dbOrder.CreatedAt,
-			SubOrders:     subOrders,
-			PaymentStatus: biz.PaymentStatus(dbOrder.PaymentStatus),
-		})
-	}
-
-	return orders, nil
-}
-
-// 自定义JSON解析（使用标准库）
-func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
-	var dbSubOrders []struct {
-		ID          string    `json:"id"`
-		MerchantID  uuid.UUID `json:"merchantId"`
-		TotalAmount float64   `json:"totalAmount"`
-		Items       struct {
-			Item struct {
-				MerchantId uuid.UUID `json:"merchantId"` // 注意字段名大写
-				ProductId  uuid.UUID `json:"productId"`
-				Quantity   uint32    `json:"quantity"`
-			} `json:"item"`
-			Cost float64 `json:"cost"`
-		} `json:"items"`
-	}
-
-	if err := json.Unmarshal(data, &dbSubOrders); err != nil {
-		return nil, fmt.Errorf("json unmarshal failed: %w", err)
-	}
-
-	subOrders := make([]*biz.SubOrder, 0, len(dbSubOrders))
-	for _, so := range dbSubOrders {
-		subOrders = append(subOrders, &biz.SubOrder{
-			ID:          so.ID,
-			MerchantID:  so.MerchantID,
-			TotalAmount: so.TotalAmount,
-			Items: []biz.OrderItem{ // 转换为业务层需要的数组格式
-				{
-					Item: &biz.CartItem{
-						MerchantId: so.Items.Item.MerchantId,
-						ProductId:  so.Items.Item.ProductId,
-						Quantity:   so.Items.Item.Quantity,
-					},
-					Cost: so.Items.Cost,
-				},
-			},
-		})
-	}
-	return subOrders, nil
 }
 
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {

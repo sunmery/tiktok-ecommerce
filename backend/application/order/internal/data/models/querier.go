@@ -13,7 +13,7 @@ import (
 type Querier interface {
 	//CreateOrder
 	//
-	//  INSERT INTO orders.orders ( user_id, currency, street_address,
+	//  INSERT INTO orders.orders (user_id, currency, street_address,
 	//                             city, state, country, zip_code, email)
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
@@ -25,6 +25,12 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
+	//GetOrderByID
+	//
+	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+	//  FROM orders.orders
+	//  WHERE id = $1
+	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
 	// -- name: ListOrdersByUser :many
 	// SELECT *
 	// FROM orders.orders
@@ -33,31 +39,33 @@ type Querier interface {
 	// LIMIT $2 OFFSET $3;
 	//
 	//
-	//  SELECT get_date_range_stats
-	//  FROM orders.get_date_range_stats(
-	//          p_user_id => $1,
-	//          p_start => $2,
-	//          p_end => $3
-	//       )
-	GetDateRangeStats(ctx context.Context, arg GetDateRangeStatsParams) (interface{}, error)
-	//GetOrderByID
-	//
-	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-	//  FROM orders.orders
-	//  WHERE id = $1
-	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
-	// 带日期过滤的查询
-	//
-	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
-	//         json_agg(so.*) AS sub_orders
+	//  SELECT o.id         AS order_id,
+	//         o.currency   AS order_currency,
+	//         o.street_address,
+	//         o.city,
+	//         o.state,
+	//         o.country,
+	//         o.zip_code,
+	//         o.email,
+	//         o.created_at AS order_created,
+	//         jsonb_agg(
+	//                 jsonb_build_object(
+	//                         'suborder_id', so.id,
+	//                         'merchant_id', so.merchant_id,
+	//                         'total_amount', so.total_amount,
+	//                         'currency', so.currency,
+	//                         'status', so.status,
+	//                         'items', so.items,
+	//                         'created_at', so.created_at,
+	//                         'updated_at', so.updated_at
+	//                 ) ORDER BY so.created_at
+	//         )            AS suborders
 	//  FROM orders.orders o
 	//           LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 	//  WHERE o.user_id = $1::uuid
-	//    AND o.created_at BETWEEN $2::timestamptz AND $3::timestamptz
 	//  GROUP BY o.id
 	//  ORDER BY o.created_at DESC
-	//  LIMIT $5 OFFSET $4
-	ListOrdersByUserWithDate(ctx context.Context, arg ListOrdersByUserWithDateParams) ([]ListOrdersByUserWithDateRow, error)
+	GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
 	//UpdateSubOrderStatus
 	//
 	//  UPDATE orders.sub_orders

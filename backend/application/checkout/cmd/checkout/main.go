@@ -3,10 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/go-kratos/kratos/v2/registry"
-	"backend/application/checkout/internal/conf"
-	"backend/application/checkout/pkg"
 	"os"
+
+	"backend/application/checkout/internal/conf"
+	"backend/constants"
+	"backend/pkg"
+
+	"github.com/go-kratos/kratos/v2/registry"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -21,7 +24,7 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	Name = "organization-application-version"
+	Name = constants.CartServiceV1
 	// Version 通过环境变量来替换
 	Version           string
 	flagconf          string
@@ -34,7 +37,7 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "organization/application/config.yaml", "config center path, eg: -config_center organization/application/config.yaml")
+	flag.StringVar(&configPath, "config_path", "ecommerce/checkout/prod.yaml", "config center path, eg: -config_center organization/application/config.yaml")
 	flag.StringVar(&configCenterToken, "config_center_token", "token", "config center acl token, eg: -config_center_token token")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }

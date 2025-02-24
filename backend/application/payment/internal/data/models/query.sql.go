@@ -14,30 +14,26 @@ import (
 
 const CreatePaymentQuery = `-- name: CreatePaymentQuery :one
 INSERT INTO payments.payments (payment_id, order_id, amount, currency, method, status,
-                      gateway_tx_id, metadata, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+                               gateway_tx_id, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
 `
 
 type CreatePaymentQueryParams struct {
-	PaymentID   uuid.UUID          `json:"paymentID"`
-	OrderID     uuid.UUID          `json:"orderID"`
-	Amount      pgtype.Numeric     `json:"amount"`
-	Currency    string             `json:"currency"`
-	Method      string             `json:"method"`
-	Status      string             `json:"status"`
-	GatewayTxID *string            `json:"gatewayTxID"`
-	Metadata    []byte             `json:"metadata"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	PaymentID   uuid.UUID      `json:"paymentID"`
+	OrderID     uuid.UUID      `json:"orderID"`
+	Amount      pgtype.Numeric `json:"amount"`
+	Currency    string         `json:"currency"`
+	Method      string         `json:"method"`
+	Status      string         `json:"status"`
+	GatewayTxID *string        `json:"gatewayTxID"`
+	Metadata    []byte         `json:"metadata"`
 }
 
 // CreatePaymentQuery
 //
 //	INSERT INTO payments.payments (payment_id, order_id, amount, currency, method, status,
-//	                      gateway_tx_id, metadata, created_at, updated_at)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-//	RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+//	                               gateway_tx_id, metadata)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
 func (q *Queries) CreatePaymentQuery(ctx context.Context, arg CreatePaymentQueryParams) (PaymentsPayments, error) {
 	row := q.db.QueryRow(ctx, CreatePaymentQuery,
 		arg.PaymentID,
@@ -48,8 +44,6 @@ func (q *Queries) CreatePaymentQuery(ctx context.Context, arg CreatePaymentQuery
 		arg.Status,
 		arg.GatewayTxID,
 		arg.Metadata,
-		arg.CreatedAt,
-		arg.UpdatedAt,
 	)
 	var i PaymentsPayments
 	err := row.Scan(
@@ -130,8 +124,7 @@ UPDATE payments.payments
 SET status        = $2,
     gateway_tx_id = $3,
     updated_at    = $4
-WHERE payment_id = $1
-RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+WHERE payment_id = $1 RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
 `
 
 type UpdateStatusQueryParams struct {
@@ -147,8 +140,7 @@ type UpdateStatusQueryParams struct {
 //	SET status        = $2,
 //	    gateway_tx_id = $3,
 //	    updated_at    = $4
-//	WHERE payment_id = $1
-//	RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+//	WHERE payment_id = $1 RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
 func (q *Queries) UpdateStatusQuery(ctx context.Context, arg UpdateStatusQueryParams) (PaymentsPayments, error) {
 	row := q.db.QueryRow(ctx, UpdateStatusQuery,
 		arg.PaymentID,
