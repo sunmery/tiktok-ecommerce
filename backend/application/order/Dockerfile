@@ -1,7 +1,7 @@
 ARG GO_IMAGE=golang:1.23.3-alpine3.20
 FROM ${GO_IMAGE} AS builder
 
-ARG SERVICE=auth
+ARG SERVICE
 ARG VERSION=dev
 ARG CGO_ENABLED=0
 ARG GOPROXY=https://proxy.golang.com.cn,direct
@@ -27,15 +27,15 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # 使用最小化运行时镜像
 FROM alpine:3.20
 
-ARG SERVICE=auth
+ARG SERVICE
 ENV TZ=Asia/Shanghai
 
 RUN apk add --no-cache tzdata ca-certificates && \
     ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo ${TZ} > /etc/timezone
 
-COPY --from=builder /app/${SERVICE} /app/${SERVICE}
+COPY --from=builder /app/${SERVICE} /app/service
 
-EXPOSE 30009 30010
+EXPOSE 30003 30004
 
-ENTRYPOINT ["/app/${SERVICE}"]
+ENTRYPOINT ["/app/service"]

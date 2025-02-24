@@ -5,7 +5,7 @@ services:
     platform: linux/amd64
     #network_mode: host
     ports:
-      - "3015:8080"
+      - "8080:8080"
     container_name: ecommerce-gateway
     restart: on-failure:3
     volumes:
@@ -23,17 +23,18 @@ services:
   # docker cp public.pem ecommerce-gateway:/app/
   # docker compose restart
 
-
   auth:
-    image: ccr.ccs.tencentyun.com/e-commence/auth:dev
+    image: ccr.ccs.tencentyun.com/sumery/auth:dev
     platform: linux/amd64
     ports:
       - "30002:30002"
     container_name: ecommerce-auth-v1
     restart: on-failure:3
+    command:
+      - "/app/auth"
 
   user:
-    image: ccr.ccs.tencentyun.com/e-commence/user:dev
+    image: ccr.ccs.tencentyun.com/sumery/user:dev
     platform: linux/amd64
     ports:
       - "30003:30003"
@@ -42,7 +43,7 @@ services:
 
   product:
     platform: linux/amd64
-    image: ccr.ccs.tencentyun.com/e-commence/product:dev
+    image: ccr.ccs.tencentyun.com/sumery/product:dev
     ports:
       - "30005:30005"
       - "30006:30006"
@@ -50,7 +51,7 @@ services:
     restart: on-failure:3
 
   #  cart:
-  #    image: ccr.ccs.tencentyun.com/e-commence/cart:dev
+  #    image: ccr.ccs.tencentyun.com/sumery/cart:dev
   #    platform: linux/amd64
   #    ports:
   #      - "30007:30007"
@@ -59,7 +60,7 @@ services:
   #    restart: on-failure:3
 
   order:
-    image: ccr.ccs.tencentyun.com/e-commence/order:dev
+    image: ccr.ccs.tencentyun.com/sumery/order:dev
     platform: linux/amd64
     ports:
       - "30009:30009"
@@ -68,7 +69,7 @@ services:
     restart: on-failure:3
 
   payment:
-    image: ccr.ccs.tencentyun.com/e-commence/payment:dev
+    image: ccr.ccs.tencentyun.com/sumery/payment:dev
     platform: linux/amd64
     ports:
       - "30014:30014"
@@ -76,7 +77,7 @@ services:
     restart: on-failure:3
 
   category:
-    image: ccr.ccs.tencentyun.com/e-commence/category:dev
+    image: ccr.ccs.tencentyun.com/sumery/category:dev
     platform: linux/amd64
     ports:
       - "30016:30016"
@@ -84,7 +85,7 @@ services:
     restart: on-failure:3
 
 #  assistant:
-#    image: ccr.ccs.tencentyun.com/e-commence/assistant:dev
+#    image: ccr.ccs.tencentyun.com/sumery/assistant:dev
 #    platform: linux/amd64
 #    ports:
 #      - "30017:30017"
