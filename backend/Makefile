@@ -13,8 +13,6 @@ GOIMAGE ?= golang:1.24.0-alpine3.20
 GOOS ?= linux
 GOARCH ?= amd64
 CGOENABLED ?= 0
-HTTP_PORT ?= 30001
-GRPC_PORT ?= 30002
 
 # 动态变量
 DOCKER_IMAGE=e-commerce/$(APP_NAME):dev
@@ -76,17 +74,6 @@ docker-push:
 	@echo "Docker image: $(REPOSITORY):dev"
 	docker tag ecommerce/$(SERVICE):dev $(REGISTER)/$(REPOSITORY):dev
 	docker push $(REGISTER)/$(REPOSITORY):dev
-
-# 运行Docker 镜像, 需要传递该服务的HTTP_PORT, GRPC_PORT 变量
-.PHONY: docker-run
-docker-run:
-	docker run \
-	  --rm \
-	  -e config_path=ecommerce/user/account/config.yaml \
-	  -e config_center=159.75.231.54:8500 \
-	  -p $(HTTP_PORT):$(HTTP_PORT) \
-	  -p $(GRPC_PORT):$(GRPC_PORT) \
-	  $(REGISTER)/$(REPOSITORY):dev
 
 .PHONY: docker-run
 docker-deploy:

@@ -1,5 +1,6 @@
 # Logs
 **/logs
+**/idea
 *.helper
 frontend/npm-debug.helper*
 frontend/yarn-debug.helper*

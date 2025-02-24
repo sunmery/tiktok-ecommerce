@@ -1,0 +1,93 @@
+services:
+
+  gateway:
+    image: ccr.ccs.tencentyun.com/kratos/gateway:dev
+    platform: linux/amd64
+    #network_mode: host
+    ports:
+      - "3015:8080"
+    container_name: ecommerce-gateway
+    restart: on-failure:3
+    volumes:
+      - ./config.yaml:/app/configs/config.yaml
+      - ./public.pem:/app/public.pem
+    command:
+      - "/app/gateway"
+      - "-conf"
+      - "/app/configs/config.yaml"
+
+  # 将本地的 config.yaml 映射到容器中的 /app/configs/config.yaml
+  # docker cp config.yaml ecommerce-gateway:/app/configs/config.yaml
+
+  # 将证书 映射到容器中的 /app/configs/config.yaml
+  # docker cp public.pem ecommerce-gateway:/app/
+  # docker compose restart
+
+
+  auth:
+    image: ccr.ccs.tencentyun.com/e-commence/auth:dev
+    platform: linux/amd64
+    ports:
+      - "30002:30002"
+    container_name: ecommerce-auth-v1
+    restart: on-failure:3
+
+  user:
+    image: ccr.ccs.tencentyun.com/e-commence/user:dev
+    platform: linux/amd64
+    ports:
+      - "30003:30003"
+    container_name: ecommerce-user-v1
+    restart: on-failure:3
+
+  product:
+    platform: linux/amd64
+    image: ccr.ccs.tencentyun.com/e-commence/product:dev
+    ports:
+      - "30005:30005"
+      - "30006:30006"
+    container_name: ecommerce-product-v1
+    restart: on-failure:3
+
+  #  cart:
+  #    image: ccr.ccs.tencentyun.com/e-commence/cart:dev
+  #    platform: linux/amd64
+  #    ports:
+  #      - "30007:30007"
+  #      - "30008:30008"
+  #    container_name: ecommerce-cart-v1
+  #    restart: on-failure:3
+
+  order:
+    image: ccr.ccs.tencentyun.com/e-commence/order:dev
+    platform: linux/amd64
+    ports:
+      - "30009:30009"
+      - "30010:30010"
+    container_name: ecommerce-order-v1
+    restart: on-failure:3
+
+  payment:
+    image: ccr.ccs.tencentyun.com/e-commence/payment:dev
+    platform: linux/amd64
+    ports:
+      - "30014:30014"
+    container_name: ecommerce-payment-v1
+    restart: on-failure:3
+
+  category:
+    image: ccr.ccs.tencentyun.com/e-commence/category:dev
+    platform: linux/amd64
+    ports:
+      - "30016:30016"
+    container_name: ecommerce-category-v1
+    restart: on-failure:3
+
+#  assistant:
+#    image: ccr.ccs.tencentyun.com/e-commence/assistant:dev
+#    platform: linux/amd64
+#    ports:
+#      - "30017:30017"
+#      - "30018:30018"
+#    container_name: ecommerce-assistant-v1
+#    restart: on-failure:3

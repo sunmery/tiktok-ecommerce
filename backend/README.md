@@ -11,6 +11,7 @@ https://i0jecrneytu.feishu.cn/docx/WoStdOA3zo7KF1xnOM5caU8cnUg?from=from_copylin
 - checkout: 30011, 300012
 - payment: 30013, 30014
 - category: 30015, 30016
+- assistant: 30017, 30018
 
 ## 启动基础设施
 ```bash
