@@ -8,6 +8,8 @@ services:
       - "8080:8080"
     container_name: ecommerce-gateway
     restart: on-failure:3
+    environment:
+      CASDOOR_ADDR: 159.75.231.54:8500
     volumes:
       - ./config.yaml:/app/configs/config.yaml
       - ./public.pem:/app/public.pem

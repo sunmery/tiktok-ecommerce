@@ -27,11 +27,11 @@ const OperationPaymentServiceProcessPaymentCallback = "/ecommerce.payment.v1.Pay
 type PaymentServiceHTTPServer interface {
 	// CreatePayment 创建支付记录
 	CreatePayment(context.Context, *CreatePaymentReq) (*PaymentResp, error)
-	// GetPayment 获取支付信息
+	// GetPayment 获取支付信息接口
 	GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error)
-	// PaymentNotify 异步通知
+	// PaymentNotify 异步通知接口
 	PaymentNotify(context.Context, *PaymentNotifyReq) (*PaymentNotifyResp, error)
-	// ProcessPaymentCallback 支付宝回调
+	// ProcessPaymentCallback 支付宝回调处理接口
 	ProcessPaymentCallback(context.Context, *PaymentCallbackReq) (*PaymentCallbackResp, error)
 }
 

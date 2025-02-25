@@ -24,8 +24,11 @@ const OperationOrderServiceMarkOrderPaid = "/ecommerce.order.v1.OrderService/Mar
 const OperationOrderServicePlaceOrder = "/ecommerce.order.v1.OrderService/PlaceOrder"
 
 type OrderServiceHTTPServer interface {
+	// ListOrder 查询订单列表
 	ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error)
+	// MarkOrderPaid 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
+	// PlaceOrder 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
 }
 

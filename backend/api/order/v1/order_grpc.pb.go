@@ -27,9 +27,14 @@ const (
 // OrderServiceClient is the client API for OrderService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 订单服务接口定义
 type OrderServiceClient interface {
+	// 创建订单
 	PlaceOrder(ctx context.Context, in *PlaceOrderReq, opts ...grpc.CallOption) (*PlaceOrderResp, error)
+	// 查询订单列表
 	ListOrder(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error)
+	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
 }
 
@@ -74,9 +79,14 @@ func (c *orderServiceClient) MarkOrderPaid(ctx context.Context, in *MarkOrderPai
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
+//
+// 订单服务接口定义
 type OrderServiceServer interface {
+	// 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
+	// 查询订单列表
 	ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error)
+	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }

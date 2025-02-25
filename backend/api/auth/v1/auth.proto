@@ -1,39 +1,51 @@
-syntax = "proto3";
+syntax = "proto3"; // 指定使用 proto3 语法
 
-package ecommerce.auth.v1;
+package ecommerce.auth.v1; // 定义包名，用于命名空间隔离
 
-import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
+// 导入外部依赖
+import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
+import "google/protobuf/timestamp.proto"; // 提供时间戳类型支持
+import "google/protobuf/any.proto"; // 提供通用消息类型支持
 
+// Go 语言生成代码的选项
 option go_package = "backend/api/auth/v1;authv1";
+// `go_package` 指定了生成的 Go 代码的包路径和别名：
+// - "backend/api/auth/v1" 是生成代码的完整路径
+// - "authv1" 是生成代码的包别名
 
+// 认证服务接口定义
 service AuthService {
-  rpc Signin (SigninRequest) returns (SigninReply) {
+  // 用户登录接口
+  rpc Signin(SigninRequest) returns (SigninReply) {
     option (google.api.http) = {
-      post: "/v1/auth",
-      body: "*"
+      post: "/v1/auth" // 定义 HTTP POST 请求路径
+      body: "*"        // 表示请求体包含所有字段
     };
-  };
-  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse) {
+  }
+
+  // 获取用户信息接口
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse) {
     option (google.api.http) = {
-      get: "/v1/auth/profile"
+      get: "/v1/auth/profile" // 定义 HTTP GET 请求路径
     };
-  };
+  }
 }
 
+// 用户登录请求的消息结构
 message SigninRequest {
-  string code = 1;
-  string state = 2;
+  string code = 1;  // 授权码，通常由第三方认证平台（如 OAuth2）返回
+  string state = 2; // 状态参数，用于防止 CSRF 攻击或标识请求来源
 }
 
+// 用户登录响应的消息结构
 message SigninReply {
-  string state = 1;
-  string data = 2;
+  string state = 1; // 状态参数，与请求中的 state 对应
+  string data = 2;  // 登录成功后返回的数据，例如 JWT Token 或用户信息
 }
 
+// 获取用户信息请求的消息结构
 message GetUserInfoRequest {
-  string authorization = 1;
+  string authorization = 1; // 授权令牌（如 Bearer Token），用于验证用户身份
 }
 
 message Data {

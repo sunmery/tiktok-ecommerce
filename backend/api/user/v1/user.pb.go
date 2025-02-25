@@ -26,19 +26,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 定义信用卡信息的消息结构
 type CreditCards struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Number        string                 `protobuf:"bytes,1,opt,name=number,proto3" json:"number,omitempty"`                     // 卡号
-	Cvv           string                 `protobuf:"bytes,2,opt,name=cvv,proto3" json:"cvv,omitempty"`                           // 安全码
-	ExpYear       string                 `protobuf:"bytes,3,opt,name=exp_year,json=expYear,proto3" json:"exp_year,omitempty"`    // 过期年份
-	ExpMonth      string                 `protobuf:"bytes,4,opt,name=exp_month,json=expMonth,proto3" json:"exp_month,omitempty"` // 过期月份
-	Owner         string                 `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`                       // 持卡人
-	Name          string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`                         // 卡名
-	Id            uint32                 `protobuf:"varint,7,opt,name=id,proto3" json:"id,omitempty"`                            // 卡id
-	Type          string                 `protobuf:"bytes,8,opt,name=type,proto3" json:"type,omitempty"`                         // 卡类型
-	Brand         string                 `protobuf:"bytes,9,opt,name=brand,proto3" json:"brand,omitempty"`                       // 卡品牌
-	Country       string                 `protobuf:"bytes,10,opt,name=country,proto3" json:"country,omitempty"`                  // 卡所属国家
-	CreatedTime   string                 `protobuf:"bytes,11,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty"`
+	Number        string                 `protobuf:"bytes,1,opt,name=number,proto3" json:"number,omitempty"`                               // 卡号
+	Cvv           string                 `protobuf:"bytes,2,opt,name=cvv,proto3" json:"cvv,omitempty"`                                     // 安全码
+	ExpYear       string                 `protobuf:"bytes,3,opt,name=exp_year,json=expYear,proto3" json:"exp_year,omitempty"`              // 过期年份
+	ExpMonth      string                 `protobuf:"bytes,4,opt,name=exp_month,json=expMonth,proto3" json:"exp_month,omitempty"`           // 过期月份
+	Owner         string                 `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`                                 // 持卡人姓名
+	Name          string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`                                   // 卡名
+	Id            uint32                 `protobuf:"varint,7,opt,name=id,proto3" json:"id,omitempty"`                                      // 卡 ID
+	Type          string                 `protobuf:"bytes,8,opt,name=type,proto3" json:"type,omitempty"`                                   // 卡类型（如借记卡、信用卡）
+	Brand         string                 `protobuf:"bytes,9,opt,name=brand,proto3" json:"brand,omitempty"`                                 // 卡品牌（如 Visa、MasterCard）
+	Country       string                 `protobuf:"bytes,10,opt,name=country,proto3" json:"country,omitempty"`                            // 卡所属国家
+	CreatedTime   string                 `protobuf:"bytes,11,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty"` // 创建时间
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -150,10 +151,11 @@ func (x *CreditCards) GetCreatedTime() string {
 	return ""
 }
 
+// 定义通用的卡片操作响应消息
 type CardsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	Code          int32                  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"` // 响应消息
+	Code          int32                  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`      // 响应状态码
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,9 +204,10 @@ func (x *CardsReply) GetCode() int32 {
 	return 0
 }
 
+// 定义删除信用卡请求的消息结构
 type DeleteCreditCardsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"` // 要删除的信用卡 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -246,10 +249,11 @@ func (x *DeleteCreditCardsRequest) GetId() uint32 {
 	return 0
 }
 
+// 定义获取信用卡请求的消息结构
 type GetCreditCardsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Number        string                 `protobuf:"bytes,3,opt,name=number,proto3" json:"number,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 ID
+	Number        string                 `protobuf:"bytes,3,opt,name=number,proto3" json:"number,omitempty"`               // 卡号
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -298,9 +302,10 @@ func (x *GetCreditCardsRequest) GetNumber() string {
 	return ""
 }
 
+// 定义获取信用卡响应的消息结构
 type GetCreditCardsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CreditCards   *CreditCards           `protobuf:"bytes,1,opt,name=credit_cards,proto3" json:"credit_cards,omitempty"`
+	CreditCards   *CreditCards           `protobuf:"bytes,1,opt,name=credit_cards,proto3" json:"credit_cards,omitempty"` // 信用卡信息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -342,9 +347,10 @@ func (x *GetCreditCardsReply) GetCreditCards() *CreditCards {
 	return nil
 }
 
+// 定义搜索信用卡响应的消息结构
 type SearchCreditCardsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CreditCards   []*CreditCards         `protobuf:"bytes,1,rep,name=credit_cards,proto3" json:"credit_cards,omitempty"`
+	CreditCards   []*CreditCards         `protobuf:"bytes,1,rep,name=credit_cards,proto3" json:"credit_cards,omitempty"` // 信用卡列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -386,9 +392,10 @@ func (x *SearchCreditCardsReply) GetCreditCards() []*CreditCards {
 	return nil
 }
 
+// 定义列出信用卡响应的消息结构
 type ListCreditCardsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CreditCards   []*CreditCards         `protobuf:"bytes,1,rep,name=credit_cards,proto3" json:"credit_cards,omitempty"`
+	CreditCards   []*CreditCards         `protobuf:"bytes,1,rep,name=credit_cards,proto3" json:"credit_cards,omitempty"` // 信用卡列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -430,13 +437,14 @@ func (x *ListCreditCardsReply) GetCreditCards() []*CreditCards {
 	return nil
 }
 
+// 定义地址信息的消息结构
 type Address struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"` // 地址 ID
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	City          string                 `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
-	State         string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
-	Country       string                 `protobuf:"bytes,6,opt,name=country,proto3" json:"country,omitempty"`
+	City          string                 `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`       // 城市，必填字段
+	State         string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`     // 州/省，必填字段
+	Country       string                 `protobuf:"bytes,6,opt,name=country,proto3" json:"country,omitempty"` // 国家，必填字段
 	ZipCode       string                 `protobuf:"bytes,7,opt,name=zip_code,json=zipCode,proto3" json:"zip_code,omitempty"`
 	StreetAddress string                 `protobuf:"bytes,8,opt,name=street_address,json=streetAddress,proto3" json:"street_address,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -522,9 +530,10 @@ func (x *Address) GetStreetAddress() string {
 	return ""
 }
 
+// 定义更新地址请求的消息结构
 type UpdateAddressesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Addresses     *Address               `protobuf:"bytes,1,opt,name=addresses,proto3" json:"addresses,omitempty"`
+	Addresses     *Address               `protobuf:"bytes,1,opt,name=addresses,proto3" json:"addresses,omitempty"` // 地址信息，必填字段
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -566,10 +575,11 @@ func (x *UpdateAddressesRequest) GetAddresses() *Address {
 	return nil
 }
 
+// 定义删除地址请求的消息结构
 type DeleteAddressesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AddressesId   int32                  `protobuf:"varint,1,opt,name=addresses_id,proto3" json:"addresses_id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -618,10 +628,11 @@ func (x *DeleteAddressesRequest) GetUserId() string {
 	return ""
 }
 
+// 定义地址响应的消息结构
 type AddressReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Address       *Address               `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`          // 地址 ID，必填字段
+	Address       *Address               `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"` // 地址信息，必填字段
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -670,9 +681,10 @@ func (x *AddressReply) GetAddress() *Address {
 	return nil
 }
 
+// 定义获取地址列表响应的消息结构
 type GetAddressesReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Addresses     []*Address             `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
+	Addresses     []*Address             `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"` // 地址列表，必填字段
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -714,11 +726,12 @@ func (x *GetAddressesReply) GetAddresses() []*Address {
 	return nil
 }
 
+// 定义删除地址响应的消息结构
 type DeleteAddressesReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	Id            uint32                 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	Code          uint32                 `protobuf:"varint,3,opt,name=code,proto3" json:"code,omitempty"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"` // 响应消息，必填字段
+	Id            uint32                 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`          // 地址 ID，必填字段
+	Code          uint32                 `protobuf:"varint,3,opt,name=code,proto3" json:"code,omitempty"`      // 响应状态码，必填字段
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -774,9 +787,10 @@ func (x *DeleteAddressesReply) GetCode() uint32 {
 	return 0
 }
 
+// 定义获取用户个人资料请求的消息结构
 type GetProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
+	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"` // 授权令牌
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -818,10 +832,11 @@ func (x *GetProfileRequest) GetAuthorization() string {
 	return ""
 }
 
+// 定义获取用户个人资料响应的消息结构
 type GetProfileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	State         string                 `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Data          *UserInfo              `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	State         string                 `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"` // 状态
+	Data          *UserInfo              `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`   // 用户信息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

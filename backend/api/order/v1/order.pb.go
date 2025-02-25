@@ -26,7 +26,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// 支付状态
+// 支付状态的枚举类型
 type PaymentStatus int32
 
 const (
@@ -82,12 +82,13 @@ func (PaymentStatus) EnumDescriptor() ([]byte, []int) {
 	return file_v1_order_proto_rawDescGZIP(), []int{0}
 }
 
+// 创建订单请求的消息结构
 type PlaceOrderReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`
-	Address       *v1.Address            `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
-	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
-	OrderItems    []*OrderItem           `protobuf:"bytes,5,rep,name=order_items,json=orderItems,proto3" json:"order_items,omitempty"`
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`                       // 货币代码（如 USD、CNY），长度固定为 3
+	Address       *v1.Address            `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`                         // 用户地址信息
+	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`                             // 用户邮箱
+	OrderItems    []*OrderItem           `protobuf:"bytes,5,rep,name=order_items,json=orderItems,proto3" json:"order_items,omitempty"` // 订单项列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -150,10 +151,11 @@ func (x *PlaceOrderReq) GetOrderItems() []*OrderItem {
 	return nil
 }
 
+// 订单项的消息结构
 type OrderItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Item          *v11.CartItem          `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
-	Cost          float64                `protobuf:"fixed64,2,opt,name=cost,proto3" json:"cost,omitempty"` // 价格
+	Item          *v11.CartItem          `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`   // 购物车中的商品项
+	Cost          float64                `protobuf:"fixed64,2,opt,name=cost,proto3" json:"cost,omitempty"` // 商品单价
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,9 +204,10 @@ func (x *OrderItem) GetCost() float64 {
 	return 0
 }
 
+// 创建订单响应的消息结构
 type OrderResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -246,10 +249,11 @@ func (x *OrderResult) GetOrderId() string {
 	return ""
 }
 
+// 创建订单响应的消息结构
 type PlaceOrderResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Order         *OrderResult           `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
-	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Order         *OrderResult           `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"` // 订单结果
+	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`     // 支付跳转 URL
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -298,17 +302,17 @@ func (x *PlaceOrderResp) GetUrl() string {
 	return ""
 }
 
+// 订单的消息结构
 type Order struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	OrderItems []*OrderItem           `protobuf:"bytes,1,rep,name=order_items,json=orderItems,proto3" json:"order_items,omitempty"`
-	OrderId    string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	UserId     string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Currency   string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Address    *v1.Address            `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
-	Email      string                 `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`
-	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// 支付状态
-	PaymentStatus PaymentStatus `protobuf:"varint,8,opt,name=payment_status,json=paymentStatus,proto3,enum=ecommerce.order.v1.PaymentStatus" json:"payment_status,omitempty"` // NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OrderItems    []*OrderItem           `protobuf:"bytes,1,rep,name=order_items,json=orderItems,proto3" json:"order_items,omitempty"` // 订单项列表
+	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`          // 订单 ID
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`                                                                       // 货币代码（如 USD、CNY），长度固定为 3
+	Address       *v1.Address            `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`                                                                         // 用户地址信息
+	Email         string                 `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`                                                                             // 用户邮箱
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                                                    // 订单创建时间
+	PaymentStatus PaymentStatus          `protobuf:"varint,8,opt,name=payment_status,json=paymentStatus,proto3,enum=ecommerce.order.v1.PaymentStatus" json:"payment_status,omitempty"` // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -399,12 +403,11 @@ func (x *Order) GetPaymentStatus() PaymentStatus {
 	return PaymentStatus_NOT_PAID
 }
 
-// 根据日期和分页查询订单
+// 查询订单列表请求的消息结构
 type ListOrderReq struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// 分页参数
-	Page          uint32 `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`                         // 默认20，最大100
-	PageSize      uint32 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"` // 默认0
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          uint32                 `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`                         // 分页参数：当前页码，默认值为 0
+	PageSize      uint32                 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"` // 分页参数：每页大小，默认值为 20，最大值为 100
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -453,9 +456,10 @@ func (x *ListOrderReq) GetPageSize() uint32 {
 	return 0
 }
 
+// 查询订单列表响应的消息结构
 type ListOrderResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Orders        []*Order               `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
+	Orders        []*Order               `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"` // 订单列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -497,9 +501,10 @@ func (x *ListOrderResp) GetOrders() []*Order {
 	return nil
 }
 
+// 标记订单为已支付请求的消息结构
 type MarkOrderPaidReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -541,6 +546,7 @@ func (x *MarkOrderPaidReq) GetOrderId() string {
 	return ""
 }
 
+// 标记订单为已支付响应的消息结构
 type MarkOrderPaidResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields

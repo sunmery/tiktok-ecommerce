@@ -1,81 +1,97 @@
-syntax = "proto3";
+syntax = "proto3"; // 指定使用 proto3 语法
 
-package ecommerce.payment.v1;
+package ecommerce.payment.v1; // 定义包名，用于命名空间隔离
 
-import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
+// 导入外部依赖
+import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
+import "google/protobuf/timestamp.proto"; // 提供时间戳类型支持
 
+// Go 语言生成代码的选项
 option go_package = "backend/api/payment/v1;paymentv1";
 
+// 定义支付服务接口
 service PaymentService {
   // 创建支付记录
   rpc CreatePayment(CreatePaymentReq) returns (PaymentResp) {
     option (google.api.http) = {
-      post: "/v1/payments"
-      body: "*"
+      post: "/v1/payments" // 定义 HTTP POST 请求路径
+      body: "*"            // 表示请求体包含所有字段
     };
   }
 
-  // 异步通知
+  // 异步通知接口
   rpc PaymentNotify(PaymentNotifyReq) returns (PaymentNotifyResp) {
     option (google.api.http) = {
-      post: "/v1/payments/notify"
-      body: "*"
+      post: "/v1/payments/notify" // 定义 HTTP POST 请求路径
+      body: "*"                   // 表示请求体包含所有字段
     };
   }
 
-  // 支付宝回调
+  // 支付宝回调处理接口
   rpc ProcessPaymentCallback(PaymentCallbackReq) returns (PaymentCallbackResp) {
     option (google.api.http) = {
-      post: "/v1/payments/callback"
-      body: "*"
+      post: "/v1/payments/callback" // 定义 HTTP POST 请求路径
+      body: "*"                     // 表示请求体包含所有字段
     };
   }
 
-  // 获取支付信息
+  // 获取支付信息接口
   rpc GetPayment(GetPaymentReq) returns (PaymentResp) {
     option (google.api.http) = {
-      get: "/v1/payments/{payment_id}"
+      get: "/v1/payments/{payment_id}" // 定义 HTTP GET 请求路径，路径参数为 payment_id
     };
   }
 }
 
+// 定义 StringList 消息类型，表示一个字符串列表
 message StringList {
-  repeated string values = 1; // 表示 []string
+  repeated string values = 1; // 使用 repeated 关键字定义一个字符串数组 ([]string)
 }
 
+// 定义支付异步通知请求消息
 message PaymentNotifyReq {
   map<string, StringList> values = 1;
+  // 使用 map 定义一个键值对结构，键为字符串，值为 StringList 类型
+  // 适用于传递动态键值对数据
 }
 
+// 定义支付异步通知响应消息
 message PaymentNotifyResp {
-  string code = 1;
-  string msg = 2;
+  string code = 1; // 响应状态码
+  string msg = 2;  // 响应消息
 }
+
+// 定义创建支付请求消息
 message CreatePaymentReq {
-  string order_id = 1;       // 主订单ID
-  string currency = 2;       // 支付货币
-  string amount = 3;         // 支付金额
-  string payment_method = 4; // 支付方式
+  string order_id = 1;       // 主订单 ID，唯一标识一笔订单
+  string currency = 2;       // 支付货币类型，例如 "USD", "CNY"
+  string amount = 3;         // 支付金额，通常以字符串形式存储以避免精度问题
+  string payment_method = 4; // 支付方式，例如 "alipay", "wechatpay", "credit_card"
 }
 
+// 定义支付响应消息
 message PaymentResp {
-  string payment_id = 1;
-  string status = 2;         // CREATED/PENDING/SUCCEEDED/FAILED
-  string payment_url = 3;    // 第三方支付链接
-  google.protobuf.Timestamp created_at = 4;
+  string payment_id = 1;                 // 支付记录的唯一标识符
+  string status = 2;                     // 支付状态，可能值包括 CREATED/PENDING/SUCCEEDED/FAILED
+  string payment_url = 3;                // 第三方支付平台提供的支付链接
+  google.protobuf.Timestamp created_at = 4; // 支付记录创建的时间戳
 }
 
+// 定义获取支付信息请求消息
 message GetPaymentReq {
-  string payment_id = 1;
+  string payment_id = 1; // 支付记录的唯一标识符，用于查询具体的支付信息
 }
 
+// 定义支付回调请求消息
 message PaymentCallbackReq {
-  string payment_id = 1;
-  string status = 2;
-  string gateway_response = 3; // 原始网关响应
-  google.protobuf.Timestamp processed_at = 4;
-  map<string, StringList> request_form = 5;
+  string payment_id = 1;                    // 支付记录的唯一标识符
+  string status = 2;                        // 回调返回的支付状态
+  string gateway_response = 3;              // 第三方支付网关的原始响应数据
+  google.protobuf.Timestamp processed_at = 4; // 回调处理的时间戳
+  map<string, StringList> request_form = 5; // 回调请求中的表单数据，键值对结构
 }
 
-message PaymentCallbackResp {}
+// 定义支付回调响应消息
+message PaymentCallbackResp {
+  // 此处可以扩展字段，目前为空
+}

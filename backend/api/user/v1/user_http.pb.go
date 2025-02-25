@@ -8,7 +8,6 @@ package userv1
 
 import (
 	context "context"
-
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -16,36 +15,42 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the kratos package it is being compiled against.
-var (
-	_ = new(context.Context)
-	_ = binding.EncodeURL
-)
+var _ = new(context.Context)
+var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const (
-	OperationUserServiceCreateAddresses  = "/ecommerce.user.v1.UserService/CreateAddresses"
-	OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
-	OperationUserServiceDeleteAddresses  = "/ecommerce.user.v1.UserService/DeleteAddresses"
-	OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
-	OperationUserServiceGetAddresses     = "/ecommerce.user.v1.UserService/GetAddresses"
-	OperationUserServiceGetCreditCard    = "/ecommerce.user.v1.UserService/GetCreditCard"
-	OperationUserServiceGetUserProfile   = "/ecommerce.user.v1.UserService/GetUserProfile"
-	OperationUserServiceListCreditCards  = "/ecommerce.user.v1.UserService/ListCreditCards"
-	OperationUserServiceUpdateAddresses  = "/ecommerce.user.v1.UserService/UpdateAddresses"
-	OperationUserServiceUpdateCreditCard = "/ecommerce.user.v1.UserService/UpdateCreditCard"
-)
+const OperationUserServiceCreateAddresses = "/ecommerce.user.v1.UserService/CreateAddresses"
+const OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
+const OperationUserServiceDeleteAddresses = "/ecommerce.user.v1.UserService/DeleteAddresses"
+const OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
+const OperationUserServiceGetAddresses = "/ecommerce.user.v1.UserService/GetAddresses"
+const OperationUserServiceGetCreditCard = "/ecommerce.user.v1.UserService/GetCreditCard"
+const OperationUserServiceGetUserProfile = "/ecommerce.user.v1.UserService/GetUserProfile"
+const OperationUserServiceListCreditCards = "/ecommerce.user.v1.UserService/ListCreditCards"
+const OperationUserServiceUpdateAddresses = "/ecommerce.user.v1.UserService/UpdateAddresses"
+const OperationUserServiceUpdateCreditCard = "/ecommerce.user.v1.UserService/UpdateCreditCard"
 
 type UserServiceHTTPServer interface {
+	// CreateAddresses 创建用户地址
 	CreateAddresses(context.Context, *Address) (*Address, error)
+	// CreateCreditCard 创建用户的信用卡信息
 	CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	// DeleteAddresses 删除用户地址
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	// DeleteCreditCard 删除用户的信用卡信息
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
+	// GetAddresses 获取用户地址列表
 	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
+	// GetCreditCard 获取用户的信用卡信息
 	GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error)
+	// GetUserProfile 获取用户个人资料
 	GetUserProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
+	// ListCreditCards 列出用户的信用卡信息
 	ListCreditCards(context.Context, *emptypb.Empty) (*ListCreditCardsReply, error)
+	// UpdateAddresses 更新用户地址
 	UpdateAddresses(context.Context, *Address) (*Address, error)
+	// UpdateCreditCard 更新用户的信用卡信息
 	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
 }
 

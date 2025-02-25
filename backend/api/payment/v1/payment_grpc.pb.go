@@ -28,14 +28,16 @@ const (
 // PaymentServiceClient is the client API for PaymentService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 定义支付服务接口
 type PaymentServiceClient interface {
 	// 创建支付记录
 	CreatePayment(ctx context.Context, in *CreatePaymentReq, opts ...grpc.CallOption) (*PaymentResp, error)
-	// 异步通知
+	// 异步通知接口
 	PaymentNotify(ctx context.Context, in *PaymentNotifyReq, opts ...grpc.CallOption) (*PaymentNotifyResp, error)
-	// 支付宝回调
+	// 支付宝回调处理接口
 	ProcessPaymentCallback(ctx context.Context, in *PaymentCallbackReq, opts ...grpc.CallOption) (*PaymentCallbackResp, error)
-	// 获取支付信息
+	// 获取支付信息接口
 	GetPayment(ctx context.Context, in *GetPaymentReq, opts ...grpc.CallOption) (*PaymentResp, error)
 }
 
@@ -90,14 +92,16 @@ func (c *paymentServiceClient) GetPayment(ctx context.Context, in *GetPaymentReq
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
+//
+// 定义支付服务接口
 type PaymentServiceServer interface {
 	// 创建支付记录
 	CreatePayment(context.Context, *CreatePaymentReq) (*PaymentResp, error)
-	// 异步通知
+	// 异步通知接口
 	PaymentNotify(context.Context, *PaymentNotifyReq) (*PaymentNotifyResp, error)
-	// 支付宝回调
+	// 支付宝回调处理接口
 	ProcessPaymentCallback(context.Context, *PaymentCallbackReq) (*PaymentCallbackResp, error)
-	// 获取支付信息
+	// 获取支付信息接口
 	GetPayment(context.Context, *GetPaymentReq) (*PaymentResp, error)
 	mustEmbedUnimplementedPaymentServiceServer()
 }

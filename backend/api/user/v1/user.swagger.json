@@ -18,6 +18,7 @@
   "paths": {
     "/v1/users/address": {
       "get": {
+        "summary": "获取用户地址列表",
         "operationId": "UserService_GetAddresses",
         "responses": {
           "200": {
@@ -38,6 +39,7 @@
         ]
       },
       "delete": {
+        "summary": "删除用户地址",
         "operationId": "UserService_DeleteAddresses",
         "responses": {
           "200": {
@@ -63,6 +65,7 @@
           },
           {
             "name": "userId",
+            "description": "用户 ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -73,6 +76,7 @@
         ]
       },
       "post": {
+        "summary": "创建用户地址",
         "operationId": "UserService_CreateAddresses",
         "responses": {
           "200": {
@@ -103,6 +107,7 @@
         ]
       },
       "patch": {
+        "summary": "更新用户地址",
         "operationId": "UserService_UpdateAddresses",
         "responses": {
           "200": {
@@ -135,6 +140,7 @@
     },
     "/v1/users/credit_cards": {
       "post": {
+        "summary": "创建用户的信用卡信息",
         "operationId": "UserService_CreateCreditCard",
         "responses": {
           "200": {
@@ -165,6 +171,7 @@
         ]
       },
       "patch": {
+        "summary": "更新用户的信用卡信息",
         "operationId": "UserService_UpdateCreditCard",
         "responses": {
           "200": {
@@ -197,6 +204,7 @@
     },
     "/v1/users/credit_cards/all": {
       "get": {
+        "summary": "列出用户的信用卡信息",
         "operationId": "UserService_ListCreditCards",
         "responses": {
           "200": {
@@ -219,6 +227,7 @@
     },
     "/v1/users/credit_cards/{id}": {
       "delete": {
+        "summary": "删除用户的信用卡信息",
         "operationId": "UserService_DeleteCreditCard",
         "responses": {
           "200": {
@@ -237,6 +246,7 @@
         "parameters": [
           {
             "name": "id",
+            "description": "要删除的信用卡 ID",
             "in": "path",
             "required": true,
             "type": "integer",
@@ -250,6 +260,7 @@
     },
     "/v1/users/credit_cards/{number}": {
       "get": {
+        "summary": "获取用户的信用卡信息",
         "operationId": "UserService_GetCreditCard",
         "responses": {
           "200": {
@@ -268,12 +279,14 @@
         "parameters": [
           {
             "name": "number",
+            "description": "卡号",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
             "name": "userId",
+            "description": "用户 ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -286,6 +299,7 @@
     },
     "/v1/users/profile": {
       "get": {
+        "summary": "获取用户个人资料",
         "operationId": "UserService_GetUserProfile",
         "responses": {
           "200": {
@@ -304,6 +318,7 @@
         "parameters": [
           {
             "name": "authorization",
+            "description": "授权令牌",
             "in": "query",
             "required": false,
             "type": "string"
@@ -374,19 +389,23 @@
       "properties": {
         "id": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "地址 ID"
         },
         "userId": {
           "type": "string"
         },
         "city": {
-          "type": "string"
+          "type": "string",
+          "title": "城市，必填字段"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "title": "州/省，必填字段"
         },
         "country": {
-          "type": "string"
+          "type": "string",
+          "title": "国家，必填字段"
         },
         "zipCode": {
           "type": "string"
@@ -395,6 +414,7 @@
           "type": "string"
         }
       },
+      "title": "定义地址信息的消息结构",
       "required": [
         "userId",
         "city",
@@ -408,13 +428,16 @@
       "type": "object",
       "properties": {
         "message": {
-          "type": "string"
+          "type": "string",
+          "title": "响应消息"
         },
         "code": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "响应状态码"
         }
-      }
+      },
+      "title": "定义通用的卡片操作响应消息"
     },
     "v1CreditCards": {
       "type": "object",
@@ -437,7 +460,7 @@
         },
         "owner": {
           "type": "string",
-          "title": "持卡人"
+          "title": "持卡人姓名"
         },
         "name": {
           "type": "string",
@@ -446,40 +469,46 @@
         "id": {
           "type": "integer",
           "format": "int64",
-          "title": "卡id"
+          "title": "卡 ID"
         },
         "type": {
           "type": "string",
-          "title": "卡类型"
+          "title": "卡类型（如借记卡、信用卡）"
         },
         "brand": {
           "type": "string",
-          "title": "卡品牌"
+          "title": "卡品牌（如 Visa、MasterCard）"
         },
         "country": {
           "type": "string",
           "title": "卡所属国家"
         },
         "createdTime": {
-          "type": "string"
+          "type": "string",
+          "title": "创建时间"
         }
-      }
+      },
+      "title": "定义信用卡信息的消息结构"
     },
     "v1DeleteAddressesReply": {
       "type": "object",
       "properties": {
         "message": {
-          "type": "string"
+          "type": "string",
+          "title": "响应消息，必填字段"
         },
         "id": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "地址 ID，必填字段"
         },
         "code": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "响应状态码，必填字段"
         }
       },
+      "title": "定义删除地址响应的消息结构",
       "required": [
         "message",
         "id",
@@ -494,9 +523,11 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/v1Address"
-          }
+          },
+          "title": "地址列表，必填字段"
         }
       },
+      "title": "定义获取地址列表响应的消息结构",
       "required": [
         "addresses"
       ]
@@ -505,20 +536,25 @@
       "type": "object",
       "properties": {
         "credit_cards": {
-          "$ref": "#/definitions/v1CreditCards"
+          "$ref": "#/definitions/v1CreditCards",
+          "title": "信用卡信息"
         }
-      }
+      },
+      "title": "定义获取信用卡响应的消息结构"
     },
     "v1GetProfileResponse": {
       "type": "object",
       "properties": {
         "state": {
-          "type": "string"
+          "type": "string",
+          "title": "状态"
         },
         "data": {
-          "$ref": "#/definitions/v1UserInfo"
+          "$ref": "#/definitions/v1UserInfo",
+          "title": "用户信息"
         }
-      }
+      },
+      "title": "定义获取用户个人资料响应的消息结构"
     },
     "v1ListCreditCardsReply": {
       "type": "object",
@@ -528,9 +564,11 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/v1CreditCards"
-          }
+          },
+          "title": "信用卡列表"
         }
-      }
+      },
+      "title": "定义列出信用卡响应的消息结构"
     },
     "v1UserInfo": {
       "type": "object",

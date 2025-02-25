@@ -24,10 +24,11 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 用户登录请求的消息结构
 type SigninRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	State         string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`   // 授权码，通常由第三方认证平台（如 OAuth2）返回
+	State         string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"` // 状态参数，用于防止 CSRF 攻击或标识请求来源
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -76,10 +77,11 @@ func (x *SigninRequest) GetState() string {
 	return ""
 }
 
+// 用户登录响应的消息结构
 type SigninReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	State         string                 `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	State         string                 `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"` // 状态参数，与请求中的 state 对应
+	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`   // 登录成功后返回的数据，例如 JWT Token 或用户信息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -128,9 +130,10 @@ func (x *SigninReply) GetData() string {
 	return ""
 }
 
+// 获取用户信息请求的消息结构
 type GetUserInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
+	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"` // 授权令牌（如 Bearer Token），用于验证用户身份
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

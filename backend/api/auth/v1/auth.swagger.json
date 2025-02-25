@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "v1/auth.proto",
+    "title": "定义包名，用于命名空间隔离",
     "version": "version not set"
   },
   "tags": [
@@ -18,6 +18,7 @@
   "paths": {
     "/v1/auth": {
       "post": {
+        "summary": "用户登录接口",
         "operationId": "AuthService_Signin",
         "responses": {
           "200": {
@@ -50,6 +51,7 @@
     },
     "/v1/auth/profile": {
       "get": {
+        "summary": "获取用户信息接口",
         "operationId": "AuthService_GetUserInfo",
         "responses": {
           "200": {
@@ -68,6 +70,7 @@
         "parameters": [
           {
             "name": "authorization",
+            "description": "授权令牌（如 Bearer Token），用于验证用户身份",
             "in": "query",
             "required": false,
             "type": "string"
@@ -607,23 +610,29 @@
       "type": "object",
       "properties": {
         "state": {
-          "type": "string"
+          "type": "string",
+          "title": "状态参数，与请求中的 state 对应"
         },
         "data": {
-          "type": "string"
+          "type": "string",
+          "title": "登录成功后返回的数据，例如 JWT Token 或用户信息"
         }
-      }
+      },
+      "title": "用户登录响应的消息结构"
     },
     "v1SigninRequest": {
       "type": "object",
       "properties": {
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "授权码，通常由第三方认证平台（如 OAuth2）返回"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "title": "状态参数，用于防止 CSRF 攻击或标识请求来源"
         }
-      }
+      },
+      "title": "用户登录请求的消息结构"
     }
   }
 }

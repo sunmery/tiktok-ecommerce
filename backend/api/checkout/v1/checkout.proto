@@ -1,32 +1,39 @@
-syntax = "proto3";
+syntax = "proto3"; // 指定使用 proto3 语法
 
-package  ecommerce.checkout.v1;
+package ecommerce.checkout.v1; // 定义包名，用于命名空间隔离
 
-import "google/api/annotations.proto";
+// 导入外部依赖
+import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
+import "backend/api/user/v1/user.proto"; // 导入用户相关的消息定义
 
-import "backend/api/user/v1/user.proto";
-
+// Go 语言生成代码的选项
 option go_package = "backend/api/v1/checkout;checkoutv1";
+// `go_package` 指定了生成的 Go 代码的包路径和别名：
+// - "backend/api/v1/checkout" 是生成代码的完整路径
+// - "checkoutv1" 是生成代码的包别名
 
+// 结账服务接口定义
 service CheckoutService {
+  // 结账接口
   rpc Checkout(CheckoutReq) returns (CheckoutResp) {
     option (google.api.http) = {
-      post: "/v1/checkout"
-      body: "*"
+      post: "/v1/checkout" // 定义 HTTP POST 请求路径
+      body: "*"            // 表示请求体包含所有字段
     };
   }
 }
 
-// firstname+lastname+email 允许非注册用户直接填写信息下单
+// 结账请求的消息结构
 message CheckoutReq {
-  uint32 user_id = 1;
-  string firstname = 2;
-  string lastname = 3;
-  string email = 4;
-  user.v1.CreditCards credit_card = 6;
+  uint32 user_id = 1; // 用户 ID（可选），如果用户未注册，则可以为空
+  string firstname = 2; // 用户的名字（必填），允许非注册用户直接填写信息下单
+  string lastname = 3; // 用户的姓氏（必填）
+  string email = 4; // 用户的邮箱地址（必填），用于接收订单确认邮件等
+  user.v1.CreditCards credit_card = 6; // 用户的信用卡信息（必填），用于支付
 }
 
+// 结账响应的消息结构
 message CheckoutResp {
-  string order_id = 1; // 唯一标识订单，用于后续查询、退换货。
-  string transaction_id = 2;// 支付事务唯一标识，用于与支付网关对账。
+  string order_id = 1; // 唯一标识订单，用于后续查询、退换货等操作
+  string transaction_id = 2; // 支付事务唯一标识，用于与支付网关对账或处理支付相关问题
 }

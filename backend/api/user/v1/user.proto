@@ -11,155 +11,190 @@ import "google/api/field_behavior.proto";
 import "validate/validate.proto";
 import "google/protobuf/empty.proto";
 
+// 用户服务接口定义
 service UserService {
-  rpc GetUserProfile (GetProfileRequest) returns (GetProfileResponse) {
+  // 获取用户个人资料
+  rpc GetUserProfile(GetProfileRequest) returns (GetProfileResponse) {
     option (google.api.http) = {
-      get: "/v1/users/profile"
+      get: "/v1/users/profile" // 定义 HTTP GET 请求路径
     };
-  };
+  }
 
-  rpc CreateAddresses (Address) returns (Address) {
+  // 创建用户地址
+  rpc CreateAddresses(Address) returns (Address) {
     option (google.api.http) = {
-      post: "/v1/users/address",
-      body: "*"
+      post: "/v1/users/address" // 定义 HTTP POST 请求路径
+      body: "*"                 // 表示请求体包含所有字段
     };
-  };
-  rpc UpdateAddresses (Address) returns (Address) {
-    option (google.api.http) = {
-      patch: "/v1/users/address",
-      body: "*"
-    };
-  };
-  rpc DeleteAddresses (DeleteAddressesRequest) returns (DeleteAddressesReply) {
-    option (google.api.http) = {
-      delete: "/v1/users/address"
-    };
-  };
-  rpc GetAddresses (google.protobuf.Empty) returns (GetAddressesReply) {
-    option (google.api.http) = {
-      get: "/v1/users/address"
-    };
-  };
-  rpc ListCreditCards (google.protobuf.Empty) returns (ListCreditCardsReply){
-    option (google.api.http) = {
-      get: "/v1/users/credit_cards/all"
-    };
-  };
+  }
 
-  rpc CreateCreditCard (CreditCards) returns (CardsReply){
+  // 更新用户地址
+  rpc UpdateAddresses(Address) returns (Address) {
     option (google.api.http) = {
-      post: "/v1/users/credit_cards",
-      body: "*"
+      patch: "/v1/users/address" // 定义 HTTP PATCH 请求路径
+      body: "*"                  // 表示请求体包含所有字段
     };
-  };
-  rpc UpdateCreditCard (CreditCards) returns (CardsReply){
+  }
+
+  // 删除用户地址
+  rpc DeleteAddresses(DeleteAddressesRequest) returns (DeleteAddressesReply) {
     option (google.api.http) = {
-      patch: "/v1/users/credit_cards",
-      body: "*"
+      delete: "/v1/users/address" // 定义 HTTP DELETE 请求路径
     };
-  };
-  rpc DeleteCreditCard (DeleteCreditCardsRequest) returns (CardsReply){
+  }
+
+  // 获取用户地址列表
+  rpc GetAddresses(google.protobuf.Empty) returns (GetAddressesReply) {
     option (google.api.http) = {
-      delete: "/v1/users/credit_cards/{id}"
+      get: "/v1/users/address" // 定义 HTTP GET 请求路径
     };
-  };
-  rpc GetCreditCard (GetCreditCardsRequest) returns (GetCreditCardsReply){
+  }
+
+  // 列出用户的信用卡信息
+  rpc ListCreditCards(google.protobuf.Empty) returns (ListCreditCardsReply) {
     option (google.api.http) = {
-      get: "/v1/users/credit_cards/{number}"
+      get: "/v1/users/credit_cards/all" // 定义 HTTP GET 请求路径
     };
-  };
+  }
+
+  // 创建用户的信用卡信息
+  rpc CreateCreditCard(CreditCards) returns (CardsReply) {
+    option (google.api.http) = {
+      post: "/v1/users/credit_cards" // 定义 HTTP POST 请求路径
+      body: "*"                      // 表示请求体包含所有字段
+    };
+  }
+
+  // 更新用户的信用卡信息
+  rpc UpdateCreditCard(CreditCards) returns (CardsReply) {
+    option (google.api.http) = {
+      patch: "/v1/users/credit_cards" // 定义 HTTP PATCH 请求路径
+      body: "*"                       // 表示请求体包含所有字段
+    };
+  }
+
+  // 删除用户的信用卡信息
+  rpc DeleteCreditCard(DeleteCreditCardsRequest) returns (CardsReply) {
+    option (google.api.http) = {
+      delete: "/v1/users/credit_cards/{id}" // 定义 HTTP DELETE 请求路径，路径参数为 id
+    };
+  }
+
+  // 获取用户的信用卡信息
+  rpc GetCreditCard(GetCreditCardsRequest) returns (GetCreditCardsReply) {
+    option (google.api.http) = {
+      get: "/v1/users/credit_cards/{number}" // 定义 HTTP GET 请求路径，路径参数为 number
+    };
+  }
 }
 
+// 定义信用卡信息的消息结构
 message CreditCards {
   string number = 1; // 卡号
   string cvv = 2; // 安全码
   string exp_year = 3; // 过期年份
   string exp_month = 4; // 过期月份
-  string owner = 5; // 持卡人
+  string owner = 5; // 持卡人姓名
   string name = 6; // 卡名
-  uint32 id = 7; // 卡id
-  string type = 8; // 卡类型
-  string brand = 9; // 卡品牌
+  uint32 id = 7; // 卡 ID
+  string type = 8; // 卡类型（如借记卡、信用卡）
+  string brand = 9; // 卡品牌（如 Visa、MasterCard）
   string country = 10; // 卡所属国家
-  string created_time = 11;
+  string created_time = 11; // 创建时间
 }
 
+// 定义通用的卡片操作响应消息
 message CardsReply {
-  string message = 1;
-  int32 code = 2;
+  string message = 1; // 响应消息
+  int32 code = 2; // 响应状态码
 }
 
+// 定义删除信用卡请求的消息结构
 message DeleteCreditCardsRequest {
-  uint32 id = 1;
+  uint32 id = 1; // 要删除的信用卡 ID
 }
 
+// 定义获取信用卡请求的消息结构
 message GetCreditCardsRequest {
-  string user_id = 1;
-  string number = 3 [json_name = "number"];
+  string user_id = 1; // 用户 ID
+  string number = 3 [json_name = "number"]; // 卡号
 }
+
+// 定义获取信用卡响应的消息结构
 message GetCreditCardsReply {
-  CreditCards credit_cards = 1 [json_name = "credit_cards"];
+  CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡信息
 }
+
+// 定义搜索信用卡响应的消息结构
 message SearchCreditCardsReply {
-  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
+  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡列表
 }
 
+// 定义列出信用卡响应的消息结构
 message ListCreditCardsReply {
-  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"];
+  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡列表
 }
 
+// 定义地址信息的消息结构
 message Address {
-  uint32 id = 1;
+  uint32 id = 1; // 地址 ID
   string user_id = 2 [
-    (google.api.field_behavior) = REQUIRED,
-    (validate.rules).string.len = 36,
-    (validate.rules).string.uuid = true
+    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
+    (validate.rules).string.len = 36, // 验证字段长度为 36
+    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
   ];
-  string city = 4 [(google.api.field_behavior) = REQUIRED];
-  string state = 5 [(google.api.field_behavior) = REQUIRED];
-  string country = 6 [(google.api.field_behavior) = REQUIRED];
+  string city = 4 [(google.api.field_behavior) = REQUIRED]; // 城市，必填字段
+  string state = 5 [(google.api.field_behavior) = REQUIRED]; // 州/省，必填字段
+  string country = 6 [(google.api.field_behavior) = REQUIRED]; // 国家，必填字段
   string zip_code = 7 [
-    (google.api.field_behavior) = REQUIRED
+    (google.api.field_behavior) = REQUIRED // 邮政编码，必填字段
   ];
   string street_address = 8 [
-    (google.api.field_behavior) = REQUIRED
+    (google.api.field_behavior) = REQUIRED // 街道地址，必填字段
   ];
 }
 
+// 定义更新地址请求的消息结构
 message UpdateAddressesRequest {
-  Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
+  Address addresses = 1 [(google.api.field_behavior) = REQUIRED]; // 地址信息，必填字段
 }
 
+// 定义删除地址请求的消息结构
 message DeleteAddressesRequest {
   int32 addresses_id = 1 [
-    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = REQUIRED, // 地址 ID，必填字段
     json_name = "addresses_id"
   ];
-  string user_id = 2;
+  string user_id = 2; // 用户 ID
 }
 
+// 定义地址响应的消息结构
 message AddressReply {
-  uint32 id = 1 [(google.api.field_behavior) = REQUIRED];
-  Address address = 2 [(google.api.field_behavior) = REQUIRED];
+  uint32 id = 1 [(google.api.field_behavior) = REQUIRED]; // 地址 ID，必填字段
+  Address address = 2 [(google.api.field_behavior) = REQUIRED]; // 地址信息，必填字段
 }
 
+// 定义获取地址列表响应的消息结构
 message GetAddressesReply {
-  repeated Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
+  repeated Address addresses = 1 [(google.api.field_behavior) = REQUIRED]; // 地址列表，必填字段
 }
 
+// 定义删除地址响应的消息结构
 message DeleteAddressesReply {
-  string message = 1 [(google.api.field_behavior) = REQUIRED];
-  uint32 id = 2 [(google.api.field_behavior) = REQUIRED];
-  uint32 code = 3 [(google.api.field_behavior) = REQUIRED];
+  string message = 1 [(google.api.field_behavior) = REQUIRED]; // 响应消息，必填字段
+  uint32 id = 2 [(google.api.field_behavior) = REQUIRED]; // 地址 ID，必填字段
+  uint32 code = 3 [(google.api.field_behavior) = REQUIRED]; // 响应状态码，必填字段
 }
 
+// 定义获取用户个人资料请求的消息结构
 message GetProfileRequest {
-  string authorization = 1;
+  string authorization = 1; // 授权令牌
 }
 
+// 定义获取用户个人资料响应的消息结构
 message GetProfileResponse {
-  string state = 1 [json_name = "state"];
-  UserInfo data = 2 [json_name = "data"];
+  string state = 1 [json_name = "state"]; // 状态
+  UserInfo data = 2 [json_name = "data"]; // 用户信息
 }
 
 message UserInfo {

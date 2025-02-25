@@ -23,7 +23,9 @@ const OperationAuthServiceGetUserInfo = "/ecommerce.auth.v1.AuthService/GetUserI
 const OperationAuthServiceSignin = "/ecommerce.auth.v1.AuthService/Signin"
 
 type AuthServiceHTTPServer interface {
+	// GetUserInfo 获取用户信息接口
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
+	// Signin 用户登录接口
 	Signin(context.Context, *SigninRequest) (*SigninReply, error)
 }
 

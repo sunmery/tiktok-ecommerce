@@ -23,9 +23,10 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 定义 StringList 消息类型，表示一个字符串列表
 type StringList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Values        []string               `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"` // 表示 []string
+	Values        []string               `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"` // 使用 repeated 关键字定义一个字符串数组 ([]string)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -67,6 +68,7 @@ func (x *StringList) GetValues() []string {
 	return nil
 }
 
+// 定义支付异步通知请求消息
 type PaymentNotifyReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Values        map[string]*StringList `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -111,10 +113,11 @@ func (x *PaymentNotifyReq) GetValues() map[string]*StringList {
 	return nil
 }
 
+// 定义支付异步通知响应消息
 type PaymentNotifyResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"` // 响应状态码
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`   // 响应消息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -163,12 +166,13 @@ func (x *PaymentNotifyResp) GetMsg() string {
 	return ""
 }
 
+// 定义创建支付请求消息
 type CreatePaymentReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                   // 主订单ID
-	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`                                // 支付货币
-	Amount        string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`                                    // 支付金额
-	PaymentMethod string                 `protobuf:"bytes,4,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"` // 支付方式
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                   // 主订单 ID，唯一标识一笔订单
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`                                // 支付货币类型，例如 "USD", "CNY"
+	Amount        string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`                                    // 支付金额，通常以字符串形式存储以避免精度问题
+	PaymentMethod string                 `protobuf:"bytes,4,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"` // 支付方式，例如 "alipay", "wechatpay", "credit_card"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -231,12 +235,13 @@ func (x *CreatePaymentReq) GetPaymentMethod() string {
 	return ""
 }
 
+// 定义支付响应消息
 type PaymentResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PaymentId     string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                           // CREATED/PENDING/SUCCEEDED/FAILED
-	PaymentUrl    string                 `protobuf:"bytes,3,opt,name=payment_url,json=paymentUrl,proto3" json:"payment_url,omitempty"` // 第三方支付链接
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	PaymentId     string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`    // 支付记录的唯一标识符
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                           // 支付状态，可能值包括 CREATED/PENDING/SUCCEEDED/FAILED
+	PaymentUrl    string                 `protobuf:"bytes,3,opt,name=payment_url,json=paymentUrl,proto3" json:"payment_url,omitempty"` // 第三方支付平台提供的支付链接
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`    // 支付记录创建的时间戳
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -299,9 +304,10 @@ func (x *PaymentResp) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// 定义获取支付信息请求消息
 type GetPaymentReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PaymentId     string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	PaymentId     string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"` // 支付记录的唯一标识符，用于查询具体的支付信息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -343,13 +349,14 @@ func (x *GetPaymentReq) GetPaymentId() string {
 	return ""
 }
 
+// 定义支付回调请求消息
 type PaymentCallbackReq struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	PaymentId       string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
-	Status          string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	GatewayResponse string                 `protobuf:"bytes,3,opt,name=gateway_response,json=gatewayResponse,proto3" json:"gateway_response,omitempty"` // 原始网关响应
-	ProcessedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=processed_at,json=processedAt,proto3" json:"processed_at,omitempty"`
-	RequestForm     map[string]*StringList `protobuf:"bytes,5,rep,name=request_form,json=requestForm,proto3" json:"request_form,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	PaymentId       string                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`                                                                                 // 支付记录的唯一标识符
+	Status          string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                                                                                                        // 回调返回的支付状态
+	GatewayResponse string                 `protobuf:"bytes,3,opt,name=gateway_response,json=gatewayResponse,proto3" json:"gateway_response,omitempty"`                                                               // 第三方支付网关的原始响应数据
+	ProcessedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=processed_at,json=processedAt,proto3" json:"processed_at,omitempty"`                                                                           // 回调处理的时间戳
+	RequestForm     map[string]*StringList `protobuf:"bytes,5,rep,name=request_form,json=requestForm,proto3" json:"request_form,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // 回调请求中的表单数据，键值对结构
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -419,6 +426,7 @@ func (x *PaymentCallbackReq) GetRequestForm() map[string]*StringList {
 	return nil
 }
 
+// 定义支付回调响应消息
 type PaymentCallbackResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields

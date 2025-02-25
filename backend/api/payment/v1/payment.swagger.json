@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "v1/payment.proto",
+    "title": "定义包名，用于命名空间隔离",
     "version": "version not set"
   },
   "tags": [
@@ -51,7 +51,7 @@
     },
     "/v1/payments/callback": {
       "post": {
-        "summary": "支付宝回调",
+        "summary": "支付宝回调处理接口",
         "operationId": "PaymentService_ProcessPaymentCallback",
         "responses": {
           "200": {
@@ -84,7 +84,7 @@
     },
     "/v1/payments/notify": {
       "post": {
-        "summary": "异步通知",
+        "summary": "异步通知接口",
         "operationId": "PaymentService_PaymentNotify",
         "responses": {
           "200": {
@@ -117,7 +117,7 @@
     },
     "/v1/payments/{paymentId}": {
       "get": {
-        "summary": "获取支付信息",
+        "summary": "获取支付信息接口",
         "operationId": "PaymentService_GetPayment",
         "responses": {
           "200": {
@@ -136,6 +136,7 @@
         "parameters": [
           {
             "name": "paymentId",
+            "description": "支付记录的唯一标识符，用于查询具体的支付信息",
             "in": "path",
             "required": true,
             "type": "string"
@@ -181,49 +182,57 @@
       "properties": {
         "orderId": {
           "type": "string",
-          "title": "主订单ID"
+          "title": "主订单 ID，唯一标识一笔订单"
         },
         "currency": {
           "type": "string",
-          "title": "支付货币"
+          "title": "支付货币类型，例如 \"USD\", \"CNY\""
         },
         "amount": {
           "type": "string",
-          "title": "支付金额"
+          "title": "支付金额，通常以字符串形式存储以避免精度问题"
         },
         "paymentMethod": {
           "type": "string",
-          "title": "支付方式"
+          "title": "支付方式，例如 \"alipay\", \"wechatpay\", \"credit_card\""
         }
-      }
+      },
+      "title": "定义创建支付请求消息"
     },
     "v1PaymentCallbackReq": {
       "type": "object",
       "properties": {
         "paymentId": {
-          "type": "string"
+          "type": "string",
+          "title": "支付记录的唯一标识符"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "title": "回调返回的支付状态"
         },
         "gatewayResponse": {
           "type": "string",
-          "title": "原始网关响应"
+          "title": "第三方支付网关的原始响应数据"
         },
         "processedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "回调处理的时间戳"
         },
         "requestForm": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/v1StringList"
-          }
+          },
+          "title": "回调请求中的表单数据，键值对结构"
         }
-      }
+      },
+      "title": "定义支付回调请求消息"
     },
     "v1PaymentCallbackResp": {
-      "type": "object"
+      "type": "object",
+      "description": "此处可以扩展字段，目前为空",
+      "title": "定义支付回调响应消息"
     },
     "v1PaymentNotifyReq": {
       "type": "object",
@@ -232,40 +241,48 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/v1StringList"
-          }
+          },
+          "title": "使用 map 定义一个键值对结构，键为字符串，值为 StringList 类型\n 适用于传递动态键值对数据"
         }
-      }
+      },
+      "title": "定义支付异步通知请求消息"
     },
     "v1PaymentNotifyResp": {
       "type": "object",
       "properties": {
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "响应状态码"
         },
         "msg": {
-          "type": "string"
+          "type": "string",
+          "title": "响应消息"
         }
-      }
+      },
+      "title": "定义支付异步通知响应消息"
     },
     "v1PaymentResp": {
       "type": "object",
       "properties": {
         "paymentId": {
-          "type": "string"
+          "type": "string",
+          "title": "支付记录的唯一标识符"
         },
         "status": {
           "type": "string",
-          "title": "CREATED/PENDING/SUCCEEDED/FAILED"
+          "title": "支付状态，可能值包括 CREATED/PENDING/SUCCEEDED/FAILED"
         },
         "paymentUrl": {
           "type": "string",
-          "title": "第三方支付链接"
+          "title": "第三方支付平台提供的支付链接"
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "支付记录创建的时间戳"
         }
-      }
+      },
+      "title": "定义支付响应消息"
     },
     "v1StringList": {
       "type": "object",
@@ -275,9 +292,10 @@
           "items": {
             "type": "string"
           },
-          "title": "表示 []string"
+          "title": "使用 repeated 关键字定义一个字符串数组 ([]string)"
         }
-      }
+      },
+      "title": "定义 StringList 消息类型，表示一个字符串列表"
     }
   }
 }

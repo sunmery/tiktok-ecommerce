@@ -35,16 +35,28 @@ const (
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 用户服务接口定义
 type UserServiceClient interface {
+	// 获取用户个人资料
 	GetUserProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
+	// 创建用户地址
 	CreateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
+	// 更新用户地址
 	UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
+	// 删除用户地址
 	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error)
+	// 获取用户地址列表
 	GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error)
+	// 列出用户的信用卡信息
 	ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListCreditCardsReply, error)
+	// 创建用户的信用卡信息
 	CreateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
+	// 更新用户的信用卡信息
 	UpdateCreditCard(ctx context.Context, in *CreditCards, opts ...grpc.CallOption) (*CardsReply, error)
+	// 删除用户的信用卡信息
 	DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...grpc.CallOption) (*CardsReply, error)
+	// 获取用户的信用卡信息
 	GetCreditCard(ctx context.Context, in *GetCreditCardsRequest, opts ...grpc.CallOption) (*GetCreditCardsReply, error)
 }
 
@@ -159,16 +171,28 @@ func (c *userServiceClient) GetCreditCard(ctx context.Context, in *GetCreditCard
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
+//
+// 用户服务接口定义
 type UserServiceServer interface {
+	// 获取用户个人资料
 	GetUserProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
+	// 创建用户地址
 	CreateAddresses(context.Context, *Address) (*Address, error)
+	// 更新用户地址
 	UpdateAddresses(context.Context, *Address) (*Address, error)
+	// 删除用户地址
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	// 获取用户地址列表
 	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
+	// 列出用户的信用卡信息
 	ListCreditCards(context.Context, *emptypb.Empty) (*ListCreditCardsReply, error)
+	// 创建用户的信用卡信息
 	CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	// 更新用户的信用卡信息
 	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	// 删除用户的信用卡信息
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
+	// 获取用户的信用卡信息
 	GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
