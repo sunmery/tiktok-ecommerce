@@ -16,13 +16,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// 数据访问层实现
-const (
-	defaultPage     = 1
-	defaultPageSize = 20
-	maxPageSize     = 100
-)
-
 type orderRepo struct {
 	data *Data
 	log  *log.Helper

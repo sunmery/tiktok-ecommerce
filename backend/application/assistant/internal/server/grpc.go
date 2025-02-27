@@ -1,6 +1,10 @@
 package server
 
 import (
+	v1 "backend/api/assistant/v1"
+	"backend/application/assistant/internal/conf"
+	"backend/application/assistant/internal/service"
+	"backend/constants"
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -8,15 +12,13 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"backend/application/assistant/constants"
-	"backend/application/assistant/internal/conf"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-
+	assistant *service.AssistantService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
@@ -32,7 +34,7 @@ func NewGRPCServer(
 			// attribute.Float64("float", 312.23),
 
 			// The service name used to display traces in backends serviceName
-			semconv.ServiceNameKey.String(constants.ServiceNameV1),
+			semconv.ServiceNameKey.String(constants.AssistantServiceV1),
 		),
 	)
 	if err != nil {
@@ -68,6 +70,6 @@ func NewGRPCServer(
 	}
 	srv := grpc.NewServer(opts...)
 	// v1.RegisterUserServiceServer(srv, user)
-
+	v1.RegisterAssistantServer(srv, assistant)
 	return srv
 }

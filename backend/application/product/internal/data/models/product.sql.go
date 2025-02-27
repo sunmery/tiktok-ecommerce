@@ -223,18 +223,24 @@ func (q *Queries) GetLatestAudit(ctx context.Context, arg GetLatestAuditParams) 
 
 const GetProduct = `-- name: GetProduct :one
 
-SELECT id,
-       name,
-       description,
-       price,
-       status,
-       merchant_id,
-       created_at,
-       updated_at
-FROM products.products
-WHERE id = $1
-  AND merchant_id = $2
-  AND deleted_at IS NULL
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.merchant_id,
+    p.created_at,
+    p.updated_at,
+    i.stock
+FROM products.products p
+         INNER JOIN products.inventory i
+                    ON p.id = i.product_id
+                        AND p.merchant_id = i.merchant_id
+WHERE
+    p.id = $1
+  AND p.merchant_id = $2
+  AND p.deleted_at IS NULL
 `
 
 type GetProductParams struct {
@@ -251,23 +257,30 @@ type GetProductRow struct {
 	MerchantID  uuid.UUID      `json:"merchantID"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
+	Stock       int32          `json:"stock"`
 }
 
 // 乐观锁版本控制
 // 获取商品详情，包含软删除检查
 //
-//	SELECT id,
-//	       name,
-//	       description,
-//	       price,
-//	       status,
-//	       merchant_id,
-//	       created_at,
-//	       updated_at
-//	FROM products.products
-//	WHERE id = $1
-//	  AND merchant_id = $2
-//	  AND deleted_at IS NULL
+//	SELECT
+//	    p.id,
+//	    p.name,
+//	    p.description,
+//	    p.price,
+//	    p.status,
+//	    p.merchant_id,
+//	    p.created_at,
+//	    p.updated_at,
+//	    i.stock
+//	FROM products.products p
+//	         INNER JOIN products.inventory i
+//	                    ON p.id = i.product_id
+//	                        AND p.merchant_id = i.merchant_id
+//	WHERE
+//	    p.id = $1
+//	  AND p.merchant_id = $2
+//	  AND p.deleted_at IS NULL
 func (q *Queries) GetProduct(ctx context.Context, arg GetProductParams) (GetProductRow, error) {
 	row := q.db.QueryRow(ctx, GetProduct, arg.ID, arg.MerchantID)
 	var i GetProductRow
@@ -280,6 +293,7 @@ func (q *Queries) GetProduct(ctx context.Context, arg GetProductParams) (GetProd
 		&i.MerchantID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Stock,
 	)
 	return i, err
 }
@@ -332,7 +346,333 @@ func (q *Queries) GetProductImages(ctx context.Context, arg GetProductImagesPara
 	return items, nil
 }
 
+const ListProductsByCategory = `-- name: ListProductsByCategory :many
+SELECT
+    p.id,
+    p.merchant_id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.category_id,
+    p.created_at,
+    p.updated_at,
+    (
+        SELECT jsonb_agg(jsonb_build_object(
+                'url', pi.url,
+                'is_primary', pi.is_primary,
+                'sort_order', pi.sort_order
+                         ))
+        FROM products.product_images pi
+        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+    ) AS images,
+    pa.attributes
+FROM products.products p
+         LEFT JOIN products.product_attributes pa
+                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+WHERE p.category_id = ANY($1::bigint[])
+  AND p.status = $2
+  AND p.deleted_at IS NULL
+ORDER BY p.created_at DESC
+    LIMIT $3 OFFSET $4
+`
+
+type ListProductsByCategoryParams struct {
+	Column1 []int64 `json:"column1"`
+	Status  int16   `json:"status"`
+	Limit   int64   `json:"limit"`
+	Offset  int64   `json:"offset"`
+}
+
+type ListProductsByCategoryRow struct {
+	ID          uuid.UUID      `json:"id"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
+	Status      int16          `json:"status"`
+	CategoryID  int64          `json:"categoryID"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	Images      []byte         `json:"images"`
+	Attributes  []byte         `json:"attributes"`
+}
+
+// 分类批量查询（使用GIN索引优化数组查询）
+//
+//	SELECT
+//	    p.id,
+//	    p.merchant_id,
+//	    p.name,
+//	    p.description,
+//	    p.price,
+//	    p.status,
+//	    p.category_id,
+//	    p.created_at,
+//	    p.updated_at,
+//	    (
+//	        SELECT jsonb_agg(jsonb_build_object(
+//	                'url', pi.url,
+//	                'is_primary', pi.is_primary,
+//	                'sort_order', pi.sort_order
+//	                         ))
+//	        FROM products.product_images pi
+//	        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+//	    ) AS images,
+//	    pa.attributes
+//	FROM products.products p
+//	         LEFT JOIN products.product_attributes pa
+//	                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+//	WHERE p.category_id = ANY($1::bigint[])
+//	  AND p.status = $2
+//	  AND p.deleted_at IS NULL
+//	ORDER BY p.created_at DESC
+//	    LIMIT $3 OFFSET $4
+func (q *Queries) ListProductsByCategory(ctx context.Context, arg ListProductsByCategoryParams) ([]ListProductsByCategoryRow, error) {
+	rows, err := q.db.Query(ctx, ListProductsByCategory,
+		arg.Column1,
+		arg.Status,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProductsByCategoryRow
+	for rows.Next() {
+		var i ListProductsByCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Status,
+			&i.CategoryID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Images,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListRandomProducts = `-- name: ListRandomProducts :many
+SELECT
+    p.id,
+    p.merchant_id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.category_id,
+    p.created_at,
+    p.updated_at,
+    -- 图片信息
+    (
+        SELECT jsonb_agg(jsonb_build_object(
+                'url', pi.url,
+                'is_primary', pi.is_primary,
+                'sort_order', pi.sort_order
+                         ))
+        FROM products.product_images pi
+        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+    ) AS images,
+    -- 属性信息
+    pa.attributes
+FROM products.products p
+         TABLESAMPLE BERNOULLI (0.1) REPEATABLE (123)
+         LEFT JOIN products.product_attributes pa
+                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+WHERE p.status = $1 AND p.deleted_at IS NULL
+ORDER BY random()
+    LIMIT $2 OFFSET $3
+`
+
+type ListRandomProductsParams struct {
+	Status int16 `json:"status"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+type ListRandomProductsRow struct {
+	ID          uuid.UUID      `json:"id"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
+	Status      int16          `json:"status"`
+	CategoryID  int64          `json:"categoryID"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	Images      []byte         `json:"images"`
+	Attributes  []byte         `json:"attributes"`
+}
+
+// 实现随机商品列表查询（使用PostgreSQL的TABLESAMPLE优化性能）
+//
+//	SELECT
+//	    p.id,
+//	    p.merchant_id,
+//	    p.name,
+//	    p.description,
+//	    p.price,
+//	    p.status,
+//	    p.category_id,
+//	    p.created_at,
+//	    p.updated_at,
+//	    -- 图片信息
+//	    (
+//	        SELECT jsonb_agg(jsonb_build_object(
+//	                'url', pi.url,
+//	                'is_primary', pi.is_primary,
+//	                'sort_order', pi.sort_order
+//	                         ))
+//	        FROM products.product_images pi
+//	        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+//	    ) AS images,
+//	    -- 属性信息
+//	    pa.attributes
+//	FROM products.products p
+//	         TABLESAMPLE BERNOULLI (0.1) REPEATABLE (123)
+//	         LEFT JOIN products.product_attributes pa
+//	                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+//	WHERE p.status = $1 AND p.deleted_at IS NULL
+//	ORDER BY random()
+//	    LIMIT $2 OFFSET $3
+func (q *Queries) ListRandomProducts(ctx context.Context, arg ListRandomProductsParams) ([]ListRandomProductsRow, error) {
+	rows, err := q.db.Query(ctx, ListRandomProducts, arg.Status, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListRandomProductsRow
+	for rows.Next() {
+		var i ListRandomProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Status,
+			&i.CategoryID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Images,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const SearchProductsByName = `-- name: SearchProductsByName :many
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.merchant_id,
+    p.created_at,
+    p.updated_at,
+    i.stock
+FROM products.products p
+         INNER JOIN products.inventory i
+ON p.id = i.product_id
+WHERE
+  name ILIKE '%' || $1 || '%'  -- 模糊匹配商品名称
+  AND deleted_at IS NULL        -- 排除已删除商品
+ORDER BY
+  created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type SearchProductsByNameParams struct {
+	Column1 *string `json:"column1"`
+	Limit   int64   `json:"limit"`
+	Offset  int64   `json:"offset"`
+}
+
+type SearchProductsByNameRow struct {
+	ID          uuid.UUID      `json:"id"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
+	Status      int16          `json:"status"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	Stock       int32          `json:"stock"`
+}
+
+// SearchProductsByName
+//
+//	SELECT
+//	    p.id,
+//	    p.name,
+//	    p.description,
+//	    p.price,
+//	    p.status,
+//	    p.merchant_id,
+//	    p.created_at,
+//	    p.updated_at,
+//	    i.stock
+//	FROM products.products p
+//	         INNER JOIN products.inventory i
+//	ON p.id = i.product_id
+//	WHERE
+//	  name ILIKE '%' || $1 || '%'  -- 模糊匹配商品名称
+//	  AND deleted_at IS NULL        -- 排除已删除商品
+//	ORDER BY
+//	  created_at DESC
+//	LIMIT $2 OFFSET $3
+func (q *Queries) SearchProductsByName(ctx context.Context, arg SearchProductsByNameParams) ([]SearchProductsByNameRow, error) {
+	rows, err := q.db.Query(ctx, SearchProductsByName, arg.Column1, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchProductsByNameRow
+	for rows.Next() {
+		var i SearchProductsByNameRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Status,
+			&i.MerchantID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Stock,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const SoftDeleteProduct = `-- name: SoftDeleteProduct :one
+
 UPDATE products.products
 SET deleted_at = NOW()
 WHERE merchant_id = $1
@@ -345,6 +685,7 @@ type SoftDeleteProductParams struct {
 	ID         uuid.UUID `json:"id"`
 }
 
+// 分页支持
 // 软删除商品，设置删除时间戳
 //
 //	UPDATE products.products

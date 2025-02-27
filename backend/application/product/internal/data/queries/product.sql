@@ -31,18 +31,45 @@ WHERE id = $1
 
 -- name: GetProduct :one
 -- 获取商品详情，包含软删除检查
-SELECT id,
-       name,
-       description,
-       price,
-       status,
-       merchant_id,
-       created_at,
-       updated_at
-FROM products.products
-WHERE id = $1
-  AND merchant_id = $2
-  AND deleted_at IS NULL;
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.merchant_id,
+    p.created_at,
+    p.updated_at,
+    i.stock
+FROM products.products p
+         INNER JOIN products.inventory i
+                    ON p.id = i.product_id
+                        AND p.merchant_id = i.merchant_id
+WHERE
+    p.id = $1
+  AND p.merchant_id = $2
+  AND p.deleted_at IS NULL;
+
+-- name: SearchProductsByName :many
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.merchant_id,
+    p.created_at,
+    p.updated_at,
+    i.stock
+FROM products.products p
+         INNER JOIN products.inventory i
+ON p.id = i.product_id
+WHERE
+  name ILIKE '%' || $1 || '%'  -- 模糊匹配商品名称
+  AND deleted_at IS NULL        -- 排除已删除商品
+ORDER BY
+  created_at DESC
+LIMIT $2 OFFSET $3;             -- 分页支持
 
 -- name: SoftDeleteProduct :one
 -- 软删除商品，设置删除时间戳
@@ -112,3 +139,66 @@ INSERT INTO products.product_audits (merchant_id, -- 新增分片键
                                      operator_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at;
+
+-- 实现随机商品列表查询（使用PostgreSQL的TABLESAMPLE优化性能）
+-- name: ListRandomProducts :many
+SELECT
+    p.id,
+    p.merchant_id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.category_id,
+    p.created_at,
+    p.updated_at,
+    -- 图片信息
+    (
+        SELECT jsonb_agg(jsonb_build_object(
+                'url', pi.url,
+                'is_primary', pi.is_primary,
+                'sort_order', pi.sort_order
+                         ))
+        FROM products.product_images pi
+        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+    ) AS images,
+    -- 属性信息
+    pa.attributes
+FROM products.products p
+         TABLESAMPLE BERNOULLI (0.1) REPEATABLE (123)
+         LEFT JOIN products.product_attributes pa
+                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+WHERE p.status = $1 AND p.deleted_at IS NULL
+ORDER BY random()
+    LIMIT $2 OFFSET $3;
+
+-- 分类批量查询（使用GIN索引优化数组查询）
+-- name: ListProductsByCategory :many
+SELECT
+    p.id,
+    p.merchant_id,
+    p.name,
+    p.description,
+    p.price,
+    p.status,
+    p.category_id,
+    p.created_at,
+    p.updated_at,
+    (
+        SELECT jsonb_agg(jsonb_build_object(
+                'url', pi.url,
+                'is_primary', pi.is_primary,
+                'sort_order', pi.sort_order
+                         ))
+        FROM products.product_images pi
+        WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+    ) AS images,
+    pa.attributes
+FROM products.products p
+         LEFT JOIN products.product_attributes pa
+                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+WHERE p.category_id = ANY($1::bigint[])
+  AND p.status = $2
+  AND p.deleted_at IS NULL
+ORDER BY p.created_at DESC
+    LIMIT $3 OFFSET $4;

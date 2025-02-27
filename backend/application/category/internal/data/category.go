@@ -1,16 +1,13 @@
 package data
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
-	"github.com/jackc/pgx/v5"
-
 	"backend/application/category/internal/biz"
 	"backend/application/category/internal/data/models"
+	"context"
+	"fmt"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/jackc/pgx/v5"
 )
 
 type categoryRepo struct {
@@ -27,13 +24,13 @@ func NewCategoryRepo(data *Data, logger log.Logger) biz.CategoryRepo {
 
 // GetCategory 获取单个分类详情
 func (r *categoryRepo) GetCategory(ctx context.Context, id uint64) (*biz.Category, error) {
-	dbCategory, err := r.data.DB(ctx).GetCategoryByID(ctx, int64(id))
+	dbCategory, err := r.data.DB(ctx).GetCategory(ctx, int64(id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 		}
 		return nil, fmt.Errorf("get category failed: %w", err)
 	}
-	return convertDBCategory(dbCategory), nil
+	return convertDBGetCategoryRow(dbCategory), nil
 }
 
 // DeleteCategory 删除分类及关联关系
@@ -41,77 +38,86 @@ func (r *categoryRepo) GetCategory(ctx context.Context, id uint64) (*biz.Categor
 // 1. 开启事务
 // 2. 删除所有关联闭包记录
 // 3. 删除分类记录
-// 4. 更新父分类叶子状态
+// 数据访问层实现
 func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
-	// tx, err := r.data.pool.BeginTx(ctx, pgx.TxOptions{
-	// 	IsoLevel: pgx.Serializable, // 需要最高级别隔离
-	// })
-	// qtx := r.data.DB(ctx)
-	//
-	// // 获取被删分类信息用于后续处理
-	// category, err := qtx.GetCategoryByID(ctx, id)
-	// if err != nil {
-	// 	if errors.Is(err, pgx.ErrNoRows) {
-	// 		return biz.ErrCategoryNotFound
-	// 	}
-	// 	return fmt.Errorf("get category failed: %w", err)
-	// }
-	//
-	// // 删除闭包关系
-	// if err := qtx.DeleteClosureRelations(ctx, &id); err != nil {
-	// 	return fmt.Errorf("delete closure relations failed: %w", err)
-	// }
-	//
-	// // 删除分类记录
-	// if err := qtx.DeleteCategory(ctx, id); err != nil {
-	// 	return fmt.Errorf("delete category failed: %w", err)
-	// }
-	//
-	// // 更新父分类的叶子状态
-	// // if category.ParentID != "" { // 根分类无父分类
-	// // 	if err := qtx.UpdateParentLeafStatus(ctx, &category.ParentID); err != nil {
-	// // 		return fmt.Errorf("update parent leaf status failed: %w", err)
-	// // 	}
-	// // }
-	//
-	// return err
-	panic("TODO")
+
+	qtx := r.data.DB(ctx)
+
+	// 1. 获取被删分类的path
+	category, err := qtx.GetCategory(ctx, int64(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return biz.ErrCategoryNotFound
+		}
+		return fmt.Errorf("get category failed: %w", err)
+	}
+
+	// 2. 执行级联删除
+	err = qtx.DeleteCategory(ctx, models.DeleteCategoryParams{
+		ID:   &category.ID,
+		Path: &category.Path,
+
+	})
+	if err != nil {
+		return fmt.Errorf("delete operation failed: %w", err)
+	}
+
+	return nil
 }
 
 // GetSubTree 获取指定分类的子树
+// GetSubTree 获取子树（使用WITH RECURSIVE查询优化）
 func (r *categoryRepo) GetSubTree(ctx context.Context, rootId uint64) ([]*biz.Category, error) {
-	// dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, &rootID)
-	// if err != nil {
-	// 	if errors.Is(err, pgx.ErrNoRows) {
-	// 		return nil, biz.ErrCategoryNotFound
-	// 	}
-	// 	return nil, fmt.Errorf("get subtree failed: %w", err)
-	// }
-	//
-	// result := make([]*biz.Category, 0, len(dbCategories))
-	// for _, c := range dbCategories {
-	// 	result = append(result, convertDBCategory(c))
-	// }
-	// return result, nil
-	panic("TODO")
+	dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, int64(rootId))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, biz.ErrCategoryNotFound
+		}
+		return nil, fmt.Errorf("get subtree failed: %w", err)
+	}
+
+	result := make([]*biz.Category, 0, len(dbCategories))
+	for _, c := range dbCategories {
+		result = append(result, convertDBCategory(models.CategoriesCategories{
+			ID:        c.ID,
+			ParentID:  &c.ParentID,
+			Level:     c.Level,
+			Path:      c.CPath,
+			Name:      c.Name,
+			SortOrder: c.SortOrder,
+			IsLeaf:    c.IsLeaf,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+		}))
+	}
+	return result, nil
 }
 
-// GetCategoryPath 获取分类的完整路径
+// GetCategoryPath 获取分类路径（包含层级排序）
 func (r *categoryRepo) GetCategoryPath(ctx context.Context, categoryID uint64) ([]*biz.Category, error) {
-	// dbCategories, err := r.data.DB(ctx).GetCategoryPath(ctx, categoryID)
-	// if err != nil {
-	// 	if errors.Is(err, pgx.ErrNoRows) {
-	// 		return nil, biz.ErrCategoryNotFound
-	// 	}
-	// 	return nil, fmt.Errorf("get category path failed: %w", err)
-	// }
-	//
-	// result := make([]*biz.Category, 0, len(dbCategories))
-	// for _, c := range dbCategories {
-	// 	result = append(result, convertDBCategory(c))
-	// }
-	// return result, nil
-	panic("TODO")
+	dbCategories, err := r.data.DB(ctx).GetCategoryPath(ctx, int64(categoryID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, biz.ErrCategoryNotFound
+		}
+		return nil, fmt.Errorf("get category path failed: %w", err)
+	}
+
+	result := make([]*biz.Category, 0, len(dbCategories))
+	for _, c := range dbCategories {
+		result = append(result, convertDBCategory(models.CategoriesCategories{
+			ID:        c.ID,
+			ParentID:  &c.ParentID,
+			Level:     c.Level,
+			Path:      c.CPath,
+			Name:      c.Name,
+			SortOrder: c.SortOrder,
+			IsLeaf:    c.IsLeaf,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+		}))
+	}
+	return result, nil
 }
 
 // GetLeafCategories 获取所有叶子分类（三级分类）
@@ -123,7 +129,7 @@ func (r *categoryRepo) GetLeafCategories(ctx context.Context) ([]*biz.Category, 
 
 	result := make([]*biz.Category, 0, len(dbCategories))
 	for _, c := range dbCategories {
-		result = append(result, convertDBCategory(c))
+		result = append(result, convertDBGetLeafCategoriesRow(c))
 	}
 	return result, nil
 }
@@ -138,8 +144,8 @@ func (r *categoryRepo) GetClosureRelations(ctx context.Context, categoryId uint6
 	result := make([]*biz.ClosureRelation, 0, len(dbRelations))
 	for _, r := range dbRelations {
 		result = append(result, &biz.ClosureRelation{
-			Ancestor:   r.Ancestor,
-			Descendant: r.Descendant,
+			Ancestor:   uint64(r.Ancestor),
+			Descendant: uint64(r.Descendant),
 			Depth:      uint32(r.Depth),
 		})
 	}
@@ -148,16 +154,25 @@ func (r *categoryRepo) GetClosureRelations(ctx context.Context, categoryId uint6
 
 // UpdateClosureDepth 更新闭包关系深度
 func (r *categoryRepo) UpdateClosureDepth(ctx context.Context, req *biz.UpdateClosureDepth) error {
-	// deltaType := int16(delta)
-	//
-	// if err := r.data.DB(ctx).UpdateClosureDepth(ctx, models.UpdateClosureDepthParams{
-	// 	CategoryID: &categoryID,
-	// 	Delta:      &deltaType,
-	// }); err != nil {
-	// 	return fmt.Errorf("update closure depth failed: %w", err)
-	// }
-	// return nil
-	panic("TODO")
+	tx := r.data.DB(ctx)
+
+	// 验证分类存在
+	if _, err := tx.GetCategory(ctx, req.ID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return biz.ErrCategoryNotFound
+		}
+		return fmt.Errorf("get category failed: %w", err)
+	}
+
+	// 执行深度更新（示例实现，实际可能需要更复杂的逻辑）
+	err := tx.UpdateCategory(ctx, models.UpdateCategoryParams{
+		ID:   req.ID,
+		Name: req.Name,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateCategory 创建分类
@@ -178,7 +193,7 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, req *biz.CreateCatego
 	// 不为 0 就去查询该根类
 	if req.ParentID != 0 {
 		parentID := int32(req.ParentID)
-		_, err := r.data.db.GetCategoryByID(ctx, int64(parentID))
+		_, err := r.data.db.GetCategory(ctx, int64(parentID))
 		if err != nil {
 			return nil, biz.ErrParentIdUnprocessableEntiy
 		}
@@ -196,20 +211,18 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, req *biz.CreateCatego
 		SortOrder: sortOrder,
 	}
 
-	id, err := qtx.CreateCategory(ctx, params)
+	category, err := qtx.CreateCategory(ctx, params)
 	if err != nil {
-		if strings.Contains(err.Error(), "unique constraint") {
-			return nil, biz.ErrCategoryNameNotFound
-		}
 		return nil, errors.New(500, "Failed", "failed to create category")
 	}
 
-	dbCategory, err := qtx.GetCategoryByID(ctx, int64(id))
-	if err != nil {
-		return nil, fmt.Errorf("get created category failed: %w", err)
-	}
+	// fmt.Printf("id:%+v", category)
+	// dbCategory, err := qtx.GetCategoryByID(ctx, category.ID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("get created category failed: %w", err)
+	// }
 
-	return convertDBCategory(dbCategory), nil
+	return convertDBCreateCategory(category), nil
 }
 
 func (r *categoryRepo) UpdateCategoryName(ctx context.Context, req *biz.Category) error {
@@ -234,7 +247,7 @@ func (r *categoryRepo) UpdateCategoryName(ctx context.Context, req *biz.Category
 }
 
 // convertDBCategory 转换数据库模型到业务模型
-func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
+func convertDBCreateCategory(dbCategory models.CreateCategoryRow) *biz.Category {
 	return &biz.Category{
 		ID:        uint64(*dbCategory.ParentID),
 		ParentID:  uint64(*dbCategory.ParentID),
@@ -247,3 +260,44 @@ func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
 		UpdatedAt: dbCategory.UpdatedAt,
 	}
 }
+
+func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
+	return &biz.Category{
+		ID:        uint64(dbCategory.ID),
+		ParentID:  uint64(*dbCategory.ParentID),
+		Level:     int(dbCategory.Level),
+		Path:      dbCategory.Path,
+		Name:      dbCategory.Name,
+		SortOrder: int(dbCategory.SortOrder),
+		IsLeaf:    dbCategory.IsLeaf,
+		CreatedAt: dbCategory.CreatedAt,
+		UpdatedAt: dbCategory.UpdatedAt,
+	}
+}
+func convertDBGetCategoryRow(dbCategory models.GetCategoryRow) *biz.Category {
+	return &biz.Category{
+		ID:        uint64(dbCategory.ID),
+		ParentID:  uint64(dbCategory.ParentID),
+		Level:     int(dbCategory.Level),
+		Path:      dbCategory.Path,
+		Name:      dbCategory.Name,
+		SortOrder: int(dbCategory.SortOrder),
+		IsLeaf:    dbCategory.IsLeaf,
+		CreatedAt: dbCategory.CreatedAt,
+		UpdatedAt: dbCategory.UpdatedAt,
+	}
+}
+func convertDBGetLeafCategoriesRow(dbCategory models.GetLeafCategoriesRow) *biz.Category {
+	return &biz.Category{
+		ID:        uint64(dbCategory.ID),
+		ParentID:  uint64(dbCategory.ParentID),
+		Level:     int(dbCategory.Level),
+		Path:      dbCategory.Path,
+		Name:      dbCategory.Name,
+		SortOrder: int(dbCategory.SortOrder),
+		IsLeaf:    dbCategory.IsLeaf,
+		CreatedAt: dbCategory.CreatedAt,
+		UpdatedAt: dbCategory.UpdatedAt,
+	}
+}
+

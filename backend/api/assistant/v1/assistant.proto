@@ -6,18 +6,33 @@ import "google/api/annotations.proto";
 
 option go_package = "backend/api/assistant/v1;assistantv1";
 
-service AssistantService {
-  rpc Query (QueryRequest) returns (QueryReply) {
+service Assistant {
+  rpc ProcessQuery(ProcessRequest) returns (ProcessResponse) {
     option (google.api.http) = {
-      get: "/v1/query/{question}"
+      get: "/api/assistant"
     };
   }
 }
 
-message QueryRequest {
+message ProcessRequest {
   string question = 1;
 }
 
-message QueryReply {
-  string message = 1;
+message ProcessResponse {
+  oneof result {
+    OrderResponse order = 1;
+    OrderList orders = 2;
+    string message = 3;
+  }
+}
+
+message OrderResponse {
+  string id = 1;
+  string product = 2;
+  string status = 3;
+  int64 created_at = 4;
+}
+
+message OrderList {
+  repeated OrderResponse orders = 1;
 }

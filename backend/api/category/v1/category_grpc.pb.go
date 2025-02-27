@@ -37,25 +37,17 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// 定义分类服务（CategoryService），提供对分类数据的操作接口。
+// 分类服务
 type CategoryServiceClient interface {
-	// 创建分类
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	// 获取单个分类
 	GetCategory(ctx context.Context, in *GetCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	// 更新单个分类
 	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// 删除分类及关联关系
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// 获取分类的子树结构（树形结构操作）
-	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Category, error)
-	// 获取分类的完整路径（从根节点到当前分类的路径）
-	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Category, error)
-	// 获取所有叶子分类（三级分类）
-	GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categorys, error)
-	// 获取分类闭包关系（Closure Table 实现的层级关系）
-	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelation, error)
-	// 更新闭包关系深度（调整分类层级）
+	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Categories, error)
+	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error)
+	GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categories, error)
+	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelations, error)
+	// Note: UpdateClosureDepth may require transaction and complex operations
 	UpdateClosureDepth(ctx context.Context, in *UpdateClosureDepthRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -107,9 +99,9 @@ func (c *categoryServiceClient) DeleteCategory(ctx context.Context, in *DeleteCa
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Category, error) {
+func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Categories, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Category)
+	out := new(Categories)
 	err := c.cc.Invoke(ctx, CategoryService_GetSubTree_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -117,9 +109,9 @@ func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRe
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Category, error) {
+func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Category)
+	out := new(Categories)
 	err := c.cc.Invoke(ctx, CategoryService_GetCategoryPath_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -127,9 +119,9 @@ func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCate
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categorys, error) {
+func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categories, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Categorys)
+	out := new(Categories)
 	err := c.cc.Invoke(ctx, CategoryService_GetLeafCategories_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -137,9 +129,9 @@ func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *empty
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelation, error) {
+func (c *categoryServiceClient) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelations, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ClosureRelation)
+	out := new(ClosureRelations)
 	err := c.cc.Invoke(ctx, CategoryService_GetClosureRelations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -161,25 +153,17 @@ func (c *categoryServiceClient) UpdateClosureDepth(ctx context.Context, in *Upda
 // All implementations must embed UnimplementedCategoryServiceServer
 // for forward compatibility.
 //
-// 定义分类服务（CategoryService），提供对分类数据的操作接口。
+// 分类服务
 type CategoryServiceServer interface {
-	// 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
-	// 获取单个分类
 	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
-	// 更新单个分类
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
-	// 删除分类及关联关系
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
-	// 获取分类的子树结构（树形结构操作）
-	GetSubTree(context.Context, *GetSubTreeRequest) (*Category, error)
-	// 获取分类的完整路径（从根节点到当前分类的路径）
-	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Category, error)
-	// 获取所有叶子分类（三级分类）
-	GetLeafCategories(context.Context, *emptypb.Empty) (*Categorys, error)
-	// 获取分类闭包关系（Closure Table 实现的层级关系）
-	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelation, error)
-	// 更新闭包关系深度（调整分类层级）
+	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
+	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
+	GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error)
+	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error)
+	// Note: UpdateClosureDepth may require transaction and complex operations
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCategoryServiceServer()
 }
@@ -203,16 +187,16 @@ func (UnimplementedCategoryServiceServer) UpdateCategory(context.Context, *Updat
 func (UnimplementedCategoryServiceServer) DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCategory not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetSubTree(context.Context, *GetSubTreeRequest) (*Category, error) {
+func (UnimplementedCategoryServiceServer) GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubTree not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Category, error) {
+func (UnimplementedCategoryServiceServer) GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryPath not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetLeafCategories(context.Context, *emptypb.Empty) (*Categorys, error) {
+func (UnimplementedCategoryServiceServer) GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLeafCategories not implemented")
 }
-func (UnimplementedCategoryServiceServer) GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelation, error) {
+func (UnimplementedCategoryServiceServer) GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClosureRelations not implemented")
 }
 func (UnimplementedCategoryServiceServer) UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error) {

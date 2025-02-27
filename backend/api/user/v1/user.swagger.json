@@ -65,9 +65,8 @@
           },
           {
             "name": "userId",
-            "description": "用户 ID",
             "in": "query",
-            "required": false,
+            "required": true,
             "type": "string"
           }
         ],
@@ -286,9 +285,8 @@
           },
           {
             "name": "userId",
-            "description": "用户 ID",
             "in": "query",
-            "required": false,
+            "required": true,
             "type": "string"
           }
         ],

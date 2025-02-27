@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -100,7 +101,10 @@ func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.G
 	if md, ok := metadata.FromServerContext(ctx); ok {
 		md.Get("x-global-user-id")
 	}
-	userId := uuid.MustParse(userStr)
+	userId,err := uuid.Parse(userStr)
+	if err != nil {
+		return nil, errors.New("错误的UserID")
+	}
 	addresses, err := s.uc.GetAddresses(ctx, &biz.Request{
 		UserId: userId,
 	})

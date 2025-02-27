@@ -11,133 +11,164 @@
 */
 
 -- name: CreateCategory :one
-WITH root_check AS (
-    INSERT INTO categories.categories (id, parent_id, level, path, name, sort_order, is_leaf)
-        VALUES (@id, NULL, 1, 'root'::public.ltree, 'Root', 0, FALSE)
-        ON CONFLICT (id) DO NOTHING),
-     parent_info AS (SELECT COALESCE(c.id, 0)                      AS effective_parent_id,
-                            COALESCE(c.path, 'root'::public.ltree) AS parent_path,
-                            COALESCE(c.level, 0)                   AS parent_level
-                     FROM (SELECT @parent_id::BIGINT AS pid) AS input
-                              LEFT JOIN categories.categories c ON c.id = input.pid),
-     level_validation AS (SELECT effective_parent_id,
-                                 parent_path,
-                                 CASE
-                                     WHEN parent_level >= 4 THEN NULL -- 父节点已经是4层，不允许新增子节点
-                                     ELSE parent_level + 1
-                                     END AS new_level
-                          FROM parent_info),
-     insert_main AS (
-         INSERT INTO categories.categories (parent_id, level, path, name, sort_order, is_leaf) SELECT lv.effective_parent_id,
-                                                                                                      lv.new_level,
-                                                                                                      CASE
-                                                                                                          WHEN lv.parent_path OPERATOR (public.=) 'root'::public.ltree
-                                                                                                              THEN lv.parent_path || ('node_' || gen_random_uuid())::public.ltree
-                                                                                                          ELSE
-                                                                                                              lv.parent_path ||
-                                                                                                              (REPLACE(@id::text, '-', '_'))::public.ltree
-                                                                                                          END,
-                                                                                                      $2,                                                 -- Name 参数
-                                                                                                      $3,                                                 -- SortOrder 参数
-                                                                                                      CASE WHEN lv.new_level = 4 THEN TRUE ELSE FALSE END -- 第四层为叶子节点
-                                                                                               FROM level_validation lv
-                                                                                               WHERE lv.new_level IS NOT NULL
-             RETURNING *),
-     update_parent_leaf AS (
-         UPDATE categories.categories
-             SET is_leaf = FALSE
-             WHERE id = (SELECT effective_parent_id FROM parent_info)
-                 AND is_leaf = TRUE)
-INSERT
-INTO categories.category_closure (ancestor, descendant, depth)
-SELECT cc.ancestor,
-       im.id,
-       cc.depth + 1
-FROM insert_main im
-         JOIN categories.category_closure cc ON cc.descendant = im.parent_id
-UNION ALL
-SELECT im.id,
-       im.id,
-       0
-FROM insert_main im
-RETURNING descendant;
+WITH parent_cte AS (
+    SELECT id, level, path
+    FROM categories.categories
+    WHERE id = CASE
+        WHEN @parent_id::bigint = 0 THEN 1
+        WHEN @parent_id::bigint IS NULL THEN 1
+        ELSE @parent_id::bigint
+    END
+),
+valid_parent AS (
+    SELECT *
+    FROM parent_cte
+    WHERE level < 3
+    AND EXISTS(SELECT 1 FROM categories.categories WHERE id = (SELECT id FROM parent_cte))
+),
+new_category AS (
+    INSERT INTO categories.categories (
+        id, parent_id, name, sort_order, level, path, is_leaf
+    )
+    SELECT
+        nextval('categories.categories_id_seq'),
+        p.id,
+        @name::varchar(50),
+        @sort_order::smallint,
+        p.level + 1,
+        p.path || currval('categories.categories_id_seq')::text::ltree,
+        true
+    FROM valid_parent p
+    WHERE NOT EXISTS (
+        SELECT 1 FROM categories.categories
+        WHERE parent_id = p.id AND name = @name::varchar(50)
+    )
+    RETURNING *
+),
+update_leaf AS (
+    UPDATE categories.categories
+    SET is_leaf = false
+    WHERE id = (SELECT parent_id FROM new_category)
+    AND is_leaf = true
+),
+update_current_leaf AS (
+    UPDATE categories.categories
+    SET is_leaf = NOT EXISTS (
+        SELECT 1 FROM categories.categories
+        WHERE parent_id = (SELECT id FROM new_category)
+    )
+    WHERE id = (SELECT id FROM new_category)
+),
+closure_insert AS (
+    INSERT INTO categories.category_closure (ancestor, descendant, depth)
+    SELECT
+        c.ancestor,
+        n.id,
+        c.depth + 1
+    FROM categories.category_closure c
+    CROSS JOIN new_category n
+    WHERE c.descendant = (SELECT id FROM valid_parent)
+    UNION ALL
+    SELECT
+        n.id,
+        n.id,
+        0
+    FROM new_category n
+)
+SELECT * FROM new_category;
 
--- name: GetCategoryByID :one
-SELECT *
-FROM categories.categories
-WHERE id = @id
-LIMIT 1;
+-- name: GetCategory :one
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,  -- 将NULL转换为0返回给proto
+    level,
+    path::text AS path,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories WHERE id = $1;
 
--- name: UpdateCategoryName :exec
+-- name: UpdateCategory :exec
 UPDATE categories.categories
-SET name       = @name,
-    updated_at = NOW()
-WHERE id = @id;
+SET name = $2, updated_at = NOW()
+WHERE id = $1;
 
 -- name: DeleteCategory :exec
-WITH deleted AS (
+WITH deleted_nodes AS (
     DELETE FROM categories.categories
-        WHERE id = @id
-        RETURNING path)
-DELETE
-FROM categories.category_closure
-WHERE descendant IN (SELECT descendant
-                     FROM categories.category_closure
-                     WHERE ancestor = @id);
-/*
-级联删除策略：
-1. 根据闭包表找到所有后代节点
-2. 删除所有相关闭包关系
-*/
-
+        WHERE path <@ (SELECT path FROM categories.categories WHERE id = @id)
+            OR path ~ (@path || '.*{1,}')::lquery
+        RETURNING id, parent_id
+),
+     delete_closure AS (
+         DELETE FROM categories.category_closure
+             WHERE descendant IN (SELECT id FROM deleted_nodes)
+                 OR ancestor IN (SELECT id FROM deleted_nodes)
+     )
+UPDATE categories.categories
+SET is_leaf = (
+    SELECT NOT EXISTS (
+        SELECT 1 FROM categories.categories
+        WHERE parent_id = (SELECT parent_id FROM deleted_nodes LIMIT 1)
+    )
+)
+WHERE id = (SELECT parent_id FROM deleted_nodes LIMIT 1)
+  AND (SELECT parent_id FROM deleted_nodes LIMIT 1) IS NOT NULL;
 
 -- name: GetSubTree :many
-SELECT c.*
-FROM categories.categories c
-WHERE c.path <@ (SELECT path FROM categories.categories WHERE id = @root_id)
-ORDER BY c.path;
+SELECT
+    c.id,
+    COALESCE(c.parent_id, 0) AS parent_id,
+    c.level,
+    c.path::text,
+    c.name,
+    c.sort_order,
+    c.is_leaf,
+    c.created_at,
+    c.updated_at
+FROM categories.category_closure cc
+         JOIN categories.categories c ON cc.descendant = c.id
+WHERE cc.ancestor = $1 AND cc.depth >= 0
+ORDER BY cc.depth;
 
 -- name: GetCategoryPath :many
-SELECT ancestor.*
+SELECT
+    c.id,
+    COALESCE(c.parent_id, 0) AS parent_id,
+    c.level,
+    c.path::text,
+    c.name,
+    c.sort_order,
+    c.is_leaf,
+    c.created_at,
+    c.updated_at
 FROM categories.category_closure cc
-         JOIN categories.categories ancestor ON cc.ancestor = ancestor.id
-WHERE cc.descendant = @category_id
+         JOIN categories.categories c ON cc.ancestor = c.id
+WHERE cc.descendant = $1
 ORDER BY cc.depth DESC;
 
 -- name: GetLeafCategories :many
-SELECT *
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
 FROM categories.categories
-WHERE is_leaf = TRUE
-  AND level = 4;
+WHERE is_leaf = false AND level = 3;
 
 -- name: GetClosureRelations :many
-SELECT *
-FROM categories.category_closure
-WHERE descendant = @category_id;
+SELECT * FROM categories.category_closure
+WHERE descendant = $1;
 
 -- name: UpdateClosureDepth :exec
+-- 注意：实际实现可能需要更复杂的操作，这里只是示例
 UPDATE categories.category_closure
-SET depth = depth + @delta
-WHERE descendant IN (SELECT descendant
-                     FROM categories.category_closure
-                     WHERE ancestor = @category_id)
-  AND depth + @delta <= 3;
--- 确保深度不超过 3
-
--- 删除指定分类及其所有后代节点的闭包关系
--- name: DeleteClosureRelations :exec
-DELETE
-FROM categories.category_closure
-WHERE descendant IN (SELECT descendant
-                     FROM categories.category_closure
-                     WHERE ancestor = @category_id);
-
--- 更新父分类的叶子节点状态
--- name: UpdateParentLeafStatus :exec
-UPDATE categories.categories
-SET is_leaf    = NOT EXISTS (SELECT 1
-                             FROM categories
-                             WHERE parent_id = @parent_id
-                             LIMIT 1),
-    updated_at = NOW()
-WHERE id = @parent_id;
+SET depth = depth + $2
+WHERE descendant = $1;

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -105,7 +106,7 @@ func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAudit
 		OldStatus:  convertBizStatusToPB(record.OldStatus),
 		NewStatus:  convertBizStatusToPB(record.NewStatus),
 		Reason:     record.Reason,
-		OperatorId: record.OperatorID,
+		OperatorId: record.OperatorID.String(),
 		OperatedAt: timestamppb.New(record.OperatedAt),
 	}, nil
 }
@@ -146,7 +147,7 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 		OldStatus:  convertBizStatusToPB(record.OldStatus),
 		NewStatus:  convertBizStatusToPB(record.NewStatus),
 		Reason:     record.Reason,
-		OperatorId: record.OperatorID,
+		OperatorId: record.OperatorID.String(),
 		OperatedAt: timestamppb.New(record.OperatedAt),
 	}, nil
 }
@@ -193,6 +194,30 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 	return &emptypb.Empty{}, nil
 }
 
+// ListRandomProducts 随机返回商品数据
+func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRandomProductsRequest) (*pb.Products, error) {
+	listRandomProducts, err := s.uc.ListRandomProducts(ctx, &biz.ListRandomProductsRequest{
+		Page:     req.Page,
+		PageSize: req.PageSize,
+		Status:   req.Status,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range listRandomProducts.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
+// SearchProductsByName 根据商品名称模糊查询
+func (s *ProductService) SearchProductsByName(context.Context, *pb.SearchProductRequest) (*pb.Products, error) {
+	panic("TODO")
+}
+
 // 辅助转换方法
 func convertBizProductToPB(p *biz.Product) *pb.Product {
 	pbProduct := &pb.Product{
@@ -225,30 +250,16 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		})
 	}
 
-	if p.AuditInfo.AuditId != uuid.Nil {
-		pbProduct.AuditInfo = &pb.AuditInfo{
-			AuditId:    p.AuditInfo.AuditId.String(),
-			Reason:     p.AuditInfo.Reason,
-			OperatorId: p.AuditInfo.OperatorId,
-			OperatedAt: timestamppb.New(p.AuditInfo.OperatedAt),
-		}
-	}
-
 	return pbProduct
 }
 
 func convertPBToBizProduct(p *pb.Product) *biz.Product {
-	id, err := uuid.Parse(p.Id)
-	if err != nil {
-		return nil
-	}
 	merchantId, err := uuid.Parse(p.MerchantId)
 	if err != nil {
 		return nil
 	}
 
 	return &biz.Product{
-		ID:          id,
 		MerchantId:  merchantId,
 		Name:        p.GetName(),
 		Price:       p.GetPrice(),
@@ -260,7 +271,6 @@ func convertPBToBizProduct(p *pb.Product) *biz.Product {
 			CategoryName: p.GetCategory().GetCategoryName(),
 		},
 		Attributes: nil,
-		AuditInfo:  convertPBAuditInfoToBiz(p.GetAuditInfo()),
 	}
 }
 
@@ -281,20 +291,25 @@ func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {
 	return images
 }
 
-func convertPBAuditInfoToBiz(pbInfo *pb.AuditInfo) biz.AuditInfo {
+func convertPBAuditInfoToBiz(pbInfo *pb.AuditInfo) (*biz.AuditInfo, error) {
 	if pbInfo == nil {
-		return biz.AuditInfo{}
+		return nil, errors.New("audit info is nil")
 	}
 	auditId, err := uuid.Parse(pbInfo.AuditId)
 	if err != nil {
-		return biz.AuditInfo{}
+		return nil, errors.New("invalid audit ID")
 	}
-	return biz.AuditInfo{
+
+	operatorId, err := uuid.Parse(pbInfo.OperatorId)
+	if err != nil {
+		return nil, errors.New("invalid operator ID")
+	}
+	return &biz.AuditInfo{
 		AuditId:    auditId,
 		Reason:     pbInfo.Reason,
-		OperatorId: pbInfo.OperatorId,
+		OperatorId: operatorId,
 		OperatedAt: pbInfo.OperatedAt.AsTime(),
-	}
+	}, nil
 }
 
 func convertBizStatusToPB(s biz.ProductStatus) pb.ProductStatus {

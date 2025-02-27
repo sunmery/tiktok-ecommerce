@@ -8,22 +8,20 @@ import (
 	"time"
 )
 
-// 商品分类主表（ltree路径+闭包表双重优化）
 type CategoriesCategories struct {
-	ID        uint64    `json:"id"`
-	ParentID  *int64    `json:"parent_id"`
-	Level     int16     `json:"level"`
-	Path      string    `json:"path"`
-	Name      string    `json:"name"`
-	SortOrder int16     `json:"sort_order"`
-	IsLeaf    bool      `json:"is_leaf"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64
+	ParentID  *int64
+	Level     int16
+	Path      string
+	Name      string
+	SortOrder int16
+	IsLeaf    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// 分类闭包关系表（存储所有层级关系）
 type CategoriesCategoryClosure struct {
-	Ancestor   uint64 `json:"ancestor"`
-	Descendant uint64 `json:"descendant"`
-	Depth      int16  `json:"depth"`
+	Ancestor   int64
+	Descendant int64
+	Depth      int16
 }

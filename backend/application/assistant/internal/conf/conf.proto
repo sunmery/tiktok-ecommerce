@@ -56,29 +56,10 @@ message Data {
   Cache cache = 2;
 }
 
-// SaaS 软件即服务
-message SaaS {
-  // 用户管理平台
-  message Casdoor {
-    message Server {
-      string endpoint = 1;
-      string client_id = 2 [json_name = "client_id"];
-      string client_secret = 3 [json_name = "client_secret"];
-      string organization = 4;
-      string application = 5;
-    }
-    Server server = 1;
-  }
-
-  Casdoor casdoor = 1;
-}
-
-// 认证
-message Auth {
-  message JWT {
-    string certificate = 1 [json_name = "service_key"];
-  }
-  JWT jwt = 1;
+message Ai {
+  string model = 1;
+  string api_key = 2;
+  string base_url = 3;
 }
 
 // 可观测性

@@ -39,7 +39,7 @@ type Category struct {
 }
 
 type CreateCategoryReq struct {
-	ParentID  uint64
+	ParentID  int64
 	Name      string
 	SortOrder int
 }
@@ -84,8 +84,8 @@ type ClosureRelation struct {
 	Depth      uint32
 }
 type UpdateClosureDepth struct {
-	Delta      int32
-	CategoryID uint64
+	ID      int64
+	Name string
 }
 
 // CreateCategory 创建分类

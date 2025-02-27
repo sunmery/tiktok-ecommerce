@@ -50,13 +50,13 @@ type AuditRecord struct {
 	OldStatus  ProductStatus
 	NewStatus  ProductStatus
 	Reason     string
-	OperatorID uint64
+	OperatorID uuid.UUID
 	OperatedAt time.Time
 }
 type AuditInfo struct {
 	AuditId    uuid.UUID // 审核记录ID
 	Reason     string    // 审核意见/驳回原因
-	OperatorId uint64    // 操作人ID
+	OperatorId uuid.UUID // 操作人ID
 	OperatedAt time.Time // 操作时间
 }
 
@@ -84,7 +84,6 @@ type Product struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
-	AuditInfo   AuditInfo
 }
 
 type CreateProductReply struct {
@@ -174,11 +173,19 @@ type AttributeModel struct {
 	Value     string
 }
 
-type AuditInfoModel struct {
-	AuditID    uint64
-	Reason     string
-	OperatorID uint64
-	OperatedAt time.Time
+type ListRandomProductsRequest struct {
+	Page     uint32
+	PageSize uint32
+	Status   uint32
+}
+
+type SearchProductRequest struct {
+	Name string
+}
+
+// Products 批量商品
+type Products struct {
+	Items []*Product
 }
 
 // ProductRepo is a Greater repo.
@@ -189,6 +196,7 @@ type ProductRepo interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
+	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 }
 
 // CanTransitionTo 添加状态转换方法
@@ -229,4 +237,7 @@ func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest)
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
 	p.log.Debugf("DeleteProduct: %+v", req)
 	return &emptypb.Empty{}, nil
+}
+func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error) {
+	return p.repo.ListRandomProducts(ctx, req)
 }

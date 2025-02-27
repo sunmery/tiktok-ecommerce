@@ -6,7 +6,7 @@
   },
   "tags": [
     {
-      "name": "AssistantService"
+      "name": "Assistant"
     }
   ],
   "consumes": [
@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/v1/query/{question}": {
+    "/api/assistant": {
       "get": {
-        "operationId": "AssistantService_Query",
+        "operationId": "Assistant_ProcessQuery",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1QueryReply"
+              "$ref": "#/definitions/v1ProcessResponse"
             }
           },
           "default": {
@@ -36,13 +36,13 @@
         "parameters": [
           {
             "name": "question",
-            "in": "path",
-            "required": true,
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "AssistantService"
+          "Assistant"
         ]
       }
     }
@@ -76,9 +76,45 @@
         }
       }
     },
-    "v1QueryReply": {
+    "v1OrderList": {
       "type": "object",
       "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderResponse"
+          }
+        }
+      }
+    },
+    "v1OrderResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "product": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1ProcessResponse": {
+      "type": "object",
+      "properties": {
+        "order": {
+          "$ref": "#/definitions/v1OrderResponse"
+        },
+        "orders": {
+          "$ref": "#/definitions/v1OrderList"
+        },
         "message": {
           "type": "string"
         }

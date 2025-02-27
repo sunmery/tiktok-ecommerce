@@ -18,7 +18,6 @@
   "paths": {
     "/v1/categories": {
       "post": {
-        "summary": "创建分类",
         "operationId": "CategoryService_CreateCategory",
         "responses": {
           "200": {
@@ -51,13 +50,12 @@
     },
     "/v1/categories/leaves": {
       "get": {
-        "summary": "获取所有叶子分类（三级分类）",
         "operationId": "CategoryService_GetLeafCategories",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Categorys"
+              "$ref": "#/definitions/v1Categories"
             }
           },
           "default": {
@@ -74,13 +72,12 @@
     },
     "/v1/categories/{categoryId}/closure": {
       "get": {
-        "summary": "获取分类闭包关系（Closure Table 实现的层级关系）",
         "operationId": "CategoryService_GetClosureRelations",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ClosureRelation"
+              "$ref": "#/definitions/v1ClosureRelations"
             }
           },
           "default": {
@@ -105,7 +102,7 @@
         ]
       },
       "patch": {
-        "summary": "更新闭包关系深度（调整分类层级）",
+        "summary": "Note: UpdateClosureDepth may require transaction and complex operations",
         "operationId": "CategoryService_UpdateClosureDepth",
         "responses": {
           "200": {
@@ -129,7 +126,7 @@
             "in": "path",
             "required": true,
             "type": "string",
-            "format": "uint64"
+            "format": "int64"
           },
           {
             "name": "body",
@@ -147,13 +144,12 @@
     },
     "/v1/categories/{categoryId}/path": {
       "get": {
-        "summary": "获取分类的完整路径（从根节点到当前分类的路径）",
         "operationId": "CategoryService_GetCategoryPath",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Category"
+              "$ref": "#/definitions/v1Categories"
             }
           },
           "default": {
@@ -180,7 +176,6 @@
     },
     "/v1/categories/{id}": {
       "get": {
-        "summary": "获取单个分类",
         "operationId": "CategoryService_GetCategory",
         "responses": {
           "200": {
@@ -211,7 +206,6 @@
         ]
       },
       "delete": {
-        "summary": "删除分类及关联关系",
         "operationId": "CategoryService_DeleteCategory",
         "responses": {
           "200": {
@@ -243,7 +237,6 @@
         ]
       },
       "put": {
-        "summary": "更新单个分类",
         "operationId": "CategoryService_UpdateCategory",
         "responses": {
           "200": {
@@ -285,13 +278,12 @@
     },
     "/v1/categories/{rootId}/subtree": {
       "get": {
-        "summary": "获取分类的子树结构（树形结构操作）",
         "operationId": "CategoryService_GetSubTree",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Category"
+              "$ref": "#/definitions/v1Categories"
             }
           },
           "default": {
@@ -331,10 +323,8 @@
     "CategoryServiceUpdateClosureDepthBody": {
       "type": "object",
       "properties": {
-        "delta": {
-          "type": "integer",
-          "format": "int32",
-          "title": "深度变化值（正数表示增加深度，负数表示减少深度）。"
+        "name": {
+          "type": "string"
         }
       },
       "title": "更新闭包关系深度请求"
@@ -367,58 +357,10 @@
         }
       }
     },
-    "v1Category": {
+    "v1Categories": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64",
-          "title": "分类的唯一标识符。"
-        },
-        "parentId": {
-          "type": "string",
-          "format": "uint64",
-          "title": "父分类的 ID，根节点的 parent_id 为 0。"
-        },
-        "level": {
-          "type": "integer",
-          "format": "int32",
-          "title": "分类的层级（例如：1 表示一级分类，2 表示二级分类）。"
-        },
-        "path": {
-          "type": "string",
-          "title": "分类路径（ltree 序列化为字符串，用于快速查询层级关系）。"
-        },
-        "name": {
-          "type": "string",
-          "title": "分类名称。"
-        },
-        "sortOrder": {
-          "type": "integer",
-          "format": "int32",
-          "title": "排序值，用于控制分类的显示顺序。"
-        },
-        "isLeaf": {
-          "type": "boolean",
-          "title": "是否为叶子节点（没有子分类）。"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "分类创建时间。"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "分类最后更新时间。"
-        }
-      },
-      "title": "基础数据结构：分类（Category）"
-    },
-    "v1Categorys": {
-      "type": "object",
-      "properties": {
-        "categorys": {
+        "categories": {
           "type": "array",
           "items": {
             "type": "object",
@@ -427,33 +369,82 @@
         }
       }
     },
+    "v1Category": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "parentId": {
+          "type": "string",
+          "format": "int64",
+          "title": "0 represents root in proto (stored as NULL in DB)"
+        },
+        "level": {
+          "type": "integer",
+          "format": "int32",
+          "title": "0-3"
+        },
+        "path": {
+          "type": "string",
+          "title": "ltree path"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isLeaf": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "v1ClosureRelation": {
       "type": "object",
       "properties": {
         "ancestor": {
           "type": "string",
-          "format": "int64",
-          "title": "祖先分类的 ID。"
+          "format": "int64"
         },
         "descendant": {
           "type": "string",
-          "format": "int64",
-          "title": "后代分类的 ID。"
+          "format": "int64"
         },
         "depth": {
           "type": "integer",
-          "format": "int32",
-          "title": "祖先与后代之间的层级深度（0 表示自身，1 表示直接子节点）。"
+          "format": "int32"
         }
-      },
-      "title": "数据结构：闭包关系（ClosureRelation）"
+      }
+    },
+    "v1ClosureRelations": {
+      "type": "object",
+      "properties": {
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ClosureRelation"
+          }
+        }
+      }
     },
     "v1CreateCategoryRequest": {
       "type": "object",
       "properties": {
         "parentId": {
           "type": "string",
-          "format": "uint64",
+          "format": "int64",
           "title": "父分类的 ID，根节点的 parent_id 为 0。"
         },
         "name": {

@@ -19,101 +19,101 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssistantService_Query_FullMethodName = "/ecommerce.assistant.v1.AssistantService/Query"
+	Assistant_ProcessQuery_FullMethodName = "/ecommerce.assistant.v1.Assistant/ProcessQuery"
 )
 
-// AssistantServiceClient is the client API for AssistantService service.
+// AssistantClient is the client API for Assistant service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AssistantServiceClient interface {
-	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryReply, error)
+type AssistantClient interface {
+	ProcessQuery(ctx context.Context, in *ProcessRequest, opts ...grpc.CallOption) (*ProcessResponse, error)
 }
 
-type assistantServiceClient struct {
+type assistantClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAssistantServiceClient(cc grpc.ClientConnInterface) AssistantServiceClient {
-	return &assistantServiceClient{cc}
+func NewAssistantClient(cc grpc.ClientConnInterface) AssistantClient {
+	return &assistantClient{cc}
 }
 
-func (c *assistantServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryReply, error) {
+func (c *assistantClient) ProcessQuery(ctx context.Context, in *ProcessRequest, opts ...grpc.CallOption) (*ProcessResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(QueryReply)
-	err := c.cc.Invoke(ctx, AssistantService_Query_FullMethodName, in, out, cOpts...)
+	out := new(ProcessResponse)
+	err := c.cc.Invoke(ctx, Assistant_ProcessQuery_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AssistantServiceServer is the server API for AssistantService service.
-// All implementations must embed UnimplementedAssistantServiceServer
+// AssistantServer is the server API for Assistant service.
+// All implementations must embed UnimplementedAssistantServer
 // for forward compatibility.
-type AssistantServiceServer interface {
-	Query(context.Context, *QueryRequest) (*QueryReply, error)
-	mustEmbedUnimplementedAssistantServiceServer()
+type AssistantServer interface {
+	ProcessQuery(context.Context, *ProcessRequest) (*ProcessResponse, error)
+	mustEmbedUnimplementedAssistantServer()
 }
 
-// UnimplementedAssistantServiceServer must be embedded to have
+// UnimplementedAssistantServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedAssistantServiceServer struct{}
+type UnimplementedAssistantServer struct{}
 
-func (UnimplementedAssistantServiceServer) Query(context.Context, *QueryRequest) (*QueryReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
+func (UnimplementedAssistantServer) ProcessQuery(context.Context, *ProcessRequest) (*ProcessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessQuery not implemented")
 }
-func (UnimplementedAssistantServiceServer) mustEmbedUnimplementedAssistantServiceServer() {}
-func (UnimplementedAssistantServiceServer) testEmbeddedByValue()                          {}
+func (UnimplementedAssistantServer) mustEmbedUnimplementedAssistantServer() {}
+func (UnimplementedAssistantServer) testEmbeddedByValue()                   {}
 
-// UnsafeAssistantServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AssistantServiceServer will
+// UnsafeAssistantServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AssistantServer will
 // result in compilation errors.
-type UnsafeAssistantServiceServer interface {
-	mustEmbedUnimplementedAssistantServiceServer()
+type UnsafeAssistantServer interface {
+	mustEmbedUnimplementedAssistantServer()
 }
 
-func RegisterAssistantServiceServer(s grpc.ServiceRegistrar, srv AssistantServiceServer) {
-	// If the following call pancis, it indicates UnimplementedAssistantServiceServer was
+func RegisterAssistantServer(s grpc.ServiceRegistrar, srv AssistantServer) {
+	// If the following call pancis, it indicates UnimplementedAssistantServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&AssistantService_ServiceDesc, srv)
+	s.RegisterService(&Assistant_ServiceDesc, srv)
 }
 
-func _AssistantService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryRequest)
+func _Assistant_ProcessQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AssistantServiceServer).Query(ctx, in)
+		return srv.(AssistantServer).ProcessQuery(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AssistantService_Query_FullMethodName,
+		FullMethod: Assistant_ProcessQuery_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AssistantServiceServer).Query(ctx, req.(*QueryRequest))
+		return srv.(AssistantServer).ProcessQuery(ctx, req.(*ProcessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// AssistantService_ServiceDesc is the grpc.ServiceDesc for AssistantService service.
+// Assistant_ServiceDesc is the grpc.ServiceDesc for Assistant service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AssistantService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ecommerce.assistant.v1.AssistantService",
-	HandlerType: (*AssistantServiceServer)(nil),
+var Assistant_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "ecommerce.assistant.v1.Assistant",
+	HandlerType: (*AssistantServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Query",
-			Handler:    _AssistantService_Query_Handler,
+			MethodName: "ProcessQuery",
+			Handler:    _Assistant_ProcessQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

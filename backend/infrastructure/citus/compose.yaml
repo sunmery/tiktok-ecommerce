@@ -12,8 +12,8 @@ services:
       - data:/var/lib/postgresql/data
     environment:
       TZ: Asia/Shanghai
-      POSTGRES_PASSWORD: citus
       POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: citus
       POSTGRES_DB: ecommerce
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d ecommerce" ]

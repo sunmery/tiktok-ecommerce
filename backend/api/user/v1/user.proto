@@ -116,7 +116,11 @@ message DeleteCreditCardsRequest {
 
 // 定义获取信用卡请求的消息结构
 message GetCreditCardsRequest {
-  string user_id = 1; // 用户 ID
+  string user_id = 1[
+    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
+    (validate.rules).string.len = 36, // 验证字段长度为 36
+    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
+  ];
   string number = 3 [json_name = "number"]; // 卡号
 }
 
@@ -165,7 +169,11 @@ message DeleteAddressesRequest {
     (google.api.field_behavior) = REQUIRED, // 地址 ID，必填字段
     json_name = "addresses_id"
   ];
-  string user_id = 2; // 用户 ID
+  string user_id = 2[
+    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
+    (validate.rules).string.len = 36, // 验证字段长度为 36
+    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
+  ];
 }
 
 // 定义地址响应的消息结构

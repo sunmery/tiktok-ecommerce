@@ -186,28 +186,29 @@ func (x *Data) GetCache() *Data_Cache {
 	return nil
 }
 
-// SaaS 软件即服务
-type SaaS struct {
+type Ai struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Casdoor       *SaaS_Casdoor          `protobuf:"bytes,1,opt,name=casdoor,proto3" json:"casdoor,omitempty"`
+	Model         string                 `protobuf:"bytes,1,opt,name=model,proto3" json:"model,omitempty"`
+	ApiKey        string                 `protobuf:"bytes,2,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	BaseUrl       string                 `protobuf:"bytes,3,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SaaS) Reset() {
-	*x = SaaS{}
+func (x *Ai) Reset() {
+	*x = Ai{}
 	mi := &file_internal_conf_conf_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SaaS) String() string {
+func (x *Ai) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SaaS) ProtoMessage() {}
+func (*Ai) ProtoMessage() {}
 
-func (x *SaaS) ProtoReflect() protoreflect.Message {
+func (x *Ai) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_conf_conf_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -219,61 +220,30 @@ func (x *SaaS) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SaaS.ProtoReflect.Descriptor instead.
-func (*SaaS) Descriptor() ([]byte, []int) {
+// Deprecated: Use Ai.ProtoReflect.Descriptor instead.
+func (*Ai) Descriptor() ([]byte, []int) {
 	return file_internal_conf_conf_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *SaaS) GetCasdoor() *SaaS_Casdoor {
+func (x *Ai) GetModel() string {
 	if x != nil {
-		return x.Casdoor
+		return x.Model
 	}
-	return nil
+	return ""
 }
 
-// 认证
-type Auth struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Jwt           *Auth_JWT              `protobuf:"bytes,1,opt,name=jwt,proto3" json:"jwt,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Auth) Reset() {
-	*x = Auth{}
-	mi := &file_internal_conf_conf_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Auth) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Auth) ProtoMessage() {}
-
-func (x *Auth) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[4]
+func (x *Ai) GetApiKey() string {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.ApiKey
 	}
-	return mi.MessageOf(x)
+	return ""
 }
 
-// Deprecated: Use Auth.ProtoReflect.Descriptor instead.
-func (*Auth) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *Auth) GetJwt() *Auth_JWT {
+func (x *Ai) GetBaseUrl() string {
 	if x != nil {
-		return x.Jwt
+		return x.BaseUrl
 	}
-	return nil
+	return ""
 }
 
 // 可观测性
@@ -288,7 +258,7 @@ type Observability struct {
 
 func (x *Observability) Reset() {
 	*x = Observability{}
-	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	mi := &file_internal_conf_conf_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -300,7 +270,7 @@ func (x *Observability) String() string {
 func (*Observability) ProtoMessage() {}
 
 func (x *Observability) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[5]
+	mi := &file_internal_conf_conf_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -313,7 +283,7 @@ func (x *Observability) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability.ProtoReflect.Descriptor instead.
 func (*Observability) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Observability) GetTrace() *Observability_Trace {
@@ -348,7 +318,7 @@ type Consul struct {
 
 func (x *Consul) Reset() {
 	*x = Consul{}
-	mi := &file_internal_conf_conf_proto_msgTypes[6]
+	mi := &file_internal_conf_conf_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -360,7 +330,7 @@ func (x *Consul) String() string {
 func (*Consul) ProtoMessage() {}
 
 func (x *Consul) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[6]
+	mi := &file_internal_conf_conf_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -373,7 +343,7 @@ func (x *Consul) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Consul.ProtoReflect.Descriptor instead.
 func (*Consul) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{6}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Consul) GetRegistryCenter() *Consul_RegistryCenter {
@@ -401,7 +371,7 @@ type Server_HTTP struct {
 
 func (x *Server_HTTP) Reset() {
 	*x = Server_HTTP{}
-	mi := &file_internal_conf_conf_proto_msgTypes[7]
+	mi := &file_internal_conf_conf_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -413,7 +383,7 @@ func (x *Server_HTTP) String() string {
 func (*Server_HTTP) ProtoMessage() {}
 
 func (x *Server_HTTP) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[7]
+	mi := &file_internal_conf_conf_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -461,7 +431,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_internal_conf_conf_proto_msgTypes[8]
+	mi := &file_internal_conf_conf_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -473,7 +443,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[8]
+	mi := &file_internal_conf_conf_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -520,7 +490,7 @@ type Server_Snowflake struct {
 
 func (x *Server_Snowflake) Reset() {
 	*x = Server_Snowflake{}
-	mi := &file_internal_conf_conf_proto_msgTypes[9]
+	mi := &file_internal_conf_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -532,7 +502,7 @@ func (x *Server_Snowflake) String() string {
 func (*Server_Snowflake) ProtoMessage() {}
 
 func (x *Server_Snowflake) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[9]
+	mi := &file_internal_conf_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -568,7 +538,7 @@ type Data_Pool struct {
 
 func (x *Data_Pool) Reset() {
 	*x = Data_Pool{}
-	mi := &file_internal_conf_conf_proto_msgTypes[10]
+	mi := &file_internal_conf_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -580,7 +550,7 @@ func (x *Data_Pool) String() string {
 func (*Data_Pool) ProtoMessage() {}
 
 func (x *Data_Pool) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[10]
+	mi := &file_internal_conf_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +612,7 @@ type Data_Database struct {
 
 func (x *Data_Database) Reset() {
 	*x = Data_Database{}
-	mi := &file_internal_conf_conf_proto_msgTypes[11]
+	mi := &file_internal_conf_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -654,7 +624,7 @@ func (x *Data_Database) String() string {
 func (*Data_Database) ProtoMessage() {}
 
 func (x *Data_Database) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[11]
+	mi := &file_internal_conf_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -706,7 +676,7 @@ type Data_Cache struct {
 
 func (x *Data_Cache) Reset() {
 	*x = Data_Cache{}
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -718,7 +688,7 @@ func (x *Data_Cache) String() string {
 func (*Data_Cache) ProtoMessage() {}
 
 func (x *Data_Cache) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -783,171 +753,6 @@ func (x *Data_Cache) GetPassword() string {
 	return ""
 }
 
-// 用户管理平台
-type SaaS_Casdoor struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Server        *SaaS_Casdoor_Server   `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SaaS_Casdoor) Reset() {
-	*x = SaaS_Casdoor{}
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SaaS_Casdoor) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SaaS_Casdoor) ProtoMessage() {}
-
-func (x *SaaS_Casdoor) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SaaS_Casdoor.ProtoReflect.Descriptor instead.
-func (*SaaS_Casdoor) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{3, 0}
-}
-
-func (x *SaaS_Casdoor) GetServer() *SaaS_Casdoor_Server {
-	if x != nil {
-		return x.Server
-	}
-	return nil
-}
-
-type SaaS_Casdoor_Server struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Endpoint      string                 `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
-	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,proto3" json:"client_id,omitempty"`
-	ClientSecret  string                 `protobuf:"bytes,3,opt,name=client_secret,proto3" json:"client_secret,omitempty"`
-	Organization  string                 `protobuf:"bytes,4,opt,name=organization,proto3" json:"organization,omitempty"`
-	Application   string                 `protobuf:"bytes,5,opt,name=application,proto3" json:"application,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SaaS_Casdoor_Server) Reset() {
-	*x = SaaS_Casdoor_Server{}
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SaaS_Casdoor_Server) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SaaS_Casdoor_Server) ProtoMessage() {}
-
-func (x *SaaS_Casdoor_Server) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SaaS_Casdoor_Server.ProtoReflect.Descriptor instead.
-func (*SaaS_Casdoor_Server) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{3, 0, 0}
-}
-
-func (x *SaaS_Casdoor_Server) GetEndpoint() string {
-	if x != nil {
-		return x.Endpoint
-	}
-	return ""
-}
-
-func (x *SaaS_Casdoor_Server) GetClientId() string {
-	if x != nil {
-		return x.ClientId
-	}
-	return ""
-}
-
-func (x *SaaS_Casdoor_Server) GetClientSecret() string {
-	if x != nil {
-		return x.ClientSecret
-	}
-	return ""
-}
-
-func (x *SaaS_Casdoor_Server) GetOrganization() string {
-	if x != nil {
-		return x.Organization
-	}
-	return ""
-}
-
-func (x *SaaS_Casdoor_Server) GetApplication() string {
-	if x != nil {
-		return x.Application
-	}
-	return ""
-}
-
-type Auth_JWT struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Certificate   string                 `protobuf:"bytes,1,opt,name=certificate,json=service_key,proto3" json:"certificate,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Auth_JWT) Reset() {
-	*x = Auth_JWT{}
-	mi := &file_internal_conf_conf_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Auth_JWT) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Auth_JWT) ProtoMessage() {}
-
-func (x *Auth_JWT) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Auth_JWT.ProtoReflect.Descriptor instead.
-func (*Auth_JWT) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 0}
-}
-
-func (x *Auth_JWT) GetCertificate() string {
-	if x != nil {
-		return x.Certificate
-	}
-	return ""
-}
-
 type Observability_Trace struct {
 	state         protoimpl.MessageState    `protogen:"open.v1"`
 	Grpc          *Observability_Trace_GRPC `protobuf:"bytes,2,opt,name=grpc,proto3" json:"grpc,omitempty"`
@@ -958,7 +763,7 @@ type Observability_Trace struct {
 
 func (x *Observability_Trace) Reset() {
 	*x = Observability_Trace{}
-	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -970,7 +775,7 @@ func (x *Observability_Trace) String() string {
 func (*Observability_Trace) ProtoMessage() {}
 
 func (x *Observability_Trace) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -983,7 +788,7 @@ func (x *Observability_Trace) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability_Trace.ProtoReflect.Descriptor instead.
 func (*Observability_Trace) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 0}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 0}
 }
 
 func (x *Observability_Trace) GetGrpc() *Observability_Trace_GRPC {
@@ -1008,7 +813,7 @@ type Observability_Logging struct {
 
 func (x *Observability_Logging) Reset() {
 	*x = Observability_Logging{}
-	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1020,7 +825,7 @@ func (x *Observability_Logging) String() string {
 func (*Observability_Logging) ProtoMessage() {}
 
 func (x *Observability_Logging) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1033,7 +838,7 @@ func (x *Observability_Logging) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability_Logging.ProtoReflect.Descriptor instead.
 func (*Observability_Logging) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 1}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 1}
 }
 
 type Observability_Metrics struct {
@@ -1044,7 +849,7 @@ type Observability_Metrics struct {
 
 func (x *Observability_Metrics) Reset() {
 	*x = Observability_Metrics{}
-	mi := &file_internal_conf_conf_proto_msgTypes[18]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1056,7 +861,7 @@ func (x *Observability_Metrics) String() string {
 func (*Observability_Metrics) ProtoMessage() {}
 
 func (x *Observability_Metrics) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[18]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1069,7 +874,7 @@ func (x *Observability_Metrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability_Metrics.ProtoReflect.Descriptor instead.
 func (*Observability_Metrics) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 2}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 2}
 }
 
 type Observability_Trace_GRPC struct {
@@ -1081,7 +886,7 @@ type Observability_Trace_GRPC struct {
 
 func (x *Observability_Trace_GRPC) Reset() {
 	*x = Observability_Trace_GRPC{}
-	mi := &file_internal_conf_conf_proto_msgTypes[19]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1093,7 +898,7 @@ func (x *Observability_Trace_GRPC) String() string {
 func (*Observability_Trace_GRPC) ProtoMessage() {}
 
 func (x *Observability_Trace_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[19]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1106,7 +911,7 @@ func (x *Observability_Trace_GRPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability_Trace_GRPC.ProtoReflect.Descriptor instead.
 func (*Observability_Trace_GRPC) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 0, 0}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 0, 0}
 }
 
 func (x *Observability_Trace_GRPC) GetEndpoint() string {
@@ -1125,7 +930,7 @@ type Observability_Trace_HTTP struct {
 
 func (x *Observability_Trace_HTTP) Reset() {
 	*x = Observability_Trace_HTTP{}
-	mi := &file_internal_conf_conf_proto_msgTypes[20]
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1137,7 +942,7 @@ func (x *Observability_Trace_HTTP) String() string {
 func (*Observability_Trace_HTTP) ProtoMessage() {}
 
 func (x *Observability_Trace_HTTP) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[20]
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1150,7 +955,7 @@ func (x *Observability_Trace_HTTP) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observability_Trace_HTTP.ProtoReflect.Descriptor instead.
 func (*Observability_Trace_HTTP) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 0, 1}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{4, 0, 1}
 }
 
 func (x *Observability_Trace_HTTP) GetEndpoint() string {
@@ -1172,7 +977,7 @@ type Consul_RegistryCenter struct {
 
 func (x *Consul_RegistryCenter) Reset() {
 	*x = Consul_RegistryCenter{}
-	mi := &file_internal_conf_conf_proto_msgTypes[21]
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1184,7 +989,7 @@ func (x *Consul_RegistryCenter) String() string {
 func (*Consul_RegistryCenter) ProtoMessage() {}
 
 func (x *Consul_RegistryCenter) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[21]
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1197,7 +1002,7 @@ func (x *Consul_RegistryCenter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Consul_RegistryCenter.ProtoReflect.Descriptor instead.
 func (*Consul_RegistryCenter) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{6, 0}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 0}
 }
 
 func (x *Consul_RegistryCenter) GetAddress() string {
@@ -1238,7 +1043,7 @@ type Consul_ConfigCenter struct {
 
 func (x *Consul_ConfigCenter) Reset() {
 	*x = Consul_ConfigCenter{}
-	mi := &file_internal_conf_conf_proto_msgTypes[22]
+	mi := &file_internal_conf_conf_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1055,7 @@ func (x *Consul_ConfigCenter) String() string {
 func (*Consul_ConfigCenter) ProtoMessage() {}
 
 func (x *Consul_ConfigCenter) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[22]
+	mi := &file_internal_conf_conf_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1068,7 @@ func (x *Consul_ConfigCenter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Consul_ConfigCenter.ProtoReflect.Descriptor instead.
 func (*Consul_ConfigCenter) Descriptor() ([]byte, []int) {
-	return file_internal_conf_conf_proto_rawDescGZIP(), []int{6, 1}
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{5, 1}
 }
 
 func (x *Consul_ConfigCenter) GetAddr() string {
@@ -1369,82 +1174,62 @@ var file_internal_conf_conf_proto_rawDesc = string([]byte{
 	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72,
 	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
 	0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
-	0x22, 0xb0, 0x02, 0x0a, 0x04, 0x53, 0x61, 0x61, 0x53, 0x12, 0x32, 0x0a, 0x07, 0x63, 0x61, 0x73,
-	0x64, 0x6f, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6b, 0x72, 0x61,
-	0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x53, 0x61, 0x61, 0x53, 0x2e, 0x43, 0x61, 0x73,
-	0x64, 0x6f, 0x6f, 0x72, 0x52, 0x07, 0x63, 0x61, 0x73, 0x64, 0x6f, 0x6f, 0x72, 0x1a, 0xf3, 0x01,
-	0x0a, 0x07, 0x43, 0x61, 0x73, 0x64, 0x6f, 0x6f, 0x72, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x65, 0x72,
-	0x76, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6b, 0x72, 0x61, 0x74,
-	0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x53, 0x61, 0x61, 0x53, 0x2e, 0x43, 0x61, 0x73, 0x64,
-	0x6f, 0x6f, 0x72, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x52, 0x06, 0x73, 0x65, 0x72, 0x76,
-	0x65, 0x72, 0x1a, 0xae, 0x01, 0x0a, 0x06, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x12, 0x1a, 0x0a,
-	0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x69,
-	0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x12, 0x24, 0x0a, 0x0d, 0x63, 0x6c, 0x69, 0x65, 0x6e,
-	0x74, 0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d,
-	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x12, 0x22, 0x0a,
-	0x0c, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0c, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x12, 0x20, 0x0a, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x22, 0x57, 0x0a, 0x04, 0x41, 0x75, 0x74, 0x68, 0x12, 0x26, 0x0a, 0x03, 0x6a,
-	0x77, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f,
-	0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x4a, 0x57, 0x54, 0x52, 0x03,
-	0x6a, 0x77, 0x74, 0x1a, 0x27, 0x0a, 0x03, 0x4a, 0x57, 0x54, 0x12, 0x20, 0x0a, 0x0b, 0x63, 0x65,
-	0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6b, 0x65, 0x79, 0x22, 0x9c, 0x03, 0x0a,
-	0x0d, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x12, 0x35,
-	0x0a, 0x05, 0x74, 0x72, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e,
-	0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72,
-	0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x2e, 0x54, 0x72, 0x61, 0x63, 0x65, 0x52, 0x05,
-	0x74, 0x72, 0x61, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e,
-	0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74,
-	0x79, 0x2e, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x72, 0x69,
-	0x63, 0x73, 0x12, 0x3b, 0x0a, 0x07, 0x6c, 0x6f, 0x67, 0x67, 0x69, 0x6e, 0x67, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69,
-	0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x2e, 0x4c,
-	0x6f, 0x67, 0x67, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x6c, 0x6f, 0x67, 0x67, 0x69, 0x6e, 0x67, 0x1a,
-	0xc3, 0x01, 0x0a, 0x05, 0x54, 0x72, 0x61, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x04, 0x67, 0x72, 0x70,
-	0x63, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73,
-	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69,
-	0x74, 0x79, 0x2e, 0x54, 0x72, 0x61, 0x63, 0x65, 0x2e, 0x47, 0x52, 0x50, 0x43, 0x52, 0x04, 0x67,
-	0x72, 0x70, 0x63, 0x12, 0x38, 0x0a, 0x04, 0x68, 0x74, 0x74, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x24, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f,
+	0x22, 0x4e, 0x0a, 0x02, 0x41, 0x69, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x12, 0x17, 0x0a, 0x07,
+	0x61, 0x70, 0x69, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61,
+	0x70, 0x69, 0x4b, 0x65, 0x79, 0x12, 0x19, 0x0a, 0x08, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x75, 0x72,
+	0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x62, 0x61, 0x73, 0x65, 0x55, 0x72, 0x6c,
+	0x22, 0x9c, 0x03, 0x0a, 0x0d, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69,
+	0x74, 0x79, 0x12, 0x35, 0x0a, 0x05, 0x74, 0x72, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1f, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f,
 	0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x2e, 0x54, 0x72, 0x61,
-	0x63, 0x65, 0x2e, 0x48, 0x54, 0x54, 0x50, 0x52, 0x04, 0x68, 0x74, 0x74, 0x70, 0x1a, 0x22, 0x0a,
-	0x04, 0x47, 0x52, 0x50, 0x43, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x1a, 0x22, 0x0a, 0x04, 0x48, 0x54, 0x54, 0x50, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x6e, 0x64,
+	0x63, 0x65, 0x52, 0x05, 0x74, 0x72, 0x61, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x07, 0x6d, 0x65, 0x74,
+	0x72, 0x69, 0x63, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61,
+	0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62,
+	0x69, 0x6c, 0x69, 0x74, 0x79, 0x2e, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x52, 0x07, 0x6d,
+	0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x12, 0x3b, 0x0a, 0x07, 0x6c, 0x6f, 0x67, 0x67, 0x69, 0x6e,
+	0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69,
+	0x74, 0x79, 0x2e, 0x4c, 0x6f, 0x67, 0x67, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x6c, 0x6f, 0x67, 0x67,
+	0x69, 0x6e, 0x67, 0x1a, 0xc3, 0x01, 0x0a, 0x05, 0x54, 0x72, 0x61, 0x63, 0x65, 0x12, 0x38, 0x0a,
+	0x04, 0x67, 0x72, 0x70, 0x63, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x6b, 0x72,
+	0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61,
+	0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x2e, 0x54, 0x72, 0x61, 0x63, 0x65, 0x2e, 0x47, 0x52, 0x50,
+	0x43, 0x52, 0x04, 0x67, 0x72, 0x70, 0x63, 0x12, 0x38, 0x0a, 0x04, 0x68, 0x74, 0x74, 0x70, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61,
+	0x70, 0x69, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79,
+	0x2e, 0x54, 0x72, 0x61, 0x63, 0x65, 0x2e, 0x48, 0x54, 0x54, 0x50, 0x52, 0x04, 0x68, 0x74, 0x74,
+	0x70, 0x1a, 0x22, 0x0a, 0x04, 0x47, 0x52, 0x50, 0x43, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x6e, 0x64,
 	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x6e, 0x64,
-	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x1a, 0x09, 0x0a, 0x07, 0x4c, 0x6f, 0x67, 0x67, 0x69, 0x6e, 0x67,
-	0x1a, 0x09, 0x0a, 0x07, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x22, 0xe0, 0x02, 0x0a, 0x06,
-	0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x12, 0x4a, 0x0a, 0x0f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74,
-	0x72, 0x79, 0x5f, 0x63, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e,
-	0x73, 0x75, 0x6c, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x43, 0x65, 0x6e, 0x74,
-	0x65, 0x72, 0x52, 0x0e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x43, 0x65, 0x6e, 0x74,
-	0x65, 0x72, 0x12, 0x44, 0x0a, 0x0d, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x63, 0x65, 0x6e,
-	0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6b, 0x72, 0x61, 0x74,
-	0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x2e, 0x43, 0x6f,
-	0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x1a, 0x82, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x67,
-	0x69, 0x73, 0x74, 0x72, 0x79, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x65, 0x12, 0x21, 0x0a,
-	0x0c, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x08, 0x52, 0x0b, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x43, 0x68, 0x65, 0x63, 0x6b,
-	0x12, 0x1b, 0x0a, 0x09, 0x61, 0x63, 0x6c, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x63, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x1a, 0x3f, 0x0a,
-	0x0c, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a,
-	0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64,
-	0x72, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x63, 0x6c, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x63, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x42, 0x1e,
-	0x5a, 0x1c, 0x61, 0x73, 0x73, 0x69, 0x73, 0x74, 0x61, 0x6e, 0x74, 0x2f, 0x69, 0x6e, 0x74, 0x65,
-	0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x3b, 0x63, 0x6f, 0x6e, 0x66, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x1a, 0x22, 0x0a, 0x04, 0x48, 0x54, 0x54, 0x50, 0x12, 0x1a, 0x0a,
+	0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x1a, 0x09, 0x0a, 0x07, 0x4c, 0x6f, 0x67,
+	0x67, 0x69, 0x6e, 0x67, 0x1a, 0x09, 0x0a, 0x07, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x22,
+	0xe0, 0x02, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x12, 0x4a, 0x0a, 0x0f, 0x72, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x5f, 0x63, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69,
+	0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79,
+	0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x52, 0x0e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79,
+	0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x44, 0x0a, 0x0d, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x5f, 0x63, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e,
+	0x6b, 0x72, 0x61, 0x74, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x75,
+	0x6c, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x52, 0x0c,
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x1a, 0x82, 0x01, 0x0a,
+	0x0e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x43, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x12,
+	0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x63, 0x68,
+	0x65, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d,
+	0x65, 0x12, 0x21, 0x0a, 0x0c, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x5f, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0b, 0x68, 0x65, 0x61, 0x6c, 0x74, 0x68, 0x43,
+	0x68, 0x65, 0x63, 0x6b, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x63, 0x6c, 0x5f, 0x74, 0x6f, 0x6b, 0x65,
+	0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x63, 0x6c, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x1a, 0x3f, 0x0a, 0x0c, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x65, 0x6e, 0x74, 0x65,
+	0x72, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x61, 0x64, 0x64, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x63, 0x6c, 0x5f, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x63, 0x6c, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x42, 0x1e, 0x5a, 0x1c, 0x61, 0x73, 0x73, 0x69, 0x73, 0x74, 0x61, 0x6e, 0x74, 0x2f,
+	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x3b, 0x63, 0x6f,
+	0x6e, 0x66, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1459,65 +1244,58 @@ func file_internal_conf_conf_proto_rawDescGZIP() []byte {
 	return file_internal_conf_conf_proto_rawDescData
 }
 
-var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_internal_conf_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),                // 0: kratos.api.Bootstrap
 	(*Server)(nil),                   // 1: kratos.api.Server
 	(*Data)(nil),                     // 2: kratos.api.Data
-	(*SaaS)(nil),                     // 3: kratos.api.SaaS
-	(*Auth)(nil),                     // 4: kratos.api.Auth
-	(*Observability)(nil),            // 5: kratos.api.Observability
-	(*Consul)(nil),                   // 6: kratos.api.Consul
-	(*Server_HTTP)(nil),              // 7: kratos.api.Server.HTTP
-	(*Server_GRPC)(nil),              // 8: kratos.api.Server.GRPC
-	(*Server_Snowflake)(nil),         // 9: kratos.api.Server.Snowflake
-	(*Data_Pool)(nil),                // 10: kratos.api.Data.Pool
-	(*Data_Database)(nil),            // 11: kratos.api.Data.Database
-	(*Data_Cache)(nil),               // 12: kratos.api.Data.Cache
-	(*SaaS_Casdoor)(nil),             // 13: kratos.api.SaaS.Casdoor
-	(*SaaS_Casdoor_Server)(nil),      // 14: kratos.api.SaaS.Casdoor.Server
-	(*Auth_JWT)(nil),                 // 15: kratos.api.Auth.JWT
-	(*Observability_Trace)(nil),      // 16: kratos.api.Observability.Trace
-	(*Observability_Logging)(nil),    // 17: kratos.api.Observability.Logging
-	(*Observability_Metrics)(nil),    // 18: kratos.api.Observability.Metrics
-	(*Observability_Trace_GRPC)(nil), // 19: kratos.api.Observability.Trace.GRPC
-	(*Observability_Trace_HTTP)(nil), // 20: kratos.api.Observability.Trace.HTTP
-	(*Consul_RegistryCenter)(nil),    // 21: kratos.api.Consul.RegistryCenter
-	(*Consul_ConfigCenter)(nil),      // 22: kratos.api.Consul.ConfigCenter
-	(*durationpb.Duration)(nil),      // 23: google.protobuf.Duration
+	(*Ai)(nil),                       // 3: kratos.api.Ai
+	(*Observability)(nil),            // 4: kratos.api.Observability
+	(*Consul)(nil),                   // 5: kratos.api.Consul
+	(*Server_HTTP)(nil),              // 6: kratos.api.Server.HTTP
+	(*Server_GRPC)(nil),              // 7: kratos.api.Server.GRPC
+	(*Server_Snowflake)(nil),         // 8: kratos.api.Server.Snowflake
+	(*Data_Pool)(nil),                // 9: kratos.api.Data.Pool
+	(*Data_Database)(nil),            // 10: kratos.api.Data.Database
+	(*Data_Cache)(nil),               // 11: kratos.api.Data.Cache
+	(*Observability_Trace)(nil),      // 12: kratos.api.Observability.Trace
+	(*Observability_Logging)(nil),    // 13: kratos.api.Observability.Logging
+	(*Observability_Metrics)(nil),    // 14: kratos.api.Observability.Metrics
+	(*Observability_Trace_GRPC)(nil), // 15: kratos.api.Observability.Trace.GRPC
+	(*Observability_Trace_HTTP)(nil), // 16: kratos.api.Observability.Trace.HTTP
+	(*Consul_RegistryCenter)(nil),    // 17: kratos.api.Consul.RegistryCenter
+	(*Consul_ConfigCenter)(nil),      // 18: kratos.api.Consul.ConfigCenter
+	(*durationpb.Duration)(nil),      // 19: google.protobuf.Duration
 }
 var file_internal_conf_conf_proto_depIdxs = []int32{
 	1,  // 0: kratos.api.Bootstrap.server:type_name -> kratos.api.Server
 	2,  // 1: kratos.api.Bootstrap.data:type_name -> kratos.api.Data
-	7,  // 2: kratos.api.Server.http:type_name -> kratos.api.Server.HTTP
-	8,  // 3: kratos.api.Server.grpc:type_name -> kratos.api.Server.GRPC
-	9,  // 4: kratos.api.Server.snowflake:type_name -> kratos.api.Server.Snowflake
-	11, // 5: kratos.api.Data.database:type_name -> kratos.api.Data.Database
-	12, // 6: kratos.api.Data.cache:type_name -> kratos.api.Data.Cache
-	13, // 7: kratos.api.SaaS.casdoor:type_name -> kratos.api.SaaS.Casdoor
-	15, // 8: kratos.api.Auth.jwt:type_name -> kratos.api.Auth.JWT
-	16, // 9: kratos.api.Observability.trace:type_name -> kratos.api.Observability.Trace
-	18, // 10: kratos.api.Observability.metrics:type_name -> kratos.api.Observability.Metrics
-	17, // 11: kratos.api.Observability.logging:type_name -> kratos.api.Observability.Logging
-	21, // 12: kratos.api.Consul.registry_center:type_name -> kratos.api.Consul.RegistryCenter
-	22, // 13: kratos.api.Consul.config_center:type_name -> kratos.api.Consul.ConfigCenter
-	23, // 14: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
-	23, // 15: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	23, // 16: kratos.api.Data.Pool.max_conn_lifetime:type_name -> google.protobuf.Duration
-	23, // 17: kratos.api.Data.Pool.health_check_period:type_name -> google.protobuf.Duration
-	23, // 18: kratos.api.Data.Pool.max_conn_idle_time:type_name -> google.protobuf.Duration
-	10, // 19: kratos.api.Data.Database.pool:type_name -> kratos.api.Data.Pool
-	23, // 20: kratos.api.Data.Cache.read_timeout:type_name -> google.protobuf.Duration
-	23, // 21: kratos.api.Data.Cache.write_timeout:type_name -> google.protobuf.Duration
-	23, // 22: kratos.api.Data.Cache.dial_timeout:type_name -> google.protobuf.Duration
-	14, // 23: kratos.api.SaaS.Casdoor.server:type_name -> kratos.api.SaaS.Casdoor.Server
-	19, // 24: kratos.api.Observability.Trace.grpc:type_name -> kratos.api.Observability.Trace.GRPC
-	20, // 25: kratos.api.Observability.Trace.http:type_name -> kratos.api.Observability.Trace.HTTP
-	26, // [26:26] is the sub-list for method output_type
-	26, // [26:26] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	6,  // 2: kratos.api.Server.http:type_name -> kratos.api.Server.HTTP
+	7,  // 3: kratos.api.Server.grpc:type_name -> kratos.api.Server.GRPC
+	8,  // 4: kratos.api.Server.snowflake:type_name -> kratos.api.Server.Snowflake
+	10, // 5: kratos.api.Data.database:type_name -> kratos.api.Data.Database
+	11, // 6: kratos.api.Data.cache:type_name -> kratos.api.Data.Cache
+	12, // 7: kratos.api.Observability.trace:type_name -> kratos.api.Observability.Trace
+	14, // 8: kratos.api.Observability.metrics:type_name -> kratos.api.Observability.Metrics
+	13, // 9: kratos.api.Observability.logging:type_name -> kratos.api.Observability.Logging
+	17, // 10: kratos.api.Consul.registry_center:type_name -> kratos.api.Consul.RegistryCenter
+	18, // 11: kratos.api.Consul.config_center:type_name -> kratos.api.Consul.ConfigCenter
+	19, // 12: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
+	19, // 13: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	19, // 14: kratos.api.Data.Pool.max_conn_lifetime:type_name -> google.protobuf.Duration
+	19, // 15: kratos.api.Data.Pool.health_check_period:type_name -> google.protobuf.Duration
+	19, // 16: kratos.api.Data.Pool.max_conn_idle_time:type_name -> google.protobuf.Duration
+	9,  // 17: kratos.api.Data.Database.pool:type_name -> kratos.api.Data.Pool
+	19, // 18: kratos.api.Data.Cache.read_timeout:type_name -> google.protobuf.Duration
+	19, // 19: kratos.api.Data.Cache.write_timeout:type_name -> google.protobuf.Duration
+	19, // 20: kratos.api.Data.Cache.dial_timeout:type_name -> google.protobuf.Duration
+	15, // 21: kratos.api.Observability.Trace.grpc:type_name -> kratos.api.Observability.Trace.GRPC
+	16, // 22: kratos.api.Observability.Trace.http:type_name -> kratos.api.Observability.Trace.HTTP
+	23, // [23:23] is the sub-list for method output_type
+	23, // [23:23] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_internal_conf_conf_proto_init() }
@@ -1531,7 +1309,7 @@ func file_internal_conf_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_conf_conf_proto_rawDesc), len(file_internal_conf_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

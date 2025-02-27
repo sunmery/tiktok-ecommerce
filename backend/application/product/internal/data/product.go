@@ -1,18 +1,16 @@
 package data
 
 import (
-	"context"
-	"errors"
-	"fmt"
-
 	category "backend/api/category/v1"
-
-	"github.com/google/uuid"
-
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"backend/pkg/types"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/google/uuid"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
@@ -270,6 +268,67 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 		// OperatorID: req.OperatorID,
 		OperatedAt: auditRecord.CreatedAt,
 	}, nil
+}
+
+func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRandomProductsRequest) (*biz.Products, error) {
+	offset := (req.PageSize - 1) * req.PageSize
+	listRandomProducts, err := p.data.DB(ctx).ListRandomProducts(ctx, models.ListRandomProductsParams{
+		Status: int16(req.Status),
+		Limit:  int64(req.PageSize),
+		Offset: int64(offset),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 从分类服务获取分类信息
+
+	var items = make([]*biz.Product, 0)
+	for _, product := range listRandomProducts {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		var attributes map[string]*biz.AttributeValue
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price)
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category: biz.CategoryInfo{
+				CategoryId: uint64(product.CategoryID),
+				// CategoryName: product.,
+				// SortOrder:    0,
+			},
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			Attributes: attributes,
+		})
+	}
+
+	return &biz.Products{Items: items}, err
+}
+func (p *productRepo) SearchProductsByName(ctx context.Context, _ *biz.SearchProductRequest) (*biz.Products, error) {
+	panic("TODO")
 }
 
 func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest) (*biz.Product, error) {

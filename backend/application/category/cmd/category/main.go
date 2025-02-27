@@ -33,7 +33,7 @@ var (
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/category/dev.yaml", "config center path, eg: -config_center organization/application/config.yaml")
+	flag.StringVar(&configPath, "config_path", "ecommerce/category/prod.yaml", "config center path, eg: -config_center organization/application/config.yaml")
 	flag.StringVar(&configCenterToken, "config_center_token", "token", "config center acl token, eg: -config_center_token token")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 
@@ -86,14 +86,7 @@ func main() {
 	if err := c.Load(); err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
-
-	// 认证和授权
-	var ac conf.Auth
-	if err := c.Scan(&ac); err != nil {
-		log.Fatal(fmt.Errorf("load auth config failed:%w", err))
-	}
-
-	var bc conf.Bootstrap
+var bc conf.Bootstrap
 	if err := c.Scan(&bc); err != nil {
 		log.Fatal(fmt.Errorf("load bootstrap config failed:%w", err))
 	}
@@ -110,7 +103,7 @@ func main() {
 		log.Fatal(fmt.Errorf("load observability config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &obs, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &cc, &obs, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}

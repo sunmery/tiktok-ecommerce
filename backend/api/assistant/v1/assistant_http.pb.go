@@ -19,56 +19,53 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAssistantServiceQuery = "/ecommerce.assistant.v1.AssistantService/Query"
+const OperationAssistantProcessQuery = "/ecommerce.assistant.v1.Assistant/ProcessQuery"
 
-type AssistantServiceHTTPServer interface {
-	Query(context.Context, *QueryRequest) (*QueryReply, error)
+type AssistantHTTPServer interface {
+	ProcessQuery(context.Context, *ProcessRequest) (*ProcessResponse, error)
 }
 
-func RegisterAssistantServiceHTTPServer(s *http.Server, srv AssistantServiceHTTPServer) {
+func RegisterAssistantHTTPServer(s *http.Server, srv AssistantHTTPServer) {
 	r := s.Route("/")
-	r.GET("/v1/query/{question}", _AssistantService_Query0_HTTP_Handler(srv))
+	r.GET("/api/assistant", _Assistant_ProcessQuery0_HTTP_Handler(srv))
 }
 
-func _AssistantService_Query0_HTTP_Handler(srv AssistantServiceHTTPServer) func(ctx http.Context) error {
+func _Assistant_ProcessQuery0_HTTP_Handler(srv AssistantHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in QueryRequest
+		var in ProcessRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAssistantServiceQuery)
+		http.SetOperation(ctx, OperationAssistantProcessQuery)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Query(ctx, req.(*QueryRequest))
+			return srv.ProcessQuery(ctx, req.(*ProcessRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*QueryReply)
+		reply := out.(*ProcessResponse)
 		return ctx.Result(200, reply)
 	}
 }
 
-type AssistantServiceHTTPClient interface {
-	Query(ctx context.Context, req *QueryRequest, opts ...http.CallOption) (rsp *QueryReply, err error)
+type AssistantHTTPClient interface {
+	ProcessQuery(ctx context.Context, req *ProcessRequest, opts ...http.CallOption) (rsp *ProcessResponse, err error)
 }
 
-type AssistantServiceHTTPClientImpl struct {
+type AssistantHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewAssistantServiceHTTPClient(client *http.Client) AssistantServiceHTTPClient {
-	return &AssistantServiceHTTPClientImpl{client}
+func NewAssistantHTTPClient(client *http.Client) AssistantHTTPClient {
+	return &AssistantHTTPClientImpl{client}
 }
 
-func (c *AssistantServiceHTTPClientImpl) Query(ctx context.Context, in *QueryRequest, opts ...http.CallOption) (*QueryReply, error) {
-	var out QueryReply
-	pattern := "/v1/query/{question}"
+func (c *AssistantHTTPClientImpl) ProcessQuery(ctx context.Context, in *ProcessRequest, opts ...http.CallOption) (*ProcessResponse, error) {
+	var out ProcessResponse
+	pattern := "/api/assistant"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAssistantServiceQuery))
+	opts = append(opts, http.Operation(OperationAssistantProcessQuery))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

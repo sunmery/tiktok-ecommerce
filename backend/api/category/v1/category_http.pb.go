@@ -31,23 +31,15 @@ const OperationCategoryServiceUpdateCategory = "/ecommerce.category.v1.CategoryS
 const OperationCategoryServiceUpdateClosureDepth = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
 
 type CategoryServiceHTTPServer interface {
-	// CreateCategory 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
-	// DeleteCategory 删除分类及关联关系
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
-	// GetCategory 获取单个分类
 	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
-	// GetCategoryPath 获取分类的完整路径（从根节点到当前分类的路径）
-	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Category, error)
-	// GetClosureRelations 获取分类闭包关系（Closure Table 实现的层级关系）
-	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelation, error)
-	// GetLeafCategories 获取所有叶子分类（三级分类）
-	GetLeafCategories(context.Context, *emptypb.Empty) (*Categorys, error)
-	// GetSubTree 获取分类的子树结构（树形结构操作）
-	GetSubTree(context.Context, *GetSubTreeRequest) (*Category, error)
-	// UpdateCategory 更新单个分类
+	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
+	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error)
+	GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error)
+	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
-	// UpdateClosureDepth 更新闭包关系深度（调整分类层级）
+	// UpdateClosureDepth Note: UpdateClosureDepth may require transaction and complex operations
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 }
 
@@ -172,7 +164,7 @@ func _CategoryService_GetSubTree0_HTTP_Handler(srv CategoryServiceHTTPServer) fu
 		if err != nil {
 			return err
 		}
-		reply := out.(*Category)
+		reply := out.(*Categories)
 		return ctx.Result(200, reply)
 	}
 }
@@ -194,7 +186,7 @@ func _CategoryService_GetCategoryPath0_HTTP_Handler(srv CategoryServiceHTTPServe
 		if err != nil {
 			return err
 		}
-		reply := out.(*Category)
+		reply := out.(*Categories)
 		return ctx.Result(200, reply)
 	}
 }
@@ -213,7 +205,7 @@ func _CategoryService_GetLeafCategories0_HTTP_Handler(srv CategoryServiceHTTPSer
 		if err != nil {
 			return err
 		}
-		reply := out.(*Categorys)
+		reply := out.(*Categories)
 		return ctx.Result(200, reply)
 	}
 }
@@ -235,7 +227,7 @@ func _CategoryService_GetClosureRelations0_HTTP_Handler(srv CategoryServiceHTTPS
 		if err != nil {
 			return err
 		}
-		reply := out.(*ClosureRelation)
+		reply := out.(*ClosureRelations)
 		return ctx.Result(200, reply)
 	}
 }
@@ -269,10 +261,10 @@ type CategoryServiceHTTPClient interface {
 	CreateCategory(ctx context.Context, req *CreateCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
 	DeleteCategory(ctx context.Context, req *DeleteCategoryRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetCategory(ctx context.Context, req *GetCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
-	GetCategoryPath(ctx context.Context, req *GetCategoryPathRequest, opts ...http.CallOption) (rsp *Category, err error)
-	GetClosureRelations(ctx context.Context, req *GetClosureRequest, opts ...http.CallOption) (rsp *ClosureRelation, err error)
-	GetLeafCategories(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *Categorys, err error)
-	GetSubTree(ctx context.Context, req *GetSubTreeRequest, opts ...http.CallOption) (rsp *Category, err error)
+	GetCategoryPath(ctx context.Context, req *GetCategoryPathRequest, opts ...http.CallOption) (rsp *Categories, err error)
+	GetClosureRelations(ctx context.Context, req *GetClosureRequest, opts ...http.CallOption) (rsp *ClosureRelations, err error)
+	GetLeafCategories(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *Categories, err error)
+	GetSubTree(ctx context.Context, req *GetSubTreeRequest, opts ...http.CallOption) (rsp *Categories, err error)
 	UpdateCategory(ctx context.Context, req *UpdateCategoryRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	UpdateClosureDepth(ctx context.Context, req *UpdateClosureDepthRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
@@ -324,8 +316,8 @@ func (c *CategoryServiceHTTPClientImpl) GetCategory(ctx context.Context, in *Get
 	return &out, nil
 }
 
-func (c *CategoryServiceHTTPClientImpl) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...http.CallOption) (*Category, error) {
-	var out Category
+func (c *CategoryServiceHTTPClientImpl) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...http.CallOption) (*Categories, error) {
+	var out Categories
 	pattern := "/v1/categories/{category_id}/path"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCategoryServiceGetCategoryPath))
@@ -337,8 +329,8 @@ func (c *CategoryServiceHTTPClientImpl) GetCategoryPath(ctx context.Context, in 
 	return &out, nil
 }
 
-func (c *CategoryServiceHTTPClientImpl) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...http.CallOption) (*ClosureRelation, error) {
-	var out ClosureRelation
+func (c *CategoryServiceHTTPClientImpl) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...http.CallOption) (*ClosureRelations, error) {
+	var out ClosureRelations
 	pattern := "/v1/categories/{category_id}/closure"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCategoryServiceGetClosureRelations))
@@ -350,8 +342,8 @@ func (c *CategoryServiceHTTPClientImpl) GetClosureRelations(ctx context.Context,
 	return &out, nil
 }
 
-func (c *CategoryServiceHTTPClientImpl) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*Categorys, error) {
-	var out Categorys
+func (c *CategoryServiceHTTPClientImpl) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*Categories, error) {
+	var out Categories
 	pattern := "/v1/categories/leaves"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCategoryServiceGetLeafCategories))
@@ -363,8 +355,8 @@ func (c *CategoryServiceHTTPClientImpl) GetLeafCategories(ctx context.Context, i
 	return &out, nil
 }
 
-func (c *CategoryServiceHTTPClientImpl) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...http.CallOption) (*Category, error) {
-	var out Category
+func (c *CategoryServiceHTTPClientImpl) GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...http.CallOption) (*Categories, error) {
+	var out Categories
 	pattern := "/v1/categories/{root_id}/subtree"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCategoryServiceGetSubTree))
