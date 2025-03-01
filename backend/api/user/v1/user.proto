@@ -5,11 +5,10 @@ package ecommerce.user.v1;
 option go_package = "backend/api/user/v1;userv1";
 
 import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
 import "google/api/field_behavior.proto";
 import "validate/validate.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 // 用户服务接口定义
 service UserService {
@@ -119,24 +118,25 @@ message GetCreditCardsRequest {
   string user_id = 1[
     (google.api.field_behavior) = REQUIRED, // 标记为必填字段
     (validate.rules).string.len = 36, // 验证字段长度为 36
-    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
+    // 验证字段为 UUID 格式
+    (validate.rules).string.uuid = true
   ];
-  string number = 3 [json_name = "number"]; // 卡号
+  string number = 3 ; // 卡号
 }
 
 // 定义获取信用卡响应的消息结构
 message GetCreditCardsReply {
-  CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡信息
+  CreditCards credit_cards = 1 ; // 信用卡信息
 }
 
 // 定义搜索信用卡响应的消息结构
 message SearchCreditCardsReply {
-  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡列表
+  repeated CreditCards credit_cards = 1 ; // 信用卡列表
 }
 
 // 定义列出信用卡响应的消息结构
 message ListCreditCardsReply {
-  repeated CreditCards credit_cards = 1 [json_name = "credit_cards"]; // 信用卡列表
+  repeated CreditCards credit_cards = 1 ; // 信用卡列表
 }
 
 // 定义地址信息的消息结构
@@ -145,34 +145,39 @@ message Address {
   string user_id = 2 [
     (google.api.field_behavior) = REQUIRED, // 标记为必填字段
     (validate.rules).string.len = 36, // 验证字段长度为 36
-    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
+    // 验证字段为 UUID 格式
+    (validate.rules).string.uuid = true
   ];
   string city = 4 [(google.api.field_behavior) = REQUIRED]; // 城市，必填字段
   string state = 5 [(google.api.field_behavior) = REQUIRED]; // 州/省，必填字段
   string country = 6 [(google.api.field_behavior) = REQUIRED]; // 国家，必填字段
   string zip_code = 7 [
-    (google.api.field_behavior) = REQUIRED // 邮政编码，必填字段
+    // 邮政编码，必填字段
+    (google.api.field_behavior) = REQUIRED
   ];
   string street_address = 8 [
-    (google.api.field_behavior) = REQUIRED // 街道地址，必填字段
+    // 街道地址，必填字段
+    (google.api.field_behavior) = REQUIRED
   ];
 }
 
 // 定义更新地址请求的消息结构
 message UpdateAddressesRequest {
-  Address addresses = 1 [(google.api.field_behavior) = REQUIRED]; // 地址信息，必填字段
+  // 地址信息，必填字段
+  Address addresses = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // 定义删除地址请求的消息结构
 message DeleteAddressesRequest {
   int32 addresses_id = 1 [
-    (google.api.field_behavior) = REQUIRED, // 地址 ID，必填字段
-    json_name = "addresses_id"
+    // 地址 ID，必填字段
+    (google.api.field_behavior) = REQUIRED
   ];
   string user_id = 2[
     (google.api.field_behavior) = REQUIRED, // 标记为必填字段
     (validate.rules).string.len = 36, // 验证字段长度为 36
-    (validate.rules).string.uuid = true // 验证字段为 UUID 格式
+    // 验证字段为 UUID 格式
+    (validate.rules).string.uuid = true
   ];
 }
 
@@ -195,173 +200,19 @@ message DeleteAddressesReply {
 }
 
 // 定义获取用户个人资料请求的消息结构
-message GetProfileRequest {
-  string authorization = 1; // 授权令牌
-}
+message GetProfileRequest {}
 
 // 定义获取用户个人资料响应的消息结构
 message GetProfileResponse {
-  string state = 1 [json_name = "state"]; // 状态
-  UserInfo data = 2 [json_name = "data"]; // 用户信息
-}
-
-message UserInfo {
-
-  message Properties {
-    string no = 1;
-    string oauth_Google_avatarUrl = 2;
-    string oauth_Google_displayName = 3;
-    string oauth_Google_email = 4;
-    string oauth_Google_id = 5;
-    string oauth_Google_username = 6;
-  }
-
   string owner = 1;
   string name = 2;
-  google.protobuf.Timestamp createdTime = 3;
-  google.protobuf.Timestamp updatedTime = 4;
-  string deletedTime = 5;
-  string id = 6;
-  string externalId = 7;
-  string type = 8;
-  string password = 9;
-  string passwordSalt = 10;
-  string passwordType = 11;
-  string displayName = 12;
-  string firstName = 13;
-  string lastName = 14;
-  string avatar = 15;
-  string avatarType = 16;
-  string permanentAvatar = 17;
-  string email = 18;
-  bool emailVerified = 19;
-  string phone = 20;
-  string countryCode = 21;
-  string region = 22;
-  string location = 23;
-  repeated string address = 24;
-  string affiliation = 25;
-  string title = 26;
-  string idCardType = 27;
-  string idCard = 28;
-  string homepage = 29;
-  string bio = 30;
-  string tag = 31;
-  string language = 32;
-  string gender = 33;
-  string birthday = 34;
-  string education = 35;
-  uint32 score = 36;
-  uint32 karma = 37;
-  uint32 ranking = 38;
-  uint32 balance = 39;
-  string currency = 40;
-  bool isDefaultAvatar = 41;
-  bool isOnline = 42;
-  bool isAdmin = 43;
-  bool isForbidden = 44;
-  bool isDeleted = 45;
-  string signupApplication = 46;
-  string hash = 47;
-  string preHash = 48;
-  string accessKey = 49;
-  string accessSecret = 50;
-  string accessToken = 51;
-  string createdIp = 52;
-  string lastSigninTime = 53;
-  string lastSigninIp = 54;
-  string github = 55;
-  string google = 56;
-  string qq = 57;
-  string wechat = 58;
-  string facebook = 59;
-  string dingtalk = 60;
-  string weibo = 61;
-  string gitee = 62;
-  string linkedin = 63;
-  string wecom = 64;
-  string lark = 65;
-  string gitlab = 66;
-  string adfs = 67;
-  string baidu = 68;
-  string alipay = 69;
-  string casdoor = 70;
-  string infoflow = 71;
-  string apple = 72;
-  string azuread = 73;
-  string azureadb2c = 74;
-  string slack = 75;
-  string steam = 76;
-  string bilibili = 77;
-  string okta = 78;
-  string douyin = 79;
-  string line = 80;
-  string amazon = 81;
-  string auth0 = 82;
-  string battlenet = 83;
-  string bitbucket = 84;
-  string box = 85;
-  string cloudfoundry = 86;
-  string dailymotion = 87;
-  string deezer = 88;
-  string digitalocean = 89;
-  string discord = 90;
-  string dropbox = 91;
-  string eveonline = 92;
-  string fitbit = 93;
-  string gitea = 94;
-  string heroku = 95;
-  string influxcloud = 96;
-  string instagram = 97;
-  string intercom = 98;
-  string kakao = 99;
-  string lastfm = 100;
-  string mailru = 101;
-  string meetup = 102;
-  string microsoftonline = 103;
-  string naver = 104;
-  string nextcloud = 105;
-  string onedrive = 106;
-  string oura = 107;
-  string patreon = 108;
-  string paypal = 109;
-  string salesforce = 110;
-  string shopify = 111;
-  string soundcloud = 112;
-  string spotify = 113;
-  string strava = 114;
-  string stripe = 115;
-  string tiktok = 116;
-  string tumblr = 117;
-  string twitch = 118;
-  string twitter = 119;
-  string typetalk = 120;
-  string uber = 121;
-  string vk = 122;
-  string wepay = 123;
-  string xero = 124;
-  string yahoo = 125;
-  string yammer = 126;
-  string yandex = 127;
-  string zoom = 128;
-  string metamask = 129;
-  string web3onboard = 130;
-  string custom = 131;
-  google.protobuf.Any webauthnCredentials = 132;
-  string preferredMfaType = 133;
-  google.protobuf.Any recoveryCodes = 134;
-  string totpSecret = 135;
-  bool mfaPhoneEnabled = 136;
-  bool mfaEmailEnabled = 137;
-  string invitation = 138;
-  string invitationCode = 139;
-  google.protobuf.Any faceIds = 140;
-  string ldap = 141;
-  Properties properties = 142;
-  google.protobuf.Any roles = 143;
-  google.protobuf.Any permissions = 144;
-  google.protobuf.Any groups = 145;
-  string lastSigninWrongTime = 146;
-  uint32 signinWrongTimes = 147;
-  google.protobuf.Any managedAccounts = 148;
+  string avatar = 3;
+  string email = 4;
+  string id = 5;
+  string role = 6;
+  string display_name = 9;
+  bool is_deleted = 10; // 用户是否注销
+  google.protobuf.Timestamp created_time = 7;
+  google.protobuf.Timestamp updated_time = 8;
+  //  repeated string roles = 6;
 }

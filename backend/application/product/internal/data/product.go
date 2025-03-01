@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
@@ -40,32 +42,39 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	})
 	newCategory := &category.Category{}
 	if getCategoryErr != nil {
-		// if errors.Is(err, pgx.ErrNoRows) {
-		newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-			// ParentId:  req.Product.ID,
-			Name:      req.Product.Category.CategoryName,
-			SortOrder: req.Product.Category.SortOrder,
-		})
-		// }
-		// return nil, fmt.Errorf("get category failed: %w", err)
+		// 明确处理"未找到分类"的情况
+		if status.Code(getCategoryErr) == codes.NotFound {
+			// 创建分类时需要指定父分类（示例使用根分类）
+			newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+				ParentId:  1, // 默认挂载到根分类
+				Name:      req.Product.Category.CategoryName,
+				SortOrder: req.Product.Category.SortOrder,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("create category failed: %w", err)
+			}
+			categoryId = uint64(newCategory.Id)
+		} else {
+			return nil, fmt.Errorf("get category failed: %w", getCategoryErr)
+		}
+	} else {
+		categoryId = uint64(getCategory.Id)
 	}
 
 	if getCategory != nil {
 		fmt.Printf("getCategory%+v", categoryId)
-		categoryId = getCategory.Id
+		categoryId = uint64(getCategory.Id)
 	}
 	if newCategory != nil {
 		fmt.Printf("newCategory%+v", categoryId)
-		categoryId = newCategory.Id
+		categoryId = uint64(newCategory.Id)
 	}
 
 	fmt.Printf("categoryId%+v", categoryId)
 	// 执行创建
 
-	if err != nil {
-		return nil, err
-	}
 	result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
+
 		Name:        req.Product.Name,
 		Description: &req.Product.Description,
 		Price:       price,
@@ -227,9 +236,9 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 	// 确定新状态
 	var newStatus biz.ProductStatus
 	switch biz.AuditAction(req.Action) { // 添加类型转换
-	case biz.AuditActionApprove:
+	case biz.Approved:
 		newStatus = biz.ProductStatusApproved
-	case biz.AuditActionReject:
+	case biz.Rejected:
 		newStatus = biz.ProductStatusRejected
 	default:
 		return nil, v1.ErrorInvalidAuditAction("AuditProduct: 非法的req.Action参数")
@@ -271,7 +280,7 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 }
 
 func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRandomProductsRequest) (*biz.Products, error) {
-	offset := (req.PageSize - 1) * req.PageSize
+	offset := (req.Page - 1) * req.PageSize
 	listRandomProducts, err := p.data.DB(ctx).ListRandomProducts(ctx, models.ListRandomProductsParams{
 		Status: int16(req.Status),
 		Limit:  int64(req.PageSize),
@@ -327,6 +336,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 
 	return &biz.Products{Items: items}, err
 }
+
 func (p *productRepo) SearchProductsByName(ctx context.Context, _ *biz.SearchProductRequest) (*biz.Products, error) {
 	panic("TODO")
 }
@@ -353,6 +363,7 @@ func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductR
 	_, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
 		ID:         req.ID,
 		MerchantID: req.MerchantID,
+		Status:     int16(biz.ProductStatusSoldOut), // 下架状态
 	})
 	if err != nil {
 		return err

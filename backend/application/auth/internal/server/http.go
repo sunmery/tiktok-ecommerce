@@ -6,17 +6,13 @@ import (
 	"backend/application/auth/internal/service"
 	"backend/constants"
 	"context"
-	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
-	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	jwtV5 "github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/handlers"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
@@ -24,12 +20,11 @@ import (
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
 	auth *service.AuthService,
-	ac *conf.Auth,
 	obs *conf.Observability,
 	logger log.Logger,
 ) *http.Server {
 	// InitSentry()
-	publicKey := InitJwtKey(ac)
+	// publicKey := InitJwtKey(ac)
 
 	// trace start
 	ctx := context.Background()
@@ -56,6 +51,7 @@ func NewHTTPServer(c *conf.Server,
 	// trace end
 	var opts = []http.ServerOption{
 		http.Middleware(
+			metadata.Server(),
 			validate.Validator(), // 参数校验
 			tracing.Server(),
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
@@ -67,26 +63,14 @@ func NewHTTPServer(c *conf.Server,
 				}),
 			),
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
-			selector.Server(
-				jwt.Server(
-					func(token *jwtV5.Token) (interface{}, error) {
-						// 检查是否使用了正确的签名方法
-						if _, ok := token.Method.(*jwtV5.SigningMethodRSA); !ok {
-							return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-						}
-						return publicKey, nil
-					},
-					jwt.WithSigningMethod(jwtV5.SigningMethodRS256),
-				),
-			).
-				Match(NewWhiteListMatcher()).Build(),
 		),
-		http.Filter(handlers.CORS( // 浏览器跨域
-			handlers.AllowedOrigins([]string{"http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:443", "https://node1.apikv.com"}),
-			handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE"}),
-			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
-			handlers.AllowCredentials(),
-		)),
+
+		// http.Filter(handlers.CORS( // 浏览器跨域
+		// 	handlers.AllowedOrigins([]string{"http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:443", "https://node1.apikv.com"}),
+		// 	handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE"}),
+		// 	handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
+		// 	handlers.AllowCredentials(),
+		// )),
 		http.RequestDecoder(MultipartFormDataDecoder),
 	}
 	if c.Http.Network != "" {
@@ -111,6 +95,7 @@ func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 		r.Header.Set("Content-Type", "application/json")
 		// return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
 	}
+
 	// fmt.Printf("method:%s\n", r.Method)
 	// if r.Method == "POST" {
 	// 	data, err := ioutil.ReadAll(r.Body)

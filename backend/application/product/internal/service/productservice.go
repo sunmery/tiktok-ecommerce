@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/google/uuid"
 
 	pb "backend/api/product/v1"
@@ -27,7 +26,10 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 }
 
 func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
-	bizProduct := convertPBToBizProduct(req.GetProduct())
+	bizProduct,err := convertPBToBizProduct(req.GetProduct())
+	if err!= nil {
+		return nil, fmt.Errorf("convert PB To BizProduct err: %w", err)
+	}
 	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{Product: *bizProduct})
 	if err != nil {
 		return nil, err
@@ -253,24 +255,120 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 	return pbProduct
 }
 
-func convertPBToBizProduct(p *pb.Product) *biz.Product {
-	merchantId, err := uuid.Parse(p.MerchantId)
+// func convertPBToBizProduct(p *pb.Product) (*biz.Product, error) {
+// 	merchantId, err := uuid.Parse(p.MerchantId)
+// 	if err != nil {
+// 		return nil, errors.New("invalid merchant ID")
+// 	}
+//
+// 	return &biz.Product{
+// 		MerchantId:  merchantId,
+// 		Name:        p.GetName(),
+// 		Price:       p.GetPrice(),
+// 		Description: p.GetDescription(),
+// 		Images:      convertPBImagesToBiz(p.GetImages()),
+// 		Status:      convertPBStatusToBiz(p.GetStatus()),
+// 		Category: biz.CategoryInfo{
+// 			CategoryId:   uint64(p.GetCategory().GetCategoryId()),
+// 			CategoryName: p.GetCategory().GetCategoryName(),
+// 		},
+// 		Attributes: convertPBObject(p.Attributes)
+// 	},nil
+// }
+
+// 顶层转换函数
+func convertPBToBizProduct(p *pb.Product) (*biz.Product, error) {
+	merchantID, err := uuid.Parse(p.GetMerchantId())
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("invalid merchant ID: %w", err)
 	}
 
 	return &biz.Product{
-		MerchantId:  merchantId,
+		MerchantId:  merchantID,
 		Name:        p.GetName(),
 		Price:       p.GetPrice(),
 		Description: p.GetDescription(),
 		Images:      convertPBImagesToBiz(p.GetImages()),
 		Status:      convertPBStatusToBiz(p.GetStatus()),
-		Category: biz.CategoryInfo{
-			CategoryId:   uint64(p.GetCategory().GetCategoryId()),
-			CategoryName: p.GetCategory().GetCategoryName(),
-		},
-		Attributes: nil,
+		Category:    convertPBCategoryToBiz(p.GetCategory()),
+		Attributes:  convertPBAttributes(p.GetAttributes()),
+	}, nil
+}
+
+// 递归处理属性转换
+func convertPBAttributes(pbAttrs map[string]*pb.AttributeValue) map[string]*biz.AttributeValue {
+	if pbAttrs == nil {
+		return nil
+	}
+
+	bizAttrs := make(map[string]*biz.AttributeValue)
+	for k, v := range pbAttrs {
+		bizAttrs[k] = convertPBAttributeValue(v)
+	}
+	return bizAttrs
+}
+
+func convertPBAttributeValue(pbVal *pb.AttributeValue) *biz.AttributeValue {
+	if pbVal == nil {
+		return nil
+	}
+
+	return &biz.AttributeValue{
+		StringValue: pbVal.GetStringValue(),
+		ArrayValue:  convertPBStringArray(pbVal.GetArrayValue()),
+		ObjectValue: convertPBNestedObject(pbVal.GetObjectValue()),
+	}
+}
+
+// 处理字符串数组
+func convertPBStringArray(pbArr *pb.StringArray) *biz.StringArray {
+	if pbArr == nil || len(pbArr.GetItems()) == 0 {
+		return nil
+	}
+	arr := biz.StringArray(pbArr.GetItems())
+	return &arr
+}
+
+// 递归处理嵌套对象
+func convertPBNestedObject(pbObj *pb.NestedObject) *biz.NestedObject {
+	if pbObj == nil || pbObj.GetFields() == nil {
+		return nil
+	}
+
+	fields := make(map[string]*biz.AttributeValue)
+	for k, v := range pbObj.GetFields() {
+		fields[k] = convertPBAttributeValue(v)
+	}
+
+	return &biz.NestedObject{
+		Fields: fields,
+	}
+}
+
+// 其他辅助转换函数
+// func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {
+// 	var images []*biz.ProductImage
+// 	for _, img := range pbImages {
+// 		images = append(images, &biz.ProductImage{
+// 			URL:       img.GetUrl(),
+// 			IsPrimary: img.GetIsPrimary(),
+// 			SortOrder: int(img.GetSortOrder()),
+// 		})
+// 	}
+// 	return images
+// }
+
+// func convertPBStatusToBiz(pbStatus pb.ProductStatus) biz.ProductStatus {
+// 	return biz.ProductStatus(pbStatus)
+// }
+
+func convertPBCategoryToBiz(pbCategory *pb.CategoryInfo) biz.CategoryInfo {
+	if pbCategory == nil {
+		return biz.CategoryInfo{}
+	}
+	return biz.CategoryInfo{
+		CategoryId:   uint64(pbCategory.GetCategoryId()),
+		CategoryName: pbCategory.GetCategoryName(),
 	}
 }
 

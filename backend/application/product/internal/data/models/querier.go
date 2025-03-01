@@ -46,8 +46,7 @@ type Querier interface {
 	//                                 price,
 	//                                 status,
 	//                                 merchant_id,
-	//                                 category_id
-	//                                 )
+	//                                 category_id)
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at, updated_at
 	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
@@ -75,22 +74,20 @@ type Querier interface {
 	// 获取商品详情，包含软删除检查
 	//
 	//
-	//  SELECT
-	//      p.id,
-	//      p.name,
-	//      p.description,
-	//      p.price,
-	//      p.status,
-	//      p.merchant_id,
-	//      p.created_at,
-	//      p.updated_at,
-	//      i.stock
+	//  SELECT p.id,
+	//         p.name,
+	//         p.description,
+	//         p.price,
+	//         p.status,
+	//         p.merchant_id,
+	//         p.created_at,
+	//         p.updated_at,
+	//         i.stock
 	//  FROM products.products p
 	//           INNER JOIN products.inventory i
 	//                      ON p.id = i.product_id
 	//                          AND p.merchant_id = i.merchant_id
-	//  WHERE
-	//      p.id = $1
+	//  WHERE p.id = $1
 	//    AND p.merchant_id = $2
 	//    AND p.deleted_at IS NULL
 	GetProduct(ctx context.Context, arg GetProductParams) (GetProductRow, error)
@@ -104,87 +101,110 @@ type Querier interface {
 	GetProductImages(ctx context.Context, arg GetProductImagesParams) ([]ProductsProductImages, error)
 	// 分类批量查询（使用GIN索引优化数组查询）
 	//
-	//  SELECT
-	//      p.id,
-	//      p.merchant_id,
-	//      p.name,
-	//      p.description,
-	//      p.price,
-	//      p.status,
-	//      p.category_id,
-	//      p.created_at,
-	//      p.updated_at,
-	//      (
-	//          SELECT jsonb_agg(jsonb_build_object(
-	//                  'url', pi.url,
-	//                  'is_primary', pi.is_primary,
-	//                  'sort_order', pi.sort_order
+	//  SELECT p.id,
+	//         p.merchant_id,
+	//         p.name,
+	//         p.description,
+	//         p.price,
+	//         p.status,
+	//         p.category_id,
+	//         p.created_at,
+	//         p.updated_at,
+	//         (SELECT jsonb_agg(jsonb_build_object(
+	//                 'url', pi.url,
+	//                 'is_primary', pi.is_primary,
+	//                 'sort_order', pi.sort_order
 	//                           ))
 	//          FROM products.product_images pi
-	//          WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
-	//      ) AS images,
-	//      pa.attributes
+	//          WHERE pi.product_id = p.id
+	//            AND pi.merchant_id = p.merchant_id) AS images,
+	//         pa.attributes
 	//  FROM products.products p
 	//           LEFT JOIN products.product_attributes pa
 	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-	//  WHERE p.category_id = ANY($1::bigint[])
+	//  WHERE p.category_id = ANY ($1::bigint[])
 	//    AND p.status = $2
 	//    AND p.deleted_at IS NULL
 	//  ORDER BY p.created_at DESC
-	//      LIMIT $3 OFFSET $4
+	//  LIMIT $3 OFFSET $4
 	ListProductsByCategory(ctx context.Context, arg ListProductsByCategoryParams) ([]ListProductsByCategoryRow, error)
-	// 实现随机商品列表查询（使用PostgreSQL的TABLESAMPLE优化性能）
+	// 实现随机商品列表查询（使用PostgreSQL的TABLESAMPLE优化性能）,数据量太少不显示
+	// SELECT
+	//     p.id,
+	//     p.merchant_id,
+	//     p.name,
+	//     p.description,
+	//     p.price,
+	//     p.status,
+	//     p.category_id,
+	//     p.created_at,
+	//     p.updated_at,
+	//     -- 图片信息
+	//     (
+	//         SELECT jsonb_agg(jsonb_build_object(
+	//                 'url', pi.url,
+	//                 'is_primary', pi.is_primary,
+	//                 'sort_order', pi.sort_order
+	//                          ))
+	//         FROM products.product_images pi
+	//         WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
+	//     ) AS images,
+	//     -- 属性信息
+	//     pa.attributes
+	// FROM products.products p
+	//          TABLESAMPLE BERNOULLI (0.1) REPEATABLE (123)
+	//          LEFT JOIN products.product_attributes pa
+	//                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+	// WHERE p.status = $1 AND p.deleted_at IS NULL
+	// ORDER BY random()
+	//     LIMIT $2 OFFSET $3;
 	//
-	//  SELECT
-	//      p.id,
-	//      p.merchant_id,
-	//      p.name,
-	//      p.description,
-	//      p.price,
-	//      p.status,
-	//      p.category_id,
-	//      p.created_at,
-	//      p.updated_at,
-	//      -- 图片信息
-	//      (
-	//          SELECT jsonb_agg(jsonb_build_object(
-	//                  'url', pi.url,
-	//                  'is_primary', pi.is_primary,
-	//                  'sort_order', pi.sort_order
+	//
+	//  SELECT p.id,
+	//         p.merchant_id,
+	//         p.name,
+	//         p.description,
+	//         p.price,
+	//         p.status,
+	//         p.category_id,
+	//         p.created_at,
+	//         p.updated_at,
+	//         -- 图片信息
+	//         (SELECT jsonb_agg(jsonb_build_object(
+	//                 'url', pi.url,
+	//                 'is_primary', pi.is_primary,
+	//                 'sort_order', pi.sort_order
 	//                           ))
 	//          FROM products.product_images pi
-	//          WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id
-	//      ) AS images,
-	//      -- 属性信息
-	//      pa.attributes
+	//          WHERE pi.product_id = p.id
+	//            AND pi.merchant_id = p.merchant_id) AS images,
+	//         -- 属性信息
+	//         pa.attributes
 	//  FROM products.products p
-	//           TABLESAMPLE BERNOULLI (0.1) REPEATABLE (123)
 	//           LEFT JOIN products.product_attributes pa
 	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-	//  WHERE p.status = $1 AND p.deleted_at IS NULL
+	//  WHERE p.status = $1
+	//    AND p.deleted_at IS NULL
 	//  ORDER BY random()
-	//      LIMIT $2 OFFSET $3
+	//  LIMIT $2 OFFSET $3
 	ListRandomProducts(ctx context.Context, arg ListRandomProductsParams) ([]ListRandomProductsRow, error)
 	//SearchProductsByName
 	//
-	//  SELECT
-	//      p.id,
-	//      p.name,
-	//      p.description,
-	//      p.price,
-	//      p.status,
-	//      p.merchant_id,
-	//      p.created_at,
-	//      p.updated_at,
-	//      i.stock
+	//  SELECT p.id,
+	//         p.name,
+	//         p.description,
+	//         p.price,
+	//         p.status,
+	//         p.merchant_id,
+	//         p.created_at,
+	//         p.updated_at,
+	//         i.stock
 	//  FROM products.products p
 	//           INNER JOIN products.inventory i
-	//  ON p.id = i.product_id
-	//  WHERE
-	//    name ILIKE '%' || $1 || '%'  -- 模糊匹配商品名称
-	//    AND deleted_at IS NULL        -- 排除已删除商品
-	//  ORDER BY
-	//    created_at DESC
+	//                      ON p.id = i.product_id
+	//  WHERE name ILIKE '%' || $1 || '%' -- 模糊匹配商品名称
+	//    AND deleted_at IS NULL          -- 排除已删除商品
+	//  ORDER BY created_at DESC
 	//  LIMIT $2 OFFSET $3
 	SearchProductsByName(ctx context.Context, arg SearchProductsByNameParams) ([]SearchProductsByNameRow, error)
 	// 分页支持
@@ -192,7 +212,8 @@ type Querier interface {
 	//
 	//
 	//  UPDATE products.products
-	//  SET deleted_at = NOW()
+	//  SET deleted_at = NOW(),
+	//      status     = $3
 	//  WHERE merchant_id = $1
 	//    AND id = $2
 	//  RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at

@@ -17,6 +17,7 @@ var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCasdoor, NewAuthRepo)
 type Data struct {
 	rdb *redis.Client
 	cs  *casdoorsdk.Client
+	logger *log.Helper
 }
 
 // NewData .
@@ -31,6 +32,7 @@ func NewData(
 	return &Data{
 		rdb: rdb,
 		cs:  cs,
+		logger: log.NewHelper(logger),
 	}, cleanup, nil
 }
 
@@ -75,3 +77,5 @@ type authRepo struct {
 	data *Data
 	log  *log.Helper
 }
+
+

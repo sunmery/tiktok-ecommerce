@@ -2,17 +2,30 @@ package biz
 
 import (
 	"context"
-	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
+	"github.com/google/uuid"
+	"time"
 )
 
-type GetProfileRequest struct {
-	Authorization string
-}
-
-type GetProfileReply struct {
-	State string          `json:"state,omitempty"`
-	Data  casdoorsdk.User `json:"data"`
-}
+// 用户档案
+type (
+	GetProfileRequest struct {
+		Owner string
+		UserId    uuid.UUID
+	}
+	GetProfileReply struct {
+		Owner  string
+		Name   string
+		DisplayName string
+		Id     uuid.UUID
+		Avatar string
+		Email  string
+		// Roles: []string
+		Role string
+		IsDeleted bool
+		CreatedTime time.Time
+		UpdatedTime time.Time
+	}
+)
 
 func (cc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error) {
 	cc.log.WithContext(ctx).Infof("GetProfile: %+v", req)

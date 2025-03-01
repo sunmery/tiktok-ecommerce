@@ -19,12 +19,9 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAuthServiceGetUserInfo = "/ecommerce.auth.v1.AuthService/GetUserInfo"
 const OperationAuthServiceSignin = "/ecommerce.auth.v1.AuthService/Signin"
 
 type AuthServiceHTTPServer interface {
-	// GetUserInfo 获取用户信息接口
-	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
 	// Signin 用户登录接口
 	Signin(context.Context, *SigninRequest) (*SigninReply, error)
 }
@@ -32,7 +29,6 @@ type AuthServiceHTTPServer interface {
 func RegisterAuthServiceHTTPServer(s *http.Server, srv AuthServiceHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/auth", _AuthService_Signin0_HTTP_Handler(srv))
-	r.GET("/v1/auth/profile", _AuthService_GetUserInfo0_HTTP_Handler(srv))
 }
 
 func _AuthService_Signin0_HTTP_Handler(srv AuthServiceHTTPServer) func(ctx http.Context) error {
@@ -57,27 +53,7 @@ func _AuthService_Signin0_HTTP_Handler(srv AuthServiceHTTPServer) func(ctx http.
 	}
 }
 
-func _AuthService_GetUserInfo0_HTTP_Handler(srv AuthServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetUserInfoRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAuthServiceGetUserInfo)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetUserInfo(ctx, req.(*GetUserInfoRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*GetUserInfoResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
 type AuthServiceHTTPClient interface {
-	GetUserInfo(ctx context.Context, req *GetUserInfoRequest, opts ...http.CallOption) (rsp *GetUserInfoResponse, err error)
 	Signin(ctx context.Context, req *SigninRequest, opts ...http.CallOption) (rsp *SigninReply, err error)
 }
 
@@ -87,19 +63,6 @@ type AuthServiceHTTPClientImpl struct {
 
 func NewAuthServiceHTTPClient(client *http.Client) AuthServiceHTTPClient {
 	return &AuthServiceHTTPClientImpl{client}
-}
-
-func (c *AuthServiceHTTPClientImpl) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...http.CallOption) (*GetUserInfoResponse, error) {
-	var out GetUserInfoResponse
-	pattern := "/v1/auth/profile"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAuthServiceGetUserInfo))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
 }
 
 func (c *AuthServiceHTTPClientImpl) Signin(ctx context.Context, in *SigninRequest, opts ...http.CallOption) (*SigninReply, error) {

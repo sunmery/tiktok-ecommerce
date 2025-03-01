@@ -13,10 +13,15 @@ import (
 type ProductStatus uint
 
 const (
-	ProductStatusDraft ProductStatus = iota
-	ProductStatusPending
-	ProductStatusApproved
-	ProductStatusRejected
+	ProductStatusDraft    ProductStatus = iota // 商品草稿
+	ProductStatusPending                       // 商品待审核。
+	ProductStatusApproved                      // 商品审核通过。
+	ProductStatusRejected                      // 商品审核未通过。
+	ProductStatusSoldOut                       // 商品因某种原因不可购买。
+)
+const (
+	Approved  AuditAction = 1
+	Rejected  AuditAction = 2
 )
 
 var validTransitions = map[ProductStatus]map[ProductStatus]bool{
@@ -30,18 +35,25 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	ProductStatusRejected: {
 		ProductStatusDraft: true,
 	},
+	ProductStatusSoldOut:{
+		ProductStatusSoldOut: true,
+	},
 }
 
 // AuditAction 添加AuditAction类型
 type (
-	AuditAction    int
-	AttributeValue struct{}
+	AuditAction  int
+	StringArray  []string
+	NestedObject struct {
+		Fields map[string]*AttributeValue `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	}
+	AttributeValue struct {
+		StringValue string
+		ArrayValue  *StringArray
+		ObjectValue *NestedObject
+	}
 )
 
-const (
-	AuditActionApprove AuditAction = 0
-	AuditActionReject  AuditAction = 1
-)
 
 // AuditRecord 完善AuditRecord定义
 type AuditRecord struct {
