@@ -96,6 +96,7 @@ type Product struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
+	Inventory Inventory // 库存
 }
 
 type CreateProductReply struct {
@@ -157,6 +158,7 @@ type AuditProductRequest struct {
 type DeleteProductRequest struct {
 	ID         uuid.UUID
 	MerchantID uuid.UUID
+	Status     ProductStatus // 删除商品的状态, 默认为4, 但未来可能会根据需求进行修改
 }
 
 // GetProductRequest 完善GetProductRequest
@@ -166,7 +168,22 @@ type GetProductRequest struct {
 
 // CreateProductRequest 完善CreateProductRequest
 type CreateProductRequest struct {
-	Product Product
+	Name        string
+	Price       float64
+	Description string
+	MerchantId  uuid.UUID
+	Images      []*ProductImage
+	Status      ProductStatus
+	Category    CategoryInfo
+	Attributes  map[string]*AttributeValue
+	Stock uint32
+}
+
+// 库存
+type Inventory struct {
+	ProductId uuid.UUID
+	MerchantId uuid.UUID
+	Stock int32
 }
 
 type ImageModel struct {

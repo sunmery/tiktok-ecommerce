@@ -33,6 +33,12 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at
 	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) (CreateAuditRecordRow, error)
+	//CreateInventory
+	//
+	//  INSERT INTO products.inventory (product_id, merchant_id, stock)
+	//  VALUES ($1, $2, $3)
+	//  RETURNING product_id, merchant_id, stock
+	CreateInventory(ctx context.Context, arg CreateInventoryParams) (ProductsInventory, error)
 	// 所有分片表必须：
 	// 1. 包含分片键列（merchant_id）
 	// 2. 主键必须包含分片键
@@ -216,8 +222,7 @@ type Querier interface {
 	//      status     = $3
 	//  WHERE merchant_id = $1
 	//    AND id = $2
-	//  RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
-	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error)
+	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) error
 	// 更新商品基础信息，使用乐观锁控制并发
 	//
 	//  UPDATE products.products

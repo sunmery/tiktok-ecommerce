@@ -60,6 +60,7 @@ func NewHTTPServer(c *conf.Server,
 					return nil
 				}),
 			),
+
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 		),
 	}

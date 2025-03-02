@@ -106,6 +106,30 @@ func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordPa
 	return i, err
 }
 
+const CreateInventory = `-- name: CreateInventory :one
+INSERT INTO products.inventory (product_id, merchant_id, stock)
+VALUES ($1, $2, $3)
+RETURNING product_id, merchant_id, stock
+`
+
+type CreateInventoryParams struct {
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	Stock      int32     `json:"stock"`
+}
+
+// CreateInventory
+//
+//	INSERT INTO products.inventory (product_id, merchant_id, stock)
+//	VALUES ($1, $2, $3)
+//	RETURNING product_id, merchant_id, stock
+func (q *Queries) CreateInventory(ctx context.Context, arg CreateInventoryParams) (ProductsInventory, error) {
+	row := q.db.QueryRow(ctx, CreateInventory, arg.ProductID, arg.MerchantID, arg.Stock)
+	var i ProductsInventory
+	err := row.Scan(&i.ProductID, &i.MerchantID, &i.Stock)
+	return i, err
+}
+
 const CreateProduct = `-- name: CreateProduct :one
 
 INSERT INTO products.products (name,
@@ -687,14 +711,13 @@ func (q *Queries) SearchProductsByName(ctx context.Context, arg SearchProductsBy
 	return items, nil
 }
 
-const SoftDeleteProduct = `-- name: SoftDeleteProduct :one
+const SoftDeleteProduct = `-- name: SoftDeleteProduct :exec
 
 UPDATE products.products
 SET deleted_at = NOW(),
     status     = $3
 WHERE merchant_id = $1
   AND id = $2
-RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
 `
 
 type SoftDeleteProductParams struct {
@@ -711,24 +734,9 @@ type SoftDeleteProductParams struct {
 //	    status     = $3
 //	WHERE merchant_id = $1
 //	  AND id = $2
-//	RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
-func (q *Queries) SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error) {
-	row := q.db.QueryRow(ctx, SoftDeleteProduct, arg.MerchantID, arg.ID, arg.Status)
-	var i ProductsProducts
-	err := row.Scan(
-		&i.ID,
-		&i.MerchantID,
-		&i.Name,
-		&i.Description,
-		&i.Price,
-		&i.Status,
-		&i.CurrentAuditID,
-		&i.CategoryID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) error {
+	_, err := q.db.Exec(ctx, SoftDeleteProduct, arg.MerchantID, arg.ID, arg.Status)
+	return err
 }
 
 const UpdateProduct = `-- name: UpdateProduct :exec

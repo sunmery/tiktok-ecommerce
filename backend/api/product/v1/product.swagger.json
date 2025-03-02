@@ -62,6 +62,45 @@
           "ProductService"
         ]
       },
+      "delete": {
+        "summary": "删除商品（软删除）",
+        "operationId": "ProductService_DeleteProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "商品 ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "商品状态, 默认删除状态为4, 即下架状态",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
       "post": {
         "summary": "创建商品（草稿状态）",
         "operationId": "ProductService_CreateProduct",
@@ -134,43 +173,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1Product"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "merchantId",
-            "description": "商家 ID, 用于分片路由",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ProductService"
-        ]
-      },
-      "delete": {
-        "summary": "删除商品（软删除）",
-        "operationId": "ProductService_DeleteProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {}
             }
           },
           "default": {
@@ -348,25 +350,6 @@
     }
   },
   "definitions": {
-    "ProductImage": {
-      "type": "object",
-      "properties": {
-        "url": {
-          "type": "string",
-          "title": "图片URL"
-        },
-        "isPrimary": {
-          "type": "boolean",
-          "title": "是否主图"
-        },
-        "sortOrder": {
-          "type": "integer",
-          "format": "int32",
-          "title": "排序顺序"
-        }
-      },
-      "title": "图片信息"
-    },
     "ProductServiceAuditProductBody": {
       "type": "object",
       "properties": {
@@ -389,12 +372,6 @@
     },
     "ProductServiceSubmitForAuditBody": {
       "type": "object",
-      "properties": {
-        "merchantId": {
-          "type": "string",
-          "title": "商家 ID, 用于分片路由"
-        }
-      },
       "title": "提交审核请求"
     },
     "ProductServiceUpdateProductBody": {
@@ -547,11 +524,71 @@
     "v1CreateProductRequest": {
       "type": "object",
       "properties": {
-        "product": {
-          "$ref": "#/definitions/v1Product"
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "title": "商品价格（单位：元"
+        },
+        "description": {
+          "type": "string",
+          "title": "商品描述"
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品库存"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Image"
+          },
+          "title": "商品图片列表"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1AttributeValue"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "时间戳"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "category": {
+          "$ref": "#/definitions/v1CategoryInfo"
         }
       },
       "title": "创建商品请求"
+    },
+    "v1Image": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "图片URL"
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "title": "是否主图"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32",
+          "title": "排序顺序"
+        }
+      },
+      "title": "图片信息"
     },
     "v1NestedObject": {
       "type": "object",
@@ -597,7 +634,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/ProductImage"
+            "$ref": "#/definitions/v1Image"
           },
           "title": "商品图片列表"
         },
@@ -622,8 +659,7 @@
           "format": "date-time"
         },
         "category": {
-          "$ref": "#/definitions/v1CategoryInfo",
-          "title": "替换原有category_id字段"
+          "$ref": "#/definitions/v1CategoryInfo"
         }
       },
       "title": "商品核心数据结构"
@@ -634,10 +670,11 @@
         "PRODUCT_STATUS_DRAFT",
         "PRODUCT_STATUS_PENDING",
         "PRODUCT_STATUS_APPROVED",
-        "PRODUCT_STATUS_REJECTED"
+        "PRODUCT_STATUS_REJECTED",
+        "PRODUCT_STATUS_SOLDOUT"
       ],
       "default": "PRODUCT_STATUS_DRAFT",
-      "description": "- PRODUCT_STATUS_DRAFT: 草稿状态\n - PRODUCT_STATUS_PENDING: 待审核\n - PRODUCT_STATUS_APPROVED: 审核通过\n - PRODUCT_STATUS_REJECTED: 审核驳回",
+      "description": "- PRODUCT_STATUS_DRAFT: 草稿状态\n - PRODUCT_STATUS_PENDING: 待审核\n - PRODUCT_STATUS_APPROVED: 审核通过\n - PRODUCT_STATUS_REJECTED: 审核驳回\n - PRODUCT_STATUS_SOLDOUT: 下架",
       "title": "商品状态枚举定义"
     },
     "v1Products": {

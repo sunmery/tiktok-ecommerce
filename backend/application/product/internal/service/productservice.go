@@ -26,11 +26,25 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 }
 
 func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
-	bizProduct,err := convertPBToBizProduct(req.GetProduct())
-	if err!= nil {
-		return nil, fmt.Errorf("convert PB To BizProduct err: %w", err)
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
 	}
-	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{Product: *bizProduct})
+	merchantId, err := uuid.Parse(userId)
+	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
+		Name:        req.Name,
+		Price:       req.Price,
+		Description: req.Description,
+		MerchantId:  merchantId,
+		Images:      convertPBImagesToBiz(req.Images),
+		Status:      biz.ProductStatusPending,
+		Category: biz.CategoryInfo{
+			CategoryId:   uint64(req.Category.CategoryId),
+			CategoryName: req.Category.CategoryName,
+		},
+		Attributes: nil,
+		Stock:      req.Stock,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +102,14 @@ func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAudit
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
-	merchantId, err := uuid.Parse(req.MerchantId)
+
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
+	}
+	merchantId, err := uuid.Parse(userId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
 
 	bizReq := biz.SubmitAuditRequest{
@@ -119,15 +138,20 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 	}
 	productId, err := uuid.Parse(req.ProductId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid productId ID")
 	}
 	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
-	operatorId, err := uuid.Parse(req.MerchantId)
+
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
+	}
+	operatorId, err := uuid.Parse(userId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid operatorId ID")
 	}
 
 	bizReq := biz.AuditProductRequest{
@@ -179,13 +203,17 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
-	merchantId, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+
+	// 从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
+	var userId string
+	if md,ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
 	}
+	merchantId := uuid.MustParse(userId)
 	bizReq := biz.DeleteProductRequest{
 		ID:         id,
 		MerchantID: merchantId,
+		Status:     4,
 	}
 
 	_, err = s.uc.DeleteProduct(ctx, bizReq)
@@ -245,7 +273,7 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		} else {
 			sortOrder = 0 // 默认值
 		}
-		pbProduct.Images = append(pbProduct.Images, &pb.Product_Image{
+		pbProduct.Images = append(pbProduct.Images, &pb.Image{
 			Url:       img.URL,
 			IsPrimary: img.IsPrimary,
 			SortOrder: sortOrder,
@@ -277,8 +305,12 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 // }
 
 // 顶层转换函数
-func convertPBToBizProduct(p *pb.Product) (*biz.Product, error) {
-	merchantID, err := uuid.Parse(p.GetMerchantId())
+func convertPBToBizProduct(ctx context.Context,p *pb.Product) (*biz.Product, error) {
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
+	}
+	merchantID, err := uuid.Parse(userId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid merchant ID: %w", err)
 	}
@@ -372,7 +404,7 @@ func convertPBCategoryToBiz(pbCategory *pb.CategoryInfo) biz.CategoryInfo {
 	}
 }
 
-func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {
+func convertPBImagesToBiz(pbImages []*pb.Image) []*biz.ProductImage {
 	var images []*biz.ProductImage
 	for _, img := range pbImages {
 		var sortOrderPtr *int

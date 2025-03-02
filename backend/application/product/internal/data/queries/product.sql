@@ -15,6 +15,11 @@ INSERT INTO products.products (name,
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at, updated_at;
 
+-- name: CreateInventory :one
+INSERT INTO products.inventory (product_id, merchant_id, stock)
+VALUES ($1, $2, $3)
+RETURNING *;
+
 -- name: UpdateProduct :exec
 -- 更新商品基础信息，使用乐观锁控制并发
 UPDATE products.products
@@ -67,13 +72,12 @@ LIMIT $2 OFFSET $3;
 -- 分页支持
 
 -- 软删除商品，设置删除时间戳
--- name: SoftDeleteProduct :one
+-- name: SoftDeleteProduct :exec
 UPDATE products.products
 SET deleted_at = NOW(),
     status     = $3
 WHERE merchant_id = $1
-  AND id = $2
-RETURNING *;
+  AND id = $2;
 
 -- name: CreateProductImages :copyfrom
 INSERT INTO products.product_images (merchant_id, -- 新增分片键

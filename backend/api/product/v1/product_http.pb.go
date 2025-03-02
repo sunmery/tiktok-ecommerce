@@ -61,7 +61,7 @@ func RegisterProductServiceHTTPServer(s *http.Server, srv ProductServiceHTTPServ
 	r.GET("/v1/products/{name}", _ProductService_SearchProductsByName0_HTTP_Handler(srv))
 	r.GET("/v1/products", _ProductService_ListRandomProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/categories/{name}", _ProductService_ListProductsByCategory0_HTTP_Handler(srv))
-	r.DELETE("/v1/products/{id}", _ProductService_DeleteProduct0_HTTP_Handler(srv))
+	r.DELETE("/v1/products", _ProductService_DeleteProduct0_HTTP_Handler(srv))
 }
 
 func _ProductService_CreateProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
@@ -252,9 +252,6 @@ func _ProductService_DeleteProduct0_HTTP_Handler(srv ProductServiceHTTPServer) f
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
 		http.SetOperation(ctx, OperationProductServiceDeleteProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.DeleteProduct(ctx, req.(*DeleteProductRequest))
@@ -316,7 +313,7 @@ func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *Cr
 
 func (c *ProductServiceHTTPClientImpl) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/products/{id}"
+	pattern := "/v1/products"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationProductServiceDeleteProduct))
 	opts = append(opts, http.PathTemplate(pattern))

@@ -51,7 +51,7 @@ CREATE TABLE products.inventory
 -----------------------------
 CREATE TABLE products.product_images
 (
-    id          UUID,
+    id          UUID DEFAULT uuidv7_sub_ms(),
     merchant_id UUID         NOT NULL, -- 分片键（必须）
     product_id  UUID         NOT NULL,
     url         VARCHAR(512) NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE products.product_attributes
 -----------------------------
 CREATE TABLE products.product_audits
 (
-    id          UUID,
+    id          UUID DEFAULT uuidv7_sub_ms(),
     merchant_id UUID        NOT NULL, -- 分片键（必须）
     product_id  UUID        NOT NULL,
     old_status  SMALLINT    NOT NULL,

@@ -29,7 +29,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	db := p.data.DB(ctx)
 
 	// 转换价格到pgtype.Numeric
-	price, err := types.Float64ToNumeric(req.Product.Price)
+	price, err := types.Float64ToNumeric(req.Price)
 	if err != nil {
 		return nil, fmt.Errorf("invalid price format: %w", err)
 	}
@@ -38,7 +38,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 
 	getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-		Id: req.Product.Category.CategoryId,
+		Id: req.Category.CategoryId,
 	})
 	newCategory := &category.Category{}
 	if getCategoryErr != nil {
@@ -47,8 +47,8 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 			// 创建分类时需要指定父分类（示例使用根分类）
 			newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
 				ParentId:  1, // 默认挂载到根分类
-				Name:      req.Product.Category.CategoryName,
-				SortOrder: req.Product.Category.SortOrder,
+				Name:      req.Category.CategoryName,
+				SortOrder: 0,
 			})
 			if err != nil {
 				return nil, fmt.Errorf("create category failed: %w", err)
@@ -74,17 +74,27 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	// 执行创建
 
 	result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
-
-		Name:        req.Product.Name,
-		Description: &req.Product.Description,
+		Name:        req.Name,
+		Description: &req.Description,
 		Price:       price,
 		CategoryID:  int64(categoryId),
-		Status:      int16(req.Product.Status),
-		MerchantID:  req.Product.MerchantId,
+		Status:      int16(req.Status),
+		MerchantID:  req.MerchantId,
 	})
 	if createErr != nil {
 		return nil, fmt.Errorf("failed to create product: %w", createErr)
 	}
+
+	// 创建库存记录
+	inventory, err := p.data.DB(ctx).CreateInventory(ctx, models.CreateInventoryParams{
+		ProductID:  result.ID,
+		MerchantID: req.MerchantId,
+		Stock:      int32(req.Stock),
+	})
+	if err != nil {
+		return nil, err
+	}
+	p.log.Debugf("inventory: %+v", inventory)
 
 	// 转换基础信息
 	product := biz.CreateProductReply{
@@ -94,8 +104,8 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	}
 
 	// 创建图片记录
-	if len(req.Product.Images) > 0 {
-		if err := p.createProductImages(ctx, result.ID, req.Product.MerchantId, req.Product.Images); err != nil {
+	if len(req.Images) > 0 {
+		if err := p.createProductImages(ctx, result.ID, req.MerchantId, req.Images); err != nil {
 			p.log.Warnf("created product but failed to create images: %v", err)
 		}
 	}
@@ -218,16 +228,18 @@ func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRe
 	}, nil
 }
 
+// AuditProduct 审核商品
 func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductRequest) (*biz.AuditRecord, error) {
 	db := p.data.DB(ctx)
 
 	// 获取当前产品状态
+	fmt.Printf("req%+v", req)
 	current, err := db.GetProduct(ctx, models.GetProductParams{
 		ID:         req.ProductID,
 		MerchantID: req.MerchantID,
 	})
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(pgx.ErrNoRows, err) {
 			return nil, v1.ErrorProductNotFound("查询不到该商品")
 		}
 		return nil, v1.ErrorInvalidStatus("data/product: AuditProduct: %+v", err)
@@ -241,11 +253,13 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 	case biz.Rejected:
 		newStatus = biz.ProductStatusRejected
 	default:
-		return nil, v1.ErrorInvalidAuditAction("AuditProduct: 非法的req.Action参数")
+		p.log.Warnf("非法的Action行为: %v", req.Action)
+		return nil, v1.ErrorInvalidAuditAction("AuditProduct: 非法的req.Action参数, 1为通过, 2为驳回")
 	}
 
 	// 创建审核记录
-	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
+	fmt.Printf("current%+v", current)
+	auditRecord, err := db.CreateAuditRecord(ctx, models.CreateAuditRecordParams{
 		MerchantID: req.MerchantID,
 		ProductID:  req.ProductID,
 		OldStatus:  current.Status,
@@ -269,12 +283,12 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 	}
 
 	return &biz.AuditRecord{
-		ID:        auditRecord.ID,
-		ProductID: req.ProductID,
-		OldStatus: biz.ProductStatus(current.Status),
-		NewStatus: newStatus,
-		Reason:    req.Reason,
-		// OperatorID: req.OperatorID,
+		ID:         auditRecord.ID,
+		ProductID:  req.ProductID,
+		OldStatus:  biz.ProductStatus(current.Status),
+		NewStatus:  newStatus,
+		Reason:     req.Reason,
+		OperatorID: req.OperatorID,
 		OperatedAt: auditRecord.CreatedAt,
 	}, nil
 }
@@ -360,10 +374,10 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
-	_, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
+	err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
 		ID:         req.ID,
 		MerchantID: req.MerchantID,
-		Status:     int16(biz.ProductStatusSoldOut), // 下架状态
+		Status:     int16(req.Status), // 下架状态
 	})
 	if err != nil {
 		return err

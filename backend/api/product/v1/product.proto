@@ -74,7 +74,7 @@ service ProductService {
   // 删除商品（软删除）
   rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/v1/products/{id}"
+      delete: "/v1/products"
     };
   }
 }
@@ -85,6 +85,7 @@ enum ProductStatus {
   PRODUCT_STATUS_PENDING = 1;  // 待审核
   PRODUCT_STATUS_APPROVED = 2; // 审核通过
   PRODUCT_STATUS_REJECTED = 3; // 审核驳回
+  PRODUCT_STATUS_SOLDOUT = 4; // 下架
 }
 
 // 审核动作枚举
@@ -120,7 +121,12 @@ message CategoryInfo {
   uint32 category_id = 1 [(validate.rules).string = {min_len: 1}];
   string category_name = 2;
 }
-
+// 图片信息
+message Image {
+  string url = 1;         // 图片URL
+  bool is_primary = 2;    // 是否主图
+  int32 sort_order = 3;   // 排序顺序
+}
 // 商品核心数据结构
 message Product {
   string id = 1[
@@ -131,13 +137,6 @@ message Product {
   double price = 4; // 商品价格（单位：元）
   ProductStatus status = 6; // 当前状态
   string merchant_id = 7;    // 所属商家ID
-
-  // 图片信息
-  message Image {
-    string url = 1;         // 图片URL
-    bool is_primary = 2;    // 是否主图
-    int32 sort_order = 3;   // 排序顺序
-  }
   repeated Image images = 8; // 商品图片列表
 
   // 商品属性（动态KV结构）
@@ -149,7 +148,7 @@ message Product {
   // 时间戳
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
-  CategoryInfo category = 13; // 替换原有category_id字段
+  CategoryInfo category = 13;
 }
 
 // 创建商品的返回值
@@ -188,7 +187,16 @@ message AuditInfo {
 
 // 创建商品请求
 message CreateProductRequest {
-  Product product = 1 [(validate.rules).message.required = true];
+  string name = 1 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
+  double price = 2; // 商品价格（单位：元
+  string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
+  uint32 stock = 4; // 商品库存
+  repeated Image images = 8; // 商品图片列表
+  map<string, AttributeValue>  attributes = 7;
+  // 时间戳
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  CategoryInfo category = 13;
 }
 
 // 更新商品请求
@@ -200,7 +208,6 @@ message UpdateProductRequest {
 // 提交审核请求
 message SubmitAuditRequest {
   string product_id = 1;
-  string merchant_id = 2; // 商家 ID, 用于分片路由
 }
 
 // 审核操作请求
@@ -220,8 +227,8 @@ message GetProductRequest {
 
 // 删除商品请求
 message DeleteProductRequest {
-  string id = 1;
-  string merchant_id = 2; // 商家 ID, 用于分片路由
+  string id = 1; // 商品 ID
+  uint32 status = 3; // 商品状态, 默认删除状态为4, 即下架状态
 }
 
 // 审核记录返回结构
