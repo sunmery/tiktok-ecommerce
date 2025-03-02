@@ -44,9 +44,14 @@ message Data {
     string url = 1;
     string database = 2;
   }
+
+  message Es {
+    string addr = 1;
+  }
   Database database = 1;
   Cache cache = 2;
   Mongo mongo = 3;
+  Es es = 4;
 }
 
 // 授权/认证

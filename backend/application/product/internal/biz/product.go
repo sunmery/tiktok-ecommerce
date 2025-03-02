@@ -20,8 +20,8 @@ const (
 	ProductStatusSoldOut                       // 商品因某种原因不可购买。
 )
 const (
-	Approved  AuditAction = 1
-	Rejected  AuditAction = 2
+	Approved AuditAction = 1
+	Rejected AuditAction = 2
 )
 
 var validTransitions = map[ProductStatus]map[ProductStatus]bool{
@@ -35,7 +35,7 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	ProductStatusRejected: {
 		ProductStatusDraft: true,
 	},
-	ProductStatusSoldOut:{
+	ProductStatusSoldOut: {
 		ProductStatusSoldOut: true,
 	},
 }
@@ -53,7 +53,6 @@ type (
 		ObjectValue *NestedObject
 	}
 )
-
 
 // AuditRecord 完善AuditRecord定义
 type AuditRecord struct {
@@ -96,7 +95,7 @@ type Product struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
-	Inventory Inventory // 库存
+	Inventory   Inventory // 库存
 }
 
 type CreateProductReply struct {
@@ -176,14 +175,14 @@ type CreateProductRequest struct {
 	Status      ProductStatus
 	Category    CategoryInfo
 	Attributes  map[string]*AttributeValue
-	Stock uint32
+	Stock       uint32
 }
 
 // 库存
 type Inventory struct {
-	ProductId uuid.UUID
+	ProductId  uuid.UUID
 	MerchantId uuid.UUID
-	Stock int32
+	Stock      int32
 }
 
 type ImageModel struct {
@@ -209,7 +208,12 @@ type ListRandomProductsRequest struct {
 }
 
 type SearchProductRequest struct {
-	Name string
+	Query    map[string]interface{}
+	Page     int32
+	Size     int32
+	Sort     string // 排序方式
+	MaxPrice int32
+	MinPrice int32
 }
 
 // Products 批量商品
@@ -217,15 +221,27 @@ type Products struct {
 	Items []*Product
 }
 
+// AutoCompleteRequest 是自动补全请求消息
+type AutoCompleteRequest struct {
+	Prefix string // 前缀
+}
+
+// AutoCompleteResponse 是自动补全响应消息
+type AutoCompleteResponse struct {
+	Suggestions []string // 建议列表
+}
+
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
+	SearchProductsByName(ctx context.Context, req *SearchProductRequest) (*Products, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
+	AutocompleteSearch(ctx context.Context, req *AutoCompleteRequest) (*AutoCompleteResponse, error)
 }
 
 // CanTransitionTo 添加状态转换方法
@@ -269,4 +285,12 @@ func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductReq
 }
 func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error) {
 	return p.repo.ListRandomProducts(ctx, req)
+}
+
+func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchProductRequest) (*Products, error) {
+	return p.repo.SearchProductsByName(ctx, req)
+}
+
+func (p *ProductUsecase) AutocompleteSearch(ctx context.Context, req *AutoCompleteRequest) (*AutoCompleteResponse, error) {
+	return p.repo.AutocompleteSearch(ctx, req)
 }

@@ -7,6 +7,9 @@ import (
 	"backend/constants"
 	"context"
 	"fmt"
+
+	es "github.com/elastic/go-elasticsearch/v8"
+
 	"github.com/exaring/otelpgx"
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -23,7 +26,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo, NewDiscovery, NewCategoryClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo, NewDiscovery, NewCategoryClient, NewElasticsearch)
 
 type Data struct {
 	db  *models.Queries
@@ -32,6 +35,7 @@ type Data struct {
 	// mdb    *mongo.Database
 	logger         *log.Helper
 	categoryClient categoryv1.CategoryServiceClient
+	Es             *es.Client
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -43,7 +47,8 @@ func NewData(
 	rdb *redis.Client,
 	logger log.Logger,
 	categoryClient categoryv1.CategoryServiceClient,
-// mdb *mongo.Database,
+	Es *es.Client,
+	// mdb *mongo.Database,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -55,6 +60,7 @@ func NewData(
 		logger: log.NewHelper(logger), // 注入日志
 		// mdb:    mdb,
 		categoryClient: categoryClient,
+		Es:             Es,
 	}, cleanup, nil
 }
 
@@ -203,4 +209,27 @@ func (d *Data) ExecTx(ctx context.Context, fn func(context.Context) error) error
 	}
 	d.logger.WithContext(ctx).Info("transaction committed")
 	return nil
+}
+
+func NewElasticsearch(c *conf.Data) *es.Client {
+	if c.Es == nil {
+		panic("es config is nil")
+	}
+	client, err := es.NewClient(es.Config{
+		Addresses: []string{c.Es.Addr},
+	})
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.Ping(client.Ping.WithPretty(), client.Ping.WithHuman())
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.Info(client.Info.WithHuman())
+	if err != nil {
+		panic(err)
+	}
+
+	return client
+
 }

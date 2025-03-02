@@ -4,6 +4,7 @@ package ecommerce.product.v1;
 
 option go_package = "backend/api/product/v1;productv1";
 
+import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
@@ -53,7 +54,8 @@ service ProductService {
   // 根据商品名称模糊查询
   rpc SearchProductsByName(SearchProductRequest) returns (Products) {
     option (google.api.http) = {
-      get: "/v1/products/{name}"
+      post: "/v1/products/search"
+      body: "*"
     };
   }
 
@@ -75,6 +77,13 @@ service ProductService {
   rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/products"
+    };
+  }
+
+  // 自动补全搜索词
+  rpc AutocompleteSearch(AutoCompleteRequest) returns (AutoCompleteResponse) {
+    option (google.api.http) = {
+      get: "/v1/goods/autocomplete"
     };
   }
 }
@@ -102,7 +111,12 @@ message ListRandomProductsRequest {
 }
 
 message SearchProductRequest {
-  string name = 1;
+  google.protobuf.Struct query = 1; // 搜索查询条件
+  int32 page = 2; // 页码
+  int32 pageSize = 3; // 每页数量
+  int32 mxprice = 4; // 最大价格
+  int32 minprice = 5; // 最小价格
+  string sort = 6; // 排序方式
 }
 
 // 商品数组
@@ -115,23 +129,22 @@ message ListProductsByCategoryRequest {
   string name = 1;
 }
 
-
 // 新增分类验证相关定义
 message CategoryInfo {
-  uint32 category_id = 1 [(validate.rules).string = {min_len: 1}];
+  uint32 category_id = 1 [(validate.rules).uint32.gt = 0]; // 确保验证规则与字段类型匹配
   string category_name = 2;
 }
+
 // 图片信息
 message Image {
   string url = 1;         // 图片URL
   bool is_primary = 2;    // 是否主图
   int32 sort_order = 3;   // 排序顺序
 }
+
 // 商品核心数据结构
 message Product {
-  string id = 1[
-    (validate.rules).uint64.gt = 0
-  ];  // 商品唯一ID（系统生成）
+  string id = 1 [(validate.rules).string = {min_len: 1}];  // 商品唯一ID（系统生成）
   string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   double price = 4; // 商品价格（单位：元）
@@ -153,9 +166,7 @@ message Product {
 
 // 创建商品的返回值
 message CreateProductReply {
-  string id = 1[
-    (validate.rules).uint64.gt = 0
-  ];  // 商品唯一ID（系统生成）
+  string id = 1 [(validate.rules).string = {min_len: 1}];  // 商品唯一ID（系统生成）
   google.protobuf.Timestamp created_at = 2;
   google.protobuf.Timestamp updated_at = 3;
 }
@@ -221,8 +232,8 @@ message AuditProductRequest {
 
 // 查询单个商品请求
 message GetProductRequest {
-  string id = 1 [(validate.rules).int64 = {gt:0}];
-  string merchant_id = 2 [(validate.rules).int64 = {gt:0}]; // 商家 ID, 用于分片路由
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+  string merchant_id = 2 [(validate.rules).string = {min_len: 1}]; // 商家 ID, 用于分片路由
 }
 
 // 删除商品请求
@@ -240,4 +251,14 @@ message AuditRecord {
   string reason = 5;
   string operator_id = 6;
   google.protobuf.Timestamp operated_at = 7;
+}
+
+// 自动补全请求消息
+message AutoCompleteRequest {
+  string prefix = 1; // 前缀
+}
+
+// 自动补全响应消息
+message AutoCompleteResponse {
+  repeated string suggestions = 1; // 建议列表
 }

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,6 +41,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		Id: req.Category.CategoryId,
 	})
+
 	newCategory := &category.Category{}
 	if getCategoryErr != nil {
 		// 明确处理"未找到分类"的情况
@@ -103,11 +105,15 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		UpdatedAt: result.UpdatedAt,
 	}
 
-	// 创建图片记录
+	//创建图片记录
 	if len(req.Images) > 0 {
 		if err := p.createProductImages(ctx, result.ID, req.MerchantId, req.Images); err != nil {
 			p.log.Warnf("created product but failed to create images: %v", err)
 		}
+	}
+	//将商品数据所引导ElasticSearch
+	if err := p.data.CreateProduct(ctx, req, result.ID); err != nil {
+		p.log.Warnf("created product but failed to create es: %v", err)
 	}
 
 	return &product, nil
@@ -351,8 +357,13 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 	return &biz.Products{Items: items}, err
 }
 
-func (p *productRepo) SearchProductsByName(ctx context.Context, _ *biz.SearchProductRequest) (*biz.Products, error) {
-	panic("TODO")
+func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchProductRequest) (*biz.Products, error) {
+
+	resp, err := p.data.SearchProductsByName(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest) (*biz.Product, error) {
@@ -457,6 +468,11 @@ func (p *productRepo) createProductImages(ctx context.Context, productID uuid.UU
 	}
 
 	return p.data.DB(ctx).BulkCreateProductImages(ctx, bulkParams)
+}
+
+// 自动补全
+func (p *productRepo) AutocompleteSearch(ctx context.Context, req *biz.AutoCompleteRequest) (*biz.AutoCompleteResponse, error) {
+	return p.data.AutocompleteSearch(ctx, req)
 }
 
 func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {

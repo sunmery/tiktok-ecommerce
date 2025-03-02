@@ -1,0 +1,543 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ProductService API
+    description: 商品服务定义
+    version: 0.0.1
+paths:
+    /v1/goods/autocomplete:
+        get:
+            tags:
+                - ProductService
+            description: 自动补全搜索词
+            operationId: ProductService_AutocompleteSearch
+            parameters:
+                - name: prefix
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AutoCompleteResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products:
+        get:
+            tags:
+                - ProductService
+            description: 随机返回商品数据
+            operationId: ProductService_ListRandomProducts
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: status
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Products'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - ProductService
+            description: 创建商品（草稿状态）
+            operationId: ProductService_CreateProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - ProductService
+            description: 删除商品（软删除）
+            operationId: ProductService_DeleteProduct
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+                - name: status
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products/categories/{name}:
+        get:
+            tags:
+                - ProductService
+            description: 根据商品分类查询
+            operationId: ProductService_ListProductsByCategory
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Products'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products/search:
+        post:
+            tags:
+                - ProductService
+            description: 根据商品名称模糊查询
+            operationId: ProductService_SearchProductsByName
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SearchProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Products'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products/{id}:
+        get:
+            tags:
+                - ProductService
+            description: 获取商品详情
+            operationId: ProductService_GetProduct
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: merchantId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Product'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        put:
+            tags:
+                - ProductService
+            description: 更新商品信息
+            operationId: ProductService_UpdateProduct
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Product'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products/{productId}/audit:
+        post:
+            tags:
+                - ProductService
+            description: 审核商品
+            operationId: ProductService_AuditProduct
+            parameters:
+                - name: productId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AuditProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuditRecord'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/products/{productId}/submit-audit:
+        post:
+            tags:
+                - ProductService
+            description: 提交商品审核
+            operationId: ProductService_SubmitForAudit
+            parameters:
+                - name: productId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SubmitAuditRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuditRecord'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+components:
+    schemas:
+        AttributeValue:
+            type: object
+            properties:
+                stringValue:
+                    type: string
+                arrayValue:
+                    $ref: '#/components/schemas/StringArray'
+                objectValue:
+                    $ref: '#/components/schemas/NestedObject'
+            description: 属性值类型定义
+        AuditInfo:
+            type: object
+            properties:
+                auditId:
+                    type: string
+                reason:
+                    type: string
+                operatorId:
+                    type: string
+                operatedAt:
+                    type: string
+                    format: date-time
+            description: 审核信息
+        AuditProductRequest:
+            type: object
+            properties:
+                productId:
+                    type: string
+                merchantId:
+                    type: string
+                action:
+                    type: integer
+                    format: enum
+                reason:
+                    type: string
+                operatorId:
+                    type: string
+            description: 审核操作请求
+        AuditRecord:
+            type: object
+            properties:
+                id:
+                    type: string
+                productId:
+                    type: string
+                oldStatus:
+                    type: integer
+                    format: enum
+                newStatus:
+                    type: integer
+                    format: enum
+                reason:
+                    type: string
+                operatorId:
+                    type: string
+                operatedAt:
+                    type: string
+                    format: date-time
+            description: 审核记录返回结构
+        AutoCompleteResponse:
+            type: object
+            properties:
+                suggestions:
+                    type: array
+                    items:
+                        type: string
+            description: 自动补全响应消息
+        CategoryInfo:
+            type: object
+            properties:
+                categoryId:
+                    type: integer
+                    format: uint32
+                categoryName:
+                    type: string
+            description: 新增分类验证相关定义
+        CreateProductReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+            description: 创建商品的返回值
+        CreateProductRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                price:
+                    type: number
+                    format: double
+                description:
+                    type: string
+                stock:
+                    type: integer
+                    format: uint32
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Image'
+                attributes:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/AttributeValue'
+                createdAt:
+                    type: string
+                    description: 时间戳
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                category:
+                    $ref: '#/components/schemas/CategoryInfo'
+            description: 创建商品请求
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        Image:
+            type: object
+            properties:
+                url:
+                    type: string
+                isPrimary:
+                    type: boolean
+                sortOrder:
+                    type: integer
+                    format: int32
+            description: 图片信息
+        NestedObject:
+            type: object
+            properties:
+                fields:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/AttributeValue'
+            description: 嵌套对象结构
+        Product:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: number
+                    format: double
+                status:
+                    type: integer
+                    format: enum
+                merchantId:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Image'
+                attributes:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/AttributeValue'
+                    description: 商品属性（动态KV结构）
+                auditInfo:
+                    allOf:
+                        - $ref: '#/components/schemas/AuditInfo'
+                    description: 审核信息（仅当处于审核状态时有效）
+                createdAt:
+                    type: string
+                    description: 时间戳
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                category:
+                    $ref: '#/components/schemas/CategoryInfo'
+            description: 商品核心数据结构
+        Products:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Product'
+            description: 商品数组
+        SearchProductRequest:
+            type: object
+            properties:
+                query:
+                    type: object
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+                mxprice:
+                    type: integer
+                    format: int32
+                minprice:
+                    type: integer
+                    format: int32
+                sort:
+                    type: string
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
+                message:
+                    type: string
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        StringArray:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        type: string
+            description: 字符串数组
+        SubmitAuditRequest:
+            type: object
+            properties:
+                productId:
+                    type: string
+            description: 提交审核请求
+        UpdateProductRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                product:
+                    $ref: '#/components/schemas/Product'
+            description: 更新商品请求
+tags:
+    - name: ProductService

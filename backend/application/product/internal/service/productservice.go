@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 
 	pb "backend/api/product/v1"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -206,7 +208,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 
 	// 从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
 	var userId string
-	if md,ok := metadata.FromServerContext(ctx); ok {
+	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
 	}
 	merchantId := uuid.MustParse(userId)
@@ -244,8 +246,40 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 }
 
 // SearchProductsByName 根据商品名称模糊查询
-func (s *ProductService) SearchProductsByName(context.Context, *pb.SearchProductRequest) (*pb.Products, error) {
-	panic("TODO")
+func (s *ProductService) SearchProductsByName(ctx context.Context, req *pb.SearchProductRequest) (*pb.Products, error) {
+	listRandomProducts, err := s.uc.SearchProductsByName(ctx, &biz.SearchProductRequest{
+		Query:    structToMap(req.Query),
+		Page:     req.Page,
+		Size:     req.PageSize,
+		Sort:     req.Sort,
+		MaxPrice: req.Mxprice,
+		MinPrice: req.Minprice,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range listRandomProducts.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
+func (s *ProductService) AutocompleteSearch(ctx context.Context, req *pb.AutoCompleteRequest) (*pb.AutoCompleteResponse, error) {
+	resp, err := s.uc.AutocompleteSearch(ctx, &biz.AutoCompleteRequest{
+		Prefix: req.Prefix,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 将响应转换为 gRPC 响应
+	suggestions := make([]string, 0)
+	suggestions = append(suggestions, resp.Suggestions...)
+	return &pb.AutoCompleteResponse{
+		Suggestions: suggestions,
+	}, nil
 }
 
 // 辅助转换方法
@@ -305,7 +339,7 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 // }
 
 // 顶层转换函数
-func convertPBToBizProduct(ctx context.Context,p *pb.Product) (*biz.Product, error) {
+func convertPBToBizProduct(ctx context.Context, p *pb.Product) (*biz.Product, error) {
 	var userId string
 	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
@@ -487,4 +521,11 @@ var validTransitions = map[biz.ProductStatus]map[biz.ProductStatus]bool{
 	biz.ProductStatusApproved: {
 		// 已审核状态不允许修改
 	},
+}
+
+func structToMap(s *structpb.Struct) map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.AsMap()
 }
