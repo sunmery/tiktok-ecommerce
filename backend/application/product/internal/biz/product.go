@@ -281,6 +281,9 @@ func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest)
 
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
 	p.log.Debugf("DeleteProduct: %+v", req)
+	if err := p.repo.DeleteProduct(ctx, &req); err != nil {
+		return nil, err
+	}
 	return &emptypb.Empty{}, nil
 }
 func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error) {

@@ -5,11 +5,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/google/uuid"
 )
 
@@ -273,4 +276,126 @@ func (d *Data) AutocompleteSearch(ctx context.Context, req *biz.AutoCompleteRequ
 		Suggestions: suggestions,
 	}, nil
 
+}
+
+func (d *Data) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (bool, error) {
+	var reqmap = make(map[string]interface{})
+	reqmap["name"] = req.Name
+	reqmap["description"] = req.Description
+	reqmap["price"] = req.Price
+	reqmap["category_id"] = req.Category.CategoryId
+	reqmap["category_name"] = req.Category.CategoryName
+
+	// updateDoc := map[string]interface{}{
+	// 	"doc": reqmap,
+	// }
+
+	// updateJSON, err := json.Marshal(updateDoc)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// 构建查询条件
+	query := map[string]interface{}{
+		"script": map[string]interface{}{
+			"source": "ctx._source.name = params.name; ctx._source.description = params.description; ctx._source.price = params.price; ctx._source.category_id = params.category_id; ctx._source.category_name = params.category_name",
+			"params": reqmap,
+		},
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"id": req.ID.String(),
+			},
+		},
+	}
+
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return false, err
+	}
+
+	update := d.Es.UpdateByQuery
+	resp, err := update(
+		[]string{"tt_product"},
+		update.WithBody(bytes.NewReader(queryJSON)),
+		update.WithContext(ctx),
+		update.WithPretty(),
+	)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	fmt.Println(resp)
+	var respmap map[string]interface{}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	err = json.Unmarshal(bodyBytes, &respmap)
+	if err != nil {
+		return false, err
+	}
+	if respmap["error"] != nil {
+		if reason, ok := respmap["error"].(map[string]interface{}); ok {
+			return false, errors.New(reason["reason"].(string))
+		}
+		return false, errors.New("update error")
+	}
+
+	return true, err
+}
+
+func (d *Data) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) (bool, error) {
+	// 构建查询条件
+	fmt.Println("******************开始\n", req.ID.String())
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"id": req.ID.String(),
+			},
+		},
+	}
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return false, err
+	}
+	// 执行删除操作
+	deleteReq := esapi.DeleteByQueryRequest{
+		Index: []string{"tt_product"},
+		Body:  bytes.NewReader(queryJSON),
+	}
+
+	resp, err := deleteReq.Do(ctx, d.Es)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	fmt.Println("******************已将删除\n", resp)
+	// 处理响应结果
+	if resp.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&e); err != nil {
+			return false, fmt.Errorf("error parsing the response body: %s", err)
+		} else {
+			// 打印错误信息
+			return false, fmt.Errorf("error deleting document: %s", e["error"].(map[string]interface{})["reason"])
+		}
+	}
+
+	var respmap map[string]interface{}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	err = json.Unmarshal(bodyBytes, &respmap)
+	if err != nil {
+		return false, err
+	}
+	if respmap["error"] != nil {
+		if reason, ok := respmap["error"].(map[string]interface{}); ok {
+			return false, errors.New(reason["reason"].(string))
+		}
+	}
+
+	return true, nil
 }

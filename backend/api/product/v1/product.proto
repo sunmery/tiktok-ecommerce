@@ -76,7 +76,7 @@ service ProductService {
   // 删除商品（软删除）
   rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/v1/products"
+      delete: "/v1/products/del"
     };
   }
 

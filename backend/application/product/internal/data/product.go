@@ -184,7 +184,10 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 	if err != nil {
 		return nil, fmt.Errorf("failed to get updated product: %w", err)
 	}
-
+	_, err = p.data.UpdateProduct(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update es: %w", err)
+	}
 	return p.fullProductData(ctx, updated)
 }
 
@@ -390,6 +393,10 @@ func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductR
 		MerchantID: req.MerchantID,
 		Status:     int16(req.Status), // 下架状态
 	})
+	if err != nil {
+		return err
+	}
+	_, err = p.data.DeleteProduct(ctx, req)
 	if err != nil {
 		return err
 	}

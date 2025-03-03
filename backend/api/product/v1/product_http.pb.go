@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.3
 // - protoc             v3.21.0
-// source: v1/product.proto
+// source: product.proto
 
 package productv1
 
@@ -64,7 +64,7 @@ func RegisterProductServiceHTTPServer(s *http.Server, srv ProductServiceHTTPServ
 	r.POST("/v1/products/search", _ProductService_SearchProductsByName0_HTTP_Handler(srv))
 	r.GET("/v1/products", _ProductService_ListRandomProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/categories/{name}", _ProductService_ListProductsByCategory0_HTTP_Handler(srv))
-	r.DELETE("/v1/products", _ProductService_DeleteProduct0_HTTP_Handler(srv))
+	r.DELETE("/v1/products/del", _ProductService_DeleteProduct0_HTTP_Handler(srv))
 	r.GET("/v1/goods/autocomplete", _ProductService_AutocompleteSearch0_HTTP_Handler(srv))
 }
 
@@ -350,7 +350,7 @@ func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *Cr
 
 func (c *ProductServiceHTTPClientImpl) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/products"
+	pattern := "/v1/products/del"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationProductServiceDeleteProduct))
 	opts = append(opts, http.PathTemplate(pattern))

@@ -7,6 +7,7 @@ require (
 	github.com/casdoor/casdoor-go-sdk v1.3.0
 	github.com/cloudwego/eino v0.3.13
 	github.com/cloudwego/eino-ext/components/model/ark v0.0.0-20250225083118-fd27d80f189c
+	github.com/elastic/go-elasticsearch v0.0.0
 	github.com/elastic/go-elasticsearch/v8 v8.17.1
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/exaring/otelpgx v0.9.0
