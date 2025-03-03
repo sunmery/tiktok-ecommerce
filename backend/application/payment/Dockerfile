@@ -1,4 +1,4 @@
-ARG GO_IMAGE=golang:1.23.3-alpine3.20
+ARG GO_IMAGE=golang:1.24.0-alpine3.21
 FROM ${GO_IMAGE} AS builder
 
 ARG SERVICE

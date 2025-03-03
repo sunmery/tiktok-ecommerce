@@ -404,6 +404,12 @@ func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchP
 		mu          sync.Mutex
 	)
 
+	// 遍历商品收集分类ID
+	for _, product := range productsByNameRows {
+		mu.Lock()
+		categoryIDs = append(categoryIDs, product.ID) // 假设product结构中有CategoryID字段
+		mu.Unlock()
+	}
 
 	// 第二阶段：批量获取分类信息
 	g, ctx := errgroup.WithContext(ctx)
