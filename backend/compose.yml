@@ -2,7 +2,6 @@ services:
 
   gateway:
     image: ccr.ccs.tencentyun.com/kratos/gateway:dev
-    platform: linux/amd64
     #network_mode: host
     ports:
       - "8080:8080"
@@ -27,7 +26,6 @@ services:
 
   auth:
     image: ccr.ccs.tencentyun.com/sumery/auth:dev
-    platform: linux/amd64
     ports:
       - "30002:30002"
     container_name: ecommerce-auth-v1
@@ -37,14 +35,12 @@ services:
 
   user:
     image: ccr.ccs.tencentyun.com/sumery/user:dev
-    platform: linux/amd64
     ports:
       - "30003:30003"
     container_name: ecommerce-user-v1
     restart: on-failure:3
 
   product:
-    platform: linux/amd64
     image: ccr.ccs.tencentyun.com/sumery/product:dev
     ports:
       - "30005:30005"
@@ -63,7 +59,6 @@ services:
 
   order:
     image: ccr.ccs.tencentyun.com/sumery/order:dev
-    platform: linux/amd64
     ports:
       - "30009:30009"
       - "30010:30010"
@@ -72,7 +67,6 @@ services:
 
   payment:
     image: ccr.ccs.tencentyun.com/sumery/payment:dev
-    platform: linux/amd64
     ports:
       - "30014:30014"
     container_name: ecommerce-payment-v1
@@ -80,7 +74,6 @@ services:
 
   category:
     image: ccr.ccs.tencentyun.com/sumery/category:dev
-    platform: linux/amd64
     ports:
       - "30016:30016"
     container_name: ecommerce-category-v1

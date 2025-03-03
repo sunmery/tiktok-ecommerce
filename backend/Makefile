@@ -19,6 +19,8 @@ DOCKER_IMAGE=e-commerce/$(APP_NAME):dev
 SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = sumery/$(SERVICE)
 REGISTER = ccr.ccs.tencentyun.com
+ARM64=linux/arm64/v8
+AMD64=linux/amd64
 
 .PHONY: api
 # 生成api目录的proto的代码
@@ -74,6 +76,25 @@ docker-build:
 	  --build-arg VERSION=$(VERSION) \
 	  --platform $(GOOS)/$(GOARCH)
 
+.PHONY: docker-buildx
+# 使用 docker 构建多平台架构镜像
+docker-buildx:
+	@echo "构建的微服务: $(SERVICE)"
+	@echo "平台1: $(ARM64)"
+	@echo "平台2: $(AMD64)"
+	@echo "镜像名: $(REPOSITORY):dev"
+	docker buildx build . \
+	  -f application/$(SERVICE)/Dockerfile \
+	  --progress=plain \
+	  -t ecommerce/$(SERVICE):dev \
+	  --build-arg SERVICE=$(SERVICE) \
+	  --build-arg CGOENABLED=$(CGOENABLED) \
+	  --build-arg GOIMAGE=$(GOIMAGE) \
+	  --build-arg GOOS=$(GOOS) \
+	  --build-arg GOARCH=$(GOARCH) \
+	  --build-arg VERSION=$(VERSION) \
+	  --platform $(ARM64),$(AMD64)
+
 # 使用方式: make docker-push SERVICE=微服务名
 .PHONY: docker-push
 docker-push:
@@ -88,6 +109,14 @@ docker-deploy:
 	@echo "使用方式: make docker-deploy SERVICE=微服务名"
 	@echo "SERVICE=$(SERVICE)"
 	make docker-build SERVICE=$(SERVICE)
+	@echo "SERVICE=$(SERVICE)"
+	make docker-push SERVICE=$(SERVICE)
+
+.PHONY: docker-deployx
+docker-deployx:
+	@echo "使用方式: make docker-deploy SERVICE=微服务名"
+	@echo "SERVICE=$(SERVICE)"
+	make docker-buildx SERVICE=$(SERVICE)
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
 
