@@ -8,11 +8,36 @@ import (
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type categoryRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (r *categoryRepo) GetCategories(ctx context.Context, ids []int64) ([]*biz.Category, error) {
+	// 执行SQL查询
+	rows, err := r.data.DB(ctx).BatchGetCategories(ctx, ids)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "数据库查询失败")
+	}
+	var categories []*biz.Category
+	for _, row := range rows {
+		categories = append(categories, &biz.Category{
+			ID:        uint64(row.ID),
+			ParentID:  uint64(row.ParentID),
+			Level:     int(row.Level),
+			Path:      row.Path,
+			Name:      row.Name,
+			SortOrder: int(row.SortOrder),
+			IsLeaf:    row.IsLeaf,
+			CreatedAt: row.CreatedAt,
+			UpdatedAt: row.UpdatedAt,
+		})
+	}
+	return categories, nil
 }
 
 func NewCategoryRepo(data *Data, logger log.Logger) biz.CategoryRepo {
@@ -23,8 +48,8 @@ func NewCategoryRepo(data *Data, logger log.Logger) biz.CategoryRepo {
 }
 
 // GetCategory 获取单个分类详情
-func (r *categoryRepo) GetCategory(ctx context.Context, id uint64) (*biz.Category, error) {
-	dbCategory, err := r.data.DB(ctx).GetCategory(ctx, int64(id))
+func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category, error) {
+	dbCategory, err := r.data.DB(ctx).GetCategory(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 		}
@@ -56,7 +81,6 @@ func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
 	err = qtx.DeleteCategory(ctx, models.DeleteCategoryParams{
 		ID:   &category.ID,
 		Path: &category.Path,
-
 	})
 	if err != nil {
 		return fmt.Errorf("delete operation failed: %w", err)
@@ -120,14 +144,14 @@ func (r *categoryRepo) GetCategoryPath(ctx context.Context, categoryID uint64) (
 	return result, nil
 }
 
-// GetLeafCategories 获取所有叶子分类（三级分类）
+// GetLeafCategories 获取所有叶子分类
 func (r *categoryRepo) GetLeafCategories(ctx context.Context) ([]*biz.Category, error) {
 	dbCategories, err := r.data.DB(ctx).GetLeafCategories(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get leaf categories failed: %w", err)
 	}
 
-	result := make([]*biz.Category, 0, len(dbCategories))
+	var result []*biz.Category
 	for _, c := range dbCategories {
 		result = append(result, convertDBGetLeafCategoriesRow(c))
 	}
@@ -300,4 +324,3 @@ func convertDBGetLeafCategoriesRow(dbCategory models.GetLeafCategoriesRow) *biz.
 		UpdatedAt: dbCategory.UpdatedAt,
 	}
 }
-

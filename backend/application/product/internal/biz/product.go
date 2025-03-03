@@ -20,8 +20,8 @@ const (
 	ProductStatusSoldOut                       // 商品因某种原因不可购买。
 )
 const (
-	Approved  AuditAction = 1
-	Rejected  AuditAction = 2
+	Approved AuditAction = 1
+	Rejected AuditAction = 2
 )
 
 var validTransitions = map[ProductStatus]map[ProductStatus]bool{
@@ -35,25 +35,28 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	ProductStatusRejected: {
 		ProductStatusDraft: true,
 	},
-	ProductStatusSoldOut:{
+	ProductStatusSoldOut: {
 		ProductStatusSoldOut: true,
 	},
 }
 
-// AuditAction 添加AuditAction类型
 type (
-	AuditAction  int
-	StringArray  []string
-	NestedObject struct {
-		Fields map[string]*AttributeValue `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AuditAction int
+
+	ArrayValue struct {
+		Items []string `json:"items"`
 	}
+
+	NestedObject struct {
+		Fields map[string]*AttributeValue `json:"fields,omitempty"`
+	}
+
 	AttributeValue struct {
-		StringValue string
-		ArrayValue  *StringArray
-		ObjectValue *NestedObject
+		StringValue string        `json:"stringValue,omitempty"`
+		ArrayValue  *ArrayValue   `json:"arrayValue,omitempty"`
+		ObjectValue *NestedObject `json:"objectValue,omitempty"`
 	}
 )
-
 
 // AuditRecord 完善AuditRecord定义
 type AuditRecord struct {
@@ -96,13 +99,7 @@ type Product struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
-	Inventory Inventory // 库存
-}
-
-type CreateProductReply struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Inventory   Inventory // 库存
 }
 
 type SubmitAuditRequest struct {
@@ -167,23 +164,30 @@ type GetProductRequest struct {
 }
 
 // CreateProductRequest 完善CreateProductRequest
-type CreateProductRequest struct {
-	Name        string
-	Price       float64
-	Description string
-	MerchantId  uuid.UUID
-	Images      []*ProductImage
-	Status      ProductStatus
-	Category    CategoryInfo
-	Attributes  map[string]*AttributeValue
-	Stock uint32
-}
+type (
+	CreateProductRequest struct {
+		Name        string
+		Price       float64
+		Description string
+		MerchantId  uuid.UUID
+		Images      []*ProductImage
+		Status      ProductStatus
+		Category    CategoryInfo
+		Attributes  map[string]*AttributeValue
+		Stock       uint32
+	}
+	CreateProductReply struct {
+		ID        uuid.UUID
+		CreatedAt time.Time
+		UpdatedAt time.Time
+	}
+)
 
 // 库存
 type Inventory struct {
-	ProductId uuid.UUID
+	ProductId  uuid.UUID
 	MerchantId uuid.UUID
-	Stock int32
+	Stock      int32
 }
 
 type ImageModel struct {
@@ -208,13 +212,25 @@ type ListRandomProductsRequest struct {
 	Status   uint32
 }
 
-type SearchProductRequest struct {
-	Name string
-}
-
 // Products 批量商品
 type Products struct {
 	Items []*Product
+}
+
+type SearchProductsByNameRequest struct {
+	Name     string
+	Page     uint32
+	PageSize uint32
+	// 将自然语言文本转换为全文搜索查询条件（tsquery 类型），主要功能包括：
+	// 词素标准化（Normalization）
+	// 移除停用词（的、是、the、a 等）
+	// 执行词干提取（running → run，dogs → dog）
+	// 逻辑运算符转换
+	// 自动用 &（AND）连接词汇
+	// 示例："red apple" → 'red' & 'apple'
+	// 安全过滤
+	// 自动转义特殊字符（! : & 等）
+	Query    string
 }
 
 // ProductRepo is a Greater repo.
@@ -226,6 +242,7 @@ type ProductRepo interface {
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
+	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
 }
 
 // CanTransitionTo 添加状态转换方法
@@ -269,4 +286,7 @@ func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductReq
 }
 func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error) {
 	return p.repo.ListRandomProducts(ctx, req)
+}
+func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error) {
+	return p.repo.SearchProductsByName(ctx, req)
 }

@@ -2,12 +2,23 @@
 CREATE SCHEMA IF NOT EXISTS products;
 SET SEARCH_PATH TO products;
 
+CREATE FUNCTION uuidv7_sub_ms() RETURNS uuid
+AS
+$$
+select encode(
+               substring(int8send(floor(t_ms)::int8) from 3) ||
+               int2send((7 << 12)::int2 | ((t_ms - floor(t_ms)) * 4096)::int2) ||
+               substring(uuid_send(gen_random_uuid()) from 9 for 8)
+           , 'hex')::uuid
+from (select extract(epoch from clock_timestamp()) * 1000 as t_ms) s
+$$ LANGUAGE sql volatile;
+
 -----------------------------
 -- 商品主表（分布式分片表）
 -----------------------------
 CREATE TABLE products.products
 (
-    id               UUID,                  -- 分布式环境下建议使用 snowflake 等分布式ID
+    id               UUID  DEFAULT uuidv7_sub_ms(),
     merchant_id      UUID         NOT NULL, -- 分片键（必须）
     name             VARCHAR(255) NOT NULL,
     description      TEXT,
@@ -26,9 +37,9 @@ CREATE TABLE products.products
 -----------------------------
 CREATE TABLE products.inventory
 (
-    product_id UUID NOT NULL,                    -- 商品ID（关联商品表）
-    merchant_id  UUID NOT NULL,                    -- 商家ID
-    stock      INT NOT NULL CHECK (stock >= 0), -- 当前库存（不允许负数）
+    product_id  UUID NOT NULL,                    -- 商品ID（关联商品表）
+    merchant_id UUID NOT NULL,                    -- 商家ID
+    stock       INT  NOT NULL CHECK (stock >= 0), -- 当前库存（不允许负数）
     PRIMARY KEY (product_id, merchant_id)         -- 联合主键（商品+商家唯一）
 );
 
@@ -40,7 +51,7 @@ CREATE TABLE products.inventory
 -----------------------------
 CREATE TABLE products.product_images
 (
-    id          UUID,
+    id          UUID DEFAULT uuidv7_sub_ms(),
     merchant_id UUID         NOT NULL, -- 分片键（必须）
     product_id  UUID         NOT NULL,
     url         VARCHAR(512) NOT NULL,
@@ -80,7 +91,7 @@ CREATE TABLE products.product_attributes
 -----------------------------
 CREATE TABLE products.product_audits
 (
-    id          UUID,
+    id          UUID DEFAULT uuidv7_sub_ms(),
     merchant_id UUID        NOT NULL, -- 分片键（必须）
     product_id  UUID        NOT NULL,
     old_status  SMALLINT    NOT NULL,

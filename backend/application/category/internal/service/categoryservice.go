@@ -62,7 +62,7 @@ func (s *CategoryServiceService) GetCategory(ctx context.Context, req *pb.GetCat
 	}
 
 	// 调用业务逻辑层
-	category, err := s.uc.GetCategory(ctx, req.Id)
+	category, err := s.uc.GetCategory(ctx, int64(req.Id))
 	if err != nil {
 		if errors.Is(err, biz.ErrCategoryNotFound) {
 			return nil, status.Error(codes.NotFound, "分类不存在")
@@ -199,7 +199,7 @@ func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *empty
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	pbCategories := make([]*pb.Category, len(leafCategories))
+	pbCategories := make([]*pb.Category, 0, len(leafCategories)) // 预分配容量，但长度为0
 	for _, c := range leafCategories {
 		pbCategories = append(pbCategories, &pb.Category{
 			Id:        int64(c.ID),
@@ -263,4 +263,35 @@ func (s *CategoryServiceService) UpdateClosureDepth(ctx context.Context, req *pb
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *CategoryServiceService) BatchGetCategories(ctx context.Context, req *pb.BatchGetCategoriesRequest) (*pb.Categories, error) {
+	// 转换请求参数
+	ids := make([]int64, 0, len(req.Ids))
+	for _, id := range req.Ids {
+		ids = append(ids, id)
+	}
+
+	rows, err := s.uc.GetCategories(ctx, ids)
+	if err!= nil {
+		return nil, fmt.Errorf("failed to get categories: %v", err)
+	}
+
+	// 转换为protobuf结构
+	categories := make([]*pb.Category, 0, len(rows))
+	for _, row := range rows {
+		categories = append(categories, &pb.Category{
+			Id:        int64(row.ID),
+			ParentId: int64(row.ParentID),
+			Level:     int32(row.Level),
+			Path:      row.Path,
+			Name:      row.Name,
+			SortOrder: int32(row.SortOrder),
+			IsLeaf:    row.IsLeaf,
+			CreatedAt: timestamppb.New(row.CreatedAt),
+			UpdatedAt: timestamppb.New(row.UpdatedAt),
+		})
+	}
+
+	return &pb.Categories{Categories: categories}, nil
 }

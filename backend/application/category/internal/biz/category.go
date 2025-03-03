@@ -51,7 +51,8 @@ type DeleteCategoryReply struct {
 type CategoryRepo interface {
 	// CreateCategory 基础操作
 	CreateCategory(ctx context.Context, req *CreateCategoryReq) (*Category, error)
-	GetCategory(ctx context.Context, id uint64) (*Category, error)
+	GetCategory(ctx context.Context, id int64) (*Category, error)
+	GetCategories(ctx context.Context, ids []int64) ([]*Category, error)
 	UpdateCategoryName(ctx context.Context, req *Category) error
 	DeleteCategory(ctx context.Context, id uint64) error
 
@@ -101,7 +102,7 @@ func (uc *CategoryUsecase) UpdateCategoryName(ctx context.Context, req *Category
 }
 
 // GetCategory 获取单个分类详情
-func (uc *CategoryUsecase) GetCategory(ctx context.Context, id uint64) (*Category, error) {
+func (uc *CategoryUsecase) GetCategory(ctx context.Context, id int64) (*Category, error) {
 	uc.log.WithContext(ctx).Debugf("GetCategory request: %d", id)
 	return uc.repo.GetCategory(ctx, id)
 }
@@ -130,7 +131,7 @@ func (uc *CategoryUsecase) GetCategoryPath(ctx context.Context, categoryID uint6
 	return uc.repo.GetCategoryPath(ctx, categoryID)
 }
 
-// GetLeafCategories 获取叶子分类
+// GetLeafCategories 获取所有叶子分类
 func (uc *CategoryUsecase) GetLeafCategories(ctx context.Context) ([]*Category, error) {
 	// uc.log.WithContext(ctx).Debugf("GetLeafCategories request: %d", level)
 	return uc.repo.GetLeafCategories(ctx)
@@ -146,4 +147,8 @@ func (uc *CategoryUsecase) GetClosureRelations(ctx context.Context, categoryID u
 func (uc *CategoryUsecase) UpdateClosureDepth(ctx context.Context, req *UpdateClosureDepth) error {
 	uc.log.WithContext(ctx).Debugf("UpdateClosureDepth request: %d delta:%d", req)
 	return uc.repo.UpdateClosureDepth(ctx, req)
+}
+func (uc *CategoryUsecase) GetCategories(ctx context.Context, ids []int64) ([]*Category, error){
+	uc.log.WithContext(ctx).Debugf("GetCategories request: %d", ids)
+	return uc.repo.GetCategories(ctx, ids)
 }

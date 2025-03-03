@@ -263,6 +263,27 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "query",
+            "description": "将自然语言文本转换为全文搜索查询条件（tsquery 类型），主要功能包括：\n词素标准化（Normalization）\n移除停用词（的、是、the、a 等）\n执行词干提取（running → run，dogs → dog）\n逻辑运算符转换\n自动用 \u0026（AND）连接词汇\n示例：\"red apple\" → 'red' \u0026 'apple'\n安全过滤\n自动转义特殊字符（! : \u0026 等）",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [

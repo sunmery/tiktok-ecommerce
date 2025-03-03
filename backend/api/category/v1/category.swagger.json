@@ -18,6 +18,7 @@
   "paths": {
     "/v1/categories": {
       "post": {
+        "summary": "创建分类",
         "operationId": "CategoryService_CreateCategory",
         "responses": {
           "200": {
@@ -48,8 +49,46 @@
         ]
       }
     },
+    "/v1/categories/batch": {
+      "get": {
+        "summary": "批量查询分类",
+        "operationId": "CategoryService_BatchGetCategories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Categories"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ids",
+            "description": "注意类型与SQL中的bigint匹配",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
     "/v1/categories/leaves": {
       "get": {
+        "summary": "获取所有叶子节点",
         "operationId": "CategoryService_GetLeafCategories",
         "responses": {
           "200": {
@@ -72,6 +111,7 @@
     },
     "/v1/categories/{categoryId}/closure": {
       "get": {
+        "summary": "获取闭包关系",
         "operationId": "CategoryService_GetClosureRelations",
         "responses": {
           "200": {
@@ -102,7 +142,7 @@
         ]
       },
       "patch": {
-        "summary": "Note: UpdateClosureDepth may require transaction and complex operations",
+        "summary": "更新闭包关系深度",
         "operationId": "CategoryService_UpdateClosureDepth",
         "responses": {
           "200": {
@@ -144,6 +184,7 @@
     },
     "/v1/categories/{categoryId}/path": {
       "get": {
+        "summary": "获取分类路径",
         "operationId": "CategoryService_GetCategoryPath",
         "responses": {
           "200": {
@@ -176,6 +217,7 @@
     },
     "/v1/categories/{id}": {
       "get": {
+        "summary": "获取单个分类",
         "operationId": "CategoryService_GetCategory",
         "responses": {
           "200": {
@@ -206,6 +248,7 @@
         ]
       },
       "delete": {
+        "summary": "删除分类",
         "operationId": "CategoryService_DeleteCategory",
         "responses": {
           "200": {
@@ -237,6 +280,7 @@
         ]
       },
       "put": {
+        "summary": "更新分类",
         "operationId": "CategoryService_UpdateCategory",
         "responses": {
           "200": {
@@ -278,6 +322,7 @@
     },
     "/v1/categories/{rootId}/subtree": {
       "get": {
+        "summary": "获取子树",
         "operationId": "CategoryService_GetSubTree",
         "responses": {
           "200": {

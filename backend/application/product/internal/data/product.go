@@ -11,8 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sync"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
@@ -28,89 +30,118 @@ type productRepo struct {
 func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.CreateProductReply, error) {
 	db := p.data.DB(ctx)
 
-	// 转换价格到pgtype.Numeric
-	price, err := types.Float64ToNumeric(req.Price)
-	if err != nil {
-		return nil, fmt.Errorf("invalid price format: %w", err)
-	}
+	var (
+		eg         errgroup.Group
+		categoryId uint64
+		result     models.CreateProductRow
+		attributes []byte
+	)
 
-	var categoryId uint64 = 0
-
-	getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-		// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-		Id: req.Category.CategoryId,
-	})
-	newCategory := &category.Category{}
-	if getCategoryErr != nil {
-		// 明确处理"未找到分类"的情况
-		if status.Code(getCategoryErr) == codes.NotFound {
-			// 创建分类时需要指定父分类（示例使用根分类）
-			newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-				ParentId:  1, // 默认挂载到根分类
-				Name:      req.Category.CategoryName,
-				SortOrder: 0,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("create category failed: %w", err)
+	// 获取分类ID
+	eg.Go(func() (err error) {
+		getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+			// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+			Id: req.Category.CategoryId,
+		})
+		newCategory := &category.Category{}
+		if getCategoryErr != nil {
+			// 明确处理"未找到分类"的情况
+			if status.Code(getCategoryErr) == codes.NotFound {
+				// 创建分类时需要指定父分类（示例使用根分类）
+				newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+					ParentId:  1, // 默认挂载到根分类
+					Name:      req.Category.CategoryName,
+					SortOrder: req.Category.SortOrder,
+				})
+				if err != nil {
+					return fmt.Errorf("create category failed: %w", err)
+				}
+				categoryId = uint64(newCategory.Id)
+			} else {
+				return fmt.Errorf("get category failed: %w", getCategoryErr)
 			}
-			categoryId = uint64(newCategory.Id)
 		} else {
-			return nil, fmt.Errorf("get category failed: %w", getCategoryErr)
+			categoryId = uint64(getCategory.Id)
 		}
-	} else {
-		categoryId = uint64(getCategory.Id)
-	}
 
-	if getCategory != nil {
-		fmt.Printf("getCategory%+v", categoryId)
-		categoryId = uint64(getCategory.Id)
-	}
-	if newCategory != nil {
-		fmt.Printf("newCategory%+v", categoryId)
-		categoryId = uint64(newCategory.Id)
-	}
-
-	fmt.Printf("categoryId%+v", categoryId)
-	// 执行创建
-
-	result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
-		Name:        req.Name,
-		Description: &req.Description,
-		Price:       price,
-		CategoryID:  int64(categoryId),
-		Status:      int16(req.Status),
-		MerchantID:  req.MerchantId,
+		if getCategory != nil {
+			fmt.Printf("getCategory%+v", categoryId)
+			categoryId = uint64(getCategory.Id)
+		}
+		if newCategory != nil {
+			fmt.Printf("newCategory%+v", categoryId)
+			categoryId = uint64(newCategory.Id)
+		}
+		return nil
 	})
-	if createErr != nil {
-		return nil, fmt.Errorf("failed to create product: %w", createErr)
-	}
+
+	// 创建商品
+	eg.Go(func() (createErr error) {
+		// 转换价格到pgtype.Numeric
+		price, err := types.Float64ToNumeric(req.Price)
+		if err != nil {
+			return fmt.Errorf("invalid price format: %w", err)
+		}
+
+		result, createErr = db.CreateProduct(ctx, models.CreateProductParams{
+			Name:        req.Name,
+			Description: &req.Description,
+			Price:       price,
+			CategoryID:  int64(categoryId),
+			Status:      int16(req.Status),
+			MerchantID:  req.MerchantId,
+		})
+		if createErr != nil {
+			return fmt.Errorf("failed to create product: %w", createErr)
+		}
+		return
+	})
+
+	// 创建商品图片
+	eg.Go(func() error {
+		// 创建图片记录
+		if len(req.Images) > 0 {
+			if err := p.createProductImages(ctx, result.ID, req.MerchantId, req.Images); err != nil {
+				p.log.Warnf("created product but failed to create images: %v", err)
+			}
+		}
+		return nil
+	})
+
+	// 创建属性记录
+	eg.Go(func() (err error) {
+		// 转成JSON
+		attributes, err = json.Marshal(req.Attributes)
+		if err != nil {
+			return err
+		}
+		createProductAttributeErr := db.CreateProductAttribute(ctx, models.CreateProductAttributeParams{
+			MerchantID: req.MerchantId,
+			ProductID:  result.ID,
+			Attributes: attributes,
+		})
+		if createProductAttributeErr != nil {
+			return fmt.Errorf("failed to create product attribute: %w", createProductAttributeErr)
+		}
+		return nil
+	})
 
 	// 创建库存记录
-	inventory, err := p.data.DB(ctx).CreateInventory(ctx, models.CreateInventoryParams{
-		ProductID:  result.ID,
-		MerchantID: req.MerchantId,
-		Stock:      int32(req.Stock),
+	eg.Go(func() error {
+		inventory, err := p.data.DB(ctx).CreateInventory(ctx, models.CreateInventoryParams{
+			ProductID:  result.ID,
+			MerchantID: req.MerchantId,
+			Stock:      int32(req.Stock),
+		})
+		fmt.Printf("inventory%+v", inventory)
+		return err
 	})
-	if err != nil {
-		return nil, err
-	}
-	p.log.Debugf("inventory: %+v", inventory)
 
-	// 转换基础信息
-	product := biz.CreateProductReply{
+	return &biz.CreateProductReply{
 		ID:        result.ID,
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
-	}
-
-	// 创建图片记录
-	if len(req.Images) > 0 {
-		if err := p.createProductImages(ctx, result.ID, req.MerchantId, req.Images); err != nil {
-			p.log.Warnf("created product but failed to create images: %v", err)
-		}
-	}
-
-	return &product, nil
+	}, nil
 }
 
 func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
@@ -351,8 +382,132 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 	return &biz.Products{Items: items}, err
 }
 
-func (p *productRepo) SearchProductsByName(ctx context.Context, _ *biz.SearchProductRequest) (*biz.Products, error) {
-	panic("TODO")
+func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchProductsByNameRequest) (*biz.Products, error) {
+	// 参数转换
+	page := (req.Page - 1) * req.PageSize
+	params := models.SearchFullProductsByNameParams{
+		Name:     &req.Name,
+		Query:    req.Query,
+		PageSize: int64(req.PageSize),
+		Page:     int64(page),
+	}
+
+	// 执行数据库查询
+	productsByNameRows, err := p.data.DB(ctx).SearchFullProductsByName(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("database query failed: %w", err)
+	}
+
+	// 第一阶段：收集所有分类ID
+	var (
+		categoryIDs = make([]int64, 0, len(productsByNameRows))
+		mu          sync.Mutex
+	)
+
+
+	// 第二阶段：批量获取分类信息
+	g, ctx := errgroup.WithContext(ctx)
+	var categoryMap map[int]*category.Category // 使用int类型作为key
+
+	g.Go(func() error {
+		// 调用分类微服务批量接口
+		resp, err := p.data.categoryClient.BatchGetCategories(ctx, &category.BatchGetCategoriesRequest{
+			Ids: categoryIDs,
+		})
+		if err != nil {
+			return fmt.Errorf("category service failed: %w", err)
+		}
+
+		// 构建分类映射表
+		categoryMap = make(map[int]*category.Category, len(resp.Categories))
+		for _, c := range resp.Categories {
+			categoryMap[int(c.Id)] = c // 确保类型转换正确
+		}
+		return nil
+	})
+
+	// 第三阶段：并行处理商品数据
+	var (
+		products = make([]*biz.Product, 0, len(productsByNameRows))
+		pMu      sync.Mutex
+	)
+
+	for _, product := range productsByNameRows {
+		product := product // 创建局部变量
+		g.Go(func() error {
+			// 处理商品图片
+			var images []*biz.ProductImage
+			if len(product.Images) > 0 {
+				if err := json.Unmarshal(product.Images, &images); err != nil {
+					p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+				}
+			}
+
+			// 处理商品属性
+			var attributes map[string]*biz.AttributeValue
+			if len(product.Attributes) > 0 {
+				if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+					p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+				}
+			}
+
+			// 处理价格
+			price, err := types.NumericToFloat(product.Price)
+			if err != nil {
+				p.log.WithContext(ctx).Warnf("price conversion error: %v", err)
+				price = 0 // 设置默认值
+			}
+
+			// 获取分类信息
+			var cg *category.Category
+			if categoryMap != nil {
+				cg = categoryMap[int(product.CategoryID)] // 类型转换确保匹配
+			}
+
+			// 构建商品对象
+			productData := &biz.Product{
+				ID:          product.ID,
+				MerchantId:  product.MerchantID,
+				Name:        product.Name,
+				Price:       price,
+				Description: *product.Description,
+				Images:      images,
+				Status:      biz.ProductStatus(product.Status),
+				CreatedAt:   product.CreatedAt,
+				UpdatedAt:   product.UpdatedAt,
+				Attributes: attributes,
+				Inventory: biz.Inventory{
+					ProductId:  product.ID,
+					MerchantId: product.MerchantID,
+					Stock:      product.Stock,
+				},
+			}
+
+			// 添加分类信息
+			if cg != nil {
+				productData.Category = biz.CategoryInfo{
+					CategoryId:   uint64(cg.Id),    // int -> uint64
+					CategoryName: cg.Name,
+					SortOrder:    cg.SortOrder,
+				}
+			}
+
+			// 安全添加至结果集
+			pMu.Lock()
+			products = append(products, productData)
+			pMu.Unlock()
+			return nil
+		})
+	}
+
+	// 等待所有goroutine完成
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("parallel processing failed: %w", err)
+	}
+
+	return &biz.Products{
+		Items:      products,
+	}, nil
 }
 
 func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest) (*biz.Product, error) {

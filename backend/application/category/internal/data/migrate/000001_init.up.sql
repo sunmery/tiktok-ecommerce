@@ -23,8 +23,6 @@ CREATE TABLE categories.categories (
     UNIQUE (parent_id, name)
 );
 
-CREATE INDEX idx_categories_path_gist ON categories.categories USING GIST (path);
-
 -- 闭包表
 CREATE TABLE categories.category_closure (
     ancestor   BIGINT NOT NULL REFERENCES categories.categories(id),
@@ -32,6 +30,9 @@ CREATE TABLE categories.category_closure (
     depth      SMALLINT NOT NULL CHECK (depth >= 0),
     PRIMARY KEY (ancestor, descendant)
 );
+
+CREATE INDEX idx_categories_path_gist ON categories.categories USING GIST (path);
+CREATE INDEX idx_categories_id ON categories.categories USING HASH (id);
 
 -- 根节点闭包关系
 INSERT INTO categories.categories

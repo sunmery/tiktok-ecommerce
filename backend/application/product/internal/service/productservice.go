@@ -30,6 +30,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
 	}
+
 	merchantId, err := uuid.Parse(userId)
 	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
 		Name:        req.Name,
@@ -42,7 +43,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 			CategoryId:   uint64(req.Category.CategoryId),
 			CategoryName: req.Category.CategoryName,
 		},
-		Attributes: nil,
+		Attributes: convertPBAttributes(req.Attributes),
 		Stock:      req.Stock,
 	})
 	if err != nil {
@@ -179,15 +180,13 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	// TODO service 层获取用户ID
 	// 层层传递下去
 	var userId string
 	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
 	}
-	fmt.Printf("x-md-global-user-id %s\n", userId)
 
-	id, err := uuid.Parse(req.Id)
+	id, err := uuid.Parse(userId)
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
 		ID: id,
 	})
@@ -206,7 +205,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 
 	// 从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
 	var userId string
-	if md,ok := metadata.FromServerContext(ctx); ok {
+	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
 	}
 	merchantId := uuid.MustParse(userId)
@@ -244,8 +243,23 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 }
 
 // SearchProductsByName 根据商品名称模糊查询
-func (s *ProductService) SearchProductsByName(context.Context, *pb.SearchProductRequest) (*pb.Products, error) {
-	panic("TODO")
+func (s *ProductService) SearchProductsByName(ctx context.Context, req *pb.SearchProductRequest) (*pb.Products, error) {
+	products, err := s.uc.SearchProductsByName(context.Background(), &biz.SearchProductsByNameRequest{
+		Name:     req.Name,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+		Query:    req.Query,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range products.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
 }
 
 // 辅助转换方法
@@ -305,7 +319,7 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 // }
 
 // 顶层转换函数
-func convertPBToBizProduct(ctx context.Context,p *pb.Product) (*biz.Product, error) {
+func convertPBToBizProduct(ctx context.Context, p *pb.Product) (*biz.Product, error) {
 	var userId string
 	if md, ok := metadata.FromServerContext(ctx); ok {
 		userId = md.Get("x-md-global-user-id")
@@ -340,6 +354,7 @@ func convertPBAttributes(pbAttrs map[string]*pb.AttributeValue) map[string]*biz.
 	return bizAttrs
 }
 
+// 转换入口函数
 func convertPBAttributeValue(pbVal *pb.AttributeValue) *biz.AttributeValue {
 	if pbVal == nil {
 		return nil
@@ -352,13 +367,16 @@ func convertPBAttributeValue(pbVal *pb.AttributeValue) *biz.AttributeValue {
 	}
 }
 
-// 处理字符串数组
-func convertPBStringArray(pbArr *pb.StringArray) *biz.StringArray {
-	if pbArr == nil || len(pbArr.GetItems()) == 0 {
+// 转换字符串数组
+func convertPBStringArray(pbArr *pb.StringArray) *biz.ArrayValue {
+	if pbArr == nil {
 		return nil
 	}
-	arr := biz.StringArray(pbArr.GetItems())
-	return &arr
+
+	// Protobuf 的 StringArray 应该包含 Items 字段
+	return &biz.ArrayValue{
+		Items: pbArr.GetItems(), // 直接映射到业务层的 ArrayValue.Items
+	}
 }
 
 // 递归处理嵌套对象

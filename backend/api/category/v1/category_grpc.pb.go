@@ -23,12 +23,13 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CategoryService_CreateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/CreateCategory"
+	CategoryService_GetLeafCategories_FullMethodName   = "/ecommerce.category.v1.CategoryService/GetLeafCategories"
+	CategoryService_BatchGetCategories_FullMethodName  = "/ecommerce.category.v1.CategoryService/BatchGetCategories"
 	CategoryService_GetCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/GetCategory"
 	CategoryService_UpdateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/UpdateCategory"
 	CategoryService_DeleteCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/DeleteCategory"
 	CategoryService_GetSubTree_FullMethodName          = "/ecommerce.category.v1.CategoryService/GetSubTree"
 	CategoryService_GetCategoryPath_FullMethodName     = "/ecommerce.category.v1.CategoryService/GetCategoryPath"
-	CategoryService_GetLeafCategories_FullMethodName   = "/ecommerce.category.v1.CategoryService/GetLeafCategories"
 	CategoryService_GetClosureRelations_FullMethodName = "/ecommerce.category.v1.CategoryService/GetClosureRelations"
 	CategoryService_UpdateClosureDepth_FullMethodName  = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
 )
@@ -39,15 +40,25 @@ const (
 //
 // 分类服务
 type CategoryServiceClient interface {
+	// 创建分类
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	GetCategory(ctx context.Context, in *GetCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Categories, error)
-	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error)
+	// 获取所有叶子节点
 	GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categories, error)
+	// 批量查询分类
+	BatchGetCategories(ctx context.Context, in *BatchGetCategoriesRequest, opts ...grpc.CallOption) (*Categories, error)
+	// 获取单个分类
+	GetCategory(ctx context.Context, in *GetCategoryRequest, opts ...grpc.CallOption) (*Category, error)
+	// 更新分类
+	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 删除分类
+	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 获取子树
+	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Categories, error)
+	// 获取分类路径
+	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error)
+	// 获取闭包关系
 	GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelations, error)
-	// Note: UpdateClosureDepth may require transaction and complex operations
+	// 更新闭包关系深度
 	UpdateClosureDepth(ctx context.Context, in *UpdateClosureDepthRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -63,6 +74,26 @@ func (c *categoryServiceClient) CreateCategory(ctx context.Context, in *CreateCa
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Category)
 	err := c.cc.Invoke(ctx, CategoryService_CreateCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categories, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Categories)
+	err := c.cc.Invoke(ctx, CategoryService_GetLeafCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *categoryServiceClient) BatchGetCategories(ctx context.Context, in *BatchGetCategoriesRequest, opts ...grpc.CallOption) (*Categories, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Categories)
+	err := c.cc.Invoke(ctx, CategoryService_BatchGetCategories_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,16 +150,6 @@ func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCate
 	return out, nil
 }
 
-func (c *categoryServiceClient) GetLeafCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Categories, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Categories)
-	err := c.cc.Invoke(ctx, CategoryService_GetLeafCategories_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *categoryServiceClient) GetClosureRelations(ctx context.Context, in *GetClosureRequest, opts ...grpc.CallOption) (*ClosureRelations, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ClosureRelations)
@@ -155,15 +176,25 @@ func (c *categoryServiceClient) UpdateClosureDepth(ctx context.Context, in *Upda
 //
 // 分类服务
 type CategoryServiceServer interface {
+	// 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
-	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
-	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
-	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
-	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
-	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
+	// 获取所有叶子节点
 	GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error)
+	// 批量查询分类
+	BatchGetCategories(context.Context, *BatchGetCategoriesRequest) (*Categories, error)
+	// 获取单个分类
+	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
+	// 更新分类
+	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
+	// 删除分类
+	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
+	// 获取子树
+	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
+	// 获取分类路径
+	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
+	// 获取闭包关系
 	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error)
-	// Note: UpdateClosureDepth may require transaction and complex operations
+	// 更新闭包关系深度
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCategoryServiceServer()
 }
@@ -177,6 +208,12 @@ type UnimplementedCategoryServiceServer struct{}
 
 func (UnimplementedCategoryServiceServer) CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCategory not implemented")
+}
+func (UnimplementedCategoryServiceServer) GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeafCategories not implemented")
+}
+func (UnimplementedCategoryServiceServer) BatchGetCategories(context.Context, *BatchGetCategoriesRequest) (*Categories, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchGetCategories not implemented")
 }
 func (UnimplementedCategoryServiceServer) GetCategory(context.Context, *GetCategoryRequest) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategory not implemented")
@@ -192,9 +229,6 @@ func (UnimplementedCategoryServiceServer) GetSubTree(context.Context, *GetSubTre
 }
 func (UnimplementedCategoryServiceServer) GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryPath not implemented")
-}
-func (UnimplementedCategoryServiceServer) GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLeafCategories not implemented")
 }
 func (UnimplementedCategoryServiceServer) GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClosureRelations not implemented")
@@ -237,6 +271,42 @@ func _CategoryService_CreateCategory_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CategoryServiceServer).CreateCategory(ctx, req.(*CreateCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CategoryService_GetLeafCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).GetLeafCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_GetLeafCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).GetLeafCategories(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CategoryService_BatchGetCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetCategoriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).BatchGetCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_BatchGetCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).BatchGetCategories(ctx, req.(*BatchGetCategoriesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -331,24 +401,6 @@ func _CategoryService_GetCategoryPath_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CategoryService_GetLeafCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CategoryServiceServer).GetLeafCategories(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CategoryService_GetLeafCategories_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CategoryServiceServer).GetLeafCategories(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _CategoryService_GetClosureRelations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetClosureRequest)
 	if err := dec(in); err != nil {
@@ -397,6 +449,14 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CategoryService_CreateCategory_Handler,
 		},
 		{
+			MethodName: "GetLeafCategories",
+			Handler:    _CategoryService_GetLeafCategories_Handler,
+		},
+		{
+			MethodName: "BatchGetCategories",
+			Handler:    _CategoryService_BatchGetCategories_Handler,
+		},
+		{
 			MethodName: "GetCategory",
 			Handler:    _CategoryService_GetCategory_Handler,
 		},
@@ -415,10 +475,6 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCategoryPath",
 			Handler:    _CategoryService_GetCategoryPath_Handler,
-		},
-		{
-			MethodName: "GetLeafCategories",
-			Handler:    _CategoryService_GetLeafCategories_Handler,
 		},
 		{
 			MethodName: "GetClosureRelations",

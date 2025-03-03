@@ -108,3 +108,6 @@ CREATE TABLE products.product_audits
 -- 创建分片兼容索引
 CREATE INDEX idx_audits_product ON products.product_audits
     USING BTREE (merchant_id, product_id, created_at DESC);
+
+-- 在数据库的name字段添加全文索引
+CREATE INDEX idx_products_name ON products USING gin(to_tsvector('simple', name));

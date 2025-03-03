@@ -161,14 +161,27 @@ SELECT
     created_at,
     updated_at
 FROM categories.categories
-WHERE is_leaf = false AND level = 3;
+WHERE level != 0;
 
 -- name: GetClosureRelations :many
 SELECT * FROM categories.category_closure
 WHERE descendant = $1;
 
 -- name: UpdateClosureDepth :exec
--- 注意：实际实现可能需要更复杂的操作，这里只是示例
 UPDATE categories.category_closure
 SET depth = depth + $2
 WHERE descendant = $1;
+
+-- name: BatchGetCategories :many
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS path,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories
+WHERE id = ANY(@ids::bigint[]);

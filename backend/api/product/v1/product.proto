@@ -102,7 +102,19 @@ message ListRandomProductsRequest {
 }
 
 message SearchProductRequest {
-  string name = 1;
+  string name = 1 [(validate.rules).string = {min_len: 1, max_len: 200}];
+  // 将自然语言文本转换为全文搜索查询条件（tsquery 类型），主要功能包括：
+  // 词素标准化（Normalization）
+  // 移除停用词（的、是、the、a 等）
+  // 执行词干提取（running → run，dogs → dog）
+  // 逻辑运算符转换
+  // 自动用 &（AND）连接词汇
+  // 示例："red apple" → 'red' & 'apple'
+  // 安全过滤
+  // 自动转义特殊字符（! : & 等）
+  string query = 2[(validate.rules).string = {min_len: 1, max_len: 200}];
+  uint32 page = 3 [(validate.rules).uint32 = {gt: 0}];
+  uint32 page_size = 4[(validate.rules).uint32 = {gt: 0}];
 }
 
 // 商品数组
@@ -150,14 +162,14 @@ message Product {
   google.protobuf.Timestamp updated_at = 12;
   CategoryInfo category = 13;
 }
+// 字符串数组
+message StringArray {
+  repeated string items = 1;
+}
 
-// 创建商品的返回值
-message CreateProductReply {
-  string id = 1[
-    (validate.rules).uint64.gt = 0
-  ];  // 商品唯一ID（系统生成）
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+// 嵌套对象结构
+message NestedObject {
+  map<string, AttributeValue> fields = 1;
 }
 
 // 属性值类型定义
@@ -167,14 +179,13 @@ message AttributeValue {
   NestedObject object_value = 3;// 嵌套对象
 }
 
-// 字符串数组
-message StringArray {
-  repeated string items = 1;
-}
-
-// 嵌套对象结构
-message NestedObject {
-  map<string, AttributeValue> fields = 1;
+// 创建商品的返回值
+message CreateProductReply {
+  string id = 1[
+    (validate.rules).uint64.gt = 0
+  ];  // 商品唯一ID（系统生成）
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }
 
 // 审核信息

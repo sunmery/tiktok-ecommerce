@@ -9,6 +9,21 @@ import (
 )
 
 type Querier interface {
+	//BatchGetCategories
+	//
+	//  SELECT
+	//      id,
+	//      COALESCE(parent_id, 0) AS parent_id,
+	//      level,
+	//      path::text AS path,
+	//      name,
+	//      sort_order,
+	//      is_leaf,
+	//      created_at,
+	//      updated_at
+	//  FROM categories.categories
+	//  WHERE id = ANY($1::bigint[])
+	BatchGetCategories(ctx context.Context, ids []int64) ([]BatchGetCategoriesRow, error)
 	//CreateCategory
 	//
 	//  /*
@@ -161,7 +176,7 @@ type Querier interface {
 	//      created_at,
 	//      updated_at
 	//  FROM categories.categories
-	//  WHERE is_leaf = false AND level = 3
+	//  WHERE level != 0
 	GetLeafCategories(ctx context.Context) ([]GetLeafCategoriesRow, error)
 	//GetSubTree
 	//
@@ -186,7 +201,7 @@ type Querier interface {
 	//  SET name = $2, updated_at = NOW()
 	//  WHERE id = $1
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error
-	// 注意：实际实现可能需要更复杂的操作，这里只是示例
+	//UpdateClosureDepth
 	//
 	//  UPDATE categories.category_closure
 	//  SET depth = depth + $2

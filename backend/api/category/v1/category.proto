@@ -12,6 +12,7 @@ import "google/protobuf/empty.proto"; // 用于表示空响应。
 
 // 分类服务
 service CategoryService {
+  // 创建分类
   rpc CreateCategory(CreateCategoryRequest) returns (Category) {
     option (google.api.http) = {
       post: "/v1/categories"
@@ -19,12 +20,28 @@ service CategoryService {
     };
   }
 
+  // 获取所有叶子节点
+  rpc GetLeafCategories(google.protobuf.Empty) returns (Categories) {
+    option (google.api.http) = {
+      get: "/v1/categories/leaves"
+    };
+  }
+
+  // 批量查询分类
+  rpc BatchGetCategories(BatchGetCategoriesRequest) returns (Categories) {
+    option (google.api.http) = {
+      get: "/v1/categories/batch"
+    };
+  }
+
+  // 获取单个分类
   rpc GetCategory(GetCategoryRequest) returns (Category) {
     option (google.api.http) = {
       get: "/v1/categories/{id}"
     };
   }
 
+  // 更新分类
   rpc UpdateCategory(UpdateCategoryRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       put: "/v1/categories/{id}"
@@ -32,37 +49,36 @@ service CategoryService {
     };
   }
 
+  // 删除分类
   rpc DeleteCategory(DeleteCategoryRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/categories/{id}"
     };
   }
 
+
+  // 获取子树
   rpc GetSubTree(GetSubTreeRequest) returns (Categories) {
     option (google.api.http) = {
       get: "/v1/categories/{root_id}/subtree"
     };
   }
 
+  // 获取分类路径
   rpc GetCategoryPath(GetCategoryPathRequest) returns (Categories) {
     option (google.api.http) = {
       get: "/v1/categories/{category_id}/path"
     };
   }
 
-  rpc GetLeafCategories(google.protobuf.Empty) returns (Categories) {
-    option (google.api.http) = {
-      get: "/v1/categories/leaves"
-    };
-  }
-
+  // 获取闭包关系
   rpc GetClosureRelations(GetClosureRequest) returns (ClosureRelations) {
     option (google.api.http) = {
       get: "/v1/categories/{category_id}/closure"
     };
   }
 
-  // Note: UpdateClosureDepth may require transaction and complex operations
+  // 更新闭包关系深度
   rpc UpdateClosureDepth(UpdateClosureDepthRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       patch: "/v1/categories/{category_id}/closure"
@@ -71,8 +87,13 @@ service CategoryService {
   }
 }
 
+// 批量查询分类请求
+message BatchGetCategoriesRequest {
+  repeated int64 ids = 1; // 注意类型与SQL中的bigint匹配
+}
+
 message Categories {
-    repeated Category categories = 1;
+  repeated Category categories = 1;
 }
 
 message Category {
@@ -96,8 +117,6 @@ message ClosureRelation {
   int64 descendant = 2;
   int32 depth = 3;
 }
-
-// 请求/响应消息
 
 // 创建分类请求
 message CreateCategoryRequest {

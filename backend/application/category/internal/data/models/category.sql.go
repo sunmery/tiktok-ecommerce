@@ -10,6 +10,77 @@ import (
 	"time"
 )
 
+const BatchGetCategories = `-- name: BatchGetCategories :many
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS path,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories
+WHERE id = ANY($1::bigint[])
+`
+
+type BatchGetCategoriesRow struct {
+	ID        int64
+	ParentID  int64
+	Level     int16
+	Path      string
+	Name      string
+	SortOrder int16
+	IsLeaf    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// BatchGetCategories
+//
+//	SELECT
+//	    id,
+//	    COALESCE(parent_id, 0) AS parent_id,
+//	    level,
+//	    path::text AS path,
+//	    name,
+//	    sort_order,
+//	    is_leaf,
+//	    created_at,
+//	    updated_at
+//	FROM categories.categories
+//	WHERE id = ANY($1::bigint[])
+func (q *Queries) BatchGetCategories(ctx context.Context, ids []int64) ([]BatchGetCategoriesRow, error) {
+	rows, err := q.db.Query(ctx, BatchGetCategories, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BatchGetCategoriesRow
+	for rows.Next() {
+		var i BatchGetCategoriesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ParentID,
+			&i.Level,
+			&i.Path,
+			&i.Name,
+			&i.SortOrder,
+			&i.IsLeaf,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const CreateCategory = `-- name: CreateCategory :one
 /*
 参数说明：
@@ -431,7 +502,7 @@ SELECT
     created_at,
     updated_at
 FROM categories.categories
-WHERE is_leaf = false AND level = 3
+WHERE level != 0
 `
 
 type GetLeafCategoriesRow struct {
@@ -459,7 +530,7 @@ type GetLeafCategoriesRow struct {
 //	    created_at,
 //	    updated_at
 //	FROM categories.categories
-//	WHERE is_leaf = false AND level = 3
+//	WHERE level != 0
 func (q *Queries) GetLeafCategories(ctx context.Context) ([]GetLeafCategoriesRow, error) {
 	rows, err := q.db.Query(ctx, GetLeafCategories)
 	if err != nil {
@@ -597,7 +668,7 @@ type UpdateClosureDepthParams struct {
 	Depth      int16
 }
 
-// 注意：实际实现可能需要更复杂的操作，这里只是示例
+// UpdateClosureDepth
 //
 //	UPDATE categories.category_closure
 //	SET depth = depth + $2

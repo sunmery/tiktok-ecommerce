@@ -20,6 +20,7 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationCategoryServiceBatchGetCategories = "/ecommerce.category.v1.CategoryService/BatchGetCategories"
 const OperationCategoryServiceCreateCategory = "/ecommerce.category.v1.CategoryService/CreateCategory"
 const OperationCategoryServiceDeleteCategory = "/ecommerce.category.v1.CategoryService/DeleteCategory"
 const OperationCategoryServiceGetCategory = "/ecommerce.category.v1.CategoryService/GetCategory"
@@ -31,27 +32,38 @@ const OperationCategoryServiceUpdateCategory = "/ecommerce.category.v1.CategoryS
 const OperationCategoryServiceUpdateClosureDepth = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
 
 type CategoryServiceHTTPServer interface {
+	// BatchGetCategories 批量查询分类
+	BatchGetCategories(context.Context, *BatchGetCategoriesRequest) (*Categories, error)
+	// CreateCategory 创建分类
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
+	// DeleteCategory 删除分类
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
+	// GetCategory 获取单个分类
 	GetCategory(context.Context, *GetCategoryRequest) (*Category, error)
+	// GetCategoryPath 获取分类路径
 	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
+	// GetClosureRelations 获取闭包关系
 	GetClosureRelations(context.Context, *GetClosureRequest) (*ClosureRelations, error)
+	// GetLeafCategories 获取所有叶子节点
 	GetLeafCategories(context.Context, *emptypb.Empty) (*Categories, error)
+	// GetSubTree 获取子树
 	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
+	// UpdateCategory 更新分类
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*emptypb.Empty, error)
-	// UpdateClosureDepth Note: UpdateClosureDepth may require transaction and complex operations
+	// UpdateClosureDepth 更新闭包关系深度
 	UpdateClosureDepth(context.Context, *UpdateClosureDepthRequest) (*emptypb.Empty, error)
 }
 
 func RegisterCategoryServiceHTTPServer(s *http.Server, srv CategoryServiceHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/categories", _CategoryService_CreateCategory0_HTTP_Handler(srv))
+	r.GET("/v1/categories/leaves", _CategoryService_GetLeafCategories0_HTTP_Handler(srv))
+	r.GET("/v1/categories/batch", _CategoryService_BatchGetCategories0_HTTP_Handler(srv))
 	r.GET("/v1/categories/{id}", _CategoryService_GetCategory0_HTTP_Handler(srv))
 	r.PUT("/v1/categories/{id}", _CategoryService_UpdateCategory0_HTTP_Handler(srv))
 	r.DELETE("/v1/categories/{id}", _CategoryService_DeleteCategory0_HTTP_Handler(srv))
 	r.GET("/v1/categories/{root_id}/subtree", _CategoryService_GetSubTree0_HTTP_Handler(srv))
 	r.GET("/v1/categories/{category_id}/path", _CategoryService_GetCategoryPath0_HTTP_Handler(srv))
-	r.GET("/v1/categories/leaves", _CategoryService_GetLeafCategories0_HTTP_Handler(srv))
 	r.GET("/v1/categories/{category_id}/closure", _CategoryService_GetClosureRelations0_HTTP_Handler(srv))
 	r.PATCH("/v1/categories/{category_id}/closure", _CategoryService_UpdateClosureDepth0_HTTP_Handler(srv))
 }
@@ -74,6 +86,44 @@ func _CategoryService_CreateCategory0_HTTP_Handler(srv CategoryServiceHTTPServer
 			return err
 		}
 		reply := out.(*Category)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CategoryService_GetLeafCategories0_HTTP_Handler(srv CategoryServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in emptypb.Empty
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCategoryServiceGetLeafCategories)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetLeafCategories(ctx, req.(*emptypb.Empty))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*Categories)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CategoryService_BatchGetCategories0_HTTP_Handler(srv CategoryServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in BatchGetCategoriesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCategoryServiceBatchGetCategories)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.BatchGetCategories(ctx, req.(*BatchGetCategoriesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*Categories)
 		return ctx.Result(200, reply)
 	}
 }
@@ -191,25 +241,6 @@ func _CategoryService_GetCategoryPath0_HTTP_Handler(srv CategoryServiceHTTPServe
 	}
 }
 
-func _CategoryService_GetLeafCategories0_HTTP_Handler(srv CategoryServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in emptypb.Empty
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationCategoryServiceGetLeafCategories)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetLeafCategories(ctx, req.(*emptypb.Empty))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*Categories)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _CategoryService_GetClosureRelations0_HTTP_Handler(srv CategoryServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetClosureRequest
@@ -258,6 +289,7 @@ func _CategoryService_UpdateClosureDepth0_HTTP_Handler(srv CategoryServiceHTTPSe
 }
 
 type CategoryServiceHTTPClient interface {
+	BatchGetCategories(ctx context.Context, req *BatchGetCategoriesRequest, opts ...http.CallOption) (rsp *Categories, err error)
 	CreateCategory(ctx context.Context, req *CreateCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
 	DeleteCategory(ctx context.Context, req *DeleteCategoryRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetCategory(ctx context.Context, req *GetCategoryRequest, opts ...http.CallOption) (rsp *Category, err error)
@@ -275,6 +307,19 @@ type CategoryServiceHTTPClientImpl struct {
 
 func NewCategoryServiceHTTPClient(client *http.Client) CategoryServiceHTTPClient {
 	return &CategoryServiceHTTPClientImpl{client}
+}
+
+func (c *CategoryServiceHTTPClientImpl) BatchGetCategories(ctx context.Context, in *BatchGetCategoriesRequest, opts ...http.CallOption) (*Categories, error) {
+	var out Categories
+	pattern := "/v1/categories/batch"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationCategoryServiceBatchGetCategories))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *CategoryServiceHTTPClientImpl) CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...http.CallOption) (*Category, error) {

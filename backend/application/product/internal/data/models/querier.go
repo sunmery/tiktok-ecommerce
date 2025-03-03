@@ -56,6 +56,13 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at, updated_at
 	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
+	//CreateProductAttribute
+	//
+	//  INSERT INTO products.product_attributes
+	//      (merchant_id, product_id, attributes)
+	//  VALUES ($1, $2, $3)
+	//  RETURNING created_at, updated_at
+	CreateProductAttribute(ctx context.Context, arg CreateProductAttributeParams) error
 	//CreateProductImages
 	//
 	//  INSERT INTO products.product_images (merchant_id, -- 新增分片键
@@ -65,6 +72,13 @@ type Querier interface {
 	//                                       sort_order)
 	//  VALUES ($1, $2, $3, $4, $5)
 	CreateProductImages(ctx context.Context, arg []CreateProductImagesParams) (int64, error)
+	//DeleteProductAttribute
+	//
+	//  DELETE
+	//  FROM products.product_attributes
+	//  WHERE merchant_id = $1
+	//    AND product_id = $2
+	DeleteProductAttribute(ctx context.Context, arg DeleteProductAttributeParams) error
 	// 获取最新审核记录
 	//
 	//  INSERT INTO products.product_audits (merchant_id, -- 新增分片键
@@ -86,17 +100,51 @@ type Querier interface {
 	//         p.price,
 	//         p.status,
 	//         p.merchant_id,
+	//         p.category_id,
 	//         p.created_at,
 	//         p.updated_at,
-	//         i.stock
+	//         i.stock,
+	//         (SELECT jsonb_agg(jsonb_build_object(
+	//                 'url', pi.url,
+	//                 'is_primary', pi.is_primary,
+	//                 'sort_order', pi.sort_order
+	//                           ))
+	//          FROM products.product_images pi
+	//          WHERE pi.product_id = p.id
+	//            AND pi.merchant_id = p.merchant_id) AS images,
+	//         pa.attributes,
+	//         (SELECT jsonb_build_object(
+	//                         'id', a.id,
+	//                         'old_status', a.old_status,
+	//                         'new_status', a.new_status,
+	//                         'reason', a.reason,
+	//                         'created_at', a.created_at
+	//                 )
+	//          FROM products.product_audits a
+	//          WHERE a.product_id = p.id
+	//            AND a.merchant_id = p.merchant_id
+	//          ORDER BY a.created_at DESC
+	//          LIMIT 1)                              AS latest_audit
 	//  FROM products.products p
 	//           INNER JOIN products.inventory i
-	//                      ON p.id = i.product_id
-	//                          AND p.merchant_id = i.merchant_id
+	//                      ON p.id = i.product_id AND p.merchant_id = i.merchant_id
+	//           LEFT JOIN products.product_attributes pa
+	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 	//  WHERE p.id = $1
 	//    AND p.merchant_id = $2
 	//    AND p.deleted_at IS NULL
 	GetProduct(ctx context.Context, arg GetProductParams) (GetProductRow, error)
+	//GetProductAttribute
+	//
+	//  SELECT merchant_id,
+	//         product_id,
+	//         attributes,
+	//         created_at,
+	//         updated_at
+	//  FROM products.product_attributes
+	//  WHERE merchant_id = $1
+	//    AND product_id = $2
+	GetProductAttribute(ctx context.Context, arg GetProductAttributeParams) (ProductsProductAttributes, error)
 	// 获取商品图片列表，按排序顺序返回
 	//
 	//  SELECT id, merchant_id, product_id, url, is_primary, sort_order, created_at
@@ -194,28 +242,37 @@ type Querier interface {
 	//  ORDER BY random()
 	//  LIMIT $2 OFFSET $3
 	ListRandomProducts(ctx context.Context, arg ListRandomProductsParams) ([]ListRandomProductsRow, error)
-	//SearchProductsByName
+	// 商品搜索查询
 	//
-	//  SELECT p.id,
-	//         p.name,
-	//         p.description,
-	//         p.price,
-	//         p.status,
-	//         p.merchant_id,
-	//         p.created_at,
-	//         p.updated_at,
-	//         i.stock
+	//  SELECT
+	//      p.id,
+	//      p.name,
+	//      p.description,
+	//      p.price,
+	//      p.status,
+	//      p.merchant_id,
+	//      p.created_at,
+	//      p.updated_at,
+	//      i.stock,
+	//      (SELECT jsonb_agg(jsonb_build_object(
+	//          'url', pi.url,
+	//          'is_primary', pi.is_primary,
+	//          'sort_order', pi.sort_order
+	//      )) FROM products.product_images pi
+	//       WHERE pi.product_id = p.id AND pi.merchant_id = p.merchant_id) AS images,
+	//      pa.attributes
 	//  FROM products.products p
-	//           INNER JOIN products.inventory i
-	//                      ON p.id = i.product_id
-	//  WHERE name ILIKE '%' || $1 || '%' -- 模糊匹配商品名称
-	//    AND deleted_at IS NULL          -- 排除已删除商品
-	//  ORDER BY created_at DESC
-	//  LIMIT $2 OFFSET $3
-	SearchProductsByName(ctx context.Context, arg SearchProductsByNameParams) ([]SearchProductsByNameRow, error)
-	// 分页支持
+	//  INNER JOIN products.inventory i
+	//      ON p.id = i.product_id AND p.merchant_id = i.merchant_id
+	//  LEFT JOIN products.product_attributes pa
+	//      ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+	//  WHERE p.name ILIKE '%' || $1 || '%'
+	//      AND p.deleted_at IS NULL
+	//  ORDER BY ts_rank(to_tsvector('simple', p.name), plainto_tsquery('simple', $2)) DESC,
+	//      p.created_at DESC
+	//  LIMIT $4 OFFSET $3
+	SearchFullProductsByName(ctx context.Context, arg SearchFullProductsByNameParams) ([]SearchFullProductsByNameRow, error)
 	// 软删除商品，设置删除时间戳
-	//
 	//
 	//  UPDATE products.products
 	//  SET deleted_at = NOW(),
@@ -235,6 +292,15 @@ type Querier interface {
 	//    AND merchant_id = $6
 	//    AND updated_at = $7
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
+	//UpdateProductAttribute
+	//
+	//  UPDATE products.product_attributes
+	//  SET attributes = $3,
+	//      updated_at = NOW()
+	//  WHERE merchant_id = $1
+	//    AND product_id = $2
+	//  RETURNING updated_at
+	UpdateProductAttribute(ctx context.Context, arg UpdateProductAttributeParams) error
 	// 更新商品状态并记录当前审核ID
 	//
 	//  UPDATE products.products
