@@ -203,21 +203,21 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*emptypb.Empty, error) {
 	fmt.Println("#########################")
 	id, err := uuid.Parse(req.Id)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "invalid product ID")
-	// }
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
 	fmt.Println("delete", id)
 
-	// 从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
-	// var userId string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userId = md.Get("x-md-global-user-id")
-	// }
-	//merchantId := uuid.MustParse(userId)
+	//从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
+	var userId string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		userId = md.Get("x-md-global-user-id")
+	}
+	merchantId := uuid.MustParse(userId)
 	bizReq := biz.DeleteProductRequest{
-		ID: id,
-		//MerchantID: merchantId,
-		Status: 4,
+		ID:         id,
+		MerchantID: merchantId,
+		Status:     4,
 	}
 
 	_, err = s.uc.DeleteProduct(ctx, bizReq)
