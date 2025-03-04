@@ -1,12 +1,3 @@
-GOPATH:=$(shell go env GOPATH)
-VERSION=$(shell git describe --tags --always)
-APP_RELATIVE_PATH=$(shell basename $$PWD)
-API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
-INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
-KRATOS_VERSION=$(shell go mod graph |grep go-kratos/kratos/v2 |head -n 1 |awk -F '@' '{print $$2}')
-KRATOS=$(GOPATH)/pkg/mod/github.com/go-kratos/kratos/v2@$(KRATOS_VERSION)
-APP_NAME=$(APP_RELATIVE_PATH)
-
 # 默认值
 VERSION ?= dev
 GOIMAGE ?= golang:1.24.0-alpine3.20
@@ -15,12 +6,19 @@ GOARCH ?= amd64
 CGOENABLED ?= 0
 
 # 动态变量
-DOCKER_IMAGE=e-commerce/$(APP_NAME):dev
+DOCKER_IMAGE=e-commerce/$(APP_NAME):$(VERSION)
 SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = sumery/$(SERVICE)
 REGISTER = ccr.ccs.tencentyun.com
-ARM64=linux/arm64/v8
+ARM64=linux/arm64
 AMD64=linux/amd64
+
+GOPATH:=$(shell go env GOPATH)
+VERSION=$(shell git describe --tags --always)
+APP_RELATIVE_PATH=$(shell basename $$PWD)
+API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
+APP_NAME=$(APP_RELATIVE_PATH)
 
 .PHONY: api
 # 生成api目录的proto的代码
@@ -63,11 +61,11 @@ build:
 docker-build:
 	@echo "构建的微服务: $(SERVICE)"
 	@echo "系统: $(GOOS) | CPU架构: $(GOARCH)"
-	@echo "镜像名: $(REPOSITORY):dev"
+	@echo "镜像名: $(REPOSITORY):$(VERSION)"
 	docker build . \
 	  -f application/$(SERVICE)/Dockerfile \
 	  --progress=plain \
-	  -t ecommerce/$(SERVICE):dev \
+	  -t ecommerce/$(SERVICE):$(VERSION) \
 	  --build-arg SERVICE=$(SERVICE) \
 	  --build-arg CGOENABLED=$(CGOENABLED) \
 	  --build-arg GOIMAGE=$(GOIMAGE) \
@@ -76,47 +74,38 @@ docker-build:
 	  --build-arg VERSION=$(VERSION) \
 	  --platform $(GOOS)/$(GOARCH)
 
-.PHONY: docker-buildx
+.PHONY: docker-deployx
 # 使用 docker 构建多平台架构镜像
-docker-buildx:
+docker-deployx:
 	@echo "构建的微服务: $(SERVICE)"
 	@echo "平台1: $(ARM64)"
 	@echo "平台2: $(AMD64)"
-	@echo "镜像名: $(REPOSITORY):dev"
+	@echo "镜像名: $(REPOSITORY):$(VERSION)"
 	docker buildx build . \
 	  -f application/$(SERVICE)/Dockerfile \
 	  --progress=plain \
-	  -t ecommerce/$(SERVICE):dev \
+	  -t $(REGISTER)/$(REPOSITORY):$(VERSION) \
 	  --build-arg SERVICE=$(SERVICE) \
 	  --build-arg CGOENABLED=$(CGOENABLED) \
 	  --build-arg GOIMAGE=$(GOIMAGE) \
-	  --build-arg GOOS=$(GOOS) \
-	  --build-arg GOARCH=$(GOARCH) \
 	  --build-arg VERSION=$(VERSION) \
-	  --platform $(ARM64),$(AMD64)
+	  --platform $(ARM64),$(AMD64) \
+	  --push
 
 # 使用方式: make docker-push SERVICE=微服务名
 .PHONY: docker-push
 docker-push:
 	@echo "使用方式: make docker-push SERVICE=微服务名"
 	@echo "OS: $(GOOS) | ARCH: $(GOARCH)"
-	@echo "Docker image: $(REPOSITORY):dev"
-	docker tag ecommerce/$(SERVICE):dev $(REGISTER)/$(REPOSITORY):dev
-	docker push $(REGISTER)/$(REPOSITORY):dev
+	@echo "Docker image: $(REPOSITORY):$(VERSION)"
+	docker tag ecommerce/$(SERVICE):$(VERSION) $(REGISTER)/$(REPOSITORY):$(VERSION)
+	docker push $(REGISTER)/$(REPOSITORY):$(VERSION)
 
 .PHONY: docker-deploy
 docker-deploy:
 	@echo "使用方式: make docker-deploy SERVICE=微服务名"
 	@echo "SERVICE=$(SERVICE)"
 	make docker-build SERVICE=$(SERVICE)
-	@echo "SERVICE=$(SERVICE)"
-	make docker-push SERVICE=$(SERVICE)
-
-.PHONY: docker-deployx
-docker-deployx:
-	@echo "使用方式: make docker-deploy SERVICE=微服务名"
-	@echo "SERVICE=$(SERVICE)"
-	make docker-buildx SERVICE=$(SERVICE)
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
 

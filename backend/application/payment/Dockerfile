@@ -1,5 +1,5 @@
 ARG GO_IMAGE=golang:1.24.0-alpine3.21
-FROM ${GO_IMAGE} AS builder
+FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS builder
 
 ARG SERVICE
 ARG VERSION=dev
@@ -21,7 +21,7 @@ COPY . .
 # 编译指定服务（注意路径调整）
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=${CGO_ENABLED} GOOS=linux GOARCH=amd64 \
+    CGO_ENABLED=${CGO_ENABLED} \
     go build -ldflags="-X main.Version=${VERSION}" -o /app/${SERVICE} ./application/${SERVICE}/cmd/${SERVICE}
 
 # 使用最小化运行时镜像
@@ -36,6 +36,6 @@ RUN apk add --no-cache tzdata ca-certificates && \
 
 COPY --from=builder /app/${SERVICE} /app/service
 
-EXPOSE 30003 30004
+EXPOSE 30013 30014
 
 ENTRYPOINT ["/app/service"]
