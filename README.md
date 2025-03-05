@@ -1,71 +1,39 @@
 ## 项目开发
 
-项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
-
-1. 拉取, 包含前端项目. 不需要前端删除`` `-recurse-submodules` `` 即可
-
-
-```Bash
-git clone --recurse-submodules git@github.com:sunmery/tiktok-e-commence.git
-```
-
-目录结构:
-
-
-```
-.
-├── LICENSE
-├── Makefile CLI 生成命令
-├── README.md
-├── api 应用proto目录
-│  ├── cart  服务 proto
-│  │  └── v1  proto版本
-│  │      └── service.proto
-│  ├── checkout
-│  │  └── v1
-│  │      └── service.proto
-│  ├── order
-│  │  └── v1
-│  │      └── service.proto
-│  ├── payment
-│  │  └── v1
-│  │      └── service.proto
-│  ├── product
-│  │  └── v1
-│  │      └── service.proto
-│  └── user
-│      └── v1
-│          ├── error_reason.pb.go
-│          ├── error_reason.proto
-│          ├── error_reason.swagger.json
-│          ├── service.pb.go
-│          ├── service.proto
-│          ├── service.swagger.json
-│          ├── service_grpc.pb.go
-│          └── user
-│              └── v1
-│                  ├── error_reason.pb.go
-│                  ├── service.pb.go
-│                  └── service_grpc.pb.go
-├── application 微服务目录
-│  ├── cart
-│  ├── checkout
-│   ├── order
-│   ├── payment
-│  ├── product
-│  ├── user
-├── third_party 第三方 proto目录
-```
+项目分为三个大部分
+- 后端
+- 网关
+- 前端
 
 ## 架构
+
+我们使用了 API Gateway， 把安全， 限流， 熔断， 统一认证这些跨横切面的逻辑都上放到了 API Gateway， 由 API Gatewa 来实现， 把 BFF 当成了一个基础设施， 实现关注点， 专门对业务进行兼容， 不对安全， 限流， 熔断， 统一认证这些跨横切面的逻辑这些通用逻辑维护
+
+```mermaid
+graph TD
+    A[客户端] -->|token| A1[CDN]
+    A1 --> SLB
+    A <-->|token| Auth[认证中心]
+    SLB --> B[API Gateway]
+    B --> C1[用户BFF]
+    B --> C2[商品BFF]
+    B --> C3[订单BFF]
+    C1 --> D1[微服务A]
+    C1 --> D2[微服务B]
+    C1 --> D3[微服务C]
+    C2 --> D1
+    C2 --> D2
+    C2 --> D3
+    C3 --> D1
+    C3 --> D2
+    C3 --> D3
+```
 
 南北向为 Client 发送请求到 API Gateway， 由 API Gateway 分发流量到对应的微服务
 
 东西向为 微服务之间通过 gRPC 来交互
 
-暂时无法在飞书文档外展示此内容
 
-针对单点和多点 BFF 架构缺陷， 我们使用了 API Gateway， 把安全， 限流， 熔断， 统一认证这些跨横切面的逻辑都上放到了 API Gateway， 由 API Gatewa 来实现， 把 BFF 当成了一个基础设施， 实现关注点， 专门对业务进行兼容， 不对安全， 限流， 熔断， 统一认证这些跨横切面的逻辑这些通用逻辑维护
 
 ### 微服务设计
 
@@ -75,7 +43,7 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
 
 - 普通用户（**customer**）
 
-- 商户（**Seller**）
+- 商户（**Merchant**）
 
 - 管理员（**Admin**）
 
@@ -84,15 +52,11 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
 
 商户角色的权限：
 
-- 处理订单
+- 审核商品
 
 - 查看销售数据
 
-- 与用户沟通（回复评价）
-
 - 发布商品
-
-    - 品牌
 
     - 标签
 
@@ -107,9 +71,6 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
     - 库存
 
 - 修改商品
-
-    - 品牌
-
     - 标签
 
     - 描述
@@ -131,58 +92,12 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
 
 - 审核商品、处理违规行为。
 
-- 配置平台参数（如运费模板、支付方式）。
-
 - 查看平台整体数据（如交易额、用户增长）
 
 - 增删改查用户
 
 - 可以访问所有数据和功能
 
-
-#### **数据分析服务（Analytics Service）**
-
-- **职责**：
-
-    - 收集和分析用户行为数据。
-
-    - 生成销售报表、用户画像。
-
-    - 提供数据可视化（如 Dashboard）
-
-- **权限**：
-
-    - 商家可以查看自己店铺的数据，管理员可以查看全平台数据。
-
-
-#### **评价服务（Review Service）**
-
-- **职责**：
-
-    - 管理用户对商品的评价。
-
-    - 提供评价展示、评分统计。
-
-    - 处理评价举报。
-
-- **权限**：
-
-    - 用户可以发布评价，商家可以回复。
-
-
-#### **通知服务（Notification Service）**
-
-- **职责**：
-
-    - 发送短信、邮件、站内信通知。
-
-    - 管理通知模板。
-
-    - 处理通知队列。
-
-- **权限**：
-
-    - 所有用户都可以接收通知。
 
 
 #### **搜索服务（Search Service）**
@@ -261,9 +176,9 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
 
 - 获取购物车信息
 
-- 订单定时取消（高级）
+- 订单定时取消
 
-- 修改订单信息（可选）
+- 修改订单信息
 
 - 创建订单
 
@@ -351,17 +266,6 @@ Web UI 的前端后端 （BFF） 服务， 有两种角色：
 ### 工具下载
 
 - https://github.com/grpc-ecosystem/grpc-gateway/releases
-
-
-### 线上体验
-
-- [前端](https://node8.apikv.com:30020/)
-
-- 后端 [API 文档](https://app.apifox.com/invite/project?token=3j_9favhOghU57nmpYK8n)
-
-- 注册中心
-
-- 配置中心
 
 
 ## Language
