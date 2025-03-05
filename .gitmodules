@@ -1,3 +1,6 @@
 [submodule "frontend"]
 	path = frontend
 	url = git@github.com:sunmery/tiktok_e-commence-fe.git
+[submodule "tiktok-ecommerce-gateway"]
+	path = tiktok-ecommerce-gateway
+	url = git@github.com:sunmery/tiktok-ecommerce-gateway.git
