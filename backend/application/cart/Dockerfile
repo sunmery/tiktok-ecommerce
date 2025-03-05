@@ -13,7 +13,10 @@ COPY go.mod go.sum ./
 
 # 下载全仓依赖
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download -x
+#     --mount=type=bind,source=go.sum,target=go.sum \
+#     --mount=type=bind,source=go.mod,target=go.mod \
+    CGOENABLED=$CGOENABLED \
+    go mod tidy
 
 # 复制全部代码
 COPY . .
@@ -25,7 +28,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -ldflags="-X main.Version=${VERSION}" -o /app/${SERVICE} ./application/${SERVICE}/cmd/${SERVICE}
 
 # 使用最小化运行时镜像
-FROM alpine:3.20
+FROM --platform=$BUILDPLATFORM alpine:3.20
 
 ARG SERVICE
 ENV TZ=Asia/Shanghai
@@ -36,6 +39,6 @@ RUN apk add --no-cache tzdata ca-certificates && \
 
 COPY --from=builder /app/${SERVICE} /app/service
 
-EXPOSE 30007 30008
+EXPOSE 30017 30018
 
 ENTRYPOINT ["/app/service"]

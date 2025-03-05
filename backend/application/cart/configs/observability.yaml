@@ -1,0 +1,15 @@
+# 可观测性
+
+## 链路追踪
+trace:
+  service_name: "organization-application-version"
+  grpc:
+    endpoint: localhost:4317
+  http:
+    endpoint: localhost:4318
+
+## 日志
+logging:
+
+## 指标
+metrics:

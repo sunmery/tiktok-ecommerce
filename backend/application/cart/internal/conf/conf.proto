@@ -39,8 +39,13 @@ message Data {
     string username = 6;
     string password = 7;
   }
+  message Mongo {
+    string url = 1;
+    string database = 2;
+  }
   Database database = 1;
   Cache cache = 2;
+  Mongo mongo = 3;
 }
 
 // 授权/认证

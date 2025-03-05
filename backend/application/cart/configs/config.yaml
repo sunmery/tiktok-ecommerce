@@ -1,0 +1,19 @@
+server:
+  http:
+    addr: 0.0.0.0:30001
+    timeout: 3s
+  grpc:
+    addr: 0.0.0.0:30002
+    timeout: 3s
+data:
+  database:
+    driver: postgres
+    source: postgresql://postgres:postgres@localhost:5432/database?sslmode=disable&timezone=Asia/Shanghai
+
+  cache:
+    addr: localhost:6379
+    username:
+    password:
+    read_timeout: 3.0s
+    write_timeout: 3.0s
+    dial_timeout: 5s
