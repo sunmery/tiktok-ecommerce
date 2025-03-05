@@ -1,6 +1,6 @@
 # 默认值
 VERSION ?= dev
-GOIMAGE ?= golang:1.24.0-alpine3.20
+GOIMAGE ?= golang:1.24.0-alpine3.21
 GOOS ?= linux
 GOARCH ?= amd64
 CGOENABLED ?= 0
@@ -10,7 +10,7 @@ DOCKER_IMAGE=e-commerce/$(APP_NAME):$(VERSION)
 SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = sumery/$(SERVICE)
 REGISTER = ccr.ccs.tencentyun.com
-ARM64=linux/arm64
+ARM64=linux/arm64/v8
 AMD64=linux/amd64
 
 GOPATH:=$(shell go env GOPATH)

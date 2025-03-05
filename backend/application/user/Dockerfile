@@ -1,43 +1,51 @@
-ARG GO_IMAGE=golang:1.24.0-alpine3.21
-FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS builder
+# syntax=docker/dockerfile:1
 
+ARG GO_IMAGE=golang:1.24.0-alpine3.21
+FROM --platform=$BUILDPLATFORM golang:alpine AS compile
+
+ARG TARGETOS=linux
+ARG TARGETARCH
 ARG SERVICE
 ARG VERSION=dev
-ARG CGO_ENABLED=0
-ARG GOPROXY=https://proxy.golang.com.cn,direct
+ARG GOPROXY=https://goproxy.cn,direct
+ARG CGOENABLED=0
 
 WORKDIR /build
 
 # 仅复制根模块文件
 COPY go.mod go.sum ./
 
-# 下载全仓依赖
 RUN --mount=type=cache,target=/go/pkg/mod \
-#     --mount=type=bind,source=go.sum,target=go.sum \
-#     --mount=type=bind,source=go.mod,target=go.mod \
-    CGOENABLED=$CGOENABLED \
-    go mod tidy
+    --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    go mod download -x
 
 # 复制全部代码
 COPY . .
 
+RUN echo "TARGETOS=$CGO_ENABLED"
+RUN echo "CGO_ENABLED=$CGO_ENABLED"
+
 # 编译指定服务（注意路径调整）
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=${CGO_ENABLED} \
-    go build -ldflags="-X main.Version=${VERSION}" -o /app/${SERVICE} ./application/${SERVICE}/cmd/${SERVICE}
+    GOOS=$TARGETOS \
+    GOARCH=$TARGETARCH \
+    CGOENABLED=$CGOENABLED \
+    go build -ldflags="-X main.Version=$VERSION" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}
 
 # 使用最小化运行时镜像
-FROM --platform=$BUILDPLATFORM alpine:3.20
+FROM alpine:3.21 AS final
 
 ARG SERVICE
 ENV TZ=Asia/Shanghai
 
+# 安装依赖并配置时区
 RUN apk add --no-cache tzdata ca-certificates && \
-    ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
-    echo ${TZ} > /etc/timezone
+    ln -sf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
+    echo "$TZ" > /etc/timezone
 
-COPY --from=builder /app/${SERVICE} /app/service
+COPY --from=compile /app/$SERVICE /app/service
 
 EXPOSE 30003 30004
 
