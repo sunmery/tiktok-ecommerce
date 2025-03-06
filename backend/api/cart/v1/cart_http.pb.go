@@ -10,7 +10,6 @@ import (
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,16 +19,19 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationCartServiceCreateCart = "/ecommerce.cart.v1.CartService/CreateCart"
 const OperationCartServiceEmptyCart = "/ecommerce.cart.v1.CartService/EmptyCart"
 const OperationCartServiceGetCart = "/ecommerce.cart.v1.CartService/GetCart"
 const OperationCartServiceRemoveCartItem = "/ecommerce.cart.v1.CartService/RemoveCartItem"
 const OperationCartServiceUpsertItem = "/ecommerce.cart.v1.CartService/UpsertItem"
 
 type CartServiceHTTPServer interface {
+	// CreateCart 创建购物车
+	CreateCart(context.Context, *CreateCartReq) (*CreateCartResp, error)
 	// EmptyCart清空购物车
-	EmptyCart(context.Context, *emptypb.Empty) (*EmptyCartResp, error)
+	EmptyCart(context.Context, *EmptyCartReq) (*EmptyCartResp, error)
 	// GetCart获取购物车信息
-	GetCart(context.Context, *emptypb.Empty) (*GetCartResp, error)
+	GetCart(context.Context, *GetCartReq) (*GetCartResp, error)
 	// RemoveCartItem删除购物车商品
 	RemoveCartItem(context.Context, *RemoveCartItemReq) (*RemoveCartItemResp, error)
 	// UpsertItem新增购物车商品
@@ -38,10 +40,33 @@ type CartServiceHTTPServer interface {
 
 func RegisterCartServiceHTTPServer(s *http.Server, srv CartServiceHTTPServer) {
 	r := s.Route("/")
-	r.POST("/v1/cart", _CartService_UpsertItem0_HTTP_Handler(srv))
-	r.GET("/v1/cart", _CartService_GetCart0_HTTP_Handler(srv))
-	r.DELETE("/v1/cart", _CartService_EmptyCart0_HTTP_Handler(srv))
-	r.DELETE("/v1/cart/item/{product_id}", _CartService_RemoveCartItem0_HTTP_Handler(srv))
+	r.POST("/v1/carts/create", _CartService_CreateCart0_HTTP_Handler(srv))
+	r.POST("/v1/carts", _CartService_UpsertItem0_HTTP_Handler(srv))
+	r.GET("/v1/carts", _CartService_GetCart0_HTTP_Handler(srv))
+	r.DELETE("/v1/carts", _CartService_EmptyCart0_HTTP_Handler(srv))
+	r.DELETE("/v1/carts/item", _CartService_RemoveCartItem0_HTTP_Handler(srv))
+}
+
+func _CartService_CreateCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateCartReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCartServiceCreateCart)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateCart(ctx, req.(*CreateCartReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateCartResp)
+		return ctx.Result(200, reply)
+	}
 }
 
 func _CartService_UpsertItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
@@ -68,13 +93,13 @@ func _CartService_UpsertItem0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx h
 
 func _CartService_GetCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in emptypb.Empty
+		var in GetCartReq
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationCartServiceGetCart)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetCart(ctx, req.(*emptypb.Empty))
+			return srv.GetCart(ctx, req.(*GetCartReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -87,13 +112,13 @@ func _CartService_GetCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http
 
 func _CartService_EmptyCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in emptypb.Empty
+		var in EmptyCartReq
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationCartServiceEmptyCart)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.EmptyCart(ctx, req.(*emptypb.Empty))
+			return srv.EmptyCart(ctx, req.(*EmptyCartReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -110,9 +135,6 @@ func _CartService_RemoveCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(c
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
 		http.SetOperation(ctx, OperationCartServiceRemoveCartItem)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.RemoveCartItem(ctx, req.(*RemoveCartItemReq))
@@ -127,8 +149,9 @@ func _CartService_RemoveCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(c
 }
 
 type CartServiceHTTPClient interface {
-	EmptyCart(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *EmptyCartResp, err error)
-	GetCart(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *GetCartResp, err error)
+	CreateCart(ctx context.Context, req *CreateCartReq, opts ...http.CallOption) (rsp *CreateCartResp, err error)
+	EmptyCart(ctx context.Context, req *EmptyCartReq, opts ...http.CallOption) (rsp *EmptyCartResp, err error)
+	GetCart(ctx context.Context, req *GetCartReq, opts ...http.CallOption) (rsp *GetCartResp, err error)
 	RemoveCartItem(ctx context.Context, req *RemoveCartItemReq, opts ...http.CallOption) (rsp *RemoveCartItemResp, err error)
 	UpsertItem(ctx context.Context, req *UpsertItemReq, opts ...http.CallOption) (rsp *UpsertItemResp, err error)
 }
@@ -141,9 +164,22 @@ func NewCartServiceHTTPClient(client *http.Client) CartServiceHTTPClient {
 	return &CartServiceHTTPClientImpl{client}
 }
 
-func (c *CartServiceHTTPClientImpl) EmptyCart(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*EmptyCartResp, error) {
+func (c *CartServiceHTTPClientImpl) CreateCart(ctx context.Context, in *CreateCartReq, opts ...http.CallOption) (*CreateCartResp, error) {
+	var out CreateCartResp
+	pattern := "/v1/carts/create"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCartServiceCreateCart))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CartServiceHTTPClientImpl) EmptyCart(ctx context.Context, in *EmptyCartReq, opts ...http.CallOption) (*EmptyCartResp, error) {
 	var out EmptyCartResp
-	pattern := "/v1/cart"
+	pattern := "/v1/carts"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCartServiceEmptyCart))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -154,9 +190,9 @@ func (c *CartServiceHTTPClientImpl) EmptyCart(ctx context.Context, in *emptypb.E
 	return &out, nil
 }
 
-func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*GetCartResp, error) {
+func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *GetCartReq, opts ...http.CallOption) (*GetCartResp, error) {
 	var out GetCartResp
-	pattern := "/v1/cart"
+	pattern := "/v1/carts"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCartServiceGetCart))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -169,7 +205,7 @@ func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *emptypb.Emp
 
 func (c *CartServiceHTTPClientImpl) RemoveCartItem(ctx context.Context, in *RemoveCartItemReq, opts ...http.CallOption) (*RemoveCartItemResp, error) {
 	var out RemoveCartItemResp
-	pattern := "/v1/cart/item/{product_id}"
+	pattern := "/v1/carts/item"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCartServiceRemoveCartItem))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -182,7 +218,7 @@ func (c *CartServiceHTTPClientImpl) RemoveCartItem(ctx context.Context, in *Remo
 
 func (c *CartServiceHTTPClientImpl) UpsertItem(ctx context.Context, in *UpsertItemReq, opts ...http.CallOption) (*UpsertItemResp, error) {
 	var out UpsertItemResp
-	pattern := "/v1/cart"
+	pattern := "/v1/carts"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationCartServiceUpsertItem))
 	opts = append(opts, http.PathTemplate(pattern))

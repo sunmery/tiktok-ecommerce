@@ -25,11 +25,12 @@ service CheckoutService {
 
 // 结账请求的消息结构
 message CheckoutReq {
-  uint32 user_id = 1; // 用户 ID（可选），如果用户未注册，则可以为空
+  string user_id = 1; // 用户 ID（可选），如果用户未注册，则可以为空
   string firstname = 2; // 用户的名字（必填），允许非注册用户直接填写信息下单
   string lastname = 3; // 用户的姓氏（必填）
   string email = 4; // 用户的邮箱地址（必填），用于接收订单确认邮件等
   user.v1.CreditCards credit_card = 6; // 用户的信用卡信息（必填），用于支付
+  user.v1.Address address = 7;
 }
 
 // 结账响应的消息结构

@@ -5,25 +5,25 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type CartSchemaCart struct {
+type CartsCart struct {
 	CartID    int32            `json:"cartID"`
-	UserID    string           `json:"userID"`
+	UserID    uuid.UUID        `json:"userID"`
 	CartName  string           `json:"cartName"`
 	Status    string           `json:"status"`
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
 
-type CartSchemaCartItems struct {
-	CartItemID int32            `json:"cartItemID"`
+type CartsCartItems struct {
+	CartItemID uuid.UUID        `json:"cartItemID"`
 	CartID     int32            `json:"cartID"`
-	MerchantID string           `json:"merchantID"`
-	ProductID  int32            `json:"productID"`
+	MerchantID uuid.UUID        `json:"merchantID"`
+	ProductID  uuid.UUID        `json:"productID"`
 	Quantity   int32            `json:"quantity"`
-	Selected   bool             `json:"selected"`
 	CreatedAt  pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt  pgtype.Timestamp `json:"updatedAt"`
 }

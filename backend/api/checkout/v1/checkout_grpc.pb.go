@@ -25,7 +25,10 @@ const (
 // CheckoutServiceClient is the client API for CheckoutService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 结账服务接口定义
 type CheckoutServiceClient interface {
+	// 结账接口
 	Checkout(ctx context.Context, in *CheckoutReq, opts ...grpc.CallOption) (*CheckoutResp, error)
 }
 
@@ -50,7 +53,10 @@ func (c *checkoutServiceClient) Checkout(ctx context.Context, in *CheckoutReq, o
 // CheckoutServiceServer is the server API for CheckoutService service.
 // All implementations must embed UnimplementedCheckoutServiceServer
 // for forward compatibility.
+//
+// 结账服务接口定义
 type CheckoutServiceServer interface {
+	// 结账接口
 	Checkout(context.Context, *CheckoutReq) (*CheckoutResp, error)
 	mustEmbedUnimplementedCheckoutServiceServer()
 }

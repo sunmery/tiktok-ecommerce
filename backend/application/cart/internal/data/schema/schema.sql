@@ -1,7 +1,7 @@
-CREATE SCHEMA IF NOT EXISTS cart_schema;
+CREATE SCHEMA IF NOT EXISTS carts;
 
--- 在 cart_schema 下创建 cart 表
-CREATE TABLE IF NOT EXISTS cart_schema.cart (
+-- 在 carts 下创建 cart 表
+CREATE TABLE IF NOT EXISTS carts.cart (
     cart_id SERIAL PRIMARY KEY,                    -- 购物车唯一ID
     user_id VARCHAR(100) NOT NULL,                 -- 用户ID
     cart_name VARCHAR(100) NOT NULL DEFAULT 'cart',  -- 购物车名称，非空且默认值为"cart"
@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS cart_schema.cart (
 );
 
 -- 为 user_id 和 cart_name 字段创建联合索引
-CREATE INDEX idx_user_id_cart_name ON cart_schema.cart (user_id, cart_name);
+CREATE INDEX idx_user_id_cart_name ON carts.cart (user_id, cart_name);
 
--- 在 cart_schema 下创建 cart_items 表
-CREATE TABLE IF NOT EXISTS cart_schema.cart_items (
+-- 在 carts 下创建 cart_items 表
+CREATE TABLE IF NOT EXISTS carts.cart_items (
     cart_item_id SERIAL PRIMARY KEY,              -- 购物车商品项唯一ID
     cart_id INT NOT NULL,                         -- 购物车ID
     merchant_id VARCHAR(100) NOT NULL,            -- 商家ID
@@ -28,4 +28,4 @@ CREATE TABLE IF NOT EXISTS cart_schema.cart_items (
 );
 
 -- 为 cart_id、merchant_id 和 product_id 字段创建联合索引
-CREATE INDEX idx_cart_id_merchant_id_product_id ON cart_schema.cart_items (cart_id, merchant_id, product_id);
+CREATE INDEX idx_cart_id_merchant_id_product_id ON carts.cart_items (cart_id, merchant_id, product_id);

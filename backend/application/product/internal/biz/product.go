@@ -161,6 +161,7 @@ type DeleteProductRequest struct {
 // GetProductRequest 完善GetProductRequest
 type GetProductRequest struct {
 	ID uuid.UUID
+	MerchantID uuid.UUID
 }
 
 // CreateProductRequest 完善CreateProductRequest

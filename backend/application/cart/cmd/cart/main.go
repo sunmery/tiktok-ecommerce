@@ -2,13 +2,12 @@ package main
 
 import (
 	"backend/application/cart/internal/conf"
-	"backend/application/cart/pkg"
 	"backend/constants"
+	"backend/pkg"
 	"flag"
 	"fmt"
-	"os"
-
 	"github.com/go-kratos/kratos/v2/registry"
+	"os"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -25,20 +24,17 @@ import (
 var (
 	Name = constants.CartServiceV1
 	// Version 通过环境变量来替换
-	Version           string
-	flagconf          string
-	configPath        string
-	configCenter      string
-	configCenterToken string
-	id, _             = os.Hostname()
+	Version      string
+	flagconf     string
+	configCenter string
+	configPath   string
+	id, _        = os.Hostname()
 )
 
 func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
-	// flag.StringVar(&configCenter, "config_center", "99.suyiiyii.top:3026", "config center url, eg: -config_center 127.0.0.1:8500")
 	flag.StringVar(&configCenter, "config_center", "localhost:8500", "config center url, eg: -config_center 127.0.0.1:8500")
-	flag.StringVar(&configPath, "config_path", "ecommerce/cart/prod.yaml", "config center path, eg: -config_center organization/application/config.yaml")
-	flag.StringVar(&configCenterToken, "config_center_token", "token", "config center acl token, eg: -config_center_token token")
+	flag.StringVar(&configPath, "config_path", "ecommerce/cart/pre.yaml", "config center path, eg: -config_center ecommerce/user/account/config.yaml")
 	flag.StringVar(&Version, "version", "v0.0.1", "version, eg: -version v0.0.1")
 }
 
@@ -72,9 +68,8 @@ func main() {
 	)
 
 	consulConfig := pkg.ConfigCenter{
-		Addr:  configCenter,
-		Path:  configPath,
-		Token: configCenterToken,
+		Addr: configCenter,
+		Path: configPath,
 	}
 	cs := pkg.InitConsul(consulConfig)
 
@@ -88,12 +83,6 @@ func main() {
 
 	if err := c.Load(); err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
-	}
-
-	// 认证和授权
-	var ac conf.Auth
-	if err := c.Scan(&ac); err != nil {
-		log.Fatal(fmt.Errorf("load auth config failed:%w", err))
 	}
 
 	var bc conf.Bootstrap
@@ -113,7 +102,7 @@ func main() {
 		log.Fatal(fmt.Errorf("load observability config failed:%w", err))
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, &ac, &cc, &obs, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, &cc, &obs, logger)
 	if err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}

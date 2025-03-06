@@ -3,65 +3,108 @@ syntax = "proto3";
 package ecommerce.cart.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
-import "validate/validate.proto";
 
-option go_package = 'backend/api/cart/v1;cartv1';
+option go_package = "backend/api/cart/v1;cartv1";
 
 service CartService {
   //新增购物车商品
   rpc UpsertItem(UpsertItemReq) returns (UpsertItemResp) {
     option (google.api.http) = {
-      post: "/v1/cart",
+      post: "/v1/carts",
       body: "*"
     };
   }
   //获取购物车信息
-  rpc GetCart(google.protobuf.Empty) returns (GetCartResp) {
+  rpc GetCart(GetCartReq) returns (GetCartResp) {
     option (google.api.http) = {
-      get: "/v1/cart"
+      get: "/v1/carts"
     };
   }
   //清空购物车
-  rpc EmptyCart(google.protobuf.Empty) returns (EmptyCartResp) {
+  rpc EmptyCart(EmptyCartReq) returns (EmptyCartResp) {
     option (google.api.http) = {
-      delete: "/v1/cart"
+      delete: "/v1/carts"
     };
   }
   //删除购物车商品
   rpc RemoveCartItem(RemoveCartItemReq) returns (RemoveCartItemResp) {
     option (google.api.http) = {
-      delete: "/v1/cart/item/{product_id}"
+      delete: "/v1/carts/item"
     };
   }
 }
+
+// 列出所有购物车
+message ListCartsReq {
+  string user_id = 1 ;
+}
+
+message ListCartsResp {
+  repeated CartSummary carts = 1; // 返回购物车列表
+}
+
+message CartSummary {
+  uint32 cart_id = 1 ; // 购物车ID
+  string cart_name = 2 ; // 购物车名称
+}
+
+// 选中购物车商品
+message CheckCartItemReq {
+  string user_id = 1 ;
+  string merchant_id = 2;
+  string product_id = 3 ;
+}
+
+message CheckCartItemResp {
+  bool success = 1;
+}
+
+// 取消选中购物车商品
+message UncheckCartItemReq {
+  string user_id = 1 ;
+  string merchant_id = 2 ;
+  string product_id = 3 ;
+}
+
+message UncheckCartItemResp {
+  bool success = 1;
+}
+
+message CreateOrderResp {
+  bool success = 1;
+  repeated CartItem items = 2;  // 返回被选中的商品
+}
+
+
 // 购物车商品
 message CartItem {
-  // 商品ID
-  string product_id = 1[
-    (validate.rules).string.len = 36, // 明确长度限制
-    (validate.rules).string.uuid = true // 强制UUID格式
-  ];
-  // 商品数量
-  uint32 quantity = 2;
-  // 商家 ID
-  string merchant_id = 3[
-    (validate.rules).string.len = 36, // 明确长度限制
-    (validate.rules).string.uuid = true // 强制UUID格式
-  ];
+  string merchant_id = 1 ;
+  string product_id = 2 ; // 商品ID
+  int32 quantity = 3;       // 商品数量
 }
 
 // 新增购物车商品
 message UpsertItemReq {
-  CartItem item = 3;
+  string user_id = 1 ;
+  CartItem item = 2;
 }
 
 message UpsertItemResp {
   bool success = 1;  // 操作是否成功
 }
 
+// 清空购物车
+message EmptyCartReq {
+  string user_id = 1 ;
+}
+
 message EmptyCartResp {
   bool success = 1;  // 操作是否成功
+}
+
+// 获取购物车信息
+message GetCartReq {
+  string user_id = 1 ;
 }
 
 message GetCartResp {
@@ -70,13 +113,15 @@ message GetCartResp {
 
 // 购物车信息
 message Cart {
-  string user_id = 1;
-  repeated CartItem items = 3;   // 购物车商品列表
+  string user_id = 1 ;
+  repeated CartItem items = 2;   // 购物车商品列表
 }
 
 // 删除购物车商品
 message RemoveCartItemReq {
-  uint32 product_id = 1;
+  string user_id = 1 ;
+  string merchant_id = 2 ;
+  string product_id = 3 ;
 }
 message RemoveCartItemResp {
   bool success = 1;  // 操作是否成功

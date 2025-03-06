@@ -5,27 +5,22 @@ import (
 	"backend/application/cart/internal/data/models"
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/exaring/otelpgx"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewMongoDB, NewCache, NewCartRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCartRepo)
 
 type Data struct {
 	db     *models.Queries
 	pgx    *pgxpool.Pool
 	rdb    *redis.Client
-	mdb    *mongo.Database
+	// mdb    *mongo.Database
 	logger *log.Helper
 }
 
@@ -35,7 +30,7 @@ type contextTxKey struct{}
 func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
-	mdb *mongo.Database,
+	// mdb *mongo.Database,
 	logger log.Logger,
 ) (*Data, func(), error) {
 	cleanup := func() {
@@ -44,7 +39,7 @@ func NewData(
 	return &Data{
 		db:     models.New(db),        // 数据库
 		pgx:    db,                    // 数据库事务
-		mdb:    mdb,                   // 数据库
+		// mdb:    mdb,                   // 数据库
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
 	}, cleanup, nil
@@ -71,22 +66,22 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 	return conn
 }
 
-func NewMongoDB(c *conf.Data, logger log.Logger) *mongo.Database {
-	helper := log.NewHelper(log.With(logger, "module", "cart/data/mongodb"))
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(c.Mongo.Url))
-	if err != nil {
-		helper.Fatalf("failed to connect to mongodb: %v", err)
-	}
-	// 检查连接
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		helper.Fatalf("failed to ping mongodb: %v", err)
-	}
-	helper.Info("connected to mongodb")
-	return client.Database(c.Mongo.Database, nil)
-}
+// func NewMongoDB(c *conf.Data, logger log.Logger) *mongo.Database {
+// 	helper := log.NewHelper(log.With(logger, "module", "cart/data/mongodb"))
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	defer cancel()
+// 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(c.Mongo.Url))
+// 	if err != nil {
+// 		helper.Fatalf("failed to connect to mongodb: %v", err)
+// 	}
+// 	// 检查连接
+// 	err = client.Ping(ctx, readpref.Primary())
+// 	if err != nil {
+// 		helper.Fatalf("failed to ping mongodb: %v", err)
+// 	}
+// 	helper.Info("connected to mongodb")
+// 	return client.Database(c.Mongo.Database, nil)
+// }
 
 // NewCache 缓存
 func NewCache(c *conf.Data) *redis.Client {

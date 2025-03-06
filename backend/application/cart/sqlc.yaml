@@ -4,8 +4,8 @@ sql:
     queries: "internal/data/queries"
     engine: "postgresql"
     database:
-      # uri: ${DB_SOURCE}
-      uri: postgresql://postgres:citus@192.168.223.128:5432/database?sslmode=disable&timezone=Asia/Shanghai
+       uri: ${DB_SOURCE}
+#      uri: postgresql://postgres:citus@192.168.223.128:5432/database?sslmode=disable&timezone=Asia/Shanghai
     gen:
       go:
         package: "models"

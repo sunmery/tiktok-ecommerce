@@ -22,6 +22,7 @@ const _ = http.SupportPackageIsVersion1
 const OperationCheckoutServiceCheckout = "/ecommerce.checkout.v1.CheckoutService/Checkout"
 
 type CheckoutServiceHTTPServer interface {
+	// Checkout 结账接口
 	Checkout(context.Context, *CheckoutReq) (*CheckoutResp, error)
 }
 

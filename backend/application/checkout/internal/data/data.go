@@ -1,25 +1,38 @@
 package data
 
 import (
+	orderv1 "backend/api/order/v1"
+	v1 "backend/api/order/v1"
+	paymentv1 "backend/api/payment/v1"
+	"backend/application/checkout/internal/conf"
+	"backend/constants"
 	"context"
 	"fmt"
 	"github.com/exaring/otelpgx"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/google/wire"
+	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	"backend/application/checkout/internal/conf"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCheckoutRepo, NewDiscovery, NewOrderServiceClient, NewPaymentServiceClient)
 
 type Data struct {
 	db     *models.Queries
 	pgx    *pgxpool.Pool
 	rdb    *redis.Client
 	logger *log.Helper
+	orderv1  v1.OrderServiceClient
+	paymentv1 paymentv1.PaymentServiceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -30,6 +43,8 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	logger log.Logger,
+	orderv1 v1.OrderServiceClient,
+	paymentv1 paymentv1.PaymentServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -39,7 +54,59 @@ func NewData(
 		pgx:    db,                    // 数据库事务
 		rdb:    rdb,                   // 缓存
 		logger: log.NewHelper(logger), // 注入日志
+		orderv1:  orderv1,
+		paymentv1: paymentv1,             // 支付服务
 	}, cleanup, nil
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewOrderServiceClient 订单微服务
+func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.OrderServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.OrderServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return orderv1.NewOrderServiceClient(conn), nil
+}
+
+// NewPaymentServiceClient 支付微服务
+func NewPaymentServiceClient(d registry.Discovery, logger log.Logger) (paymentv1.PaymentServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.PaymentServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return paymentv1.NewPaymentServiceClient(conn), nil
 }
 
 // NewCache 缓存

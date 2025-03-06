@@ -6,101 +6,77 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
-	//CheckCartItem
+	//CreateCart
 	//
-	//  UPDATE cart_schema.cart_items AS ci
-	//  SET selected = TRUE
-	//  WHERE ci.cart_id =
-	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
-	//      AND ci.merchant_id = $3  -- 商家ID
-	//      AND ci.product_id = $4
-	//  RETURNING 1
-	CheckCartItem(ctx context.Context, arg CheckCartItemParams) (int32, error)
-	// 返回 1 表示受影响的行数
-	//
-	//
-	//  INSERT INTO cart_schema.cart (user_id, cart_name)
+	//  INSERT INTO carts.cart (user_id, cart_name)
 	//  VALUES ($1, $2)
 	//  RETURNING cart_id, user_id, cart_name, status, created_at, updated_at
-	CreateCart(ctx context.Context, arg CreateCartParams) (CartSchemaCart, error)
+	CreateCart(ctx context.Context, arg CreateCartParams) (CartsCart, error)
 	//CreateOrder
 	//
-	//  SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.selected
-	//  FROM cart_schema.cart_items AS ci
+	//  SELECT ci.merchant_id, ci.product_id, ci.quantity
+	//  FROM carts.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
+	//       FROM carts.cart AS c
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
-	//      AND ci.selected = TRUE
 	CreateOrder(ctx context.Context, arg CreateOrderParams) ([]CreateOrderRow, error)
 	//EmptyCart
 	//
-	//  DELETE FROM cart_schema.cart_items AS ci
+	//  DELETE FROM carts.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
+	//       FROM carts.cart AS c
 	//       WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
 	//  RETURNING 1
 	EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, error)
 	//GetCart
 	//
-	//  SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.selected
-	//  FROM cart_schema.cart_items AS ci
+	//  SELECT ci.merchant_id, ci.product_id, ci.quantity
+	//  FROM carts.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
+	//       FROM carts.cart AS c
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
 	GetCart(ctx context.Context, arg GetCartParams) ([]GetCartRow, error)
 	//ListCarts
 	//
 	//  SELECT c.cart_id, c.cart_name
-	//  FROM cart_schema.cart AS c
+	//  FROM carts.cart AS c
 	//  WHERE c.user_id = $1
-	ListCarts(ctx context.Context, userID string) ([]ListCartsRow, error)
+	ListCarts(ctx context.Context, userID uuid.UUID) ([]ListCartsRow, error)
 	// 获取用户的购物车ID
 	//
 	//
-	//  DELETE FROM cart_schema.cart_items AS ci
+	//  DELETE FROM carts.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
+	//       FROM carts.cart AS c
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
 	//      AND ci.merchant_id = $3  -- 商家ID
 	//      AND ci.product_id = $4  -- 删除指定商品ID
-	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, selected, created_at, updated_at
-	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartSchemaCartItems, error)
-	//UncheckCartItem
-	//
-	//  UPDATE cart_schema.cart_items AS ci
-	//  SET selected = FALSE
-	//  WHERE ci.cart_id =
-	//      (SELECT c.cart_id
-	//       FROM cart_schema.cart AS c
-	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
-	//      AND ci.merchant_id = $3  -- 商家ID
-	//      AND ci.product_id = $4
-	//  RETURNING 1
-	UncheckCartItem(ctx context.Context, arg UncheckCartItemParams) (int32, error)
+	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartsCartItems, error)
 	//UpsertItem
 	//
 	//  WITH cart_id_cte AS (
 	//      SELECT c.cart_id
-	//      FROM cart_schema.cart AS c
+	//      FROM carts.cart AS c
 	//      WHERE c.user_id = $1 AND c.cart_name = $2
 	//      LIMIT 1
 	//  ),
 	//  insert_cart AS (
-	//      INSERT INTO cart_schema.cart (user_id, cart_name)
+	//      INSERT INTO carts.cart (user_id, cart_name)
 	//      SELECT $1, $2
 	//      WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
 	//      RETURNING cart_id
 	//  )
-	//  INSERT INTO cart_schema.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
+	//  INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
 	//  VALUES (
 	//      COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
 	//      $3,   -- 商家ID
@@ -113,8 +89,8 @@ type Querier interface {
 	//  DO UPDATE SET
 	//      quantity = EXCLUDED.quantity,  -- 更新商品数量
 	//      updated_at = CURRENT_TIMESTAMP  -- 更新时间
-	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, selected, created_at, updated_at
-	UpsertItem(ctx context.Context, arg UpsertItemParams) (CartSchemaCartItems, error)
+	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+	UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCartItems, error)
 }
 
 var _ Querier = (*Queries)(nil)

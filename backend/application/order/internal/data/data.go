@@ -115,7 +115,7 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	return r, nil
 }
 
-// NewPaymentServiceClient 认证微服务
+// NewPaymentServiceClient 支付微服务
 func NewPaymentServiceClient(d registry.Discovery, logger log.Logger) (paymentv1.PaymentServiceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),

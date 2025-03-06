@@ -1,32 +1,45 @@
 package biz
 
 import (
+	v1 "backend/api/user/v1"
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/google/uuid"
 )
 
-// var (
-// 	// ErrUserNotFound is user not found.
-// 	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
-// )
+type (
+	CheckoutRequest struct {
+		UserId     uuid.UUID          // 用户 ID（可选），如果用户未注册，则可以为空
+		Firstname  string          // 用户的名字（必填），允许非注册用户直接填写信息下单
+		Lastname   string          // 用户的姓氏（必填）
+		Email      string          // 用户的邮箱地址（必填），用于接收订单确认邮件等
+		CreditCard *v1.CreditCards // 用户的信用卡信息（必填），用于支付
+		Address    *v1.Address
+	}
+	CheckoutReply struct {
+		OrderId       string // 唯一标识订单，用于后续查询、退换货等操作
+		TransactionId string // 支付事务唯一标识，用于与支付网关对账或处理支付相关问题
+		PaymentURL string // 支付URL
+	}
+)
 
-type UserRepo interface {
-	Signin(context.Context, *SigninRequest) (*SigninReply, error)
+type CheckoutRepo interface {
+	Checkout(context.Context, *CheckoutRequest) (*CheckoutReply, error)
 }
 
-type UserUsecase struct {
-	repo UserRepo
+type CheckoutUsecase struct {
+	repo CheckoutRepo
 	log  *log.Helper
 }
 
-func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{
+func NewCheckoutUsecase(repo CheckoutRepo, logger log.Logger) *CheckoutUsecase {
+	return &CheckoutUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
 }
 
-func (cc *UserUsecase) Signin(ctx context.Context, req *SigninRequest) (*SigninReply, error) {
+func (cc *CheckoutUsecase) Checkout(ctx context.Context, req *CheckoutRequest) (*CheckoutReply, error) {
 	cc.log.WithContext(ctx).Debugf("Signin request: %+v", req)
-	return cc.repo.Signin(ctx, req)
+	return cc.repo.Checkout(ctx, req)
 }

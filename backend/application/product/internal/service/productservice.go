@@ -181,14 +181,26 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
 	// 层层传递下去
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
+	// var userIdMetaKey string
+	// if md, ok := metadata.FromServerContext(ctx); ok {
+	// 	userIdMetaKey = md.Get("x-md-global-user-id")
+	// }
+	//
+	// userId, err := uuid.Parse(userIdMetaKey)
+	// if err!= nil {
+	// 	return nil, errors.New("invalid user ID")
+	// }
+	productId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
-
-	id, err := uuid.Parse(userId)
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
-		ID: id,
+		ID:         productId,
+		MerchantID: merchantId,
 	})
 	if err != nil {
 		return nil, err

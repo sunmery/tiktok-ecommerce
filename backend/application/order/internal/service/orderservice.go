@@ -47,7 +47,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 			Item: &biz.CartItem{
 				MerchantId: merchantId,
 				ProductId:  ProductId,
-				Quantity:   item.Item.Quantity,
+				Quantity: uint32(item.Item.Quantity),
 			},
 			Cost: item.Cost,
 		})

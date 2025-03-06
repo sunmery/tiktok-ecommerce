@@ -2,7 +2,7 @@ package server
 
 import (
 	"backend/application/cart/internal/conf"
-
+	"fmt"
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/hashicorp/consul/api"
@@ -15,6 +15,7 @@ func NewRegistrar(c *conf.Consul) registry.Registrar {
 	// 创建consul客户端
 	configs := api.DefaultConfig()
 	// 从conf/conf.proto定义Consul配置与configs/config.yml配置文件中读取consul的配置
+	fmt.Println(c.RegistryCenter.Address)
 	configs.Address = c.RegistryCenter.Address
 	configs.Scheme = c.RegistryCenter.Scheme
 	// 创建consul客户端

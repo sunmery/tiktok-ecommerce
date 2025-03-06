@@ -1,14 +1,15 @@
 package biz
 
+import "github.com/google/uuid"
+
 type CartItem struct {
-	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
-	ProductId  uint32 `json:"product_id"`  // 商品ID
+	MerchantId uuid.UUID `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uuid.UUID `json:"product_id"`  // 商品ID
 	Quantity   int32  `json:"quantity"`    // 商品数量
-	Selected   bool   `json:"selected"`    // 是否选中
 }
 
 type UpsertItemReq struct {
-	UserId string   `json:"user_id"` // 新增字段，表示用户ID
+	UserId uuid.UUID   `json:"user_id"` // 新增字段，表示用户ID
 	Item   CartItem `json:"item"`
 }
 
@@ -17,7 +18,7 @@ type UpsertItemResp struct {
 }
 
 type EmptyCartReq struct {
-	UserId string `json:"user_id"` // 新增字段，表示用户ID
+	UserId uuid.UUID `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type EmptyCartResp struct {
@@ -25,7 +26,7 @@ type EmptyCartResp struct {
 }
 
 type GetCartReq struct {
-	UserId string `json:"user_id"` // 新增字段，表示用户ID
+	UserId uuid.UUID `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type GetCartResp struct {
@@ -38,9 +39,9 @@ type Cart struct {
 }
 
 type RemoveCartItemReq struct {
-	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
-	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
-	ProductId  uint32 `json:"product_id"`
+	UserId     uuid.UUID `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId uuid.UUID `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uuid.UUID `json:"product_id"`
 }
 
 type RemoveCartItemResp struct {
@@ -48,9 +49,9 @@ type RemoveCartItemResp struct {
 }
 
 type CheckCartItemReq struct {
-	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
-	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
-	ProductId  uint32 `json:"product_id"`
+	UserId     uuid.UUID `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId uuid.UUID `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uuid.UUID `json:"product_id"`
 }
 
 type CheckCartItemResp struct {
@@ -58,9 +59,9 @@ type CheckCartItemResp struct {
 }
 
 type UncheckCartItemReq struct {
-	UserId     string `json:"user_id"`     // 新增字段，表示用户ID
-	MerchantId string `json:"merchant_id"` // 新增字段，表示商家ID
-	ProductId  uint32 `json:"product_id"`
+	UserId     uuid.UUID `json:"user_id"`     // 新增字段，表示用户ID
+	MerchantId uuid.UUID `json:"merchant_id"` // 新增字段，表示商家ID
+	ProductId  uuid.UUID `json:"product_id"`
 }
 
 type UncheckCartItemResp struct {
@@ -68,7 +69,7 @@ type UncheckCartItemResp struct {
 }
 
 type CreateOrderReq struct {
-	UserId string `json:"user_id"` // 新增字段，表示用户ID
+	UserId uuid.UUID `json:"user_id"` // 新增字段，表示用户ID
 }
 
 type CreateOrderResp struct {
@@ -76,25 +77,6 @@ type CreateOrderResp struct {
 	Items   []CartItem `json:"items"` // 返回被选中的商品
 }
 
-type CreateCartReq struct {
-	UserId   string `json:"user_id"`   // 新增字段，表示用户ID
-	CartName string `json:"cart_name"` // 购物车名称
-}
-
-type CreateCartResp struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"` // 购物车创建反馈信息
-}
-
 type ListCartsReq struct {
-	UserId string `json:"user_id"` // 新增字段，表示用户ID
-}
-
-type CartSummary struct {
-	CartId   uint32 `json:"cart_id"`   // 购物车ID
-	CartName string `json:"cart_name"` // 购物车名称
-}
-
-type ListCartsResp struct {
-	Carts []CartSummary `json:"carts"` // 返回购物车列表
+	UserId uuid.UUID `json:"user_id"` // 新增字段，表示用户ID
 }
