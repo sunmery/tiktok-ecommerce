@@ -49,7 +49,7 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 	}, nil
 }
 
-func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
+func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb.GetCartResp, error) {
 	// 从网关获取用户ID
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -72,13 +72,12 @@ func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*
 	}
 	return &pb.GetCartResp{
 		Cart: &pb.Cart{
-			UserId: cart.Cart.UserId,
 			Items:  items,
 		},
 	}, nil
 }
 
-func (s *CartServiceService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq) (*pb.EmptyCartResp, error) {
+func (s *CartServiceService) EmptyCart(ctx context.Context, _ *pb.EmptyCartReq) (*pb.EmptyCartResp, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))

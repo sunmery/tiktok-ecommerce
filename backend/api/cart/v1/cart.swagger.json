@@ -34,15 +34,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "string owner = 1;\nstring name = 2;",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "CartService"
         ]
@@ -64,15 +55,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "string owner = 1;\nstring name = 2;",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "CartService"
         ]
@@ -109,39 +91,6 @@
         ]
       }
     },
-    "/v1/carts/create": {
-      "post": {
-        "summary": "创建购物车",
-        "operationId": "CartService_CreateCart",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateCartResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateCartReq"
-            }
-          }
-        ],
-        "tags": [
-          "CartService"
-        ]
-      }
-    },
     "/v1/carts/item": {
       "delete": {
         "summary": "删除购物车商品",
@@ -161,12 +110,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
           {
             "name": "merchantId",
             "in": "query",
@@ -218,9 +161,6 @@
     "v1Cart": {
       "type": "object",
       "properties": {
-        "userId": {
-          "type": "string"
-        },
         "items": {
           "type": "array",
           "items": {
@@ -249,31 +189,6 @@
         }
       },
       "title": "购物车商品"
-    },
-    "v1CreateCartReq": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "title": "string owner = 1;\nstring name = 2;\nstring cart_name = 3 ;"
-        },
-        "cartName": {
-          "type": "string"
-        }
-      },
-      "title": "新建购物车"
-    },
-    "v1CreateCartResp": {
-      "type": "object",
-      "properties": {
-        "success": {
-          "type": "boolean"
-        },
-        "message": {
-          "type": "string",
-          "title": "购物车创建反馈信息"
-        }
-      }
     },
     "v1EmptyCartResp": {
       "type": "object",
@@ -304,10 +219,6 @@
     "v1UpsertItemReq": {
       "type": "object",
       "properties": {
-        "userId": {
-          "type": "string",
-          "title": "string owner = 1;\nstring name = 2;\nCartItem item = 3;"
-        },
         "item": {
           "$ref": "#/definitions/v1CartItem"
         }

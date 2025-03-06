@@ -19,7 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CartService_CreateCart_FullMethodName     = "/ecommerce.cart.v1.CartService/CreateCart"
 	CartService_UpsertItem_FullMethodName     = "/ecommerce.cart.v1.CartService/UpsertItem"
 	CartService_GetCart_FullMethodName        = "/ecommerce.cart.v1.CartService/GetCart"
 	CartService_EmptyCart_FullMethodName      = "/ecommerce.cart.v1.CartService/EmptyCart"
@@ -30,8 +29,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CartServiceClient interface {
-	// 创建购物车
-	CreateCart(ctx context.Context, in *CreateCartReq, opts ...grpc.CallOption) (*CreateCartResp, error)
 	// 新增购物车商品
 	UpsertItem(ctx context.Context, in *UpsertItemReq, opts ...grpc.CallOption) (*UpsertItemResp, error)
 	// 获取购物车信息
@@ -48,16 +45,6 @@ type cartServiceClient struct {
 
 func NewCartServiceClient(cc grpc.ClientConnInterface) CartServiceClient {
 	return &cartServiceClient{cc}
-}
-
-func (c *cartServiceClient) CreateCart(ctx context.Context, in *CreateCartReq, opts ...grpc.CallOption) (*CreateCartResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateCartResp)
-	err := c.cc.Invoke(ctx, CartService_CreateCart_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *cartServiceClient) UpsertItem(ctx context.Context, in *UpsertItemReq, opts ...grpc.CallOption) (*UpsertItemResp, error) {
@@ -104,8 +91,6 @@ func (c *cartServiceClient) RemoveCartItem(ctx context.Context, in *RemoveCartIt
 // All implementations must embed UnimplementedCartServiceServer
 // for forward compatibility.
 type CartServiceServer interface {
-	// 创建购物车
-	CreateCart(context.Context, *CreateCartReq) (*CreateCartResp, error)
 	// 新增购物车商品
 	UpsertItem(context.Context, *UpsertItemReq) (*UpsertItemResp, error)
 	// 获取购物车信息
@@ -124,9 +109,6 @@ type CartServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCartServiceServer struct{}
 
-func (UnimplementedCartServiceServer) CreateCart(context.Context, *CreateCartReq) (*CreateCartResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCart not implemented")
-}
 func (UnimplementedCartServiceServer) UpsertItem(context.Context, *UpsertItemReq) (*UpsertItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertItem not implemented")
 }
@@ -158,24 +140,6 @@ func RegisterCartServiceServer(s grpc.ServiceRegistrar, srv CartServiceServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&CartService_ServiceDesc, srv)
-}
-
-func _CartService_CreateCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCartReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CartServiceServer).CreateCart(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CartService_CreateCart_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CartServiceServer).CreateCart(ctx, req.(*CreateCartReq))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _CartService_UpsertItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -257,10 +221,6 @@ var CartService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ecommerce.cart.v1.CartService",
 	HandlerType: (*CartServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateCart",
-			Handler:    _CartService_CreateCart_Handler,
-		},
 		{
 			MethodName: "UpsertItem",
 			Handler:    _CartService_UpsertItem_Handler,

@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package ecommerce.cart.v1;
 
-import "google/api/annotations.proto";
-
 option go_package = "backend/api/cart/v1;cartv1";
 import "errors/errors.proto";
 

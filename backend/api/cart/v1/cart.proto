@@ -35,9 +35,7 @@ service CartService {
 }
 
 // 列出所有购物车
-message ListCartsReq {
-  string user_id = 1 ;
-}
+message ListCartsReq {}
 
 message ListCartsResp {
   repeated CartSummary carts = 1; // 返回购物车列表
@@ -50,7 +48,6 @@ message CartSummary {
 
 // 选中购物车商品
 message CheckCartItemReq {
-  string user_id = 1 ;
   string merchant_id = 2;
   string product_id = 3 ;
 }
@@ -61,9 +58,8 @@ message CheckCartItemResp {
 
 // 取消选中购物车商品
 message UncheckCartItemReq {
-  string user_id = 1 ;
-  string merchant_id = 2 ;
-  string product_id = 3 ;
+  string merchant_id = 2;
+  string product_id = 3;
 }
 
 message UncheckCartItemResp {
@@ -85,7 +81,6 @@ message CartItem {
 
 // 新增购物车商品
 message UpsertItemReq {
-  string user_id = 1 ;
   CartItem item = 2;
 }
 
@@ -94,18 +89,14 @@ message UpsertItemResp {
 }
 
 // 清空购物车
-message EmptyCartReq {
-  string user_id = 1 ;
-}
+message EmptyCartReq {}
 
 message EmptyCartResp {
   bool success = 1;  // 操作是否成功
 }
 
 // 获取购物车信息
-message GetCartReq {
-  string user_id = 1 ;
-}
+message GetCartReq {}
 
 message GetCartResp {
   Cart cart = 1;
@@ -113,13 +104,11 @@ message GetCartResp {
 
 // 购物车信息
 message Cart {
-  string user_id = 1 ;
   repeated CartItem items = 2;   // 购物车商品列表
 }
 
 // 删除购物车商品
 message RemoveCartItemReq {
-  string user_id = 1 ;
   string merchant_id = 2 ;
   string product_id = 3 ;
 }
