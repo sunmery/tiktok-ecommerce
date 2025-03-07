@@ -50,15 +50,10 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 	}, nil
 }
 
-func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb.GetCartResp, error) {
-	// 从网关获取用户ID
+func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	cart, err := s.cc.GetCart(ctx, &biz.GetCartReq{
-		UserId:userId,
+		UserId: userId,
 	})
 	if err != nil {
 		return nil, pb.ErrorCartitemNotFound("failed to get cart: %v", err)
@@ -69,11 +64,12 @@ func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb
 			MerchantId: item.MerchantId.String(),
 			ProductId:  item.ProductId.String(),
 			Quantity:   item.Quantity,
+			Price:      item.Price,
 		}
 	}
 	return &pb.GetCartResp{
 		Cart: &pb.Cart{
-			Items:  items,
+			Items: items,
 		},
 	}, nil
 }

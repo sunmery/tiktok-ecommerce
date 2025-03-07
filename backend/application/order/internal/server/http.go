@@ -50,7 +50,6 @@ func NewHTTPServer(c *conf.Server,
 	// trace end
 	var opts = []http.ServerOption{
 		http.Middleware(
-
 			metadata.Server(),
 			validate.Validator(), // 参数校验
 			tracing.Server(),

@@ -112,9 +112,6 @@
       "title": "定义地址信息的消息结构",
       "required": [
         "userId",
-        "city",
-        "state",
-        "country",
         "zipCode",
         "streetAddress"
       ]
@@ -155,16 +152,29 @@
           "type": "string",
           "title": "唯一标识订单，用于后续查询、退换货等操作"
         },
-        "transactionId": {
+        "paymentId": {
           "type": "string",
-          "title": "支付事务唯一标识，用于与支付网关对账或处理支付相关问题"
+          "title": "支付ID"
+        },
+        "paymentUrl": {
+          "type": "string",
+          "title": "支付链接"
         }
       },
       "title": "结账响应的消息结构"
     },
-    "v1CreditCards": {
+    "v1CreditCard": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "ID"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币类型;"
+        },
         "number": {
           "type": "string",
           "title": "卡号"
@@ -175,24 +185,19 @@
         },
         "expYear": {
           "type": "string",
-          "title": "过期年份"
+          "title": "过期年份;"
         },
         "expMonth": {
           "type": "string",
-          "title": "过期月份"
+          "title": "过期月份;"
         },
         "owner": {
           "type": "string",
-          "title": "持卡人姓名"
+          "title": "持卡人姓名;"
         },
         "name": {
           "type": "string",
           "title": "卡名"
-        },
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "卡 ID"
         },
         "type": {
           "type": "string",
@@ -206,12 +211,25 @@
           "type": "string",
           "title": "卡所属国家"
         },
-        "createdTime": {
+        "createdAt": {
           "type": "string",
+          "format": "date-time",
           "title": "创建时间"
         }
       },
       "title": "定义信用卡信息的消息结构"
+    },
+    "v1CreditCards": {
+      "type": "object",
+      "properties": {
+        "creditCards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CreditCard"
+          }
+        }
+      }
     }
   }
 }

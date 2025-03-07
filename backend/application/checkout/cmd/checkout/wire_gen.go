@@ -7,13 +7,13 @@
 package main
 
 import (
-	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"backend/application/checkout/internal/biz"
 	"backend/application/checkout/internal/conf"
 	"backend/application/checkout/internal/data"
 	"backend/application/checkout/internal/server"
 	"backend/application/checkout/internal/service"
+	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 import (
@@ -23,19 +23,33 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, consul *conf.Consul, trace *conf.Trace, logger log.Logger) (*kratos.App, func(), error) {
-	pool := data.NewDB(confData)
+func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, observability *conf.Observability, logger log.Logger) (*kratos.App, func(), error) {
 	client := data.NewCache(confData)
-	casdoorsdkClient := data.NewCasdoor(auth)
-	dataData, cleanup, err := data.NewData(pool, client, casdoorsdkClient, logger)
+	discovery, err := data.NewDiscovery(consul)
 	if err != nil {
 		return nil, nil, err
 	}
-	userRepo := data.NewUserRepo(dataData, logger)
-	userUsecase := biz.NewUserUsecase(userRepo, logger)
-	userService := service.NewUserService(userUsecase)
-	grpcServer := server.NewGRPCServer(confServer, userService, trace, logger)
-	httpServer := server.NewHTTPServer(confServer, userService, auth, trace, logger)
+	cartServiceClient, err := data.NewCartServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	orderServiceClient, err := data.NewOrderServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	paymentServiceClient, err := data.NewPaymentServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(client, logger, cartServiceClient, orderServiceClient, paymentServiceClient)
+	if err != nil {
+		return nil, nil, err
+	}
+	checkoutRepo := data.NewCheckoutRepo(dataData, logger)
+	checkoutUsecase := biz.NewCheckoutUsecase(checkoutRepo, logger)
+	checkoutServiceService := service.NewCheckoutServiceService(checkoutUsecase)
+	grpcServer := server.NewGRPCServer(checkoutServiceService, confServer, observability, logger)
+	httpServer := server.NewHTTPServer(confServer, checkoutServiceService, observability, logger)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {

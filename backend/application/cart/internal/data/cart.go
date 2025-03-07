@@ -5,7 +5,9 @@ import (
 	"backend/application/cart/internal/data/models"
 	"backend/pkg/types"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -29,6 +31,11 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 		CartName: "cart",
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return &biz.EmptyCartResp{
+				Success: false,
+			}, nil
+		}
 		return nil, err
 	}
 	if effected == 0 {
@@ -54,10 +61,15 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 	c.log.WithContext(ctx).Infof("GetCart request : %+v", cart)
 	var cartItems []biz.CartItem
 	for _, item := range cart {
+		price, err := types.NumericToFloat(item.Price)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert price to float: %v", err)
+		}
 		var cartitem biz.CartItem
 		cartitem.MerchantId = item.MerchantID
 		cartitem.ProductId = item.ProductID
 		cartitem.Quantity = item.Quantity
+		cartitem.Price = price
 		cartItems = append(cartItems, cartitem)
 	}
 

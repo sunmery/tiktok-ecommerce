@@ -5,13 +5,13 @@ import "github.com/google/uuid"
 type CartItem struct {
 	MerchantId uuid.UUID `json:"merchant_id"` // 新增字段，表示商家ID
 	ProductId  uuid.UUID `json:"product_id"`  // 商品ID
-	Quantity   int32  `json:"quantity"`    // 商品数量
+	Quantity   int32     `json:"quantity"`    // 商品数量
 	Price      float64   `json:"price"`       // 商品价格
 }
 
 type UpsertItemReq struct {
-	UserId uuid.UUID   `json:"user_id"` // 新增字段，表示用户ID
-	Item   CartItem `json:"item"`
+	UserId uuid.UUID `json:"user_id"` // 新增字段，表示用户ID
+	Item   CartItem  `json:"item"`
 }
 
 type UpsertItemResp struct {

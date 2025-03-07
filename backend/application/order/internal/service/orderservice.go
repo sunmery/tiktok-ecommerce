@@ -22,10 +22,9 @@ func NewOrderServiceService(uc *biz.OrderUsecase) *OrderServiceService {
 
 func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (*v1.PlaceOrderResp, error) {
 	// 从网关获取用户ID
-
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse userId UUID: %v", err)
 	}
 	var orderItems []*biz.OrderItem
 	for _, item := range req.OrderItems {

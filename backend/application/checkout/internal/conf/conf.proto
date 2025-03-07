@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "kratos-template/internal/conf;conf";
+option go_package = "checkout/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -26,18 +26,6 @@ message Server {
 }
 
 message Data {
-  message Pool {
-    int32 max_conns = 1;
-    int32 min_conns = 2;
-    google.protobuf.Duration max_conn_lifetime = 3;
-    google.protobuf.Duration health_check_period = 4;
-    google.protobuf.Duration max_conn_idle_time = 5;
-  }
-  message Database {
-    string driver = 1;
-    string source = 2;
-    Pool pool = 3;
-  }
   message Cache {
     string network = 1;
     string addr = 2;
@@ -47,8 +35,7 @@ message Data {
     string username = 6;
     string password = 7;
   }
-  Database database = 1;
-  Cache cache = 2;
+  Cache cache = 1;
 }
 
 // SaaS 软件即服务

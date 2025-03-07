@@ -120,7 +120,7 @@ func (q *Queries) EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, er
 }
 
 const GetCart = `-- name: GetCart :many
-SELECT ci.merchant_id, ci.product_id, ci.quantity
+SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
 FROM carts.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
@@ -134,14 +134,15 @@ type GetCartParams struct {
 }
 
 type GetCartRow struct {
-	MerchantID uuid.UUID `json:"merchantID"`
-	ProductID  uuid.UUID `json:"productID"`
-	Quantity   int32     `json:"quantity"`
+	MerchantID uuid.UUID      `json:"merchantID"`
+	ProductID  uuid.UUID      `json:"productID"`
+	Quantity   int32          `json:"quantity"`
+	Price      pgtype.Numeric `json:"price"`
 }
 
 // GetCart
 //
-//	SELECT ci.merchant_id, ci.product_id, ci.quantity
+//	SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
 //	FROM carts.cart_items AS ci
 //	WHERE ci.cart_id =
 //	    (SELECT c.cart_id
@@ -156,7 +157,12 @@ func (q *Queries) GetCart(ctx context.Context, arg GetCartParams) ([]GetCartRow,
 	var items []GetCartRow
 	for rows.Next() {
 		var i GetCartRow
-		if err := rows.Scan(&i.MerchantID, &i.ProductID, &i.Quantity); err != nil {
+		if err := rows.Scan(
+			&i.MerchantID,
+			&i.ProductID,
+			&i.Quantity,
+			&i.Price,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

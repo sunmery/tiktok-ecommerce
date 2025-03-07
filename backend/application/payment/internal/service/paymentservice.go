@@ -30,11 +30,14 @@ func (s *PaymentServiceService) CreatePayment(ctx context.Context, req *pb.Creat
 		return nil, fmt.Errorf("invalid order id")
 	}
 	result, err := s.uc.CreatePayment(ctx, &biz.CreatePaymentReq{
-		OrderId:  orderId,
-		Currency: req.Currency,
-		Amount:   req.Amount,
-		// PaymentMethod: req.PaymentMethod,
-		// Metadata:      req.Metadata,
+		OrderId:       orderId,
+		Currency:      req.Currency,
+		Amount:        req.Amount,
+		// PaymentMethod: "alipay",
+		// Method:        "",
+		// Status:        "",
+		// GatewayTxID:   nil,
+		// Metadata:      nil,
 	})
 	if err != nil {
 		return nil, err

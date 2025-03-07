@@ -37,7 +37,7 @@ type Querier interface {
 	EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, error)
 	//GetCart
 	//
-	//  SELECT ci.merchant_id, ci.product_id, ci.quantity
+	//  SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
 	//  FROM carts.cart_items AS ci
 	//  WHERE ci.cart_id =
 	//      (SELECT c.cart_id

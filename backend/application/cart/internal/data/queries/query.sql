@@ -28,7 +28,7 @@ DO UPDATE SET
 RETURNING *;
 
 -- name: GetCart :many
-SELECT ci.merchant_id, ci.product_id, ci.quantity
+SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
 FROM carts.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id

@@ -6,6 +6,7 @@ import (
 	"backend/application/cart/internal/service"
 	"backend/constants"
 	"context"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -49,6 +50,7 @@ func NewGRPCServer(
 
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
+			metadata.Server(), // 注入 metadata
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				// recovery.WithLogger(log.DefaultLogger),
