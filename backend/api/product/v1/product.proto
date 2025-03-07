@@ -43,6 +43,13 @@ service ProductService {
     };
   }
 
+  // 随机返回商品数据
+  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products"
+    };
+  }
+
   // 获取商品详情
   rpc GetProduct(GetProductRequest) returns (Product) {
     option (google.api.http) = {
@@ -50,17 +57,17 @@ service ProductService {
     };
   }
 
+  // 获取商家对应的商品
+  rpc GetMerchantProducts(GetMerchantProductRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/merchants/products"
+    };
+  }
+
   // 根据商品名称模糊查询
   rpc SearchProductsByName(SearchProductRequest) returns (Products) {
     option (google.api.http) = {
       get: "/v1/products/{name}"
-    };
-  }
-
-  // 随机返回商品数据
-  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
-    option (google.api.http) = {
-      get: "/v1/products"
     };
   }
 
@@ -101,6 +108,9 @@ message ListRandomProductsRequest {
   uint32 status = 3; // 商品状态
 }
 
+// 获取商家对应的商品
+message GetMerchantProductRequest {}
+
 message SearchProductRequest {
   string name = 1 [(validate.rules).string = {min_len: 1, max_len: 200}];
   // 将自然语言文本转换为全文搜索查询条件（tsquery 类型），主要功能包括：
@@ -126,7 +136,6 @@ message Products {
 message ListProductsByCategoryRequest {
   string name = 1;
 }
-
 
 // 新增分类验证相关定义
 message CategoryInfo {

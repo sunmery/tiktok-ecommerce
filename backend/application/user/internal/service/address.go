@@ -1,14 +1,11 @@
 package service
 
 import (
+	"backend/pkg"
 	"context"
-	"errors"
+	"fmt"
 
 	"google.golang.org/protobuf/types/known/emptypb"
-
-	"github.com/go-kratos/kratos/v2/metadata"
-
-	"github.com/google/uuid"
 
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/biz"
@@ -16,11 +13,11 @@ import (
 
 // CreateAddresses 创建地址
 func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1.Address, error) {
-	var userStr string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		md.Get("x-global-user-id")
+
+	userId, uErr := pkg.GetMetadataUesrID(ctx)
+	if uErr != nil {
+		return nil, fmt.Errorf("错误的UserID")
 	}
-	userId := uuid.MustParse(userStr)
 	address, err := s.uc.CreateAddress(ctx, &biz.Address{
 		UserId:        userId,
 		StreetAddress: req.StreetAddress,
@@ -32,6 +29,7 @@ func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1
 	if err != nil {
 		return nil, err
 	}
+
 	return &v1.Address{
 		Id:            address.Id,
 		UserId:        userId.String(),
@@ -45,11 +43,10 @@ func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1
 
 // UpdateAddresses 更新地址
 func (s *UserService) UpdateAddresses(ctx context.Context, req *v1.Address) (*v1.Address, error) {
-	var userStr string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		md.Get("x-global-user-id")
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("错误的UserID")
 	}
-	userId := uuid.MustParse(userStr)
 	address, err := s.uc.UpdateAddress(ctx, &biz.Address{
 		Id:            req.Id,
 		UserId:        userId,
@@ -75,11 +72,10 @@ func (s *UserService) UpdateAddresses(ctx context.Context, req *v1.Address) (*v1
 
 // DeleteAddresses 删除地址
 func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddressesRequest) (*v1.DeleteAddressesReply, error) {
-	var userStr string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		md.Get("x-global-user-id")
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("错误的UserID")
 	}
-	userId := uuid.MustParse(userStr)
 
 	reply, err := s.uc.DeleteAddress(ctx, &biz.DeleteAddressesRequest{
 		AddressId: uint32(req.AddressesId),
@@ -97,13 +93,9 @@ func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddress
 
 // GetAddresses 获取地址
 func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.GetAddressesReply, error) {
-	var userStr string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		md.Get("x-global-user-id")
-	}
-	userId,err := uuid.Parse(userStr)
+	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, errors.New("错误的UserID")
+		return nil, fmt.Errorf("错误的UserID")
 	}
 	addresses, err := s.uc.GetAddresses(ctx, &biz.Request{
 		UserId: userId,

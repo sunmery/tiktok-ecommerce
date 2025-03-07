@@ -23,6 +23,7 @@ const _ = http.SupportPackageIsVersion1
 const OperationProductServiceAuditProduct = "/ecommerce.product.v1.ProductService/AuditProduct"
 const OperationProductServiceCreateProduct = "/ecommerce.product.v1.ProductService/CreateProduct"
 const OperationProductServiceDeleteProduct = "/ecommerce.product.v1.ProductService/DeleteProduct"
+const OperationProductServiceGetMerchantProducts = "/ecommerce.product.v1.ProductService/GetMerchantProducts"
 const OperationProductServiceGetProduct = "/ecommerce.product.v1.ProductService/GetProduct"
 const OperationProductServiceListProductsByCategory = "/ecommerce.product.v1.ProductService/ListProductsByCategory"
 const OperationProductServiceListRandomProducts = "/ecommerce.product.v1.ProductService/ListRandomProducts"
@@ -37,6 +38,8 @@ type ProductServiceHTTPServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
 	// DeleteProduct 删除商品（软删除）
 	DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
+	// GetMerchantProducts 获取商家对应的商品
+	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error)
 	// GetProduct 获取商品详情
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	// ListProductsByCategory 根据商品分类查询
@@ -57,9 +60,10 @@ func RegisterProductServiceHTTPServer(s *http.Server, srv ProductServiceHTTPServ
 	r.PUT("/v1/products/{id}", _ProductService_UpdateProduct0_HTTP_Handler(srv))
 	r.POST("/v1/products/{product_id}/submit-audit", _ProductService_SubmitForAudit0_HTTP_Handler(srv))
 	r.POST("/v1/products/{product_id}/audit", _ProductService_AuditProduct0_HTTP_Handler(srv))
-	r.GET("/v1/products/{id}", _ProductService_GetProduct0_HTTP_Handler(srv))
-	r.GET("/v1/products/{name}", _ProductService_SearchProductsByName0_HTTP_Handler(srv))
 	r.GET("/v1/products", _ProductService_ListRandomProducts0_HTTP_Handler(srv))
+	r.GET("/v1/products/{id}", _ProductService_GetProduct0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/products", _ProductService_GetMerchantProducts0_HTTP_Handler(srv))
+	r.GET("/v1/products/{name}", _ProductService_SearchProductsByName0_HTTP_Handler(srv))
 	r.GET("/v1/products/categories/{name}", _ProductService_ListProductsByCategory0_HTTP_Handler(srv))
 	r.DELETE("/v1/products", _ProductService_DeleteProduct0_HTTP_Handler(srv))
 }
@@ -161,6 +165,25 @@ func _ProductService_AuditProduct0_HTTP_Handler(srv ProductServiceHTTPServer) fu
 	}
 }
 
+func _ProductService_ListRandomProducts0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListRandomProductsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductServiceListRandomProducts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListRandomProducts(ctx, req.(*ListRandomProductsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*Products)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _ProductService_GetProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetProductRequest
@@ -183,6 +206,25 @@ func _ProductService_GetProduct0_HTTP_Handler(srv ProductServiceHTTPServer) func
 	}
 }
 
+func _ProductService_GetMerchantProducts0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetMerchantProductRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductServiceGetMerchantProducts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetMerchantProducts(ctx, req.(*GetMerchantProductRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*Products)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _ProductService_SearchProductsByName0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in SearchProductRequest
@@ -195,25 +237,6 @@ func _ProductService_SearchProductsByName0_HTTP_Handler(srv ProductServiceHTTPSe
 		http.SetOperation(ctx, OperationProductServiceSearchProductsByName)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.SearchProductsByName(ctx, req.(*SearchProductRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*Products)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _ProductService_ListRandomProducts0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ListRandomProductsRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationProductServiceListRandomProducts)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ListRandomProducts(ctx, req.(*ListRandomProductsRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -269,6 +292,7 @@ type ProductServiceHTTPClient interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *CreateProductReply, err error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	GetMerchantProducts(ctx context.Context, req *GetMerchantProductRequest, opts ...http.CallOption) (rsp *Products, err error)
 	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *Product, err error)
 	ListProductsByCategory(ctx context.Context, req *ListProductsByCategoryRequest, opts ...http.CallOption) (rsp *Products, err error)
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest, opts ...http.CallOption) (rsp *Products, err error)
@@ -318,6 +342,19 @@ func (c *ProductServiceHTTPClientImpl) DeleteProduct(ctx context.Context, in *De
 	opts = append(opts, http.Operation(OperationProductServiceDeleteProduct))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...http.CallOption) (*Products, error) {
+	var out Products
+	pattern := "/v1/merchants/products"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductServiceGetMerchantProducts))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

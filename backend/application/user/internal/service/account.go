@@ -2,24 +2,19 @@ package service
 
 import (
 	"backend/application/user/internal/biz"
+	"backend/pkg"
 	"context"
-	"github.com/go-kratos/kratos/v2/metadata"
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "backend/api/user/v1"
+	v1 "backend/api/user/v1"
 )
 
-func (s *UserService) GetUserProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileResponse, error) {
-	var (
-		owner string
-		id    string
-	)
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		owner = md.Get("x-md-global-owner")
-		id = md.Get("x-md-global-user-id")
+func (s *UserService) GetUserProfile(ctx context.Context, _ *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
 	}
-	userId, err := uuid.Parse(id)
+	owner, err := pkg.GetMetadataOwner(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +27,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, req *pb.GetProfileRequ
 		return nil, err
 	}
 
-	return &pb.GetProfileResponse{
+	return &v1.GetProfileResponse{
 		Owner:       profile.Owner,
 		Name:        profile.Name,
 		Avatar:      profile.Avatar,

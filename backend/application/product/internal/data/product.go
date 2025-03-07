@@ -27,116 +27,102 @@ type productRepo struct {
 	log  *log.Helper
 }
 
-func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (*biz.CreateProductReply, error) {
+func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (_ *biz.CreateProductReply, err error) {
+	var (
+		result            models.CreateProductRow
+		categoryID        uint64
+		createdCategoryID uint64 // 记录新创建的分类 ID（用于补偿）
+	)
+	// 获取事务版 DB 操作
 	db := p.data.DB(ctx)
 
-	var (
-		// eg         errgroup.Group
-		categoryId uint64
-		result     models.CreateProductRow
-		attributes []byte
-	)
-
-	var err error
-	// 获取分类ID
-	// eg.Go(func() (err error) {
-		getCategory, getCategoryErr := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-			// _, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-			Id: req.Category.CategoryId,
-		})
-		newCategory := &category.Category{}
-		if getCategoryErr != nil {
-			// 明确处理"未找到分类"的情况
-			if status.Code(getCategoryErr) == codes.NotFound {
-				// 创建分类时需要指定父分类（示例使用根分类）
-				newCategory, err = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-					ParentId:  1, // 默认挂载到根分类
-					Name:      req.Category.CategoryName,
-					SortOrder: req.Category.SortOrder,
-				})
-				if err != nil {
-					return nil,fmt.Errorf("create category failed: %w", err)
-				}
-				categoryId = uint64(newCategory.Id)
-			} else {
-				return nil,fmt.Errorf("get category failed: %w", getCategoryErr)
-			}
-		} else {
-			categoryId = uint64(getCategory.Id)
-		}
-
-		if getCategory != nil {
-			fmt.Printf("getCategory%+v", categoryId)
-			categoryId = uint64(getCategory.Id)
-		}
-		if newCategory != nil {
-			fmt.Printf("newCategory%+v", categoryId)
-			categoryId = uint64(newCategory.Id)
-		}
-	// 	return nil
-	// })
-
-	// 创建商品
-	// eg.Go(func() (createErr error) {
-		// 转换价格到pgtype.Numeric
-		price, err := types.Float64ToNumeric(req.Price)
-		if err != nil {
-			return nil,fmt.Errorf("invalid price format: %w", err)
-		}
-
-		result, createErr := db.CreateProduct(ctx, models.CreateProductParams{
-			Name:        req.Name,
-			Description: &req.Description,
-			Price:       price,
-			CategoryID:  int64(categoryId),
-			Status:      int16(req.Status),
-			MerchantID:  req.MerchantId,
+	// Step 1: 获取或创建分类（跨服务操作）
+	getCategory, err := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+		Id: req.Category.CategoryId,
+	})
+	if status.Code(err) == codes.NotFound {
+		// 创建新分类（跨服务操作）
+		newCategory, createErr := p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+			Name:      req.Category.CategoryName,
+			SortOrder: req.Category.SortOrder,
 		})
 		if createErr != nil {
-			return nil,fmt.Errorf("failed to create product: %w", createErr)
+			return nil, fmt.Errorf("create category failed: %w", createErr)
 		}
-	// 	return
-	// })
+		categoryID = uint64(newCategory.Id)
+		createdCategoryID = categoryID // 记录新创建的分类 ID
+	} else if err != nil {
+		return nil, fmt.Errorf("get category failed: %w", err)
+	}
+	fmt.Println("getCategory", getCategory)
+	fmt.Println("createdCategoryID", createdCategoryID)
 
-	// 创建商品图片
-	// eg.Go(func() error {
-		// 创建图片记录
+	// else {
+	// 	categoryID = uint64(getCategory.Id)
+	// }
+
+	// Step 2: 执行本地事务（商品相关操作）
+
+	// // 执行本地数据库事务（包裹商品、图片、属性、库存）
+	// txErr := p.data.ExecTx(ctx, func(ctx context.Context) error {
+	// 注意：这里使用 ctx 作为上下文
+
+	// 1. 创建商品
+	price, err := types.Float64ToNumeric(req.Price)
+	if err != nil {
+		return nil, fmt.Errorf("invalid price format: %w", err)
+	}
+
+	result, err = db.CreateProduct(ctx, models.CreateProductParams{
+		Name:        req.Name,
+		Description: &req.Description,
+		Price:       price,
+		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
+		Status:      int16(req.Status),
+		MerchantID:  req.MerchantId,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	// 2. 并行创建图片、属性、库存
+	var eg errgroup.Group
+
+	// 图片
+	eg.Go(func() error {
 		if len(req.Images) > 0 {
-			if err := p.createProductImages(ctx, result.ID, req.MerchantId, req.Images); err != nil {
-				p.log.Warnf("created product but failed to create images: %v", err)
-			}
+			return p.createProductImages(ctx, result.ID, req.MerchantId, req.Images)
 		}
-		// return nil
-	// })
-	//
-	// // 创建属性记录
-	// eg.Go(func() (err error) {
-		// 转成JSON
-		attributes, err = json.Marshal(req.Attributes)
+		return nil
+	})
+
+	// 属性
+	eg.Go(func() error {
+		attributes, err := json.Marshal(req.Attributes)
 		if err != nil {
-			return nil,err
+			return fmt.Errorf("marshal attributes failed: %w", err)
 		}
-		createProductAttributeErr := db.CreateProductAttribute(ctx, models.CreateProductAttributeParams{
+		return db.CreateProductAttribute(ctx, models.CreateProductAttributeParams{
 			MerchantID: req.MerchantId,
 			ProductID:  result.ID,
 			Attributes: attributes,
 		})
-		if createProductAttributeErr != nil {
-			return nil,fmt.Errorf("failed to create product attribute: %w", createProductAttributeErr)
-		}
-	// 	return nil
-	// })
+	})
 
-	// 创建库存记录
-	// eg.Go(func() error {
-		inventory, err := p.data.DB(ctx).CreateInventory(ctx, models.CreateInventoryParams{
+	// 库存
+	eg.Go(func() error {
+		_, err := db.CreateInventory(ctx, models.CreateInventoryParams{
 			ProductID:  result.ID,
 			MerchantID: req.MerchantId,
 			Stock:      int32(req.Stock),
 		})
-		fmt.Printf("inventory%+v", inventory)
-	// 	return err
-	// })
+		return err
+	})
+
+	err = eg.Wait()
+	if err != nil {
+		return nil, err
+	}
 
 	return &biz.CreateProductReply{
 		ID:        result.ID,
@@ -144,7 +130,6 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		UpdatedAt: result.UpdatedAt,
 	}, nil
 }
-
 func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
@@ -482,7 +467,7 @@ func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchP
 				Status:      biz.ProductStatus(product.Status),
 				CreatedAt:   product.CreatedAt,
 				UpdatedAt:   product.UpdatedAt,
-				Attributes: attributes,
+				Attributes:  attributes,
 				Inventory: biz.Inventory{
 					ProductId:  product.ID,
 					MerchantId: product.MerchantID,
@@ -513,7 +498,7 @@ func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchP
 	// }
 
 	return &biz.Products{
-		Items:      products,
+		Items: products,
 	}, nil
 }
 
@@ -533,6 +518,36 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 	}
 
 	return p.fullProductData(ctx, product)
+}
+
+func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerchantProducts) (*biz.Products, error) {
+	db := p.data.DB(ctx)
+
+	// 获取基础信息
+	merchantProducts, err := db.GetMerchantProducts(ctx, req.MerchantID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, v1.ErrorProductNotFound("查询不到商家的商品")
+		}
+		return nil, v1.ErrorInvalidStatus("GetMerchantProducts 内部错误")
+	}
+	var products []*biz.Product
+	for _, product := range merchantProducts {
+		products = append(products, &biz.Product{
+			ID:         product.ID,
+			MerchantId: product.MerchantID,
+			Name:       product.Name,
+			// Price:       price,
+			Description: *product.Description,
+			// Images:      convertImages(product.Images),
+			Status:    biz.ProductStatus(product.Status),
+			CreatedAt: product.CreatedAt,
+			UpdatedAt: product.UpdatedAt,
+			// Attributes:  product.Attributes,
+		})
+	}
+
+	return &biz.Products{Items: products}, nil
 }
 
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
@@ -572,13 +587,13 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 		Status:      biz.ProductStatus(product.Status),
 		CreatedAt:   product.CreatedAt,
 		UpdatedAt:   product.UpdatedAt,
-		Images:      p.convertImages(images),
+		Images:      convertImages(images),
 		// 其他字段根据实际需求补充
 	}, nil
 }
 
 // 转换图片数据
-func (p *productRepo) convertImages(images []models.ProductsProductImages) []*biz.ProductImage {
+func convertImages(images []models.ProductsProductImages) []*biz.ProductImage {
 	result := make([]*biz.ProductImage, 0, len(images))
 	for _, img := range images {
 		sortOrder := 0

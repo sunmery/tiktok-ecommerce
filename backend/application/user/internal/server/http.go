@@ -6,8 +6,6 @@ import (
 	"backend/application/user/internal/service"
 	"backend/constants"
 	"context"
-	"github.com/gorilla/handlers"
-
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -24,12 +22,9 @@ import (
 func NewHTTPServer(
 	c *conf.Server,
 	user *service.UserService,
-	ac *conf.Auth,
 	oc *conf.Observability,
 	logger log.Logger,
 ) *http.Server {
-	// InitSentry()
-	// publicKey := InitJwtKey(ac)
 
 	// trace start
 	ctx := context.Background()
@@ -68,27 +63,8 @@ func NewHTTPServer(
 				}),
 			),
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
-			// selector.Server(
-			// 	jwt.Server(
-			// 		func(token *jwtV5.Token) (interface{}, error) {
-			// 			// 检查是否使用了正确的签名方法
-			// 			if _, ok := token.Method.(*jwtV5.SigningMethodRSA); !ok {
-			// 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			// 			}
-			// 			return publicKey, nil
-			// 		},
-			// 		jwt.WithSigningMethod(jwtV5.SigningMethodRS256),
-			// 	),
-			// ).
-			// 	Match(NewWhiteListMatcher()).Build(),
 		),
-		http.Filter(handlers.CORS( // 浏览器跨域
-			handlers.AllowedOrigins([]string{"http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:443", "https://node1.apikv.com"}),
-			handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE"}),
-			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
-			handlers.AllowCredentials(),
-		)),
-		http.RequestDecoder(MultipartFormDataDecoder),
+		// http.RequestDecoder(MultipartFormDataDecoder),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))
@@ -104,24 +80,24 @@ func NewHTTPServer(
 	return srv
 }
 
-func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
-	// 从Request Header的Content-Type中提取出对应的解码器
-	_, ok := http.CodecForRequest(r, "Content-Type")
-	// 如果找不到对应的解码器此时会报错
-	if !ok {
-		r.Header.Set("Content-Type", "application/json")
-		// return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
-	}
-	// fmt.Printf("method:%s\n", r.Method)
-	// if r.Method == "POST" {
-	// 	data, err := ioutil.ReadAll(r.Body)
-	// 	if err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// 	if err = codec.Unmarshal(data, v); err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// }
-
-	return nil
-}
+// func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
+// 	// 从Request Header的Content-Type中提取出对应的解码器
+// 	_, ok := http.CodecForRequest(r, "Content-Type")
+// 	// 如果找不到对应的解码器此时会报错
+// 	if !ok {
+// 		r.Header.Set("Content-Type", "application/json")
+// 		// return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
+// 	}
+// 	// fmt.Printf("method:%s\n", r.Method)
+// 	// if r.Method == "POST" {
+// 	// 	data, err := ioutil.ReadAll(r.Body)
+// 	// 	if err != nil {
+// 	// 		return errors.BadRequest("CODEC", err.Error())
+// 	// 	}
+// 	// 	if err = codec.Unmarshal(data, v); err != nil {
+// 	// 		return errors.BadRequest("CODEC", err.Error())
+// 	// 	}
+// 	// }
+//
+// 	return nil
+// }

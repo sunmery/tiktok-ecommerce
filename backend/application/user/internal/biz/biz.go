@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // ProviderSet is biz providers.
@@ -22,12 +23,9 @@ type UserRepo interface {
 	DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error)
 	GetAddresses(ctx context.Context, req *Request) (*Addresses, error)
 
-	CreateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
-	UpdateCreditCard(ctx context.Context, req *CreditCards) (*CreditCardsReply, error)
-	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest) (*CreditCardsReply, error)
-	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest) (*CreditCards, error)
-	SearchCreditCards(ctx context.Context, req *GetCreditCardsRequest) ([]*CreditCards, error)
-	ListCreditCards(ctx context.Context, req *CreditCardsRequest) ([]*CreditCards, error)
+	CreateCreditCard(ctx context.Context, req *CreditCard) (*emptypb.Empty, error)
+	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardRequest) (*emptypb.Empty, error)
+	ListCreditCards(ctx context.Context, req *ListCreditCardsRequest) (*CreditCards, error)
 }
 
 type UserUsecase struct {

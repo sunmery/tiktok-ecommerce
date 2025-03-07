@@ -5,6 +5,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -19,10 +21,17 @@ type UsersAddresses struct {
 }
 
 type UsersCreditCards struct {
-	ID              int32     `json:"id"`
-	UserID          uuid.UUID `json:"userID"`
-	Number          string    `json:"number"`
-	Cvv             string    `json:"cvv"`
-	ExpirationYear  string    `json:"expirationYear"`
-	ExpirationMonth string    `json:"expirationMonth"`
+	ID          int32     `json:"id"`
+	UserID      uuid.UUID `json:"userID"`
+	Number      string    `json:"number"`
+	Currency    string    `json:"currency"`
+	Cvv         string    `json:"cvv"`
+	ExpYear     string    `json:"expYear"`
+	ExpMonth    string    `json:"expMonth"`
+	Owner       string    `json:"owner"`
+	Name        *string   `json:"name"`
+	Type        string    `json:"type"`
+	Brand       string    `json:"brand"`
+	Country     string    `json:"country"`
+	CreatedTime time.Time `json:"createdTime"`
 }

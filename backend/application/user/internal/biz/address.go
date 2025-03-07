@@ -11,18 +11,18 @@ type Request struct {
 }
 
 type DeleteAddressesRequest struct {
-	AddressId uint32 `json:"address_id"`
+	AddressId uint32
 	UserId    uuid.UUID
 }
 
 type Address struct {
-	Id            uint32 `json:"id"`
+	Id            uint32
 	UserId        uuid.UUID
-	StreetAddress string `json:"street_address"`
-	City          string `json:"city"`
-	State         string `json:"state"`
-	Country       string `json:"country"`
-	ZipCode       string `json:"zip_code"`
+	StreetAddress string
+	City          string
+	State         string
+	Country       string
+	ZipCode       string
 }
 
 type Addresses struct {
@@ -30,9 +30,9 @@ type Addresses struct {
 }
 
 type DeleteAddressesReply struct {
-	Message string `json:"message"`
-	Id      uint32 `json:"id"`
-	Code    uint32 `json:"code"`
+	Message string
+	Id      uint32
+	Code    uint32
 }
 
 func (cc *UserUsecase) CreateAddress(ctx context.Context, req *Address) (*Address, error) {

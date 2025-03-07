@@ -25,33 +25,27 @@ const OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/Cre
 const OperationUserServiceDeleteAddresses = "/ecommerce.user.v1.UserService/DeleteAddresses"
 const OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
 const OperationUserServiceGetAddresses = "/ecommerce.user.v1.UserService/GetAddresses"
-const OperationUserServiceGetCreditCard = "/ecommerce.user.v1.UserService/GetCreditCard"
 const OperationUserServiceGetUserProfile = "/ecommerce.user.v1.UserService/GetUserProfile"
 const OperationUserServiceListCreditCards = "/ecommerce.user.v1.UserService/ListCreditCards"
 const OperationUserServiceUpdateAddresses = "/ecommerce.user.v1.UserService/UpdateAddresses"
-const OperationUserServiceUpdateCreditCard = "/ecommerce.user.v1.UserService/UpdateCreditCard"
 
 type UserServiceHTTPServer interface {
 	// CreateAddresses 创建用户地址
 	CreateAddresses(context.Context, *Address) (*Address, error)
 	// CreateCreditCard 创建用户的信用卡信息
-	CreateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
+	CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error)
 	// DeleteAddresses 删除用户地址
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
 	// DeleteCreditCard 删除用户的信用卡信息
-	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*CardsReply, error)
+	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*emptypb.Empty, error)
 	// GetAddresses 获取用户地址列表
 	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
-	// GetCreditCard 获取用户的信用卡信息
-	GetCreditCard(context.Context, *GetCreditCardsRequest) (*GetCreditCardsReply, error)
 	// GetUserProfile 获取用户个人资料
 	GetUserProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	// ListCreditCards 列出用户的信用卡信息
-	ListCreditCards(context.Context, *emptypb.Empty) (*ListCreditCardsReply, error)
+	ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error)
 	// UpdateAddresses 更新用户地址
 	UpdateAddresses(context.Context, *Address) (*Address, error)
-	// UpdateCreditCard 更新用户的信用卡信息
-	UpdateCreditCard(context.Context, *CreditCards) (*CardsReply, error)
 }
 
 func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
@@ -63,9 +57,7 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.GET("/v1/users/address", _UserService_GetAddresses0_HTTP_Handler(srv))
 	r.GET("/v1/users/credit_cards/all", _UserService_ListCreditCards0_HTTP_Handler(srv))
 	r.POST("/v1/users/credit_cards", _UserService_CreateCreditCard0_HTTP_Handler(srv))
-	r.PATCH("/v1/users/credit_cards", _UserService_UpdateCreditCard0_HTTP_Handler(srv))
 	r.DELETE("/v1/users/credit_cards/{id}", _UserService_DeleteCreditCard0_HTTP_Handler(srv))
-	r.GET("/v1/users/credit_cards/{number}", _UserService_GetCreditCard0_HTTP_Handler(srv))
 }
 
 func _UserService_GetUserProfile0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
@@ -183,14 +175,14 @@ func _UserService_ListCreditCards0_HTTP_Handler(srv UserServiceHTTPServer) func(
 		if err != nil {
 			return err
 		}
-		reply := out.(*ListCreditCardsReply)
+		reply := out.(*CreditCards)
 		return ctx.Result(200, reply)
 	}
 }
 
 func _UserService_CreateCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in CreditCards
+		var in CreditCard
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -199,35 +191,13 @@ func _UserService_CreateCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func
 		}
 		http.SetOperation(ctx, OperationUserServiceCreateCreditCard)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CreateCreditCard(ctx, req.(*CreditCards))
+			return srv.CreateCreditCard(ctx, req.(*CreditCard))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*CardsReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _UserService_UpdateCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in CreditCards
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationUserServiceUpdateCreditCard)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UpdateCreditCard(ctx, req.(*CreditCards))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*CardsReply)
+		reply := out.(*emptypb.Empty)
 		return ctx.Result(200, reply)
 	}
 }
@@ -249,44 +219,20 @@ func _UserService_DeleteCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func
 		if err != nil {
 			return err
 		}
-		reply := out.(*CardsReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _UserService_GetCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetCreditCardsRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationUserServiceGetCreditCard)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetCreditCard(ctx, req.(*GetCreditCardsRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*GetCreditCardsReply)
+		reply := out.(*emptypb.Empty)
 		return ctx.Result(200, reply)
 	}
 }
 
 type UserServiceHTTPClient interface {
 	CreateAddresses(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
-	CreateCreditCard(ctx context.Context, req *CreditCards, opts ...http.CallOption) (rsp *CardsReply, err error)
+	CreateCreditCard(ctx context.Context, req *CreditCard, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	DeleteAddresses(ctx context.Context, req *DeleteAddressesRequest, opts ...http.CallOption) (rsp *DeleteAddressesReply, err error)
-	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest, opts ...http.CallOption) (rsp *CardsReply, err error)
+	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetAddresses(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *GetAddressesReply, err error)
-	GetCreditCard(ctx context.Context, req *GetCreditCardsRequest, opts ...http.CallOption) (rsp *GetCreditCardsReply, err error)
 	GetUserProfile(ctx context.Context, req *GetProfileRequest, opts ...http.CallOption) (rsp *GetProfileResponse, err error)
-	ListCreditCards(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *ListCreditCardsReply, err error)
+	ListCreditCards(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *CreditCards, err error)
 	UpdateAddresses(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
-	UpdateCreditCard(ctx context.Context, req *CreditCards, opts ...http.CallOption) (rsp *CardsReply, err error)
 }
 
 type UserServiceHTTPClientImpl struct {
@@ -310,8 +256,8 @@ func (c *UserServiceHTTPClientImpl) CreateAddresses(ctx context.Context, in *Add
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) CreateCreditCard(ctx context.Context, in *CreditCards, opts ...http.CallOption) (*CardsReply, error) {
-	var out CardsReply
+func (c *UserServiceHTTPClientImpl) CreateCreditCard(ctx context.Context, in *CreditCard, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
 	pattern := "/v1/users/credit_cards"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationUserServiceCreateCreditCard))
@@ -336,8 +282,8 @@ func (c *UserServiceHTTPClientImpl) DeleteAddresses(ctx context.Context, in *Del
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...http.CallOption) (*CardsReply, error) {
-	var out CardsReply
+func (c *UserServiceHTTPClientImpl) DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
 	pattern := "/v1/users/credit_cards/{id}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationUserServiceDeleteCreditCard))
@@ -362,19 +308,6 @@ func (c *UserServiceHTTPClientImpl) GetAddresses(ctx context.Context, in *emptyp
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) GetCreditCard(ctx context.Context, in *GetCreditCardsRequest, opts ...http.CallOption) (*GetCreditCardsReply, error) {
-	var out GetCreditCardsReply
-	pattern := "/v1/users/credit_cards/{number}"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationUserServiceGetCreditCard))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
 func (c *UserServiceHTTPClientImpl) GetUserProfile(ctx context.Context, in *GetProfileRequest, opts ...http.CallOption) (*GetProfileResponse, error) {
 	var out GetProfileResponse
 	pattern := "/v1/users/profile"
@@ -388,8 +321,8 @@ func (c *UserServiceHTTPClientImpl) GetUserProfile(ctx context.Context, in *GetP
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*ListCreditCardsReply, error) {
-	var out ListCreditCardsReply
+func (c *UserServiceHTTPClientImpl) ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*CreditCards, error) {
+	var out CreditCards
 	pattern := "/v1/users/credit_cards/all"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationUserServiceListCreditCards))
@@ -406,19 +339,6 @@ func (c *UserServiceHTTPClientImpl) UpdateAddresses(ctx context.Context, in *Add
 	pattern := "/v1/users/address"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationUserServiceUpdateAddresses))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *UserServiceHTTPClientImpl) UpdateCreditCard(ctx context.Context, in *CreditCards, opts ...http.CallOption) (*CardsReply, error) {
-	var out CardsReply
-	pattern := "/v1/users/credit_cards"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationUserServiceUpdateCreditCard))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {

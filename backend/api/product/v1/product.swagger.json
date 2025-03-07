@@ -16,6 +16,29 @@
     "application/json"
   ],
   "paths": {
+    "/v1/merchants/products": {
+      "get": {
+        "summary": "获取商家对应的商品",
+        "operationId": "ProductService_GetMerchantProducts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Products"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/v1/products": {
       "get": {
         "summary": "随机返回商品数据",

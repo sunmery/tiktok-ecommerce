@@ -84,7 +84,7 @@ func main() {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))
 	}
 
-	// 认证和授权
+	// auth
 	var ac conf.Auth
 	if err := c.Scan(&ac); err != nil {
 		log.Fatal(fmt.Errorf("load config failed:%w", err))

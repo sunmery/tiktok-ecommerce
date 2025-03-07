@@ -145,7 +145,8 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CardsReply"
+              "type": "object",
+              "properties": {}
             }
           },
           "default": {
@@ -161,38 +162,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreditCards"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      },
-      "patch": {
-        "summary": "更新用户的信用卡信息",
-        "operationId": "UserService_UpdateCreditCard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CardsReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreditCards"
+              "$ref": "#/definitions/v1CreditCard"
             }
           }
         ],
@@ -209,7 +179,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListCreditCardsReply"
+              "$ref": "#/definitions/v1CreditCards"
             }
           },
           "default": {
@@ -232,7 +202,8 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CardsReply"
+              "type": "object",
+              "properties": {}
             }
           },
           "default": {
@@ -250,44 +221,6 @@
             "required": true,
             "type": "integer",
             "format": "int64"
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/v1/users/credit_cards/{number}": {
-      "get": {
-        "summary": "获取用户的信用卡信息",
-        "operationId": "UserService_GetCreditCard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetCreditCardsReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "number",
-            "description": "卡号",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "type": "string"
           }
         ],
         "tags": [
@@ -381,34 +314,26 @@
       "title": "定义地址信息的消息结构",
       "required": [
         "userId",
-        "city",
-        "state",
-        "country",
         "zipCode",
         "streetAddress"
       ]
     },
-    "v1CardsReply": {
+    "v1CreditCard": {
       "type": "object",
       "properties": {
-        "message": {
-          "type": "string",
-          "title": "响应消息"
-        },
-        "code": {
+        "id": {
           "type": "integer",
-          "format": "int32",
-          "title": "响应状态码"
-        }
-      },
-      "title": "定义通用的卡片操作响应消息"
-    },
-    "v1CreditCards": {
-      "type": "object",
-      "properties": {
+          "format": "int64",
+          "title": "ID"
+        },
+        "currency": {
+          "type": "string",
+          "title": "[(validate.rules).string.len = 3]; // 货币类型"
+        },
         "number": {
           "type": "string",
-          "title": "卡号"
+          "description": "卡号",
+          "title": "[\n   (validate.rules).string.min_len = 16,\n   (validate.rules).string.max_len = 20\n ]"
         },
         "cvv": {
           "type": "string",
@@ -416,24 +341,19 @@
         },
         "expYear": {
           "type": "string",
-          "title": "过期年份"
+          "title": "[(validate.rules).string.len = 4,  json_name = \"expYear\"]; // 过期年份"
         },
         "expMonth": {
           "type": "string",
-          "title": "过期月份"
+          "title": "[(validate.rules).string.len = 2, json_name = \"expMonth\"]; // 过期月份"
         },
         "owner": {
           "type": "string",
-          "title": "持卡人姓名"
+          "title": "[(validate.rules).string.min_len = 2]; // 持卡人姓名"
         },
         "name": {
           "type": "string",
           "title": "卡名"
-        },
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "卡 ID"
         },
         "type": {
           "type": "string",
@@ -447,12 +367,25 @@
           "type": "string",
           "title": "卡所属国家"
         },
-        "createdTime": {
+        "createdAt": {
           "type": "string",
+          "format": "date-time",
           "title": "创建时间"
         }
       },
       "title": "定义信用卡信息的消息结构"
+    },
+    "v1CreditCards": {
+      "type": "object",
+      "properties": {
+        "creditCards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CreditCard"
+          }
+        }
+      }
     },
     "v1DeleteAddressesReply": {
       "type": "object",
@@ -472,12 +405,7 @@
           "title": "响应状态码，必填字段"
         }
       },
-      "title": "定义删除地址响应的消息结构",
-      "required": [
-        "message",
-        "id",
-        "code"
-      ]
+      "title": "定义删除地址响应的消息结构"
     },
     "v1GetAddressesReply": {
       "type": "object",
@@ -491,20 +419,7 @@
           "title": "地址列表，必填字段"
         }
       },
-      "title": "定义获取地址列表响应的消息结构",
-      "required": [
-        "addresses"
-      ]
-    },
-    "v1GetCreditCardsReply": {
-      "type": "object",
-      "properties": {
-        "creditCards": {
-          "$ref": "#/definitions/v1CreditCards",
-          "title": "信用卡信息"
-        }
-      },
-      "title": "定义获取信用卡响应的消息结构"
+      "title": "定义获取地址列表响应的消息结构"
     },
     "v1GetProfileResponse": {
       "type": "object",
@@ -545,20 +460,6 @@
         }
       },
       "title": "定义获取用户个人资料响应的消息结构"
-    },
-    "v1ListCreditCardsReply": {
-      "type": "object",
-      "properties": {
-        "creditCards": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1CreditCards"
-          },
-          "title": "信用卡列表"
-        }
-      },
-      "title": "定义列出信用卡响应的消息结构"
     }
   }
 }

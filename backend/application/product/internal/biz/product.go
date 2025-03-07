@@ -160,7 +160,11 @@ type DeleteProductRequest struct {
 
 // GetProductRequest 完善GetProductRequest
 type GetProductRequest struct {
-	ID uuid.UUID
+	ID         uuid.UUID
+	MerchantID uuid.UUID
+}
+
+type GetMerchantProducts struct {
 	MerchantID uuid.UUID
 }
 
@@ -231,7 +235,7 @@ type SearchProductsByNameRequest struct {
 	// 示例："red apple" → 'red' & 'apple'
 	// 安全过滤
 	// 自动转义特殊字符（! : & 等）
-	Query    string
+	Query string
 }
 
 // ProductRepo is a Greater repo.
@@ -241,6 +245,7 @@ type ProductRepo interface {
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
+	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
@@ -260,7 +265,6 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 }
 
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
-	p.log.Debugf("CreateProduct: %+v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 
@@ -277,17 +281,21 @@ func (p *ProductUsecase) AuditProduct(ctx context.Context, req *AuditProductRequ
 }
 
 func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error) {
-	p.log.Debugf("GetProduct: %+v", req)
 	return p.repo.GetProduct(ctx, req)
 }
 
+func (p *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
+	return p.repo.GetMerchantProducts(ctx, req)
+}
+
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {
-	p.log.Debugf("DeleteProduct: %+v", req)
 	return &emptypb.Empty{}, nil
 }
+
 func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error) {
 	return p.repo.ListRandomProducts(ctx, req)
 }
+
 func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error) {
 	return p.repo.SearchProductsByName(ctx, req)
 }
