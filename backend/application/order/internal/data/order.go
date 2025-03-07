@@ -39,7 +39,6 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 	// 分单
 	for _, item := range req.OrderItems {
-
 		// 序列化订单项
 		type SubOrderItem struct {
 			Item *biz.CartItem `json:"item"`
@@ -72,6 +71,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		fmt.Printf("subOrder: %v", subOrder)
 
 	}
+
 	// 调用支付
 	totalAmount := 0.0
 	for _, item := range req.OrderItems {
@@ -100,7 +100,30 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 }
 
 func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.ListOrderResp, error) {
-	return &biz.ListOrderResp{Orders: nil}, nil
+	orders, err := o.data.DB(ctx).ListOrdersByUser(ctx, models.ListOrdersByUserParams{
+		UserID: req.UserID,
+		Limit:  int64(req.PageSize),
+		Offset: int64((req.Page - 1) * req.PageSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var respOrders []*biz.Order
+	for _, order := range orders {
+		respOrders = append(respOrders, &biz.Order{
+			OrderID:       order.ID,
+			UserID:        order.UserID,
+			Currency:      order.Currency,
+			Address:       nil,
+			Email:         order.Email,
+			CreatedAt:     order.CreatedAt,
+			UpdatedAt:     order.UpdatedAt,
+			SubOrders:     nil,
+			PaymentStatus: "",
+		})
+	}
+	return &biz.ListOrderResp{Orders: respOrders}, nil
 }
 
 // 自定义JSON解析

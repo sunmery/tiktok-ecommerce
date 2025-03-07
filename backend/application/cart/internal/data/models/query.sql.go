@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateCart = `-- name: CreateCart :one
@@ -211,7 +212,7 @@ WHERE ci.cart_id =
      WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
     AND ci.merchant_id = $3  -- 商家ID
     AND ci.product_id = $4  -- 删除指定商品ID
-RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 `
 
 type RemoveCartItemParams struct {
@@ -230,7 +231,7 @@ type RemoveCartItemParams struct {
 //	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
 //	    AND ci.merchant_id = $3  -- 商家ID
 //	    AND ci.product_id = $4  -- 删除指定商品ID
-//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartsCartItems, error) {
 	row := q.db.QueryRow(ctx, RemoveCartItem,
 		arg.UserID,
@@ -245,6 +246,7 @@ func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) 
 		&i.MerchantID,
 		&i.ProductID,
 		&i.Quantity,
+		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -264,12 +266,13 @@ insert_cart AS (
     WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
     RETURNING cart_id
 )
-INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
+INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
 VALUES (
     COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
     $3,   -- 商家ID
     $4,   -- 商品ID
     $5,   -- 商品数量
+    $6,
     CURRENT_TIMESTAMP,  -- 创建时间
     CURRENT_TIMESTAMP   -- 更新时间
 )
@@ -277,15 +280,16 @@ ON CONFLICT (cart_id, merchant_id, product_id)  -- 如果购物车ID、商家ID�
 DO UPDATE SET 
     quantity = EXCLUDED.quantity,  -- 更新商品数量
     updated_at = CURRENT_TIMESTAMP  -- 更新时间
-RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 `
 
 type UpsertItemParams struct {
-	UserID     uuid.UUID `json:"userID"`
-	CartName   string    `json:"cartName"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	ProductID  uuid.UUID `json:"productID"`
-	Quantity   int32     `json:"quantity"`
+	UserID     uuid.UUID      `json:"userID"`
+	CartName   string         `json:"cartName"`
+	MerchantID uuid.UUID      `json:"merchantID"`
+	ProductID  uuid.UUID      `json:"productID"`
+	Quantity   int32          `json:"quantity"`
+	Price      pgtype.Numeric `json:"price"`
 }
 
 // UpsertItem
@@ -302,12 +306,13 @@ type UpsertItemParams struct {
 //	    WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
 //	    RETURNING cart_id
 //	)
-//	INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
+//	INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
 //	VALUES (
 //	    COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
 //	    $3,   -- 商家ID
 //	    $4,   -- 商品ID
 //	    $5,   -- 商品数量
+//	    $6,
 //	    CURRENT_TIMESTAMP,  -- 创建时间
 //	    CURRENT_TIMESTAMP   -- 更新时间
 //	)
@@ -315,7 +320,7 @@ type UpsertItemParams struct {
 //	DO UPDATE SET
 //	    quantity = EXCLUDED.quantity,  -- 更新商品数量
 //	    updated_at = CURRENT_TIMESTAMP  -- 更新时间
-//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCartItems, error) {
 	row := q.db.QueryRow(ctx, UpsertItem,
 		arg.UserID,
@@ -323,6 +328,7 @@ func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCa
 		arg.MerchantID,
 		arg.ProductID,
 		arg.Quantity,
+		arg.Price,
 	)
 	var i CartsCartItems
 	err := row.Scan(
@@ -331,6 +337,7 @@ func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCa
 		&i.MerchantID,
 		&i.ProductID,
 		&i.Quantity,
+		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

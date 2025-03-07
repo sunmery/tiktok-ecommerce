@@ -46,37 +46,17 @@ message CartSummary {
   string cart_name = 2 ; // 购物车名称
 }
 
-// 选中购物车商品
-message CheckCartItemReq {
-  string merchant_id = 2;
-  string product_id = 3 ;
-}
-
-message CheckCartItemResp {
-  bool success = 1;
-}
-
-// 取消选中购物车商品
-message UncheckCartItemReq {
-  string merchant_id = 2;
-  string product_id = 3;
-}
-
-message UncheckCartItemResp {
-  bool success = 1;
-}
-
 message CreateOrderResp {
   bool success = 1;
   repeated CartItem items = 2;  // 返回被选中的商品
 }
-
 
 // 购物车商品
 message CartItem {
   string merchant_id = 1 ;
   string product_id = 2 ; // 商品ID
   int32 quantity = 3;       // 商品数量
+  double price = 4;          // 商品价格
 }
 
 // 新增购物车商品
@@ -96,7 +76,9 @@ message EmptyCartResp {
 }
 
 // 获取购物车信息
-message GetCartReq {}
+message GetCartReq {
+  string user_id = 1;
+}
 
 message GetCartResp {
   Cart cart = 1;

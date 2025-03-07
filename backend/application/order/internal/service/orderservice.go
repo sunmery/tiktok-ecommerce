@@ -1,10 +1,10 @@
 package service
 
 import (
+	"backend/application/order/internal/biz"
+	"backend/pkg"
 	"context"
 	"fmt"
-
-	"backend/application/order/internal/biz"
 
 	v1 "backend/api/order/v1"
 	"github.com/google/uuid"
@@ -22,19 +22,11 @@ func NewOrderServiceService(uc *biz.OrderUsecase) *OrderServiceService {
 
 func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (*v1.PlaceOrderResp, error) {
 	// 从网关获取用户ID
-	// var userIdStr string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userIdStr = md.Get("x-md-global-user-id")
-	// }
-	// 解析 UUID
-	// userId, err := uuid.Parse(userIdStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	UserMock, err := uuid.Parse("77d08975-972c-4a06-8aa4-d2d23f374bb1")
 
-	// DTO -> DO
-
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var orderItems []*biz.OrderItem
 	for _, item := range req.OrderItems {
 		merchantId, err := uuid.Parse(item.Item.MerchantId)
@@ -47,15 +39,14 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 			Item: &biz.CartItem{
 				MerchantId: merchantId,
 				ProductId:  ProductId,
-				Quantity: uint32(item.Item.Quantity),
+				Quantity:   uint32(item.Item.Quantity),
 			},
 			Cost: item.Cost,
 		})
 	}
 
 	order, err := s.uc.PlaceOrder(ctx, &biz.PlaceOrderReq{
-		// UserId:   userId,
-		UserId:   UserMock,
+		UserId:   userId,
 		Currency: req.Currency,
 		Address: &biz.Address{
 			StreetAddress: req.Address.StreetAddress,
@@ -79,22 +70,14 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 	}, nil
 }
 
-// ListOrders TODO
 func (s *OrderServiceService) ListOrders(ctx context.Context, req *v1.ListOrderReq) (*v1.ListOrderResp, error) {
 	// 从网关获取用户ID
-	// var userIdStr string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userIdStr = md.Get("x-md-global-user-id")
-	// }
-	// 解析 UUID
-	// userId, err := uuid.Parse(userIdStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	UserMock, err := uuid.Parse("77d08975-972c-4a06-8aa4-d2d23f374bb1")
-
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	listReq := &biz.ListOrderReq{
-		UserID:   UserMock,
+		UserID:   userId,
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}
@@ -105,24 +88,38 @@ func (s *OrderServiceService) ListOrders(ctx context.Context, req *v1.ListOrderR
 	}
 	fmt.Printf("resp: %+v\n", resp)
 
-	return &v1.ListOrderResp{Orders: nil}, nil
+	var orders []*v1.Order
+	// for _, order := range resp.Orders {
+	// 	orders = append(orders, &v1.Order{
+	// 		OrderItems:    &v1.OrderItem{
+	// 			Item: &v1.CartItem{
+	// 				MerchantId: order.OrderItems[0].Item.MerchantId.String(),
+	// 				ProductId:  order.OrderItems[0].Item.ProductId.String(),
+	// 				Quantity:   uint32(order.OrderItems[0].Item.Quantity),
+	// 			},
+	// 			Cost: order.Cost,
+	// 		},
+	// 		OrderId:       order.OrderID,
+	// 		UserId:        order.UserID,
+	// 		Currency:      order.Currency,
+	// 		Address:       nil,
+	// 		Email:         order.Email,
+	// 		CreatedAt:     order.CreatedAt,
+	// 		PaymentStatus: mapBizStatusToProto(order.PaymentStatus),
+	// 	})
+	// }
+
+	return &v1.ListOrderResp{Orders: orders}, nil
 }
 
 func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrderPaidReq) (*v1.MarkOrderPaidResp, error) {
 	// 从网关获取用户ID
-	// var userIdStr string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userIdStr = md.Get("x-md-global-user-id")
-	// }
-	// 解析 UUID
-	// userId, err := uuid.Parse(userIdStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	UserMock, err := uuid.Parse("77d08975-972c-4a06-8aa4-d2d23f374bb1")
-
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	orderPaid, err := s.uc.MarkOrderPaid(ctx, &biz.MarkOrderPaidReq{
-		UserId:  UserMock,
+		UserId:  userId,
 		OrderId: req.OrderId,
 	})
 	if err != nil {

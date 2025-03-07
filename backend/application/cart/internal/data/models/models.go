@@ -24,6 +24,7 @@ type CartsCartItems struct {
 	MerchantID uuid.UUID        `json:"merchantID"`
 	ProductID  uuid.UUID        `json:"productID"`
 	Quantity   int32            `json:"quantity"`
+	Price      pgtype.Numeric   `json:"price"`
 	CreatedAt  pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt  pgtype.Timestamp `json:"updatedAt"`
 }

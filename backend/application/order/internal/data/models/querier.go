@@ -31,13 +31,7 @@ type Querier interface {
 	//  FROM orders.orders
 	//  WHERE id = $1
 	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
-	// -- name: ListOrdersByUser :many
-	// SELECT *
-	// FROM orders.orders
-	// WHERE user_id = $1
-	// ORDER BY created_at DESC
-	// LIMIT $2 OFFSET $3;
-	//
+	//GetUserOrdersWithSuborders
 	//
 	//  SELECT o.id         AS order_id,
 	//         o.currency   AS order_currency,
@@ -66,6 +60,14 @@ type Querier interface {
 	//  GROUP BY o.id
 	//  ORDER BY o.created_at DESC
 	GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
+	//ListOrdersByUser
+	//
+	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+	//  FROM orders.orders
+	//  WHERE user_id = $1
+	//  ORDER BY created_at DESC
+	//  LIMIT $2 OFFSET $3
+	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error)
 	//UpdateSubOrderStatus
 	//
 	//  UPDATE orders.sub_orders

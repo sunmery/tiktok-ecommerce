@@ -3,6 +3,7 @@ package data
 import (
 	"backend/application/cart/internal/biz"
 	"backend/application/cart/internal/data/models"
+	"backend/pkg/types"
 	"context"
 	"fmt"
 
@@ -86,11 +87,17 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 
 // UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
+	price, err := types.Float64ToNumeric(req.Item.Price)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert price to numeric: %v", err)
+	}
+
 	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
 		UserID:     req.UserId,
 		MerchantID: req.Item.MerchantId,
 		ProductID:  req.Item.ProductId,
 		Quantity:   req.Item.Quantity,
+		Price:      price,
 		CartName:   "cart",
 	})
 	if err != nil {

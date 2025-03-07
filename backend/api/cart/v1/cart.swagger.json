@@ -34,6 +34,14 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "CartService"
         ]
@@ -186,6 +194,11 @@
           "type": "integer",
           "format": "int32",
           "title": "商品数量"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "title": "商品价格"
         }
       },
       "title": "购物车商品"

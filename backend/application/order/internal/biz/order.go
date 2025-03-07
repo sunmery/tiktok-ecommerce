@@ -37,7 +37,7 @@ type SubOrder struct {
 	UpdatedAt   time.Time
 }
 type Order struct {
-	OrderID       string
+	OrderID       uuid.UUID
 	UserID        uuid.UUID
 	Currency      string
 	Address       *Address

@@ -75,20 +75,16 @@ service UserService {
 // 定义信用卡信息的消息结构
 message CreditCard {
   uint32 id = 7; // ID
-  //    [(validate.rules).string.len = 3]; // 货币类型
-  string currency = 13;
-  //  [
-  //    (validate.rules).string.min_len = 16,
-  //    (validate.rules).string.max_len = 20
-  //  ]
-  string number = 1 ; // 卡号
+  string currency = 13 [(validate.rules).string.len = 3]; // 货币类型;
+  string number = 1   [
+    (validate.rules).string.min_len = 16,
+    (validate.rules).string.max_len = 20
+  ]; // 卡号
   string cvv = 2; // 安全码
-  //  [(validate.rules).string.len = 4,  json_name = "expYear"]; // 过期年份
-  string exp_year = 3 ;
-  //  [(validate.rules).string.len = 2, json_name = "expMonth"]; // 过期月份
-  string exp_month = 4 ;
-  //  [(validate.rules).string.min_len = 2]; // 持卡人姓名
-  string owner = 5 ;
+  string exp_year = 3 [(validate.rules).string.len = 4]; // 过期年份;
+  string exp_month = 4 [(validate.rules).string.len = 2]; // 过期月份;
+
+  string owner = 5 [(validate.rules).string.min_len = 2]; // 持卡人姓名;
   string name = 6; // 卡名
   string type = 8; // 卡类型（如借记卡、信用卡）
   string brand = 9; // 卡品牌（如 Visa、MasterCard）

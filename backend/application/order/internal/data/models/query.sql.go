@@ -145,7 +145,6 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders,
 }
 
 const GetUserOrdersWithSuborders = `-- name: GetUserOrdersWithSuborders :many
-
 SELECT o.id         AS order_id,
        o.currency   AS order_currency,
        o.street_address,
@@ -187,12 +186,7 @@ type GetUserOrdersWithSubordersRow struct {
 	Suborders     []byte    `json:"suborders"`
 }
 
-// -- name: ListOrdersByUser :many
-// SELECT *
-// FROM orders.orders
-// WHERE user_id = $1
-// ORDER BY created_at DESC
-// LIMIT $2 OFFSET $3;
+// GetUserOrdersWithSuborders
 //
 //	SELECT o.id         AS order_id,
 //	       o.currency   AS order_currency,
@@ -240,6 +234,60 @@ func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.
 			&i.Email,
 			&i.OrderCreated,
 			&i.Suborders,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListOrdersByUser = `-- name: ListOrdersByUser :many
+SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+FROM orders.orders
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListOrdersByUserParams struct {
+	UserID uuid.UUID `json:"userID"`
+	Limit  int64     `json:"limit"`
+	Offset int64     `json:"offset"`
+}
+
+// ListOrdersByUser
+//
+//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+//	FROM orders.orders
+//	WHERE user_id = $1
+//	ORDER BY created_at DESC
+//	LIMIT $2 OFFSET $3
+func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error) {
+	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrdersOrders
+	for rows.Next() {
+		var i OrdersOrders
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Currency,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.Email,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}

@@ -31,10 +31,11 @@ CREATE INDEX idx_user_id_cart_name ON carts.cart (user_id, cart_name);
 CREATE TABLE IF NOT EXISTS carts.cart_items
 (
     cart_item_id uuid PRIMARY KEY DEFAULT uuidv7_sub_ms(),                            -- 购物车商品项唯一ID
-    cart_id      INT     NOT NULL,                                                    -- 购物车ID
-    merchant_id  uuid    NOT NULL,                                                    -- 商家ID
-    product_id   uuid    NOT NULL,                                                    -- 商品ID
-    quantity     INT     NOT NULL CHECK (quantity > 0),                               -- 商品数量
+    cart_id      INT            NOT NULL,                                             -- 购物车ID
+    merchant_id  uuid           NOT NULL,                                             -- 商家ID
+    product_id   uuid           NOT NULL,                                             -- 商品ID
+    quantity     INT            NOT NULL CHECK (quantity > 0),                        -- 商品数量
+    price        NUMERIC(12, 2) NOT NULL CHECK (quantity > 0),                        -- 商品价格
     created_at   TIMESTAMP        DEFAULT now(),                                      -- 创建时间
     updated_at   TIMESTAMP        DEFAULT now(),                                      -- 更新时间
     CONSTRAINT unique_cart_merchant_product UNIQUE (cart_id, merchant_id, product_id) -- 保证每个购物车商品的唯一性

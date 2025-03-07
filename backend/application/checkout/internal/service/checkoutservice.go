@@ -1,11 +1,11 @@
 package service
 
 import (
-	"backend/application/checkout/internal/biz"
-	"context"
-	"github.com/go-kratos/kratos/v2/metadata"
-
 	pb "backend/api/checkout/v1"
+	"backend/application/checkout/internal/biz"
+	"backend/pkg"
+	"context"
+	"fmt"
 )
 
 type CheckoutServiceService struct {
@@ -18,16 +18,15 @@ func NewCheckoutServiceService(uc *biz.CheckoutUsecase) *CheckoutServiceService 
 }
 
 func (s *CheckoutServiceService) Checkout(ctx context.Context, req *pb.CheckoutReq) (*pb.CheckoutResp, error) {
-	var userMdKey string
-	if md, ok := metadata.FromServerContext(ctx); ok{
-		userMdKey = md.Get("x-md-global-user-id")
+	userID, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get user id from metadata error: %v", err)
 	}
 	reply, err := s.uc.Checkout(ctx, &biz.CheckoutRequest{
-		UserId:     userMdKey,
+		UserId:     userID,
 		Firstname:  req.Firstname,
 		Lastname:   req.Lastname,
 		Email:      req.Email,
-		CreditCard: nil,
 	})
 	if err != nil {
 		return nil, err

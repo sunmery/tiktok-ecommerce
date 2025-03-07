@@ -9,12 +9,12 @@ SELECT *
 FROM orders.orders
 WHERE id = $1;
 
--- -- name: ListOrdersByUser :many
--- SELECT *
--- FROM orders.orders
--- WHERE user_id = $1
--- ORDER BY created_at DESC
--- LIMIT $2 OFFSET $3;
+-- name: ListOrdersByUser :many
+SELECT *
+FROM orders.orders
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
 
 -- name: GetUserOrdersWithSuborders :many
 SELECT o.id         AS order_id,

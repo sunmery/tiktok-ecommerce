@@ -11,12 +11,13 @@ insert_cart AS (
     WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
     RETURNING cart_id
 )
-INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
+INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
 VALUES (
     COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
     $3,   -- 商家ID
     $4,   -- 商品ID
     $5,   -- 商品数量
+    $6,
     CURRENT_TIMESTAMP,  -- 创建时间
     CURRENT_TIMESTAMP   -- 更新时间
 )

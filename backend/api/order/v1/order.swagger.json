@@ -195,9 +195,6 @@
       "title": "定义地址信息的消息结构",
       "required": [
         "userId",
-        "city",
-        "state",
-        "country",
         "zipCode",
         "streetAddress"
       ]
@@ -205,18 +202,17 @@
     "v1CartItem": {
       "type": "object",
       "properties": {
+        "merchantId": {
+          "type": "string"
+        },
         "productId": {
           "type": "string",
           "title": "商品ID"
         },
         "quantity": {
           "type": "integer",
-          "format": "int64",
+          "format": "int32",
           "title": "商品数量"
-        },
-        "merchantId": {
-          "type": "string",
-          "title": "商家 ID"
         }
       },
       "title": "购物车商品"

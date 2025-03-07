@@ -60,7 +60,7 @@ type Querier interface {
 	//       WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
 	//      AND ci.merchant_id = $3  -- 商家ID
 	//      AND ci.product_id = $4  -- 删除指定商品ID
-	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 	RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartsCartItems, error)
 	//UpsertItem
 	//
@@ -76,12 +76,13 @@ type Querier interface {
 	//      WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
 	//      RETURNING cart_id
 	//  )
-	//  INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity, created_at, updated_at)
+	//  INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
 	//  VALUES (
 	//      COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
 	//      $3,   -- 商家ID
 	//      $4,   -- 商品ID
 	//      $5,   -- 商品数量
+	//      $6,
 	//      CURRENT_TIMESTAMP,  -- 创建时间
 	//      CURRENT_TIMESTAMP   -- 更新时间
 	//  )
@@ -89,7 +90,7 @@ type Querier interface {
 	//  DO UPDATE SET
 	//      quantity = EXCLUDED.quantity,  -- 更新商品数量
 	//      updated_at = CURRENT_TIMESTAMP  -- 更新时间
-	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
+	//  RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
 	UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCartItems, error)
 }
 

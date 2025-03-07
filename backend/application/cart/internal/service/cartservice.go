@@ -39,6 +39,7 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 			MerchantId: merchantId,
 			ProductId:  productId,
 			Quantity:   req.Item.Quantity,
+			Price:      req.Item.Price,
 		},
 	})
 	if err != nil {

@@ -328,12 +328,11 @@
         },
         "currency": {
           "type": "string",
-          "title": "[(validate.rules).string.len = 3]; // 货币类型"
+          "title": "货币类型;"
         },
         "number": {
           "type": "string",
-          "description": "卡号",
-          "title": "[\n   (validate.rules).string.min_len = 16,\n   (validate.rules).string.max_len = 20\n ]"
+          "title": "卡号"
         },
         "cvv": {
           "type": "string",
@@ -341,15 +340,15 @@
         },
         "expYear": {
           "type": "string",
-          "title": "[(validate.rules).string.len = 4,  json_name = \"expYear\"]; // 过期年份"
+          "title": "过期年份;"
         },
         "expMonth": {
           "type": "string",
-          "title": "[(validate.rules).string.len = 2, json_name = \"expMonth\"]; // 过期月份"
+          "title": "过期月份;"
         },
         "owner": {
           "type": "string",
-          "title": "[(validate.rules).string.min_len = 2]; // 持卡人姓名"
+          "title": "持卡人姓名;"
         },
         "name": {
           "type": "string",
