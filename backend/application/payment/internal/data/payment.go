@@ -53,6 +53,10 @@ func (r *paymentRepo) GetPayment(ctx context.Context, id uuid.UUID) (*biz.Paymen
 	panic("TODO")
 }
 
+// ProcessPaymentCallback TODO
+// 验证支付结果，更新交易状态。
+// 调用订单服务的MarkOrderPaid标记订单为已支付。
+// 若支付超时（定时取消），触发订单服务的订单取消逻辑。
 func (r *paymentRepo) ProcessPaymentCallback(ctx context.Context, req *biz.PaymentCallbackReq) (*biz.PaymentCallbackResp, error) {
 	err := r.data.alipay.VerifySign(req.RequestForm)
 	if err != nil {

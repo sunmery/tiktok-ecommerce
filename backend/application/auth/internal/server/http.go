@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
+
 	v1 "backend/api/auth/v1"
 	"backend/application/auth/internal/conf"
 	"backend/application/auth/internal/service"
 	"backend/constants"
-	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -44,12 +46,12 @@ func NewHTTPServer(c *conf.Server,
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initHttpTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
 	// trace end
-	var opts = []http.ServerOption{
+	opts := []http.ServerOption{
 		http.Middleware(
 			metadata.Server(),
 			validate.Validator(), // 参数校验
@@ -64,13 +66,6 @@ func NewHTTPServer(c *conf.Server,
 			),
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 		),
-
-		// http.Filter(handlers.CORS( // 浏览器跨域
-		// 	handlers.AllowedOrigins([]string{"http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:443", "https://node1.apikv.com"}),
-		// 	handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE"}),
-		// 	handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
-		// 	handlers.AllowCredentials(),
-		// )),
 		http.RequestDecoder(MultipartFormDataDecoder),
 	}
 	if c.Http.Network != "" {
@@ -95,17 +90,5 @@ func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 		r.Header.Set("Content-Type", "application/json")
 		// return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
 	}
-
-	// fmt.Printf("method:%s\n", r.Method)
-	// if r.Method == "POST" {
-	// 	data, err := ioutil.ReadAll(r.Body)
-	// 	if err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// 	if err = codec.Unmarshal(data, v); err != nil {
-	// 		return errors.BadRequest("CODEC", err.Error())
-	// 	}
-	// }
-
 	return nil
 }

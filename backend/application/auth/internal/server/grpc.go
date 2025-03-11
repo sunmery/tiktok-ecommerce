@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
+
 	v1 "backend/api/auth/v1"
 	"backend/application/auth/internal/conf"
 	"backend/application/auth/internal/service"
 	"backend/constants"
-	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -41,13 +43,13 @@ func NewGRPCServer(
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
 	// trace end
 
-	var opts = []grpc.ServerOption{
+	opts := []grpc.ServerOption{
 		grpc.Middleware(
 			metadata.Server(),
 			validate.Validator(), // 参数校验

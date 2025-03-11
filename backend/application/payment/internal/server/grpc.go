@@ -45,7 +45,7 @@ func NewGRPCServer(
 		log.Warnf("There was a problem creating the resource: %v", err)
 	}
 
-	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Errorf("There was a problem initializing the tracer: %v", err)
 	}

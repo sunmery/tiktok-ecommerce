@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
+
 	v1 "backend/api/assistant/v1"
 	"backend/application/assistant/internal/conf"
 	"backend/application/assistant/internal/service"
 	"backend/constants"
-	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -23,8 +25,6 @@ func NewHTTPServer(c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
 ) *http.Server {
-
-
 	// trace start
 	ctx := context.Background()
 
@@ -43,12 +43,12 @@ func NewHTTPServer(c *conf.Server,
 		log.Warnf("There was a problem creating the resource: %v", err)
 	}
 
-	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initHttpTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Errorf("There was a problem initializing the tracer: %v", err)
 	}
 	// trace end
-	var opts = []http.ServerOption{
+	opts := []http.ServerOption{
 		http.Middleware(
 			validate.Validator(), // 参数校验
 			tracing.Server(),
@@ -84,7 +84,6 @@ func NewHTTPServer(c *conf.Server,
 	}
 	srv := http.NewServer(opts...)
 	// v1.RegisterUserServiceHTTPServer(srv, user)
-	v1.RegisterAssistantHTTPServer(srv,assistant)
+	v1.RegisterAssistantHTTPServer(srv, assistant)
 	return srv
 }
-

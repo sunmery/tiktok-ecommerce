@@ -40,7 +40,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, oc *conf.Observabi
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, oc.Trace.Grpc.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, oc.Trace.Grpc.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}

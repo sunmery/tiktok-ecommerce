@@ -13,7 +13,7 @@
 
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 
-1. 拉取, 包含前端项目. 不需要前端删除`` `-recurse-submodules` `` 即可
+1. 拉取, 包含前端项目. 不需要前端删除`-recurse-submodules`即可
 
 
 ```Bash

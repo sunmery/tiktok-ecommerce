@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
+
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
 	"backend/constants"
-	"context"
+
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -25,7 +27,6 @@ func NewHTTPServer(
 	oc *conf.Observability,
 	logger log.Logger,
 ) *http.Server {
-
 	// trace start
 	ctx := context.Background()
 
@@ -44,7 +45,7 @@ func NewHTTPServer(
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, oc.Trace.Http.Endpoint)
+	_, err2 := initHttpTracerProvider(ctx, res, oc.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}

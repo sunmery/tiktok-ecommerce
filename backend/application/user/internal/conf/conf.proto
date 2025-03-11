@@ -26,17 +26,9 @@ message Server {
 }
 
 message Data {
-  message Pool {
-    int32 max_conns = 1;
-    int32 min_conns = 2;
-    google.protobuf.Duration max_conn_lifetime = 3;
-    google.protobuf.Duration health_check_period = 4;
-    google.protobuf.Duration max_conn_idle_time = 5;
-  }
   message Database {
     string driver = 1;
     string source = 2;
-    Pool pool = 3;
   }
   message Cache {
     string network = 1;
@@ -54,15 +46,15 @@ message Data {
 // 授权/认证
 message Auth {
   message JWT {
-    string certificate = 1;  // jwt 证书
+    string certificate = 1 [json_name = "service_key"];
   }
   message Casdoor {
     message Server {
-      string endpoint = 1; // casdoor 地址,包含端口
-      string client_id = 2 [json_name = "client_id"]; // casdoor 客户端 ID
-      string client_secret = 3 [json_name = "client_secret"]; // casdoor 密钥
-      string organization = 4; // 组织名称
-      string application = 5; // 应用名称
+      string endpoint = 1;
+      string client_id = 2 [json_name = "client_id"];
+      string client_secret = 3 [json_name = "client_secret"];
+      string organization = 4;
+      string application = 5;
     }
     Server server = 2;
   }
@@ -72,41 +64,36 @@ message Auth {
 
 // 可观测性
 message Observability {
-  // 链路追踪
   message Trace {
     message GRPC {
-      string endpoint = 1; // 接收grpc链路的地址,包含端口
+      string endpoint = 1;
     }
     message HTTP {
-      string endpoint = 1; // 接收http 链路的地址,包含端口
+      string endpoint = 1;
     }
     GRPC grpc = 2;
     HTTP http = 3;
   }
-  // 日志
   message Logging {
 
   }
-  // 指标
-  message Metric {
+  message Metrics {
 
   }
   Trace trace = 1;
-  Metric metric = 2;
+  Metrics metrics = 2;
   Logging logging = 3;
 }
 
 // 注册/配置中心
 message Consul {
   message RegistryCenter {
-    string address = 1; // Consul 地址
-    string scheme = 2; // 模式, http/https
-    bool health_check = 3; // 健康检查
-    string acl_token = 4; // ACL Token
+    string address = 1;
+    string scheme = 2;
+    bool health_check = 3;
   }
   message ConfigCenter {
-    string address = 1; // Consul 地址
-    string acl_token = 2; // ACL Token
+    string addr = 1;
   }
   RegistryCenter registry_center = 1;
   ConfigCenter config_center = 2;

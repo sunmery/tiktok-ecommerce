@@ -3,12 +3,13 @@ package pkg
 import (
 	"flag"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/go-kratos/kratos/contrib/config/consul/v2"
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/hashicorp/consul/api"
-	"os"
-	"time"
 )
 
 type ConfigCenter struct {
@@ -34,9 +35,9 @@ func InitConsul(config ConfigCenter) config.Source {
 	}
 
 	// debug
-	fmt.Printf("config_path:%v\n", config.Path)
-	fmt.Printf("config_center:%v\n", config.Addr)
-	fmt.Printf("config_center:%v\n", config.Token)
+	log.Debugf("config_path:%v", config.Path)
+	log.Debugf("config_center:%v", config.Addr)
+	log.Debugf("config_center_token:%v", config.Token)
 
 	consulClient, err := api.NewClient(&api.Config{
 		Address:  config.Addr,
