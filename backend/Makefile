@@ -20,6 +20,43 @@ API_PROTO_FILES=$(shell cd ../../api/$(APP_RELATIVE_PATH) && find . -name *.prot
 INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
 APP_NAME=$(APP_RELATIVE_PATH)
 
+.PHONY: run stop
+
+# 启动所有服务
+.PHONY: run stop
+
+# 启动所有服务
+run:
+	@echo "Starting all services..."
+	@rm -f .pids  # 清理旧的 PID 文件
+	@cd application/auth && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/user && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/category && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/product && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/cart && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/checkout && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/order && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids && sleep 1 && \
+	cd application/payment && config_center=$(CONFIG_CENTER) kratos run & echo $$! >> .pids
+	@echo "All services started. Use 'make stop' to stop them."
+
+# 停止所有服务
+stop:
+	@echo "Stopping all services..."
+	@if [ -f .pids ]; then \
+		while read pid; do \
+			if ps -p $$pid > /dev/null; then \
+				kill $$pid || kill -15 $$pid; \
+				echo "Stopped process $$pid"; \
+			else \
+				echo "Process $$pid not found"; \
+			fi; \
+		done < .pids; \
+		rm -f .pids; \
+		echo "All services stopped."; \
+	else \
+		echo "No services running."; \
+	fi
+
 .PHONY: api
 # 生成api目录的proto的代码
 api:

@@ -1,12 +1,13 @@
 package server
 
 import (
+	"context"
+	"io/ioutil"
+
 	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
 	"backend/application/cart/internal/service"
 	"backend/constants"
-	"context"
-	"io/ioutil"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -28,7 +29,6 @@ func NewHTTPServer(c *conf.Server,
 ) *http.Server {
 	// InitSentry()
 
-
 	// trace start
 	ctx := context.Background()
 
@@ -47,12 +47,12 @@ func NewHTTPServer(c *conf.Server,
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
-	_, err2 := initTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initHttpTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
 	// trace end
-	var opts = []http.ServerOption{
+	opts := []http.ServerOption{
 		http.Middleware(
 			validate.Validator(), // 参数校验
 			tracing.Server(),
@@ -89,7 +89,7 @@ func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
 	codec, ok := http.CodecForRequest(r, "Content-Type")
 	// 如果找不到对应的解码器此时会报错
 	if !ok {
-		//r.Header.Set("Content-Type", "application/json")
+		// r.Header.Set("Content-Type", "application/json")
 		return errors.BadRequest("CODEC", r.Header.Get("Content-Type"))
 	}
 	// fmt.Printf("method:%s\n", r.Method)

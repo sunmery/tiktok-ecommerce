@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package ecommerce.cart.v1;
+
+option go_package = "backend/api/cart/v1;cartv1";
+import "errors/errors.proto";
+
+enum ErrorReason {
+  // 设置缺省错误码
+  option (errors.default_code) = 500;
+
+  // 找不到
+  CARTITEM_NOT_FOUND = 0 [(errors.code) = 404];
+  // 内部错误
+  INVALID_STATUS = 1 [(errors.code) = 500];
+  // 错误参数
+  InvalidAuditAction = 2 [(errors.code) = 400];
+}
