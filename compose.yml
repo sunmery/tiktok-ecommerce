@@ -1,0 +1,161 @@
+services:
+
+  gateway:
+    image: registery/kratos/gateway:v1.4.0
+    build:
+      context: .
+      target: final
+      # 构建参数
+      args:
+        CGOENABLED: 0
+        GOIMAGE: golang:1.24.0-alpine3.21
+        VERSION: v1.4.0
+        GATEWAY_PORT: 8080
+    ports:
+      - "8080:8080"
+    container_name: ecommerce-gateway
+    restart: on-failure:3
+    environment:
+      - DISCOVERY_DSN=consul://consul:3026
+      - DISCOVERY_CONFIG_PATH=ecommerce/gateway/config.yaml
+      - POLICIES_FILE_PATH=/app/dynamic-config/public.pem
+    volumes:
+      # 仅挂载本地配置文件（开发环境）
+      - ./dynamic-config:/app/dynamic-config
+    command: [ "/app/gateway" ]
+    networks:
+      - ecommerce
+
+  ecommerce-fe:
+    image: registery/repo/ecommerce-fe:dev
+    build:
+      context: .
+      target: final
+    container_name: ecommerce-fe
+    restart: unless-stopped  # 自动重启策略
+    environment:
+      - TZ=Asia/Shanghai  # 设置时区
+      - DOMAIN=example.com
+    ports:
+      - "6831:80"  # HTTP 端口映射
+    volumes:
+      - ./nginx-templates:/etc/nginx/templates  # 挂载整个模板目录
+    networks:
+      - ecommerce
+
+  auth:
+    image: registery/repo/auth:version
+    platform: linux/amd64
+    ports:
+      - "30002:30002"
+    container_name: ecommerce-auth-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+    command:
+      - "/app/service"
+
+  user:
+    image: registery/repo/user:version
+    platform: linux/amd64
+    ports:
+      - "30003:30003"
+    container_name: ecommerce-user-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  product:
+    platform: linux/amd64
+    image: registery/repo/product:version
+    ports:
+      - "30005:30005"
+      - "30006:30006"
+    container_name: ecommerce-product-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  cart:
+    image: registery/repo/cart:version
+    platform: linux/amd64
+    ports:
+      - "30007:30007"
+      - "30008:30008"
+    container_name: ecommerce-cart-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  order:
+    image: registery/repo/order:version
+    platform: linux/amd64
+    ports:
+      - "30009:30009"
+      - "30010:30010"
+    container_name: ecommerce-order-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  checkout:
+    image: registery/repo/checkout:version
+    platform: linux/amd64
+    ports:
+      - "30011:30011"
+      - "30012:30012"
+    container_name: ecommerce-checkout-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  payment:
+    image: registery/repo/payment:version
+    platform: linux/amd64
+    ports:
+      - "30014:30014"
+    container_name: ecommerce-payment-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+  category:
+    image: registery/repo/category:version
+    platform: linux/amd64
+    ports:
+      - "30016:30016"
+    container_name: ecommerce-category-v1
+    restart: on-failure:3
+    environment:
+      config_center: config_center:8500
+    networks:
+      - ecommerce
+
+#  assistant:
+#    image: registery/repo/assistant:version
+#    platform: linux/amd64
+#    ports:
+#      - "30017:30017"
+#      - "30018:30018"
+#    container_name: ecommerce-assistant-v1
+#    restart: on-failure:3
+#    environment:
+#      config_center: config_center:8500
+
+networks:
+  ecommerce:
+    external: true
