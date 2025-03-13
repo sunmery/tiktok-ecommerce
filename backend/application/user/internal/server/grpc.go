@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/middleware/tracing"
+
 	v1 "backend/api/user/v1"
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/service"
@@ -58,7 +60,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, oc *conf.Observabi
 				})),
 			sentrykratos.Server(),  // must after Recovery middleware, because of the exiting order will be reversed
 			logging.Server(logger), // 在 grpc.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
-			// tracing.Server(), // trace 链路追踪
+			tracing.Server(),       // trace 链路追踪
 		),
 	}
 	if c.Grpc.Network != "" {

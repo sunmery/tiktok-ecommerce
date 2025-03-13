@@ -13,60 +13,14 @@
 
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 
-1. 拉取, 包含前端项目. 不需要前端删除`-recurse-submodules`即可
+1. 拉取, 包含前端和网关项目. 不需要前端删除`-recurse-submodules`即可
 
 
 ```Bash
-git clone --recurse-submodules git@github.com:sunmery/tiktok-e-commence.git
+git submodule update --init --recursive
 ```
 
 目录结构:
-
-
-```
-.
-├── LICENSE
-├── Makefile CLI 生成命令
-├── README.md
-├── api 应用proto目录
-│  ├── cart  服务 proto
-│  │  └── v1  proto版本
-│  │      └── service.proto
-│  ├── checkout
-│  │  └── v1
-│  │      └── service.proto
-│  ├── order
-│  │  └── v1
-│  │      └── service.proto
-│  ├── payment
-│  │  └── v1
-│  │      └── service.proto
-│  ├── product
-│  │  └── v1
-│  │      └── service.proto
-│  └── user
-│      └── v1
-│          ├── error_reason.pb.go
-│          ├── error_reason.proto
-│          ├── error_reason.swagger.json
-│          ├── service.pb.go
-│          ├── service.proto
-│          ├── service.swagger.json
-│          ├── service_grpc.pb.go
-│          └── user
-│              └── v1
-│                  ├── error_reason.pb.go
-│                  ├── service.pb.go
-│                  └── service_grpc.pb.go
-├── application 微服务目录
-│  ├── cart
-│  ├── checkout
-│   ├── order
-│   ├── payment
-│  ├── product
-│  ├── user
-├── third_party 第三方 proto目录
-```
 
 ## 架构
 

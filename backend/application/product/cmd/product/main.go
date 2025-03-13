@@ -1,13 +1,15 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"os"
+
 	"backend/application/product/internal/conf"
 	"backend/constants"
 	"backend/pkg"
-	"flag"
-	"fmt"
+
 	"github.com/go-kratos/kratos/v2/registry"
-	"os"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -44,13 +46,14 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Regi
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{
-			"configCenter": configCenter,
-			"configPath":   configPath,
+			"config_center": configCenter,
+			"host":          id,
+			"name":          Name,
 		}),
 		kratos.Logger(logger),
 		kratos.Server(
 			gs,
-			hs,
+			// hs,
 		),
 		kratos.Registrar(r),
 	)

@@ -3,16 +3,17 @@ package server
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/tracing"
+
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/conf"
 	"backend/application/product/internal/service"
 	"backend/constants"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/logging"
-	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
-	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
@@ -43,7 +44,7 @@ func NewGRPCServer(
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Grpc.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
@@ -51,17 +52,11 @@ func NewGRPCServer(
 
 	opts := []grpc.ServerOption{
 		grpc.Middleware(
-			metadata.Server(),    // 元数据
-			validate.Validator(), // 参数校验
-			recovery.Recovery(
-				// recovery.WithLogger(log.DefaultLogger),
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
-					// do someting
-					return nil
-				})),
-
+			metadata.Server(), // 元数据
+			// validate.Validator(),   // 参数校验
+			recovery.Recovery(),    // 异常恢复
 			logging.Server(logger), // 在 grpc.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
-			// tracing.Server(), // trace 链路追踪
+			tracing.Server(),       // trace 链路追踪
 		),
 	}
 	if c.Grpc.Network != "" {
