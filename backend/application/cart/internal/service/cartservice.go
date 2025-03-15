@@ -7,7 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type CartServiceService struct {
@@ -20,18 +23,17 @@ func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
 }
 
 func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemReq) (*pb.UpsertItemResp, error) {
-	// 解析 UUID
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
 	productId, err := uuid.Parse(req.Item.ProductId)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse productId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
 	merchantId, err := uuid.Parse(req.Item.MerchantId)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse productId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid merchant ID")
 	}
 	resp, err := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
 		UserId: userId,
@@ -95,18 +97,17 @@ func (s *CartServiceService) EmptyCart(ctx context.Context, _ *pb.EmptyCartReq) 
 }
 
 func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveCartItemReq) (*pb.RemoveCartItemResp, error) {
-	// 解析 UUID
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
-	productId, err := uuid.Parse(req.ProductId)
+	productId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse productId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
-	merchantId, err := uuid.Parse(req.MerchantId)
+	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to parse merchantId UUID: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "invalid merchant ID")
 	}
 
 	resp, err := s.cc.RemoveCartItem(ctx, &biz.RemoveCartItemReq{

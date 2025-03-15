@@ -1,20 +1,25 @@
 package data
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/minio/minio-go/v7"
+
 	category "backend/api/category/v1"
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"backend/pkg/types"
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
+
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
@@ -25,6 +30,36 @@ import (
 type productRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+const (
+	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
+)
+
+func (p *productRepo) UploadProductFile(ctx context.Context, req *biz.UploadProductFileRequest) (*biz.UploadProductFileReply, error) {
+	expiry := defaultExpiryTime
+
+	policy := minio.NewPostPolicy()
+	_ = policy.SetBucket(*req.BucketName)
+	_ = policy.SetKey(*req.FileName)
+	_ = policy.SetExpires(time.Now().UTC().Add(expiry))
+	presignedURL, formData, err := p.data.minio.PresignedPostPolicy(ctx, policy)
+	if err != nil {
+		return nil, err
+	}
+
+	url, err := p.data.minio.PresignedPutObject(ctx, *req.BucketName, *req.FileName, expiry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.UploadProductFileReply{
+		UploadUrl:   presignedURL.String(),
+		DownloadUrl: url.String(),
+		BucketName:  req.BucketName,
+		ObjectName:  *req.FileName,
+		FormData:    formData,
+	}, nil
 }
 
 func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (_ *biz.CreateProductReply, err error) {
@@ -130,6 +165,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		UpdatedAt: result.UpdatedAt,
 	}, nil
 }
+
 func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
@@ -323,7 +359,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 
 	// TODO 从分类服务获取分类信息
 
-	var items = make([]*biz.Product, 0)
+	items := make([]*biz.Product, 0)
 	for _, product := range listRandomProducts {
 		var images []*biz.ProductImage
 		if len(product.Images) > 0 {
@@ -512,9 +548,9 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到该商品")
+			return nil, fmt.Errorf("product not found: %w", err)
 		}
-		return nil, v1.ErrorInvalidStatus("GetProduct 内部错误")
+		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
 
 	return p.fullProductData(ctx, product)

@@ -1,10 +1,12 @@
 package service
 
 import (
-	"backend/pkg"
 	"context"
 	"errors"
 	"fmt"
+
+	"backend/pkg"
+
 	"github.com/google/uuid"
 
 	pb "backend/api/product/v1"
@@ -26,13 +28,33 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 	return &ProductService{uc: uc}
 }
 
-func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
+func (s *ProductService) UploadProductFile(ctx context.Context, req *pb.UploadProductFileRequest) (*pb.UploadProductFileReply, error) {
+	result, err := s.uc.UploadProductFile(ctx, &biz.UploadProductFileRequest{
+		Method:      biz.UploadMethod(req.Method),
+		ContentType: req.ContentType,
+		BucketName:  req.BucketName,
+		FilePath:    req.FilePath,
+		FileName:    req.FileName,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "生成预签名URL失败")
 	}
 
-	merchantId, err := uuid.Parse(userId)
+	return &pb.UploadProductFileReply{
+		UploadUrl:   result.UploadUrl,
+		DownloadUrl: result.DownloadUrl,
+		BucketName:  result.BucketName,
+		ObjectName:  result.ObjectName,
+		FormData:    result.FormData,
+	}, nil
+}
+
+func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
+	merchantId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
+	}
+
 	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
 		Name:        req.Name,
 		Price:       req.Price,
@@ -181,24 +203,16 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	// 层层传递下去
-	// var userIdMetaKey string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userIdMetaKey = md.Get("x-md-global-user-id")
-	// }
-	//
-	// userId, err := uuid.Parse(userIdMetaKey)
-	// if err!= nil {
-	// 	return nil, errors.New("invalid user ID")
-	// }
 	productId, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
 	}
+
 	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid merchant id")
 	}
+
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
 		ID:         productId,
 		MerchantID: merchantId,

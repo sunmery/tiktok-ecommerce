@@ -35,6 +35,240 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on UploadProductFileRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UploadProductFileRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UploadProductFileRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UploadProductFileRequestMultiError, or nil if none found.
+func (m *UploadProductFileRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UploadProductFileRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Method
+
+	if m.ContentType != nil {
+		// no validation rules for ContentType
+	}
+
+	if m.BucketName != nil {
+		// no validation rules for BucketName
+	}
+
+	if m.FilePath != nil {
+		// no validation rules for FilePath
+	}
+
+	if m.FileName != nil {
+		// no validation rules for FileName
+	}
+
+	if len(errors) > 0 {
+		return UploadProductFileRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UploadProductFileRequestMultiError is an error wrapping multiple validation
+// errors returned by UploadProductFileRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UploadProductFileRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UploadProductFileRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UploadProductFileRequestMultiError) AllErrors() []error { return m }
+
+// UploadProductFileRequestValidationError is the validation error returned by
+// UploadProductFileRequest.Validate if the designated constraints aren't met.
+type UploadProductFileRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UploadProductFileRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UploadProductFileRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UploadProductFileRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UploadProductFileRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UploadProductFileRequestValidationError) ErrorName() string {
+	return "UploadProductFileRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UploadProductFileRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUploadProductFileRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UploadProductFileRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UploadProductFileRequestValidationError{}
+
+// Validate checks the field values on UploadProductFileReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UploadProductFileReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UploadProductFileReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UploadProductFileReplyMultiError, or nil if none found.
+func (m *UploadProductFileReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UploadProductFileReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UploadUrl
+
+	// no validation rules for DownloadUrl
+
+	// no validation rules for ObjectName
+
+	// no validation rules for FormData
+
+	if m.BucketName != nil {
+		// no validation rules for BucketName
+	}
+
+	if len(errors) > 0 {
+		return UploadProductFileReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UploadProductFileReplyMultiError is an error wrapping multiple validation
+// errors returned by UploadProductFileReply.ValidateAll() if the designated
+// constraints aren't met.
+type UploadProductFileReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UploadProductFileReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UploadProductFileReplyMultiError) AllErrors() []error { return m }
+
+// UploadProductFileReplyValidationError is the validation error returned by
+// UploadProductFileReply.Validate if the designated constraints aren't met.
+type UploadProductFileReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UploadProductFileReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UploadProductFileReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UploadProductFileReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UploadProductFileReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UploadProductFileReplyValidationError) ErrorName() string {
+	return "UploadProductFileReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UploadProductFileReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUploadProductFileReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UploadProductFileReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UploadProductFileReplyValidationError{}
+
 // Validate checks the field values on ListRandomProductsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

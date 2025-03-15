@@ -8,9 +8,18 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "validate/validate.proto";
+import "openapi/v3/annotations.proto";
 
 // 商品服务定义
 service ProductService {
+  // 上传商品文件
+  rpc UploadProductFile(UploadProductFileRequest) returns (UploadProductFileReply) {
+    option (google.api.http) = {
+      post: "/v1/products/uploadfile"
+      body: "*"
+    };
+  }
+
   // 创建商品（草稿状态）
   rpc CreateProduct(CreateProductRequest) returns (CreateProductReply) {
     option (google.api.http) = {
@@ -44,12 +53,12 @@ service ProductService {
   }
 
   // 随机返回商品数据
-  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);
-//  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
-//    option (google.api.http) = {
-//      get: "/v1/products"
-//    };
-//  }
+//  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);
+  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products"
+    };
+  }
 
   // 获取商品详情
   rpc GetProduct(GetProductRequest) returns (Product) {
@@ -102,7 +111,70 @@ enum AuditAction {
   AUDIT_ACTION_REJECT = 1;  // 驳回审核
 }
 
-//
+// 前端上传文件所用的HTTP方法
+enum UploadMethod {
+  Put = 0;
+  Post = 1;
+}
+
+// 获取对象存储上传链接
+message UploadProductFileRequest {
+  UploadMethod method = 1 [
+    json_name = "method",
+    (openapi.v3.property) = { description: "上传文件所用的HTTP方法，支持POST和PUT" }
+  ];  // 上传文件所用的HTTP方法
+
+  optional string content_type = 2 [
+    json_name = "contentType",
+    (openapi.v3.property) = { description: "文件的MIME类型" }
+  ];  // 文件的MIME类型
+
+  optional string bucket_name = 3 [
+    json_name = "bucketName",
+    (openapi.v3.property) = { description: "文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析" }
+  ]; // 文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析。
+
+  optional string file_path = 4 [
+    json_name = "filePath",
+    (openapi.v3.property) = { description: "远端的文件路径，可以不填写" }
+  ]; // 远端的文件路径，可以不填写。
+
+  optional string file_name = 5 [
+    json_name = "fileName",
+    (openapi.v3.property) = { description: "文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID" }
+  ]; // 文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID。
+}
+
+// 获取对象存储上传链接
+message UploadProductFileReply {
+  string upload_url = 1 [
+    json_name = "uploadUrl",
+    (openapi.v3.property) = { description: "文件的上传链接，默认1个小时的过期时间" }
+  ]; // 文件的上传链接，默认1个小时的过期时间。
+
+  string download_url = 2 [
+    json_name = "downloadUrl",
+    (openapi.v3.property) = { description: "文件的下载链接" }
+  ]; // 文件的下载链接
+
+  optional string bucket_name = 3 [
+    json_name = "bucketName",
+    (openapi.v3.property) = { description: "文件桶名称" }
+  ]; // 文件桶名称
+
+  string object_name = 4 [
+    json_name = "objectName",
+    (openapi.v3.property) = { description: "文件名" }
+  ];  // 文件名
+
+  map<string, string> form_data = 5 [
+    json_name = "formData",
+    (openapi.v3.property) = { description: "表单数据，使用POST方法时填写" }
+  ];
+}
+
+
+// 返回随机顺序的商品数据
 message ListRandomProductsRequest {
   uint32 page = 1;
   uint32 page_size = 2;

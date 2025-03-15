@@ -19,6 +19,7 @@ const (
 	ProductStatusRejected                      // 商品审核未通过。
 	ProductStatusSoldOut                       // 商品因某种原因不可购买。
 )
+
 const (
 	Approved AuditAction = 1
 	Rejected AuditAction = 2
@@ -237,9 +238,27 @@ type SearchProductsByNameRequest struct {
 	// 自动转义特殊字符（! : & 等）
 	Query string
 }
+type (
+	UploadMethod             int32
+	UploadProductFileRequest struct {
+		Method      UploadMethod
+		ContentType *string
+		BucketName  *string
+		FilePath    *string
+		FileName    *string
+	}
+	UploadProductFileReply struct {
+		UploadUrl   string
+		DownloadUrl string
+		BucketName  *string
+		ObjectName  string
+		FormData    map[string]string
+	}
+)
 
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
+	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
@@ -262,6 +281,10 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	}
 	p.Status = newStatus
 	return nil
+}
+
+func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error) {
+	return p.repo.UploadProductFile(ctx, req)
 }
 
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {

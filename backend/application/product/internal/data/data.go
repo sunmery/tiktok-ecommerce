@@ -1,12 +1,18 @@
 package data
 
 import (
+	"context"
+	"crypto/tls"
+	"fmt"
+	"net/http"
+
+	"github.com/minio/minio-go/v7/pkg/credentials"
+
 	categoryv1 "backend/api/category/v1"
 	"backend/application/product/internal/conf"
 	"backend/application/product/internal/data/models"
 	"backend/constants"
-	"context"
-	"fmt"
+
 	"github.com/exaring/otelpgx"
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -19,16 +25,18 @@ import (
 	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/minio/minio-go/v7"
 	"github.com/redis/go-redis/v9"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewProductRepo, NewDiscovery, NewCategoryClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewMinioClient, NewProductRepo, NewDiscovery, NewCategoryClient)
 
 type Data struct {
-	db  *models.Queries
-	pgx *pgxpool.Pool
-	rdb *redis.Client
+	db    *models.Queries
+	pgx   *pgxpool.Pool
+	rdb   *redis.Client
+	minio *minio.Client
 	// mdb    *mongo.Database
 	logger         *log.Helper
 	categoryClient categoryv1.CategoryServiceClient
@@ -41,9 +49,10 @@ type contextTxKey struct{}
 func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
+	minio *minio.Client,
 	logger log.Logger,
 	categoryClient categoryv1.CategoryServiceClient,
-// mdb *mongo.Database,
+	// mdb *mongo.Database,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -52,6 +61,7 @@ func NewData(
 		db:     models.New(db),        // 数据库
 		pgx:    db,                    // 数据库事务
 		rdb:    rdb,                   // 缓存
+		minio:  minio,                 // 对象存储
 		logger: log.NewHelper(logger), // 注入日志
 		// mdb:    mdb,
 		categoryClient: categoryClient,
@@ -103,6 +113,27 @@ func NewCache(c *conf.Data) *redis.Client {
 	})
 
 	return rdb
+}
+
+func NewMinioClient(c *conf.Data) *minio.Client {
+	// 初始化 Minio 客户端
+
+	// 跳过证书验证, 如果证书正常, 删除该代码
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, // 跳过证书验证
+		},
+	}
+	minioClient, err := minio.New(c.Minio.Endpoint, &minio.Options{
+		Creds:     credentials.NewStaticV4(c.Minio.AccessKey, c.Minio.SecretKey, c.Minio.Token),
+		Secure:    c.Minio.Secure,
+		Transport: transport,
+	})
+	if err != nil {
+		panic("new minio client fail: ")
+	}
+
+	return minioClient
 }
 
 // NewMongo 文档数据库

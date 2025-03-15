@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/google/uuid"
-
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"backend/application/payment/internal/biz"
+	"backend/pkg"
 
 	pb "backend/api/payment/v1"
 )
@@ -25,14 +26,14 @@ func NewPaymentServiceService(uc *biz.PaymentUsecase) *PaymentServiceService {
 }
 
 func (s *PaymentServiceService) CreatePayment(ctx context.Context, req *pb.CreatePaymentReq) (*pb.PaymentResp, error) {
-	orderId, err := uuid.Parse(req.OrderId)
+	orderId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("invalid order id")
+		return nil, status.Error(codes.InvalidArgument, "invalid order ID")
 	}
 	result, err := s.uc.CreatePayment(ctx, &biz.CreatePaymentReq{
-		OrderId:       orderId,
-		Currency:      req.Currency,
-		Amount:        req.Amount,
+		OrderId:  orderId,
+		Currency: req.Currency,
+		Amount:   req.Amount,
 		// PaymentMethod: "alipay",
 		// Method:        "",
 		// Status:        "",
@@ -89,9 +90,9 @@ func (s *PaymentServiceService) ProcessPaymentCallback(ctx context.Context, req 
 }
 
 func (s *PaymentServiceService) GetPayment(ctx context.Context, req *pb.GetPaymentReq) (*pb.PaymentResp, error) {
-	paymentId, err := uuid.Parse(req.PaymentId)
+	paymentId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, "invalid payment ID")
 	}
 	payment, err := s.uc.GetPayment(ctx, paymentId)
 	if err != nil {

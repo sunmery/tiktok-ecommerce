@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"net"
 
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
@@ -49,6 +51,11 @@ func NewGRPCServer(
 		log.Fatal(err)
 	}
 	// trace end
+	//
+	lis, lisErr := net.Listen("tcp", c.Grpc.Addr)
+	if lisErr != nil {
+		log.Fatal(fmt.Errorf("listen failed: %w", lisErr))
+	}
 
 	opts := []grpc.ServerOption{
 		grpc.Middleware(
@@ -58,6 +65,7 @@ func NewGRPCServer(
 			logging.Server(logger), // 在 grpc.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 			tracing.Server(),       // trace 链路追踪
 		),
+		grpc.Listener(lis), // 使用标准 Listener
 	}
 	if c.Grpc.Network != "" {
 		opts = append(opts, grpc.Network(c.Grpc.Network))
@@ -68,6 +76,7 @@ func NewGRPCServer(
 	if c.Grpc.Timeout != nil {
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
+
 	srv := grpc.NewServer(opts...)
 	v1.RegisterProductServiceServer(srv, product)
 	return srv

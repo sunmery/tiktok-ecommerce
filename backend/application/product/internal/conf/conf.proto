@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "product/internal/conf;conf";
+option go_package = "baockend/product/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -27,10 +27,20 @@ message Server {
 
 message Data {
 
+  message Pool {
+    int32 max_idle_conns = 1;
+    int32 max_open_conns = 2;
+    google.protobuf.Duration max_conn_lifetime = 3;
+    google.protobuf.Duration health_check_period = 4;
+    google.protobuf.Duration max_conn_idle_time = 5;
+  }
+
   message Database {
     string driver = 1;
     string source = 2;
+    Pool pool = 3;
   }
+
   message Cache {
     string network = 1;
     string addr = 2;
@@ -40,13 +50,24 @@ message Data {
     string username = 6;
     string password = 7;
   }
+
   message Mongo {
     string url = 1;
     string database = 2;
   }
+
+  message Minio {
+    string endpoint = 1;
+    string accessKey = 2;
+    string secretKey = 3;
+    bool secure = 4;
+    string token = 5;
+  }
+
   Database database = 1;
   Cache cache = 2;
   Mongo mongo = 3;
+  Minio minio = 4;
 }
 
 // 授权/认证

@@ -1,8 +1,11 @@
 package pkg
 
 import (
-	"backend/constants"
 	"context"
+	"errors"
+
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/metadata"
 	"github.com/google/uuid"
 )
@@ -14,9 +17,10 @@ func GetMetadataUesrID(ctx context.Context) (uuid.UUID, error) {
 		userIdStr = md.Get(constants.UserId)
 	}
 	userId, err := uuid.Parse(userIdStr)
-	if err != nil {
-		return uuid.Nil, err
+	if err != nil || userId == uuid.Nil {
+		return uuid.Nil, errors.New("无效的用户ID")
 	}
+
 	return userId, nil
 }
 
