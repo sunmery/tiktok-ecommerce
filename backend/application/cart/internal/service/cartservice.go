@@ -1,12 +1,13 @@
 package service
 
 import (
-	pb "backend/api/cart/v1"
-	"backend/application/cart/internal/biz"
-	"backend/pkg"
 	"context"
 	"errors"
 	"fmt"
+
+	pb "backend/api/cart/v1"
+	"backend/application/cart/internal/biz"
+	"backend/pkg"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -54,6 +55,10 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 
 func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
+	}
+
 	cart, err := s.cc.GetCart(ctx, &biz.GetCartReq{
 		UserId: userId,
 	})

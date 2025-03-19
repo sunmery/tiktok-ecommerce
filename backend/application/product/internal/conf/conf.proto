@@ -51,11 +51,6 @@ message Data {
     string password = 7;
   }
 
-  message Mongo {
-    string url = 1;
-    string database = 2;
-  }
-
   message Minio {
     string endpoint = 1;
     string accessKey = 2;
@@ -66,7 +61,6 @@ message Data {
 
   Database database = 1;
   Cache cache = 2;
-  Mongo mongo = 3;
   Minio minio = 4;
 }
 

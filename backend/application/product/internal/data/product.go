@@ -32,6 +32,61 @@ type productRepo struct {
 	log  *log.Helper
 }
 
+func (p *productRepo) GetCategoryProducts(ctx context.Context, req *biz.GetCategoryProducts) (*biz.Products, error) {
+	products, err := p.data.DB(ctx).GetCategoryProducts(ctx, models.GetCategoryProductsParams{
+		CategoryID: int64(req.CategoryID),
+		Status:     int16(req.Status),
+		Limit:      req.PageSize,
+		Offset:     (req.Page - 1) * req.PageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*biz.Product, 0)
+	for _, product := range products {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		var attributes map[string]*biz.AttributeValue
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price)
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category: biz.CategoryInfo{
+				CategoryId: uint64(product.CategoryID),
+				// CategoryName: pro,
+				// SortOrder:    0,
+			},
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			Attributes: attributes,
+		})
+	}
+
+	return &biz.Products{Items: items}, err
+}
+
 const (
 	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
 )
@@ -112,9 +167,9 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		Name:        req.Name,
 		Description: &req.Description,
 		Price:       price,
-		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
 		Status:      int16(req.Status),
 		MerchantID:  req.MerchantId,
+		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)

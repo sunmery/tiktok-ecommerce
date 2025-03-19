@@ -55,7 +55,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
 
-	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
+	created, createdErr := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
 		Name:        req.Name,
 		Price:       req.Price,
 		Description: req.Description,
@@ -69,8 +69,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		Attributes: convertPBAttributes(req.Attributes),
 		Stock:      req.Stock,
 	})
-	if err != nil {
-		return nil, err
+	if createdErr != nil {
+		return nil, createdErr
 	}
 	return &pb.CreateProductReply{
 		Id:        created.ID.String(),
@@ -277,6 +277,33 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 		Page:     req.Page,
 		PageSize: req.PageSize,
 		Status:   req.Status,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range listRandomProducts.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
+func (s *ProductService) GetCategoryProducts(ctx context.Context, req *pb.GetCategoryProductsRequest) (*pb.Products, error) {
+	page := uint32(1)
+	pageSize := uint32(100)
+	if req.Page == 0 {
+		req.Page = pageSize
+	}
+	if req.Page == 0 {
+		req.Page = page
+	}
+	listRandomProducts, err := s.uc.GetCategoryProducts(ctx, &biz.GetCategoryProducts{
+		CategoryID: req.CategoryId,
+		Status:     req.Status,
+		Page:       int64(page),
+		PageSize:   int64(req.PageSize),
 	})
 	if err != nil {
 		return nil, err

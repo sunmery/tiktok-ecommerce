@@ -256,6 +256,14 @@ type (
 	}
 )
 
+// GetCategoryProducts 根据分类获取商品
+type GetCategoryProducts struct {
+	CategoryID uint32
+	Status     uint32 // 商品状态机
+	Page       int64
+	PageSize   int64
+}
+
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
@@ -265,6 +273,7 @@ type ProductRepo interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
+	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
@@ -288,6 +297,7 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 }
 
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
+	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 
@@ -321,4 +331,8 @@ func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandom
 
 func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error) {
 	return p.repo.SearchProductsByName(ctx, req)
+}
+
+func (p *ProductUsecase) GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error) {
+	return p.repo.GetCategoryProducts(ctx, req)
 }

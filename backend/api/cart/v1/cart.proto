@@ -76,9 +76,7 @@ message EmptyCartResp {
 }
 
 // 获取购物车信息
-message GetCartReq {
-  string user_id = 1;
-}
+message GetCartReq {}
 
 message GetCartResp {
   Cart cart = 1;

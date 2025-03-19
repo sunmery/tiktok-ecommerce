@@ -41,7 +41,7 @@
     },
     "/v1/products": {
       "get": {
-        "summary": "随机返回商品数据\n rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);",
+        "summary": "随机返回商品数据",
         "operationId": "ProductService_ListRandomProducts",
         "responses": {
           "200": {
@@ -187,9 +187,63 @@
         ]
       }
     },
+    "/v1/products/category/{categoryId}": {
+      "get": {
+        "summary": "根据分类返回商品数据",
+        "operationId": "ProductService_GetCategoryProducts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Products"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "status",
+            "description": "商品状态",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/v1/products/uploadfile": {
       "post": {
-        "summary": "上传商品图片",
+        "summary": "上传商品文件",
         "operationId": "ProductService_UploadProductFile",
         "responses": {
           "200": {

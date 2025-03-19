@@ -18,7 +18,7 @@ $$ LANGUAGE sql volatile;
 -----------------------------
 CREATE TABLE products.products
 (
-    id               UUID  DEFAULT uuidv7_sub_ms(),
+    id               UUID                  DEFAULT uuidv7_sub_ms(),
     merchant_id      UUID         NOT NULL, -- 分片键（必须）
     name             VARCHAR(255) NOT NULL,
     description      TEXT,
@@ -51,7 +51,7 @@ CREATE TABLE products.inventory
 -----------------------------
 CREATE TABLE products.product_images
 (
-    id          UUID DEFAULT uuidv7_sub_ms(),
+    id          UUID                  DEFAULT uuidv7_sub_ms(),
     merchant_id UUID         NOT NULL, -- 分片键（必须）
     product_id  UUID         NOT NULL,
     url         VARCHAR(512) NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE products.product_attributes
 -----------------------------
 CREATE TABLE products.product_audits
 (
-    id          UUID DEFAULT uuidv7_sub_ms(),
+    id          UUID                 DEFAULT uuidv7_sub_ms(),
     merchant_id UUID        NOT NULL, -- 分片键（必须）
     product_id  UUID        NOT NULL,
     old_status  SMALLINT    NOT NULL,
@@ -110,4 +110,4 @@ CREATE INDEX idx_audits_product ON products.product_audits
     USING BTREE (merchant_id, product_id, created_at DESC);
 
 -- 在数据库的name字段添加全文索引
-CREATE INDEX idx_products_name ON products USING gin(to_tsvector('simple', name));
+CREATE INDEX idx_products_name ON products USING gin (to_tsvector('simple', name));

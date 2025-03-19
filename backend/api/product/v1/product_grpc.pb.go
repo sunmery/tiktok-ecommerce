@@ -8,7 +8,6 @@ package productv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,6 +26,7 @@ const (
 	ProductService_SubmitForAudit_FullMethodName         = "/ecommerce.product.v1.ProductService/SubmitForAudit"
 	ProductService_AuditProduct_FullMethodName           = "/ecommerce.product.v1.ProductService/AuditProduct"
 	ProductService_ListRandomProducts_FullMethodName     = "/ecommerce.product.v1.ProductService/ListRandomProducts"
+	ProductService_GetCategoryProducts_FullMethodName    = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
 	ProductService_GetProduct_FullMethodName             = "/ecommerce.product.v1.ProductService/GetProduct"
 	ProductService_GetMerchantProducts_FullMethodName    = "/ecommerce.product.v1.ProductService/GetMerchantProducts"
 	ProductService_SearchProductsByName_FullMethodName   = "/ecommerce.product.v1.ProductService/SearchProductsByName"
@@ -40,7 +40,7 @@ const (
 //
 // 商品服务定义
 type ProductServiceClient interface {
-	// 上传商品图片
+	// 上传商品文件
 	UploadProductFile(ctx context.Context, in *UploadProductFileRequest, opts ...grpc.CallOption) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error)
@@ -51,9 +51,9 @@ type ProductServiceClient interface {
 	// 审核商品
 	AuditProduct(ctx context.Context, in *AuditProductRequest, opts ...grpc.CallOption) (*AuditRecord, error)
 	// 随机返回商品数据
-	//
-	//	rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);
 	ListRandomProducts(ctx context.Context, in *ListRandomProductsRequest, opts ...grpc.CallOption) (*Products, error)
+	// 根据分类返回商品数据
+	GetCategoryProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error)
 	// 获取商品详情
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// 获取商家对应的商品
@@ -134,6 +134,16 @@ func (c *productServiceClient) ListRandomProducts(ctx context.Context, in *ListR
 	return out, nil
 }
 
+func (c *productServiceClient) GetCategoryProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Products)
+	err := c.cc.Invoke(ctx, ProductService_GetCategoryProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Product)
@@ -190,7 +200,7 @@ func (c *productServiceClient) DeleteProduct(ctx context.Context, in *DeleteProd
 //
 // 商品服务定义
 type ProductServiceServer interface {
-	// 上传商品图片
+	// 上传商品文件
 	UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
@@ -201,9 +211,9 @@ type ProductServiceServer interface {
 	// 审核商品
 	AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error)
 	// 随机返回商品数据
-	//
-	//	rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);
 	ListRandomProducts(context.Context, *ListRandomProductsRequest) (*Products, error)
+	// 根据分类返回商品数据
+	GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error)
 	// 获取商品详情
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	// 获取商家对应的商品
@@ -227,43 +237,36 @@ type UnimplementedProductServiceServer struct{}
 func (UnimplementedProductServiceServer) UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadProductFile not implemented")
 }
-
 func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
-
 func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
 }
-
 func (UnimplementedProductServiceServer) SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitForAudit not implemented")
 }
-
 func (UnimplementedProductServiceServer) AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuditProduct not implemented")
 }
-
 func (UnimplementedProductServiceServer) ListRandomProducts(context.Context, *ListRandomProductsRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRandomProducts not implemented")
 }
-
+func (UnimplementedProductServiceServer) GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryProducts not implemented")
+}
 func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
 }
-
 func (UnimplementedProductServiceServer) GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantProducts not implemented")
 }
-
 func (UnimplementedProductServiceServer) SearchProductsByName(context.Context, *SearchProductRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchProductsByName not implemented")
 }
-
 func (UnimplementedProductServiceServer) ListProductsByCategory(context.Context, *ListProductsByCategoryRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProductsByCategory not implemented")
 }
-
 func (UnimplementedProductServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
 }
@@ -396,6 +399,24 @@ func _ProductService_ListRandomProducts_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GetCategoryProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCategoryProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetCategoryProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_GetCategoryProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetCategoryProducts(ctx, req.(*GetCategoryProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetProductRequest)
 	if err := dec(in); err != nil {
@@ -516,6 +537,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRandomProducts",
 			Handler:    _ProductService_ListRandomProducts_Handler,
+		},
+		{
+			MethodName: "GetCategoryProducts",
+			Handler:    _ProductService_GetCategoryProducts_Handler,
 		},
 		{
 			MethodName: "GetProduct",
