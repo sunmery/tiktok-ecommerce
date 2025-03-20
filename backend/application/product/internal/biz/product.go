@@ -19,6 +19,7 @@ const (
 	ProductStatusRejected                      // 商品审核未通过。
 	ProductStatusSoldOut                       // 商品因某种原因不可购买。
 )
+
 const (
 	Approved AuditAction = 1
 	Rejected AuditAction = 2
@@ -100,6 +101,11 @@ type Product struct {
 	UpdatedAt   time.Time
 	Attributes  map[string]*AttributeValue
 	Inventory   Inventory // 库存
+}
+
+type GetProductsBatchRequest struct {
+	ProductIds  []uuid.UUID
+	MerchantIds []uuid.UUID
 }
 
 type SubmitAuditRequest struct {
@@ -237,15 +243,43 @@ type SearchProductsByNameRequest struct {
 	// 自动转义特殊字符（! : & 等）
 	Query string
 }
+type (
+	UploadMethod             int32
+	UploadProductFileRequest struct {
+		Method      UploadMethod
+		ContentType *string
+		BucketName  *string
+		FilePath    *string
+		FileName    *string
+	}
+	UploadProductFileReply struct {
+		UploadUrl   string
+		DownloadUrl string
+		BucketName  *string
+		ObjectName  string
+		FormData    map[string]string
+	}
+)
+
+// GetCategoryProducts 根据分类获取商品
+type GetCategoryProducts struct {
+	CategoryID uint32
+	Status     uint32 // 商品状态机
+	Page       int64
+	PageSize   int64
+}
 
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
+	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
+	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
 	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
+	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
@@ -264,7 +298,12 @@ func (p *Product) ChangeStatus(newStatus ProductStatus) error {
 	return nil
 }
 
+func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error) {
+	return p.repo.UploadProductFile(ctx, req)
+}
+
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
+	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 
@@ -284,6 +323,10 @@ func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest)
 	return p.repo.GetProduct(ctx, req)
 }
 
+func (p *ProductUsecase) GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error) {
+	return p.repo.GetProductBatch(ctx, req)
+}
+
 func (p *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
 	return p.repo.GetMerchantProducts(ctx, req)
 }
@@ -298,4 +341,8 @@ func (p *ProductUsecase) ListRandomProducts(ctx context.Context, req *ListRandom
 
 func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error) {
 	return p.repo.SearchProductsByName(ctx, req)
+}
+
+func (p *ProductUsecase) GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error) {
+	return p.repo.GetCategoryProducts(ctx, req)
 }

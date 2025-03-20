@@ -26,6 +26,7 @@ import (
 func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, observability *conf.Observability, logger log.Logger) (*kratos.App, func(), error) {
 	pool := data.NewDB(confData)
 	client := data.NewCache(confData)
+	minioClient := data.NewMinioClient(confData)
 	discovery, err := data.NewDiscovery(consul)
 	if err != nil {
 		return nil, nil, err
@@ -34,7 +35,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup, err := data.NewData(pool, client, logger, categoryServiceClient)
+	dataData, cleanup, err := data.NewData(pool, client, minioClient, logger, categoryServiceClient)
 	if err != nil {
 		return nil, nil, err
 	}

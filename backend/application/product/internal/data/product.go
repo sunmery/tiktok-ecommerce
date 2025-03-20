@@ -1,20 +1,25 @@
 package data
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/minio/minio-go/v7"
+
 	category "backend/api/category/v1"
 	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"backend/pkg/types"
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
+
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
@@ -25,6 +30,91 @@ import (
 type productRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (p *productRepo) GetCategoryProducts(ctx context.Context, req *biz.GetCategoryProducts) (*biz.Products, error) {
+	products, err := p.data.DB(ctx).GetCategoryProducts(ctx, models.GetCategoryProductsParams{
+		CategoryID: int64(req.CategoryID),
+		Status:     int16(req.Status),
+		Limit:      req.PageSize,
+		Offset:     (req.Page - 1) * req.PageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*biz.Product, 0)
+	for _, product := range products {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		var attributes map[string]*biz.AttributeValue
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price)
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category: biz.CategoryInfo{
+				CategoryId: uint64(product.CategoryID),
+				// CategoryName: pro,
+				// SortOrder:    0,
+			},
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			Attributes: attributes,
+		})
+	}
+
+	return &biz.Products{Items: items}, err
+}
+
+const (
+	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
+)
+
+func (p *productRepo) UploadProductFile(ctx context.Context, req *biz.UploadProductFileRequest) (*biz.UploadProductFileReply, error) {
+	expiry := defaultExpiryTime
+
+	policy := minio.NewPostPolicy()
+	_ = policy.SetBucket(*req.BucketName)
+	_ = policy.SetKey(*req.FileName)
+	_ = policy.SetExpires(time.Now().UTC().Add(expiry))
+	presignedURL, formData, err := p.data.minio.PresignedPostPolicy(ctx, policy)
+	if err != nil {
+		return nil, err
+	}
+
+	url, err := p.data.minio.PresignedPutObject(ctx, *req.BucketName, *req.FileName, expiry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.UploadProductFileReply{
+		UploadUrl:   presignedURL.String(),
+		DownloadUrl: url.String(),
+		BucketName:  req.BucketName,
+		ObjectName:  *req.FileName,
+		FormData:    formData,
+	}, nil
 }
 
 func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (_ *biz.CreateProductReply, err error) {
@@ -77,9 +167,9 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		Name:        req.Name,
 		Description: &req.Description,
 		Price:       price,
-		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
 		Status:      int16(req.Status),
 		MerchantID:  req.MerchantId,
+		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
@@ -130,6 +220,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		UpdatedAt: result.UpdatedAt,
 	}, nil
 }
+
 func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
 	db := p.data.DB(ctx)
 
@@ -323,7 +414,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 
 	// TODO 从分类服务获取分类信息
 
-	var items = make([]*biz.Product, 0)
+	items := make([]*biz.Product, 0)
 	for _, product := range listRandomProducts {
 		var images []*biz.ProductImage
 		if len(product.Images) > 0 {
@@ -512,12 +603,72 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到该商品")
+			return nil, fmt.Errorf("product not found: %w", err)
 		}
-		return nil, v1.ErrorInvalidStatus("GetProduct 内部错误")
+		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
 
 	return p.fullProductData(ctx, product)
+}
+
+func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsBatchRequest) (*biz.Products, error) {
+	db := p.data.DB(ctx)
+
+	// 获取基础信息
+	products, err := db.GetProductsBatch(ctx, models.GetProductsBatchParams{
+		ProductIds:  req.ProductIds,
+		MerchantIds: req.MerchantIds,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return &biz.Products{Items: nil}, nil
+		}
+		return nil, fmt.Errorf("failed to get product: %w", err)
+	}
+
+	items := make([]*biz.Product, 0)
+	for _, product := range products {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		var attributes map[string]*biz.AttributeValue
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price)
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category: biz.CategoryInfo{
+				CategoryId: uint64(product.CategoryID),
+				// CategoryName: product.,
+				// SortOrder:    0,
+			},
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			Attributes: attributes,
+		})
+	}
+
+	return &biz.Products{Items: items}, err
 }
 
 func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerchantProducts) (*biz.Products, error) {

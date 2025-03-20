@@ -1,10 +1,12 @@
 package service
 
 import (
-	"backend/pkg"
 	"context"
 	"errors"
 	"fmt"
+
+	"backend/pkg"
+
 	"github.com/google/uuid"
 
 	pb "backend/api/product/v1"
@@ -26,14 +28,34 @@ func NewProductService(uc *biz.ProductUsecase) *ProductService {
 	return &ProductService{uc: uc}
 }
 
-func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
+func (s *ProductService) UploadProductFile(ctx context.Context, req *pb.UploadProductFileRequest) (*pb.UploadProductFileReply, error) {
+	result, err := s.uc.UploadProductFile(ctx, &biz.UploadProductFileRequest{
+		Method:      biz.UploadMethod(req.Method),
+		ContentType: req.ContentType,
+		BucketName:  req.BucketName,
+		FilePath:    req.FilePath,
+		FileName:    req.FileName,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "生成预签名URL失败")
 	}
 
-	merchantId, err := uuid.Parse(userId)
-	created, err := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
+	return &pb.UploadProductFileReply{
+		UploadUrl:   result.UploadUrl,
+		DownloadUrl: result.DownloadUrl,
+		BucketName:  result.BucketName,
+		ObjectName:  result.ObjectName,
+		FormData:    result.FormData,
+	}, nil
+}
+
+func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductReply, error) {
+	merchantId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
+	}
+
+	created, createdErr := s.uc.CreateProduct(ctx, &biz.CreateProductRequest{
 		Name:        req.Name,
 		Price:       req.Price,
 		Description: req.Description,
@@ -47,8 +69,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		Attributes: convertPBAttributes(req.Attributes),
 		Stock:      req.Stock,
 	})
-	if err != nil {
-		return nil, err
+	if createdErr != nil {
+		return nil, createdErr
 	}
 	return &pb.CreateProductReply{
 		Id:        created.ID.String(),
@@ -181,24 +203,16 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	// 层层传递下去
-	// var userIdMetaKey string
-	// if md, ok := metadata.FromServerContext(ctx); ok {
-	// 	userIdMetaKey = md.Get("x-md-global-user-id")
-	// }
-	//
-	// userId, err := uuid.Parse(userIdMetaKey)
-	// if err!= nil {
-	// 	return nil, errors.New("invalid user ID")
-	// }
 	productId, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
 	}
+
 	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+		return nil, status.Error(codes.InvalidArgument, "invalid merchant id")
 	}
+
 	product, err := s.uc.GetProduct(ctx, &biz.GetProductRequest{
 		ID:         productId,
 		MerchantID: merchantId,
@@ -208,6 +222,43 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 	}
 
 	return convertBizProductToPB(product), nil
+}
+
+func (s *ProductService) GetProductsBatch(ctx context.Context, req *pb.GetProductsBatchRequest) (*pb.Products, error) {
+	var productIds []uuid.UUID
+	for _, id := range req.ProductIds {
+		fmt.Println(id)
+		productId, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid product id")
+		}
+		productIds = append(productIds, productId)
+	}
+
+	var merchantIds []uuid.UUID
+	for _, id := range req.MerchantIds {
+		fmt.Println(id)
+		merchantId, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid merchant id")
+		}
+		merchantIds = append(merchantIds, merchantId)
+	}
+
+	products, err := s.uc.GetProductBatch(ctx, &biz.GetProductsBatchRequest{
+		ProductIds:  productIds,
+		MerchantIds: merchantIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range products.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
 }
 
 func (s *ProductService) GetMerchantProducts(ctx context.Context, _ *pb.GetMerchantProductRequest) (*pb.Products, error) {
@@ -263,6 +314,33 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 		Page:     req.Page,
 		PageSize: req.PageSize,
 		Status:   req.Status,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range listRandomProducts.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
+func (s *ProductService) GetCategoryProducts(ctx context.Context, req *pb.GetCategoryProductsRequest) (*pb.Products, error) {
+	page := uint32(1)
+	pageSize := uint32(100)
+	if req.Page == 0 {
+		req.Page = pageSize
+	}
+	if req.Page == 0 {
+		req.Page = page
+	}
+	listRandomProducts, err := s.uc.GetCategoryProducts(ctx, &biz.GetCategoryProducts{
+		CategoryID: req.CategoryId,
+		Status:     req.Status,
+		Page:       int64(page),
+		PageSize:   int64(req.PageSize),
 	})
 	if err != nil {
 		return nil, err

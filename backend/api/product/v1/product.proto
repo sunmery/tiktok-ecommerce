@@ -8,9 +8,18 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "validate/validate.proto";
+import "openapi/v3/annotations.proto";
 
 // 商品服务定义
 service ProductService {
+  // 上传商品文件
+  rpc UploadProductFile(UploadProductFileRequest) returns (UploadProductFileReply) {
+    option (google.api.http) = {
+      post: "/v1/products/uploadfile"
+      body: "*"
+    };
+  }
+
   // 创建商品（草稿状态）
   rpc CreateProduct(CreateProductRequest) returns (CreateProductReply) {
     option (google.api.http) = {
@@ -44,14 +53,27 @@ service ProductService {
   }
 
   // 随机返回商品数据
-  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products);
-//  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
-//    option (google.api.http) = {
-//      get: "/v1/products"
-//    };
-//  }
+  rpc ListRandomProducts(ListRandomProductsRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products"
+    };
+  }
 
-  // 获取商品详情
+  // 根据分类返回商品数据
+  rpc GetCategoryProducts(GetCategoryProductsRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products/category/{category_id}"
+    };
+  }
+
+  // 批量获取商品详情
+  rpc GetProductsBatch(GetProductsBatchRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products/batch"
+    };
+  }
+
+  // 获取单个商品详情
   rpc GetProduct(GetProductRequest) returns (Product) {
     option (google.api.http) = {
       get: "/v1/products/{id}"
@@ -102,7 +124,77 @@ enum AuditAction {
   AUDIT_ACTION_REJECT = 1;  // 驳回审核
 }
 
-//
+// 前端上传文件所用的HTTP方法
+enum UploadMethod {
+  Put = 0;
+  Post = 1;
+}
+
+message GetCategoryProductsRequest {
+  uint32 category_id = 1;
+  uint32 page = 2;
+  uint32 page_size = 3;
+  uint32 status = 4; // 商品状态
+}
+
+// 获取对象存储上传链接
+message UploadProductFileRequest {
+  UploadMethod method = 1 [
+    json_name = "method",
+    (openapi.v3.property) = {description: "上传文件所用的HTTP方法，支持POST和PUT"}
+  ];  // 上传文件所用的HTTP方法
+
+  optional string content_type = 2 [
+    json_name = "contentType",
+    (openapi.v3.property) = {description: "文件的MIME类型"}
+  ];  // 文件的MIME类型
+
+  optional string bucket_name = 3 [
+    json_name = "bucketName",
+    (openapi.v3.property) = {description: "文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析"}
+  ]; // 文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析。
+
+  optional string file_path = 4 [
+    json_name = "filePath",
+    (openapi.v3.property) = {description: "远端的文件路径，可以不填写"}
+  ]; // 远端的文件路径，可以不填写。
+
+  optional string file_name = 5 [
+    json_name = "fileName",
+    (openapi.v3.property) = {description: "文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID"}
+  ]; // 文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID。
+}
+
+// 获取对象存储上传链接
+message UploadProductFileReply {
+  string upload_url = 1 [
+    json_name = "uploadUrl",
+    (openapi.v3.property) = {description: "文件的上传链接，默认1个小时的过期时间"}
+  ]; // 文件的上传链接，默认1个小时的过期时间。
+
+  string download_url = 2 [
+    json_name = "downloadUrl",
+    (openapi.v3.property) = {description: "文件的下载链接"}
+  ]; // 文件的下载链接
+
+  optional string bucket_name = 3 [
+    json_name = "bucketName",
+    (openapi.v3.property) = {description: "文件桶名称"}
+  ]; // 文件桶名称
+
+  string object_name = 4 [
+    json_name = "objectName",
+    (openapi.v3.property) = {description: "文件名"}
+  ];  // 文件名
+
+  map<string, string> form_data = 5 [
+    json_name = "formData",
+    (openapi.v3.property) = {description: "表单数据，使用POST方法时填写"}
+  ];
+}
+
+
+// 返回随机顺序的商品数据
 message ListRandomProductsRequest {
   uint32 page = 1;
   uint32 page_size = 2;
@@ -151,7 +243,7 @@ message Image {
 }
 // 商品核心数据结构
 message Product {
-  string id = 1; // 商品唯一ID（系统生成）
+  string id = 1 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品唯一ID（系统生成）
   string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   double price = 4; // 商品价格（单位：元）
@@ -230,16 +322,21 @@ message SubmitAuditRequest {
 // 审核操作请求
 message AuditProductRequest {
   string product_id = 1;
-  string merchant_id = 2; // 用于分片路由
+  string merchant_id = 2; 
   AuditAction action = 3;
-  string reason = 4;     // 驳回时必填
+  string reason = 4;     // 审核消息
   string operator_id = 5;
 }
 
 // 查询单个商品请求
 message GetProductRequest {
   string id = 1;
-  string merchant_id = 2 ; // 商家 ID, 用于分片路由
+  string merchant_id = 2; 
+}
+
+message GetProductsBatchRequest {
+  repeated string product_ids = 1;
+  repeated string merchant_ids = 2;
 }
 
 // 删除商品请求

@@ -4,6 +4,8 @@ import (
 	"context"
 	"io/ioutil"
 
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+
 	v1 "backend/api/cart/v1"
 	"backend/application/cart/internal/conf"
 	"backend/application/cart/internal/service"
@@ -12,7 +14,6 @@ import (
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
-	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
@@ -54,6 +55,7 @@ func NewHTTPServer(c *conf.Server,
 	// trace end
 	opts := []http.ServerOption{
 		http.Middleware(
+			metadata.Server(),
 			validate.Validator(), // 参数校验
 			tracing.Server(),
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
@@ -64,7 +66,6 @@ func NewHTTPServer(c *conf.Server,
 					return nil
 				}),
 			),
-			metadata.Server(),
 			logging.Server(logger), // 在 http.ServerOption 中引入 logging.Server(), 则会在每次收到 gRPC 请求的时候打印详细请求信息
 		),
 

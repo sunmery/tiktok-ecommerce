@@ -9,86 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
-
-const CreateCart = `-- name: CreateCart :one
-INSERT INTO carts.cart (user_id, cart_name)
-VALUES ($1, $2)
-RETURNING cart_id, user_id, cart_name, status, created_at, updated_at
-`
-
-type CreateCartParams struct {
-	UserID   uuid.UUID `json:"userID"`
-	CartName string    `json:"cartName"`
-}
-
-// CreateCart
-//
-//	INSERT INTO carts.cart (user_id, cart_name)
-//	VALUES ($1, $2)
-//	RETURNING cart_id, user_id, cart_name, status, created_at, updated_at
-func (q *Queries) CreateCart(ctx context.Context, arg CreateCartParams) (CartsCart, error) {
-	row := q.db.QueryRow(ctx, CreateCart, arg.UserID, arg.CartName)
-	var i CartsCart
-	err := row.Scan(
-		&i.CartID,
-		&i.UserID,
-		&i.CartName,
-		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const CreateOrder = `-- name: CreateOrder :many
-SELECT ci.merchant_id, ci.product_id, ci.quantity
-FROM carts.cart_items AS ci
-WHERE ci.cart_id = 
-    (SELECT c.cart_id
-     FROM carts.cart AS c
-     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
-`
-
-type CreateOrderParams struct {
-	UserID   uuid.UUID `json:"userID"`
-	CartName string    `json:"cartName"`
-}
-
-type CreateOrderRow struct {
-	MerchantID uuid.UUID `json:"merchantID"`
-	ProductID  uuid.UUID `json:"productID"`
-	Quantity   int32     `json:"quantity"`
-}
-
-// CreateOrder
-//
-//	SELECT ci.merchant_id, ci.product_id, ci.quantity
-//	FROM carts.cart_items AS ci
-//	WHERE ci.cart_id =
-//	    (SELECT c.cart_id
-//	     FROM carts.cart AS c
-//	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
-func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) ([]CreateOrderRow, error) {
-	rows, err := q.db.Query(ctx, CreateOrder, arg.UserID, arg.CartName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []CreateOrderRow
-	for rows.Next() {
-		var i CreateOrderRow
-		if err := rows.Scan(&i.MerchantID, &i.ProductID, &i.Quantity); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
 
 const EmptyCart = `-- name: EmptyCart :one
 DELETE FROM carts.cart_items AS ci
@@ -120,12 +41,12 @@ func (q *Queries) EmptyCart(ctx context.Context, arg EmptyCartParams) (int32, er
 }
 
 const GetCart = `-- name: GetCart :many
-SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
+SELECT ci.merchant_id, ci.product_id, ci.quantity
 FROM carts.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM carts.cart AS c
-     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
+     WHERE c.user_id = $1 AND c.cart_name = $2)
 `
 
 type GetCartParams struct {
@@ -134,20 +55,19 @@ type GetCartParams struct {
 }
 
 type GetCartRow struct {
-	MerchantID uuid.UUID      `json:"merchantID"`
-	ProductID  uuid.UUID      `json:"productID"`
-	Quantity   int32          `json:"quantity"`
-	Price      pgtype.Numeric `json:"price"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
+	Quantity   int32     `json:"quantity"`
 }
 
 // GetCart
 //
-//	SELECT ci.merchant_id, ci.product_id, ci.quantity, ci.price
+//	SELECT ci.merchant_id, ci.product_id, ci.quantity
 //	FROM carts.cart_items AS ci
 //	WHERE ci.cart_id =
 //	    (SELECT c.cart_id
 //	     FROM carts.cart AS c
-//	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)
+//	     WHERE c.user_id = $1 AND c.cart_name = $2)
 func (q *Queries) GetCart(ctx context.Context, arg GetCartParams) ([]GetCartRow, error) {
 	rows, err := q.db.Query(ctx, GetCart, arg.UserID, arg.CartName)
 	if err != nil {
@@ -157,48 +77,7 @@ func (q *Queries) GetCart(ctx context.Context, arg GetCartParams) ([]GetCartRow,
 	var items []GetCartRow
 	for rows.Next() {
 		var i GetCartRow
-		if err := rows.Scan(
-			&i.MerchantID,
-			&i.ProductID,
-			&i.Quantity,
-			&i.Price,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const ListCarts = `-- name: ListCarts :many
-SELECT c.cart_id, c.cart_name
-FROM carts.cart AS c
-WHERE c.user_id = $1
-`
-
-type ListCartsRow struct {
-	CartID   int32  `json:"cartID"`
-	CartName string `json:"cartName"`
-}
-
-// ListCarts
-//
-//	SELECT c.cart_id, c.cart_name
-//	FROM carts.cart AS c
-//	WHERE c.user_id = $1
-func (q *Queries) ListCarts(ctx context.Context, userID uuid.UUID) ([]ListCartsRow, error) {
-	rows, err := q.db.Query(ctx, ListCarts, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListCartsRow
-	for rows.Next() {
-		var i ListCartsRow
-		if err := rows.Scan(&i.CartID, &i.CartName); err != nil {
+		if err := rows.Scan(&i.MerchantID, &i.ProductID, &i.Quantity); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -215,10 +94,10 @@ DELETE FROM carts.cart_items AS ci
 WHERE ci.cart_id = 
     (SELECT c.cart_id
      FROM carts.cart AS c
-     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
+     WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
     AND ci.merchant_id = $3  -- 商家ID
     AND ci.product_id = $4  -- 删除指定商品ID
-RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
+RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
 `
 
 type RemoveCartItemParams struct {
@@ -234,10 +113,10 @@ type RemoveCartItemParams struct {
 //	WHERE ci.cart_id =
 //	    (SELECT c.cart_id
 //	     FROM carts.cart AS c
-//	     WHERE c.user_id = $1 AND c.cart_name = $2 LIMIT 1)  -- 获取用户的购物车ID
+//	     WHERE c.user_id = $1 AND c.cart_name = $2)  -- 获取用户的购物车ID
 //	    AND ci.merchant_id = $3  -- 商家ID
 //	    AND ci.product_id = $4  -- 删除指定商品ID
-//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
+//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
 func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) (CartsCartItems, error) {
 	row := q.db.QueryRow(ctx, RemoveCartItem,
 		arg.UserID,
@@ -252,7 +131,6 @@ func (q *Queries) RemoveCartItem(ctx context.Context, arg RemoveCartItemParams) 
 		&i.MerchantID,
 		&i.ProductID,
 		&i.Quantity,
-		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -272,30 +150,26 @@ insert_cart AS (
     WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
     RETURNING cart_id
 )
-INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
+INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity)
 VALUES (
     COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
     $3,   -- 商家ID
     $4,   -- 商品ID
-    $5,   -- 商品数量
-    $6,
-    CURRENT_TIMESTAMP,  -- 创建时间
-    CURRENT_TIMESTAMP   -- 更新时间
+    $5   -- 商品数量
 )
 ON CONFLICT (cart_id, merchant_id, product_id)  -- 如果购物车ID、商家ID和商品ID组合重复
 DO UPDATE SET 
-    quantity = EXCLUDED.quantity,  -- 更新商品数量
+    quantity = cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
     updated_at = CURRENT_TIMESTAMP  -- 更新时间
-RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
+RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
 `
 
 type UpsertItemParams struct {
-	UserID     uuid.UUID      `json:"userID"`
-	CartName   string         `json:"cartName"`
-	MerchantID uuid.UUID      `json:"merchantID"`
-	ProductID  uuid.UUID      `json:"productID"`
-	Quantity   int32          `json:"quantity"`
-	Price      pgtype.Numeric `json:"price"`
+	UserID     uuid.UUID `json:"userID"`
+	CartName   string    `json:"cartName"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	ProductID  uuid.UUID `json:"productID"`
+	Quantity   int32     `json:"quantity"`
 }
 
 // UpsertItem
@@ -312,21 +186,18 @@ type UpsertItemParams struct {
 //	    WHERE NOT EXISTS (SELECT 1 FROM cart_id_cte)
 //	    RETURNING cart_id
 //	)
-//	INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity,price, created_at, updated_at)
+//	INSERT INTO carts.cart_items (cart_id, merchant_id, product_id, quantity)
 //	VALUES (
 //	    COALESCE((SELECT cart_id FROM cart_id_cte), (SELECT cart_id FROM insert_cart)),  -- 获取或创建购物车ID
 //	    $3,   -- 商家ID
 //	    $4,   -- 商品ID
-//	    $5,   -- 商品数量
-//	    $6,
-//	    CURRENT_TIMESTAMP,  -- 创建时间
-//	    CURRENT_TIMESTAMP   -- 更新时间
+//	    $5   -- 商品数量
 //	)
 //	ON CONFLICT (cart_id, merchant_id, product_id)  -- 如果购物车ID、商家ID和商品ID组合重复
 //	DO UPDATE SET
-//	    quantity = EXCLUDED.quantity,  -- 更新商品数量
+//	    quantity = cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
 //	    updated_at = CURRENT_TIMESTAMP  -- 更新时间
-//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, price, created_at, updated_at
+//	RETURNING cart_item_id, cart_id, merchant_id, product_id, quantity, created_at, updated_at
 func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCartItems, error) {
 	row := q.db.QueryRow(ctx, UpsertItem,
 		arg.UserID,
@@ -334,7 +205,6 @@ func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCa
 		arg.MerchantID,
 		arg.ProductID,
 		arg.Quantity,
-		arg.Price,
 	)
 	var i CartsCartItems
 	err := row.Scan(
@@ -343,7 +213,6 @@ func (q *Queries) UpsertItem(ctx context.Context, arg UpsertItemParams) (CartsCa
 		&i.MerchantID,
 		&i.ProductID,
 		&i.Quantity,
-		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

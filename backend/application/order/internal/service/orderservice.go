@@ -7,7 +7,10 @@ import (
 	"fmt"
 
 	v1 "backend/api/order/v1"
+
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type OrderServiceService struct {
@@ -21,10 +24,9 @@ func NewOrderServiceService(uc *biz.OrderUsecase) *OrderServiceService {
 }
 
 func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (*v1.PlaceOrderResp, error) {
-	// 从网关获取用户ID
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse userId UUID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
 	var orderItems []*biz.OrderItem
 	for _, item := range req.OrderItems {

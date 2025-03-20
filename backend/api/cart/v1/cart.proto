@@ -14,18 +14,21 @@ service CartService {
       body: "*"
     };
   }
+
   //获取购物车信息
-  rpc GetCart(GetCartReq) returns (GetCartResp) {
+  rpc GetCart(GetCartReq) returns (Cart) {
     option (google.api.http) = {
       get: "/v1/carts"
     };
   }
+
   //清空购物车
   rpc EmptyCart(EmptyCartReq) returns (EmptyCartResp) {
     option (google.api.http) = {
       delete: "/v1/carts"
     };
   }
+
   //删除购物车商品
   rpc RemoveCartItem(RemoveCartItemReq) returns (RemoveCartItemResp) {
     option (google.api.http) = {
@@ -37,31 +40,20 @@ service CartService {
 // 列出所有购物车
 message ListCartsReq {}
 
-message ListCartsResp {
-  repeated CartSummary carts = 1; // 返回购物车列表
-}
-
-message CartSummary {
-  uint32 cart_id = 1 ; // 购物车ID
-  string cart_name = 2 ; // 购物车名称
-}
-
-message CreateOrderResp {
-  bool success = 1;
-  repeated CartItem items = 2;  // 返回被选中的商品
-}
-
 // 购物车商品
 message CartItem {
-  string merchant_id = 1 ;
+  string merchant_id = 1 ; // 商家ID
   string product_id = 2 ; // 商品ID
-  int32 quantity = 3;       // 商品数量
-  double price = 4;          // 商品价格
+  uint32 quantity = 4;       // 商品数量
+  string name = 6;           // 商品名称
+  string picture = 7;          // 商品主图
 }
 
 // 新增购物车商品
 message UpsertItemReq {
-  CartItem item = 2;
+  string merchant_id = 1 ;
+  string product_id = 2 ; // 商品ID
+  uint32 quantity = 3;       // 商品数量
 }
 
 message UpsertItemResp {
@@ -76,13 +68,7 @@ message EmptyCartResp {
 }
 
 // 获取购物车信息
-message GetCartReq {
-  string user_id = 1;
-}
-
-message GetCartResp {
-  Cart cart = 1;
-}
+message GetCartReq {}
 
 // 购物车信息
 message Cart {

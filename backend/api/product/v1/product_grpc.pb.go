@@ -20,11 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	ProductService_UploadProductFile_FullMethodName      = "/ecommerce.product.v1.ProductService/UploadProductFile"
 	ProductService_CreateProduct_FullMethodName          = "/ecommerce.product.v1.ProductService/CreateProduct"
 	ProductService_UpdateProduct_FullMethodName          = "/ecommerce.product.v1.ProductService/UpdateProduct"
 	ProductService_SubmitForAudit_FullMethodName         = "/ecommerce.product.v1.ProductService/SubmitForAudit"
 	ProductService_AuditProduct_FullMethodName           = "/ecommerce.product.v1.ProductService/AuditProduct"
 	ProductService_ListRandomProducts_FullMethodName     = "/ecommerce.product.v1.ProductService/ListRandomProducts"
+	ProductService_GetCategoryProducts_FullMethodName    = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
+	ProductService_GetProductsBatch_FullMethodName       = "/ecommerce.product.v1.ProductService/GetProductsBatch"
 	ProductService_GetProduct_FullMethodName             = "/ecommerce.product.v1.ProductService/GetProduct"
 	ProductService_GetMerchantProducts_FullMethodName    = "/ecommerce.product.v1.ProductService/GetMerchantProducts"
 	ProductService_SearchProductsByName_FullMethodName   = "/ecommerce.product.v1.ProductService/SearchProductsByName"
@@ -38,6 +41,8 @@ const (
 //
 // 商品服务定义
 type ProductServiceClient interface {
+	// 上传商品文件
+	UploadProductFile(ctx context.Context, in *UploadProductFileRequest, opts ...grpc.CallOption) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error)
 	// 更新商品信息
@@ -48,7 +53,11 @@ type ProductServiceClient interface {
 	AuditProduct(ctx context.Context, in *AuditProductRequest, opts ...grpc.CallOption) (*AuditRecord, error)
 	// 随机返回商品数据
 	ListRandomProducts(ctx context.Context, in *ListRandomProductsRequest, opts ...grpc.CallOption) (*Products, error)
-	// 获取商品详情
+	// 根据分类返回商品数据
+	GetCategoryProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error)
+	// 批量获取商品详情
+	GetProductsBatch(ctx context.Context, in *GetProductsBatchRequest, opts ...grpc.CallOption) (*Products, error)
+	// 获取单个商品详情
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// 获取商家对应的商品
 	GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...grpc.CallOption) (*Products, error)
@@ -66,6 +75,16 @@ type productServiceClient struct {
 
 func NewProductServiceClient(cc grpc.ClientConnInterface) ProductServiceClient {
 	return &productServiceClient{cc}
+}
+
+func (c *productServiceClient) UploadProductFile(ctx context.Context, in *UploadProductFileRequest, opts ...grpc.CallOption) (*UploadProductFileReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UploadProductFileReply)
+	err := c.cc.Invoke(ctx, ProductService_UploadProductFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error) {
@@ -112,6 +131,26 @@ func (c *productServiceClient) ListRandomProducts(ctx context.Context, in *ListR
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Products)
 	err := c.cc.Invoke(ctx, ProductService_ListRandomProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetCategoryProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Products)
+	err := c.cc.Invoke(ctx, ProductService_GetCategoryProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetProductsBatch(ctx context.Context, in *GetProductsBatchRequest, opts ...grpc.CallOption) (*Products, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Products)
+	err := c.cc.Invoke(ctx, ProductService_GetProductsBatch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +213,8 @@ func (c *productServiceClient) DeleteProduct(ctx context.Context, in *DeleteProd
 //
 // 商品服务定义
 type ProductServiceServer interface {
+	// 上传商品文件
+	UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
 	// 更新商品信息
@@ -184,7 +225,11 @@ type ProductServiceServer interface {
 	AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error)
 	// 随机返回商品数据
 	ListRandomProducts(context.Context, *ListRandomProductsRequest) (*Products, error)
-	// 获取商品详情
+	// 根据分类返回商品数据
+	GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error)
+	// 批量获取商品详情
+	GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error)
+	// 获取单个商品详情
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	// 获取商家对应的商品
 	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error)
@@ -204,6 +249,9 @@ type ProductServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProductServiceServer struct{}
 
+func (UnimplementedProductServiceServer) UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadProductFile not implemented")
+}
 func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
@@ -218,6 +266,12 @@ func (UnimplementedProductServiceServer) AuditProduct(context.Context, *AuditPro
 }
 func (UnimplementedProductServiceServer) ListRandomProducts(context.Context, *ListRandomProductsRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRandomProducts not implemented")
+}
+func (UnimplementedProductServiceServer) GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryProducts not implemented")
+}
+func (UnimplementedProductServiceServer) GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductsBatch not implemented")
 }
 func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
@@ -253,6 +307,24 @@ func RegisterProductServiceServer(s grpc.ServiceRegistrar, srv ProductServiceSer
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&ProductService_ServiceDesc, srv)
+}
+
+func _ProductService_UploadProductFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadProductFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UploadProductFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_UploadProductFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UploadProductFile(ctx, req.(*UploadProductFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -341,6 +413,42 @@ func _ProductService_ListRandomProducts_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).ListRandomProducts(ctx, req.(*ListRandomProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetCategoryProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCategoryProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetCategoryProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_GetCategoryProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetCategoryProducts(ctx, req.(*GetCategoryProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetProductsBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductsBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetProductsBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_GetProductsBatch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetProductsBatch(ctx, req.(*GetProductsBatchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -443,6 +551,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ProductServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "UploadProductFile",
+			Handler:    _ProductService_UploadProductFile_Handler,
+		},
+		{
 			MethodName: "CreateProduct",
 			Handler:    _ProductService_CreateProduct_Handler,
 		},
@@ -461,6 +573,14 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRandomProducts",
 			Handler:    _ProductService_ListRandomProducts_Handler,
+		},
+		{
+			MethodName: "GetCategoryProducts",
+			Handler:    _ProductService_GetCategoryProducts_Handler,
+		},
+		{
+			MethodName: "GetProductsBatch",
+			Handler:    _ProductService_GetProductsBatch_Handler,
 		},
 		{
 			MethodName: "GetProduct",

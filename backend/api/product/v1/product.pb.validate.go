@@ -35,6 +35,350 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GetCategoryProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetCategoryProductsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCategoryProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetCategoryProductsRequestMultiError, or nil if none found.
+func (m *GetCategoryProductsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCategoryProductsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CategoryId
+
+	// no validation rules for Page
+
+	// no validation rules for PageSize
+
+	// no validation rules for Status
+
+	if len(errors) > 0 {
+		return GetCategoryProductsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCategoryProductsRequestMultiError is an error wrapping multiple
+// validation errors returned by GetCategoryProductsRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetCategoryProductsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCategoryProductsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCategoryProductsRequestMultiError) AllErrors() []error { return m }
+
+// GetCategoryProductsRequestValidationError is the validation error returned
+// by GetCategoryProductsRequest.Validate if the designated constraints aren't met.
+type GetCategoryProductsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCategoryProductsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCategoryProductsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCategoryProductsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCategoryProductsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCategoryProductsRequestValidationError) ErrorName() string {
+	return "GetCategoryProductsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCategoryProductsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCategoryProductsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCategoryProductsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCategoryProductsRequestValidationError{}
+
+// Validate checks the field values on UploadProductFileRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UploadProductFileRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UploadProductFileRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UploadProductFileRequestMultiError, or nil if none found.
+func (m *UploadProductFileRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UploadProductFileRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Method
+
+	if m.ContentType != nil {
+		// no validation rules for ContentType
+	}
+
+	if m.BucketName != nil {
+		// no validation rules for BucketName
+	}
+
+	if m.FilePath != nil {
+		// no validation rules for FilePath
+	}
+
+	if m.FileName != nil {
+		// no validation rules for FileName
+	}
+
+	if len(errors) > 0 {
+		return UploadProductFileRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UploadProductFileRequestMultiError is an error wrapping multiple validation
+// errors returned by UploadProductFileRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UploadProductFileRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UploadProductFileRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UploadProductFileRequestMultiError) AllErrors() []error { return m }
+
+// UploadProductFileRequestValidationError is the validation error returned by
+// UploadProductFileRequest.Validate if the designated constraints aren't met.
+type UploadProductFileRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UploadProductFileRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UploadProductFileRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UploadProductFileRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UploadProductFileRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UploadProductFileRequestValidationError) ErrorName() string {
+	return "UploadProductFileRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UploadProductFileRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUploadProductFileRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UploadProductFileRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UploadProductFileRequestValidationError{}
+
+// Validate checks the field values on UploadProductFileReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UploadProductFileReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UploadProductFileReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UploadProductFileReplyMultiError, or nil if none found.
+func (m *UploadProductFileReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UploadProductFileReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UploadUrl
+
+	// no validation rules for DownloadUrl
+
+	// no validation rules for ObjectName
+
+	// no validation rules for FormData
+
+	if m.BucketName != nil {
+		// no validation rules for BucketName
+	}
+
+	if len(errors) > 0 {
+		return UploadProductFileReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UploadProductFileReplyMultiError is an error wrapping multiple validation
+// errors returned by UploadProductFileReply.ValidateAll() if the designated
+// constraints aren't met.
+type UploadProductFileReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UploadProductFileReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UploadProductFileReplyMultiError) AllErrors() []error { return m }
+
+// UploadProductFileReplyValidationError is the validation error returned by
+// UploadProductFileReply.Validate if the designated constraints aren't met.
+type UploadProductFileReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UploadProductFileReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UploadProductFileReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UploadProductFileReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UploadProductFileReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UploadProductFileReplyValidationError) ErrorName() string {
+	return "UploadProductFileReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UploadProductFileReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUploadProductFileReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UploadProductFileReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UploadProductFileReplyValidationError{}
+
 // Validate checks the field values on ListRandomProductsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -866,7 +1210,16 @@ func (m *Product) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if l := utf8.RuneCountInString(m.GetId()); l < 2 || l > 200 {
+		err := ProductValidationError{
+			field:  "Id",
+			reason: "value length must be between 2 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 200 {
 		err := ProductValidationError{
@@ -2629,6 +2982,108 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetProductRequestValidationError{}
+
+// Validate checks the field values on GetProductsBatchRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetProductsBatchRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProductsBatchRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetProductsBatchRequestMultiError, or nil if none found.
+func (m *GetProductsBatchRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProductsBatchRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetProductsBatchRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProductsBatchRequestMultiError is an error wrapping multiple validation
+// errors returned by GetProductsBatchRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetProductsBatchRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProductsBatchRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProductsBatchRequestMultiError) AllErrors() []error { return m }
+
+// GetProductsBatchRequestValidationError is the validation error returned by
+// GetProductsBatchRequest.Validate if the designated constraints aren't met.
+type GetProductsBatchRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductsBatchRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductsBatchRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductsBatchRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductsBatchRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductsBatchRequestValidationError) ErrorName() string {
+	return "GetProductsBatchRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductsBatchRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductsBatchRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductsBatchRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductsBatchRequestValidationError{}
 
 // Validate checks the field values on DeleteProductRequest with the rules
 // defined in the proto definition for this message. If any rules are

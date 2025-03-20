@@ -24,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetCartResp"
+              "$ref": "#/definitions/v1Cart"
             }
           },
           "default": {
@@ -34,14 +34,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "CartService"
         ]
@@ -184,7 +176,8 @@
       "type": "object",
       "properties": {
         "merchantId": {
-          "type": "string"
+          "type": "string",
+          "title": "商家ID"
         },
         "productId": {
           "type": "string",
@@ -192,13 +185,16 @@
         },
         "quantity": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64",
           "title": "商品数量"
         },
-        "price": {
-          "type": "number",
-          "format": "double",
-          "title": "商品价格"
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "picture": {
+          "type": "string",
+          "title": "商品主图"
         }
       },
       "title": "购物车商品"
@@ -209,14 +205,6 @@
         "success": {
           "type": "boolean",
           "title": "操作是否成功"
-        }
-      }
-    },
-    "v1GetCartResp": {
-      "type": "object",
-      "properties": {
-        "cart": {
-          "$ref": "#/definitions/v1Cart"
         }
       }
     },
@@ -232,8 +220,17 @@
     "v1UpsertItemReq": {
       "type": "object",
       "properties": {
-        "item": {
-          "$ref": "#/definitions/v1CartItem"
+        "merchantId": {
+          "type": "string"
+        },
+        "productId": {
+          "type": "string",
+          "title": "商品ID"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品数量"
         }
       },
       "title": "新增购物车商品"

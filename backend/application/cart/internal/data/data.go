@@ -1,27 +1,39 @@
 package data
 
 import (
-	"backend/application/cart/internal/conf"
-	"backend/application/cart/internal/data/models"
 	"context"
 	"fmt"
+
+	"backend/api/product/v1"
+	"backend/application/cart/internal/conf"
+	"backend/application/cart/internal/data/models"
+	"backend/constants"
+
 	"github.com/exaring/otelpgx"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/google/wire"
+	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCartRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewCartRepo, NewDiscovery, NewProductServiceClient)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
+	db  *models.Queries
+	pgx *pgxpool.Pool
+	rdb *redis.Client
 	// mdb    *mongo.Database
-	logger *log.Helper
+	logger    *log.Helper
+	productv1 productv1.ProductServiceClient
 }
 
 type contextTxKey struct{}
@@ -32,16 +44,18 @@ func NewData(
 	rdb *redis.Client,
 	// mdb *mongo.Database,
 	logger log.Logger,
+	productv1 productv1.ProductServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:     models.New(db),        // 数据库
-		pgx:    db,                    // 数据库事务
+		db:  models.New(db), // 数据库
+		pgx: db,             // 数据库事务
 		// mdb:    mdb,                   // 数据库
-		rdb:    rdb,                   // 缓存
-		logger: log.NewHelper(logger), // 注入日志
+		rdb:       rdb,                   // 缓存
+		logger:    log.NewHelper(logger), // 注入日志
+		productv1: productv1,             // 商品服务
 	}, cleanup, nil
 }
 
@@ -96,6 +110,38 @@ func NewCache(c *conf.Data) *redis.Client {
 	})
 
 	return rdb
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewProductServiceClient 商品微服务
+func NewProductServiceClient(d registry.Discovery, logger log.Logger) (productv1.ProductServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ProductServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return productv1.NewProductServiceClient(conn), nil
 }
 
 // DB 从上下文中获取事务或返回默认DB

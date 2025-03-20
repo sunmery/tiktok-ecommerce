@@ -3,9 +3,12 @@ package service
 import (
 	pb "backend/api/checkout/v1"
 	"backend/application/checkout/internal/biz"
+	"backend/pkg"
 	"context"
 	"fmt"
-	"github.com/google/uuid"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type CheckoutServiceService struct {
@@ -18,14 +21,9 @@ func NewCheckoutServiceService(uc *biz.CheckoutUsecase) *CheckoutServiceService 
 }
 
 func (s *CheckoutServiceService) Checkout(ctx context.Context, req *pb.CheckoutReq) (*pb.CheckoutResp, error) {
-	// userID, err := pkg.GetMetadataUesrID(ctx)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("get user id from metadata error: %v", err)
-	// }
-	userID := "77d08975-972c-4a06-8aa4-d2d23f374bb1"
-	userId,err := uuid.Parse(userID)
-	if err!= nil {
-		return nil, fmt.Errorf("invalid user id")
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
 	fmt.Printf("user id: %v\n", userId)
 	reply, err := s.uc.Checkout(ctx, &biz.CheckoutRequest{
@@ -44,8 +42,8 @@ func (s *CheckoutServiceService) Checkout(ctx context.Context, req *pb.CheckoutR
 	}
 
 	return &pb.CheckoutResp{
-		OrderId:       reply.OrderId,
-		PaymentId:     reply.PaymentId,
-		PaymentUrl:    reply.PaymentURL,
+		OrderId:    reply.OrderId,
+		PaymentId:  reply.PaymentId,
+		PaymentUrl: reply.PaymentURL,
 	}, nil
 }

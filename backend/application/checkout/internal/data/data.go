@@ -1,13 +1,16 @@
 package data
 
 import (
+	"context"
+	"fmt"
+
 	cartv1 "backend/api/cart/v1"
 	orderv1 "backend/api/order/v1"
 	paymentv1 "backend/api/payment/v1"
+	productv1 "backend/api/product/v1"
 	"backend/application/checkout/internal/conf"
 	"backend/constants"
-	"context"
-	"fmt"
+
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -21,7 +24,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewProductServiceClient, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient)
 
 type Data struct {
 	rdb       *redis.Client
@@ -29,14 +32,16 @@ type Data struct {
 	cartv1    cartv1.CartServiceClient
 	orderv1   orderv1.OrderServiceClient
 	paymentv1 paymentv1.PaymentServiceClient
+	productv1 productv1.ProductServiceClient
 }
 
 func NewData(
 	rdb *redis.Client,
 	logger log.Logger,
-	cartv1    cartv1.CartServiceClient,
+	cartv1 cartv1.CartServiceClient,
 	orderv1 orderv1.OrderServiceClient,
 	paymentv1 paymentv1.PaymentServiceClient,
+	productv1 productv1.ProductServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -44,9 +49,10 @@ func NewData(
 	return &Data{
 		rdb:       rdb,                   // 缓存
 		logger:    log.NewHelper(logger), // 注入日志
-		cartv1:   cartv1,
+		cartv1:    cartv1,
 		orderv1:   orderv1,
 		paymentv1: paymentv1, // 支付服务
+		productv1: productv1, // 商品服务
 	}, cleanup, nil
 }
 
@@ -62,6 +68,24 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	}
 	r := consul.New(cli, consul.WithHealthCheck(false))
 	return r, nil
+}
+
+// NewProductServiceClient 商品微服务
+func NewProductServiceClient(d registry.Discovery, logger log.Logger) (productv1.ProductServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ProductServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return productv1.NewProductServiceClient(conn), nil
 }
 
 // NewCartServiceClient 购物车服务

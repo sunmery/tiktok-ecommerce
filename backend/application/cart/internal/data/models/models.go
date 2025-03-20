@@ -13,7 +13,6 @@ type CartsCart struct {
 	CartID    int32            `json:"cartID"`
 	UserID    uuid.UUID        `json:"userID"`
 	CartName  string           `json:"cartName"`
-	Status    string           `json:"status"`
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
@@ -24,7 +23,6 @@ type CartsCartItems struct {
 	MerchantID uuid.UUID        `json:"merchantID"`
 	ProductID  uuid.UUID        `json:"productID"`
 	Quantity   int32            `json:"quantity"`
-	Price      pgtype.Numeric   `json:"price"`
 	CreatedAt  pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt  pgtype.Timestamp `json:"updatedAt"`
 }

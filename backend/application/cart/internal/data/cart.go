@@ -1,13 +1,18 @@
 package data
 
 import (
-	"backend/application/cart/internal/biz"
-	"backend/application/cart/internal/data/models"
-	"backend/pkg/types"
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
+
+	"github.com/google/uuid"
+
+	productv1 "backend/api/product/v1"
+
+	"backend/application/cart/internal/biz"
+	"backend/application/cart/internal/data/models"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -26,22 +31,17 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 
 // EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
-	effected, err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
+	_, err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
 		UserID:   req.UserId,
 		CartName: "cart",
 	})
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.As(err, &pgx.ErrNoRows) {
 			return &biz.EmptyCartResp{
-				Success: false,
+				Success: true,
 			}, nil
 		}
 		return nil, err
-	}
-	if effected == 0 {
-		return &biz.EmptyCartResp{
-			Success: false,
-		}, nil
 	}
 	return &biz.EmptyCartResp{
 		Success: true,
@@ -50,27 +50,64 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 
 // GetCart implements biz.CartRepo.
 func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartResp, error) {
-	cart, err := c.data.db.GetCart(ctx, models.GetCartParams{
+	carts, err := c.data.db.GetCart(ctx, models.GetCartParams{
 		UserID:   req.UserId,
 		CartName: "cart",
 	})
-	c.log.WithContext(ctx).Infof("GetCarterr________________ : %+v", err)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get cart: %v", err)
 	}
-	c.log.WithContext(ctx).Infof("GetCart request : %+v", cart)
+
+	if len(carts) == 0 {
+		fmt.Println("No cart items found")
+		return &biz.GetCartResp{Cart: biz.Cart{Items: nil}}, nil
+	}
+
+	var productIds []string
+	var merchantIds []string
+	for _, c := range carts {
+		productIds = append(productIds, c.ProductID.String())
+		merchantIds = append(merchantIds, c.MerchantID.String())
+	}
+
+	// 从商品微服务获取商品信息, 例如价格
+	products, perr := c.data.productv1.GetProductsBatch(ctx, &productv1.GetProductsBatchRequest{
+		ProductIds:  productIds,
+		MerchantIds: merchantIds,
+	})
+	if perr != nil {
+		return nil, perr
+	}
+
 	var cartItems []biz.CartItem
-	for _, item := range cart {
-		price, err := types.NumericToFloat(item.Price)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert price to float: %v", err)
+	for _, cart := range carts {
+		for _, p := range products.Items {
+			productId, err := uuid.Parse(p.Id)
+			if err != nil {
+				return nil, err
+			}
+			merchantId, err := uuid.Parse(p.MerchantId)
+			if err != nil {
+				return nil, err
+			}
+
+			if merchantId == cart.MerchantID && productId == cart.ProductID {
+				var picture string
+				for _, image := range p.Images {
+					if image.IsPrimary {
+						picture = image.Url
+					}
+				}
+				cartItems = append(cartItems, biz.CartItem{
+					MerchantId: cart.MerchantID,
+					ProductId:  cart.ProductID,
+					Quantity:   uint32(cart.Quantity),
+					Price:      p.Price,
+					Name:       p.Name,
+					Picture:    picture,
+				})
+			}
 		}
-		var cartitem biz.CartItem
-		cartitem.MerchantId = item.MerchantID
-		cartitem.ProductId = item.ProductID
-		cartitem.Quantity = item.Quantity
-		cartitem.Price = price
-		cartItems = append(cartItems, cartitem)
 	}
 
 	return &biz.GetCartResp{
@@ -99,17 +136,11 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 
 // UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
-	price, err := types.Float64ToNumeric(req.Item.Price)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert price to numeric: %v", err)
-	}
-
 	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
 		UserID:     req.UserId,
-		MerchantID: req.Item.MerchantId,
-		ProductID:  req.Item.ProductId,
-		Quantity:   req.Item.Quantity,
-		Price:      price,
+		MerchantID: req.MerchantId,
+		ProductID:  req.ProductId,
+		Quantity:   int32(req.Quantity),
 		CartName:   "cart",
 	})
 	if err != nil {
