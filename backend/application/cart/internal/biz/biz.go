@@ -17,7 +17,7 @@ var ProviderSet = wire.NewSet(NewCartUsecase)
 
 type CartRepo interface {
 	UpsertItem(ctx context.Context, req *UpsertItemReq) (*UpsertItemResp, error)
-	GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error)
+	GetCart(ctx context.Context, req *GetCartReq) (*GetCartRelpy, error)
 	EmptyCart(ctx context.Context, req *EmptyCartReq) (*EmptyCartResp, error)
 	RemoveCartItem(ctx context.Context, req *RemoveCartItemReq) (*RemoveCartItemResp, error)
 }
@@ -39,7 +39,7 @@ func (cc *CartUsecase) UpsertItem(ctx context.Context, req *UpsertItemReq) (*Ups
 	return cc.repo.UpsertItem(ctx, req)
 }
 
-func (cc *CartUsecase) GetCart(ctx context.Context, req *GetCartReq) (*GetCartResp, error) {
+func (cc *CartUsecase) GetCart(ctx context.Context, req *GetCartReq) (*GetCartRelpy, error) {
 	cc.log.WithContext(ctx).Infof("GetCart request: %+v", req)
 	return cc.repo.GetCart(ctx, req)
 }

@@ -751,21 +751,133 @@ var _ interface {
 	ErrorName() string
 } = GetCartReqValidationError{}
 
-// Validate checks the field values on Cart with the rules defined in the proto
-// definition for this message. If any rules are violated, the first error
-// encountered is returned, or nil if there are no violations.
-func (m *Cart) Validate() error {
+// Validate checks the field values on CartInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CartInfo) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Cart with the rules defined in the
-// proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in CartMultiError, or nil if none found.
-func (m *Cart) ValidateAll() error {
+// ValidateAll checks the field values on CartInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CartInfoMultiError, or nil
+// if none found.
+func (m *CartInfo) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Cart) validate(all bool) error {
+func (m *CartInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	// no validation rules for ProductId
+
+	// no validation rules for Quantity
+
+	// no validation rules for Price
+
+	// no validation rules for Name
+
+	// no validation rules for Picture
+
+	if len(errors) > 0 {
+		return CartInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// CartInfoMultiError is an error wrapping multiple validation errors returned
+// by CartInfo.ValidateAll() if the designated constraints aren't met.
+type CartInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CartInfoMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CartInfoMultiError) AllErrors() []error { return m }
+
+// CartInfoValidationError is the validation error returned by
+// CartInfo.Validate if the designated constraints aren't met.
+type CartInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CartInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CartInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CartInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CartInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CartInfoValidationError) ErrorName() string { return "CartInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CartInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCartInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CartInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CartInfoValidationError{}
+
+// Validate checks the field values on GetCartRelpy with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GetCartRelpy) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCartRelpy with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GetCartRelpyMultiError, or
+// nil if none found.
+func (m *GetCartRelpy) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCartRelpy) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -779,7 +891,7 @@ func (m *Cart) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CartValidationError{
+					errors = append(errors, GetCartRelpyValidationError{
 						field:  fmt.Sprintf("Items[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -787,7 +899,7 @@ func (m *Cart) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, CartValidationError{
+					errors = append(errors, GetCartRelpyValidationError{
 						field:  fmt.Sprintf("Items[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -796,7 +908,7 @@ func (m *Cart) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return CartValidationError{
+				return GetCartRelpyValidationError{
 					field:  fmt.Sprintf("Items[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -807,18 +919,18 @@ func (m *Cart) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CartMultiError(errors)
+		return GetCartRelpyMultiError(errors)
 	}
 
 	return nil
 }
 
-// CartMultiError is an error wrapping multiple validation errors returned by
-// Cart.ValidateAll() if the designated constraints aren't met.
-type CartMultiError []error
+// GetCartRelpyMultiError is an error wrapping multiple validation errors
+// returned by GetCartRelpy.ValidateAll() if the designated constraints aren't met.
+type GetCartRelpyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CartMultiError) Error() string {
+func (m GetCartRelpyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -827,11 +939,11 @@ func (m CartMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CartMultiError) AllErrors() []error { return m }
+func (m GetCartRelpyMultiError) AllErrors() []error { return m }
 
-// CartValidationError is the validation error returned by Cart.Validate if the
-// designated constraints aren't met.
-type CartValidationError struct {
+// GetCartRelpyValidationError is the validation error returned by
+// GetCartRelpy.Validate if the designated constraints aren't met.
+type GetCartRelpyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -839,22 +951,22 @@ type CartValidationError struct {
 }
 
 // Field function returns field value.
-func (e CartValidationError) Field() string { return e.field }
+func (e GetCartRelpyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CartValidationError) Reason() string { return e.reason }
+func (e GetCartRelpyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CartValidationError) Cause() error { return e.cause }
+func (e GetCartRelpyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CartValidationError) Key() bool { return e.key }
+func (e GetCartRelpyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CartValidationError) ErrorName() string { return "CartValidationError" }
+func (e GetCartRelpyValidationError) ErrorName() string { return "GetCartRelpyValidationError" }
 
 // Error satisfies the builtin error interface
-func (e CartValidationError) Error() string {
+func (e GetCartRelpyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -866,14 +978,14 @@ func (e CartValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCart.%s: %s%s",
+		"invalid %sGetCartRelpy.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CartValidationError{}
+var _ error = GetCartRelpyValidationError{}
 
 var _ interface {
 	Field() string
@@ -881,7 +993,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CartValidationError{}
+} = GetCartRelpyValidationError{}
 
 // Validate checks the field values on RemoveCartItemReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

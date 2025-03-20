@@ -52,7 +52,7 @@ func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemR
 	}, nil
 }
 
-func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb.Cart, error) {
+func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb.GetCartRelpy, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
@@ -65,19 +65,18 @@ func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb
 		return nil, fmt.Errorf("failed to get cart: %v", gerr)
 	}
 
-	var items []*pb.CartItem
-	for _, item := range carts.Cart.Items {
-		items = append(items, &pb.CartItem{
+	var items []*pb.CartInfo
+	for _, item := range carts.Items {
+		items = append(items, &pb.CartInfo{
 			MerchantId: item.MerchantId.String(),
 			ProductId:  item.ProductId.String(),
-			// Price:      item.Price,
-			Quantity: item.Quantity,
-			// TotalPrice: item.Price * float64(item.Quantity),
-			Name:    item.Name,
-			Picture: item.Picture,
+			Price:      item.Price,
+			Quantity:   item.Quantity,
+			Name:       item.Name,
+			Picture:    item.Picture,
 		})
 	}
-	return &pb.Cart{
+	return &pb.GetCartRelpy{
 		Items: items,
 	}, nil
 }

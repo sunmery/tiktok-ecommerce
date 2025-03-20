@@ -49,7 +49,7 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 }
 
 // GetCart implements biz.CartRepo.
-func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartResp, error) {
+func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartRelpy, error) {
 	carts, err := c.data.db.GetCart(ctx, models.GetCartParams{
 		UserID:   req.UserId,
 		CartName: "cart",
@@ -60,7 +60,7 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 
 	if len(carts) == 0 {
 		fmt.Println("No cart items found")
-		return &biz.GetCartResp{Cart: biz.Cart{Items: nil}}, nil
+		return &biz.GetCartRelpy{Items: nil}, nil
 	}
 
 	var productIds []string
@@ -79,7 +79,7 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 		return nil, perr
 	}
 
-	var cartItems []biz.CartItem
+	var cartItems []*biz.CartInfo
 	for _, cart := range carts {
 		for _, p := range products.Items {
 			productId, err := uuid.Parse(p.Id)
@@ -98,7 +98,7 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 						picture = image.Url
 					}
 				}
-				cartItems = append(cartItems, biz.CartItem{
+				cartItems = append(cartItems, &biz.CartInfo{
 					MerchantId: cart.MerchantID,
 					ProductId:  cart.ProductID,
 					Quantity:   uint32(cart.Quantity),
@@ -110,11 +110,8 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 		}
 	}
 
-	return &biz.GetCartResp{
-		Cart: biz.Cart{
-			UserId: req.UserId.String(),
-			Items:  cartItems,
-		},
+	return &biz.GetCartRelpy{
+		Items: cartItems,
 	}, nil
 }
 

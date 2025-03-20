@@ -16,7 +16,7 @@ service CartService {
   }
 
   //获取购物车信息
-  rpc GetCart(GetCartReq) returns (Cart) {
+  rpc GetCart(GetCartReq) returns (GetCartRelpy) {
     option (google.api.http) = {
       get: "/v1/carts"
     };
@@ -70,9 +70,18 @@ message EmptyCartResp {
 // 获取购物车信息
 message GetCartReq {}
 
+message CartInfo {
+  string merchant_id = 1 ; // 商家ID
+  string product_id = 2 ; // 商品ID
+  uint32 quantity = 4;       // 商品数量
+  double price = 5;       // 商品价格
+  string name = 6;           // 商品名称
+  string picture = 7;          // 商品主图
+}
+
 // 购物车信息
-message Cart {
-  repeated CartItem items = 2;   // 购物车商品列表
+message GetCartRelpy {
+  repeated CartInfo items = 1 ;
 }
 
 // 删除购物车商品
