@@ -156,6 +156,51 @@
         ]
       }
     },
+    "/v1/products/batch": {
+      "get": {
+        "summary": "批量获取商品详情",
+        "operationId": "ProductService_GetProductsBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Products"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "merchantIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/v1/products/categories/{name}": {
       "get": {
         "summary": "根据商品分类查询",
@@ -276,7 +321,7 @@
     },
     "/v1/products/{id}": {
       "get": {
-        "summary": "获取商品详情",
+        "summary": "获取单个商品详情",
         "operationId": "ProductService_GetProduct",
         "responses": {
           "200": {
@@ -301,7 +346,6 @@
           },
           {
             "name": "merchantId",
-            "description": "商家 ID, 用于分片路由",
             "in": "query",
             "required": false,
             "type": "string"
@@ -485,15 +529,14 @@
       "type": "object",
       "properties": {
         "merchantId": {
-          "type": "string",
-          "title": "用于分片路由"
+          "type": "string"
         },
         "action": {
           "$ref": "#/definitions/v1AuditAction"
         },
         "reason": {
           "type": "string",
-          "title": "驳回时必填"
+          "title": "审核消息"
         },
         "operatorId": {
           "type": "string"

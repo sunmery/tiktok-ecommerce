@@ -224,6 +224,43 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 	return convertBizProductToPB(product), nil
 }
 
+func (s *ProductService) GetProductsBatch(ctx context.Context, req *pb.GetProductsBatchRequest) (*pb.Products, error) {
+	var productIds []uuid.UUID
+	for _, id := range req.ProductIds {
+		fmt.Println(id)
+		productId, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid product id")
+		}
+		productIds = append(productIds, productId)
+	}
+
+	var merchantIds []uuid.UUID
+	for _, id := range req.MerchantIds {
+		fmt.Println(id)
+		merchantId, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid merchant id")
+		}
+		merchantIds = append(merchantIds, merchantId)
+	}
+
+	products, err := s.uc.GetProductBatch(ctx, &biz.GetProductsBatchRequest{
+		ProductIds:  productIds,
+		MerchantIds: merchantIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var pbProducts []*pb.Product
+	for _, product := range products.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
 func (s *ProductService) GetMerchantProducts(ctx context.Context, _ *pb.GetMerchantProductRequest) (*pb.Products, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {

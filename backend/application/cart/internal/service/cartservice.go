@@ -26,58 +26,59 @@ func NewCartServiceService(cc *biz.CartUsecase) *CartServiceService {
 func (s *CartServiceService) UpsertItem(ctx context.Context, req *pb.UpsertItemReq) (*pb.UpsertItemResp, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
+		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
 	}
-	productId, err := uuid.Parse(req.Item.ProductId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	productId, perr := uuid.Parse(req.ProductId)
+	if perr != nil {
+		return nil, errors.New(fmt.Sprintf("failed to parse productId UUID: %v", perr))
 	}
-	merchantId, err := uuid.Parse(req.Item.MerchantId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid merchant ID")
+	merchantId, merr := uuid.Parse(req.MerchantId)
+	if merr != nil {
+		return nil, errors.New(fmt.Sprintf("failed to parse merchantId UUID: %v", merr))
 	}
-	resp, err := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
-		UserId: userId,
-		Item: biz.CartItem{
-			MerchantId: merchantId,
-			ProductId:  productId,
-			Quantity:   req.Item.Quantity,
-			Price:      req.Item.Price,
-		},
+
+	resp, uerr := s.cc.UpsertItem(ctx, &biz.UpsertItemReq{
+		UserId:     userId,
+		MerchantId: merchantId,
+		ProductId:  productId,
+		Quantity:   req.Quantity,
 	})
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to upsert item: %v", err))
+	if uerr != nil {
+		return nil, errors.New(fmt.Sprintf("failed to upsert item: %v", uerr))
 	}
+
 	return &pb.UpsertItemResp{
 		Success: resp.Success,
 	}, nil
 }
 
-func (s *CartServiceService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
+func (s *CartServiceService) GetCart(ctx context.Context, _ *pb.GetCartReq) (*pb.Cart, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
+		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
 	}
 
-	cart, err := s.cc.GetCart(ctx, &biz.GetCartReq{
+	carts, gerr := s.cc.GetCart(ctx, &biz.GetCartReq{
 		UserId: userId,
 	})
-	if err != nil {
-		return nil, pb.ErrorCartitemNotFound("failed to get cart: %v", err)
+	if gerr != nil {
+		return nil, fmt.Errorf("failed to get cart: %v", gerr)
 	}
-	items := make([]*pb.CartItem, len(cart.Cart.Items))
-	for i, item := range cart.Cart.Items {
-		items[i] = &pb.CartItem{
+
+	var items []*pb.CartItem
+	for _, item := range carts.Cart.Items {
+		items = append(items, &pb.CartItem{
 			MerchantId: item.MerchantId.String(),
 			ProductId:  item.ProductId.String(),
-			Quantity:   item.Quantity,
-			Price:      item.Price,
-		}
+			// Price:      item.Price,
+			Quantity: item.Quantity,
+			// TotalPrice: item.Price * float64(item.Quantity),
+			Name:    item.Name,
+			Picture: item.Picture,
+		})
 	}
-	return &pb.GetCartResp{
-		Cart: &pb.Cart{
-			Items: items,
-		},
+	return &pb.Cart{
+		Items: items,
 	}, nil
 }
 
@@ -87,15 +88,13 @@ func (s *CartServiceService) EmptyCart(ctx context.Context, _ *pb.EmptyCartReq) 
 		return nil, errors.New(fmt.Sprintf("failed to parse userId UUID: %v", err))
 	}
 
-	resp, err := s.cc.EmptyCart(ctx, &biz.EmptyCartReq{
+	resp, rerr := s.cc.EmptyCart(ctx, &biz.EmptyCartReq{
 		UserId: userId,
 	})
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to empty cart: %v", err))
+	if rerr != nil {
+		return nil, errors.New(fmt.Sprintf("failed to empty cart: %v", rerr))
 	}
-	if !resp.Success {
-		return nil, errors.New("failed to empty cart")
-	}
+
 	return &pb.EmptyCartResp{
 		Success: resp.Success,
 	}, nil
@@ -121,7 +120,7 @@ func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveC
 		ProductId:  productId,
 	})
 	if err != nil {
-		return nil, pb.ErrorCartitemNotFound("failed to remove cart item: %v", err)
+		return nil, fmt.Errorf("failed to remove cart item: %v", err)
 	}
 
 	return &pb.RemoveCartItemResp{

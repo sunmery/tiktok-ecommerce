@@ -41,7 +41,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup, err := data.NewData(client, logger, cartServiceClient, orderServiceClient, paymentServiceClient)
+	productServiceClient, err := data.NewProductServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(client, logger, cartServiceClient, orderServiceClient, paymentServiceClient, productServiceClient)
 	if err != nil {
 		return nil, nil, err
 	}

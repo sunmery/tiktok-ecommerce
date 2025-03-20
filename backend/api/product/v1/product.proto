@@ -66,7 +66,14 @@ service ProductService {
     };
   }
 
-  // 获取商品详情
+  // 批量获取商品详情
+  rpc GetProductsBatch(GetProductsBatchRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products/batch"
+    };
+  }
+
+  // 获取单个商品详情
   rpc GetProduct(GetProductRequest) returns (Product) {
     option (google.api.http) = {
       get: "/v1/products/{id}"
@@ -124,7 +131,7 @@ enum UploadMethod {
 }
 
 message GetCategoryProductsRequest {
-  uint32 category_id= 1;
+  uint32 category_id = 1;
   uint32 page = 2;
   uint32 page_size = 3;
   uint32 status = 4; // 商品状态
@@ -134,27 +141,27 @@ message GetCategoryProductsRequest {
 message UploadProductFileRequest {
   UploadMethod method = 1 [
     json_name = "method",
-    (openapi.v3.property) = { description: "上传文件所用的HTTP方法，支持POST和PUT" }
+    (openapi.v3.property) = {description: "上传文件所用的HTTP方法，支持POST和PUT"}
   ];  // 上传文件所用的HTTP方法
 
   optional string content_type = 2 [
     json_name = "contentType",
-    (openapi.v3.property) = { description: "文件的MIME类型" }
+    (openapi.v3.property) = {description: "文件的MIME类型"}
   ];  // 文件的MIME类型
 
   optional string bucket_name = 3 [
     json_name = "bucketName",
-    (openapi.v3.property) = { description: "文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析" }
+    (openapi.v3.property) = {description: "文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析"}
   ]; // 文件桶名称，如果不填写，将会根据文件名或者MIME类型进行自动解析。
 
   optional string file_path = 4 [
     json_name = "filePath",
-    (openapi.v3.property) = { description: "远端的文件路径，可以不填写" }
+    (openapi.v3.property) = {description: "远端的文件路径，可以不填写"}
   ]; // 远端的文件路径，可以不填写。
 
   optional string file_name = 5 [
     json_name = "fileName",
-    (openapi.v3.property) = { description: "文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID" }
+    (openapi.v3.property) = {description: "文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID"}
   ]; // 文件名，如果不填写，则会生成UUID，有同名文件也会改为UUID。
 }
 
@@ -162,27 +169,27 @@ message UploadProductFileRequest {
 message UploadProductFileReply {
   string upload_url = 1 [
     json_name = "uploadUrl",
-    (openapi.v3.property) = { description: "文件的上传链接，默认1个小时的过期时间" }
+    (openapi.v3.property) = {description: "文件的上传链接，默认1个小时的过期时间"}
   ]; // 文件的上传链接，默认1个小时的过期时间。
 
   string download_url = 2 [
     json_name = "downloadUrl",
-    (openapi.v3.property) = { description: "文件的下载链接" }
+    (openapi.v3.property) = {description: "文件的下载链接"}
   ]; // 文件的下载链接
 
   optional string bucket_name = 3 [
     json_name = "bucketName",
-    (openapi.v3.property) = { description: "文件桶名称" }
+    (openapi.v3.property) = {description: "文件桶名称"}
   ]; // 文件桶名称
 
   string object_name = 4 [
     json_name = "objectName",
-    (openapi.v3.property) = { description: "文件名" }
+    (openapi.v3.property) = {description: "文件名"}
   ];  // 文件名
 
   map<string, string> form_data = 5 [
     json_name = "formData",
-    (openapi.v3.property) = { description: "表单数据，使用POST方法时填写" }
+    (openapi.v3.property) = {description: "表单数据，使用POST方法时填写"}
   ];
 }
 
@@ -315,15 +322,21 @@ message SubmitAuditRequest {
 // 审核操作请求
 message AuditProductRequest {
   string product_id = 1;
-  string merchant_id = 2; // 用于分片路由
+  string merchant_id = 2; 
   AuditAction action = 3;
-  string reason = 4;     // 驳回时必填
+  string reason = 4;     // 审核消息
   string operator_id = 5;
 }
 
 // 查询单个商品请求
 message GetProductRequest {
   string id = 1;
+  string merchant_id = 2; 
+}
+
+message GetProductsBatchRequest {
+  repeated string product_ids = 1;
+  repeated string merchant_ids = 2;
 }
 
 // 删除商品请求

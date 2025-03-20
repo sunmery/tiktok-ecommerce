@@ -1210,11 +1210,38 @@ func (m *Product) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if l := utf8.RuneCountInString(m.GetId()); l < 2 || l > 200 {
+		err := ProductValidationError{
+			field:  "Id",
+			reason: "value length must be between 2 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for Name
+	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 200 {
+		err := ProductValidationError{
+			field:  "Name",
+			reason: "value length must be between 2 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for Description
+	if utf8.RuneCountInString(m.GetDescription()) > 2000 {
+		err := ProductValidationError{
+			field:  "Description",
+			reason: "value length must be at most 2000 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for Price
 
@@ -2955,6 +2982,108 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetProductRequestValidationError{}
+
+// Validate checks the field values on GetProductsBatchRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetProductsBatchRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProductsBatchRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetProductsBatchRequestMultiError, or nil if none found.
+func (m *GetProductsBatchRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProductsBatchRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetProductsBatchRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProductsBatchRequestMultiError is an error wrapping multiple validation
+// errors returned by GetProductsBatchRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetProductsBatchRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProductsBatchRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProductsBatchRequestMultiError) AllErrors() []error { return m }
+
+// GetProductsBatchRequestValidationError is the validation error returned by
+// GetProductsBatchRequest.Validate if the designated constraints aren't met.
+type GetProductsBatchRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductsBatchRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductsBatchRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductsBatchRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductsBatchRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductsBatchRequestValidationError) ErrorName() string {
+	return "GetProductsBatchRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductsBatchRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductsBatchRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductsBatchRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductsBatchRequestValidationError{}
 
 // Validate checks the field values on DeleteProductRequest with the rules
 // defined in the proto definition for this message. If any rules are

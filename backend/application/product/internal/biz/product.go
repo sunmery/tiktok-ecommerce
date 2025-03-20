@@ -103,6 +103,11 @@ type Product struct {
 	Inventory   Inventory // 库存
 }
 
+type GetProductsBatchRequest struct {
+	ProductIds  []uuid.UUID
+	MerchantIds []uuid.UUID
+}
+
 type SubmitAuditRequest struct {
 	ProductID  uuid.UUID
 	MerchantID uuid.UUID
@@ -272,6 +277,7 @@ type ProductRepo interface {
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
+	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
 	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
@@ -315,6 +321,10 @@ func (p *ProductUsecase) AuditProduct(ctx context.Context, req *AuditProductRequ
 
 func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error) {
 	return p.repo.GetProduct(ctx, req)
+}
+
+func (p *ProductUsecase) GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error) {
+	return p.repo.GetProductBatch(ctx, req)
 }
 
 func (p *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {

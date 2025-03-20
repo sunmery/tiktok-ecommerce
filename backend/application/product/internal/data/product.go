@@ -611,6 +611,66 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 	return p.fullProductData(ctx, product)
 }
 
+func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsBatchRequest) (*biz.Products, error) {
+	db := p.data.DB(ctx)
+
+	// 获取基础信息
+	products, err := db.GetProductsBatch(ctx, models.GetProductsBatchParams{
+		ProductIds:  req.ProductIds,
+		MerchantIds: req.MerchantIds,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return &biz.Products{Items: nil}, nil
+		}
+		return nil, fmt.Errorf("failed to get product: %w", err)
+	}
+
+	items := make([]*biz.Product, 0)
+	for _, product := range products {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		var attributes map[string]*biz.AttributeValue
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price)
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category: biz.CategoryInfo{
+				CategoryId: uint64(product.CategoryID),
+				// CategoryName: product.,
+				// SortOrder:    0,
+			},
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			Attributes: attributes,
+		})
+	}
+
+	return &biz.Products{Items: items}, err
+}
+
 func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerchantProducts) (*biz.Products, error) {
 	db := p.data.DB(ctx)
 

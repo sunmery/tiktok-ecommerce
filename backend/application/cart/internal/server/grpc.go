@@ -44,7 +44,7 @@ func NewGRPCServer(
 	}
 
 	// shutdownTracerProvider, err := initTracerProvider(ctx, res, tr.Jaeger.Http.Endpoint)
-	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Grpc.Endpoint)
 	if err2 != nil {
 		log.Fatal(err)
 	}
