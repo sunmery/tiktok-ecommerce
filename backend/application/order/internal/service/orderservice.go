@@ -1,10 +1,11 @@
 package service
 
 import (
-	"backend/application/order/internal/biz"
-	"backend/pkg"
 	"context"
 	"fmt"
+
+	"backend/application/order/internal/biz"
+	"backend/pkg"
 
 	v1 "backend/api/order/v1"
 
@@ -67,7 +68,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 		Order: &v1.OrderResult{
 			OrderId: order.Order.OrderId,
 		},
-		Url: order.URL,
+		// Url: order.URL,
 	}, nil
 }
 
