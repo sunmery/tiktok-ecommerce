@@ -1,11 +1,12 @@
 package service
 
 import (
+	"context"
+	"fmt"
+
 	pb "backend/api/checkout/v1"
 	"backend/application/checkout/internal/biz"
 	"backend/pkg"
-	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,18 +24,16 @@ func NewCheckoutServiceService(uc *biz.CheckoutUsecase) *CheckoutServiceService 
 func (s *CheckoutServiceService) Checkout(ctx context.Context, req *pb.CheckoutReq) (*pb.CheckoutResp, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("get user id failed: %v", err))
 	}
-	fmt.Printf("user id: %v\n", userId)
+
 	reply, err := s.uc.Checkout(ctx, &biz.CheckoutRequest{
-		UserId: userId,
-		// Currency:   req.Currency,
-		Currency:      "CNY",
+		UserId:        userId,
 		Firstname:     req.Firstname,
 		Lastname:      req.Lastname,
 		Email:         req.Email,
-		CreditCard:    req.CreditCard,
-		Address:       req.Address,
+		CreditCardId:  req.CreditCardId,
+		AddressId:     req.AddressId,
 		PaymentMethod: "alipay",
 	})
 	if err != nil {

@@ -1,5 +1,5 @@
 -- name: InsertCreditCard :exec
-INSERT INTO users.credit_cards (user_id, currency,number, cvv, exp_year, exp_month, owner, name, type, brand, country)
+INSERT INTO users.credit_cards (user_id, currency, number, cvv, exp_year, exp_month, owner, name, type, brand, country)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
 
 -- name: DeleteCreditCard :exec
@@ -11,3 +11,9 @@ WHERE id = $1;
 SELECT *
 FROM users.credit_cards
 WHERE user_id = $1;
+
+-- name: GetCreditCard :one
+SELECT *
+FROM users.credit_cards
+WHERE user_id = $1
+  AND id = $2;

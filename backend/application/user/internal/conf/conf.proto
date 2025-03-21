@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "backend/user/internal/conf;conf"; // 生成的包路径
+option go_package = "backend/user/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -26,9 +26,17 @@ message Server {
 }
 
 message Data {
+  message Pool {
+    int32 max_conns = 1;
+    int32 min_conns = 2;
+    google.protobuf.Duration max_conn_lifetime = 3;
+    google.protobuf.Duration health_check_period = 4;
+    google.protobuf.Duration max_conn_idle_time = 5;
+  }
   message Database {
     string driver = 1;
     string source = 2;
+    Pool pool = 3;
   }
   message Cache {
     string network = 1;
@@ -91,6 +99,7 @@ message Consul {
     string address = 1;
     string scheme = 2;
     bool health_check = 3;
+    string acl_token = 4;
   }
   message ConfigCenter {
     string addr = 1;

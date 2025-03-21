@@ -71,7 +71,6 @@ type PlaceOrderReq struct {
 }
 type PlaceOrderResp struct {
 	Order *OrderResult
-	URL   string
 }
 
 type ListOrderReq struct {

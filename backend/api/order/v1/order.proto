@@ -63,7 +63,6 @@ message OrderResult {
 // 创建订单响应的消息结构
 message PlaceOrderResp {
   OrderResult order = 1; // 订单结果
-  string url = 2; // 支付跳转 URL
 }
 
 // 支付状态的枚举类型

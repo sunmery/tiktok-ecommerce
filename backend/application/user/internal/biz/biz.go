@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -20,11 +21,13 @@ type UserRepo interface {
 
 	CreateAddress(ctx context.Context, req *Address) (*Address, error)
 	UpdateAddress(ctx context.Context, req *Address) (*Address, error)
-	DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	DeleteAddress(ctx context.Context, req *AddressRequest) (*DeleteAddressesReply, error)
+	GetAddress(ctx context.Context, req *AddressRequest) (*Address, error)
 	GetAddresses(ctx context.Context, req *Request) (*Addresses, error)
 
 	CreateCreditCard(ctx context.Context, req *CreditCard) (*emptypb.Empty, error)
 	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardRequest) (*emptypb.Empty, error)
+	GetCreditCard(ctx context.Context, req *GetCreditCardRequest) (*CreditCard, error)
 	ListCreditCards(ctx context.Context, req *ListCreditCardsRequest) (*CreditCards, error)
 }
 

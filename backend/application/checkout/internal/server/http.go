@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+
 	v1 "backend/api/checkout/v1"
 	"backend/application/checkout/internal/conf"
 	"backend/application/checkout/internal/service"
@@ -49,6 +51,7 @@ func NewHTTPServer(c *conf.Server,
 	// trace end
 	opts := []http.ServerOption{
 		http.Middleware(
+			metadata.Server(),    // 元数据
 			validate.Validator(), // 参数校验
 			tracing.Server(),
 			recovery.Recovery(

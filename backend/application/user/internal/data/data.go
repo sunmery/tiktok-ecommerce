@@ -1,16 +1,17 @@
 package data
 
 import (
-	"backend/application/user/internal/conf"
-	"backend/application/user/internal/data/models"
 	"context"
 	"fmt"
+
+	"backend/application/user/internal/conf"
+	"backend/application/user/internal/data/models"
+
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -21,7 +22,7 @@ var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewUserRepo, NewCasdoor)
 
 type Data struct {
 	db     *models.Queries
-	pgx       *pgxpool.Pool
+	pgx    *pgxpool.Pool
 	rdb    *redis.Client
 	cs     *casdoorsdk.Client
 	logger *log.Helper
@@ -38,8 +39,8 @@ func NewData(
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:        models.New(db),        // 数据库
-		pgx:       db,                    // 数据库事务
+		db:  models.New(db), // 数据库
+		pgx: db,             // 数据库事务
 		rdb: rdb,
 		cs:  cs,
 	}, cleanup, nil
@@ -72,6 +73,7 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 
 	return conn
 }
+
 func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {
 	client := casdoorsdk.NewClient(
 		cc.Casdoor.Server.Endpoint,
@@ -106,6 +108,7 @@ type userRepo struct {
 
 // 使用标准库的私有类型(包级唯一)避免冲突
 type contextTxKey struct{}
+
 // DB 从上下文中获取事务或返回默认DB
 // 通过 data.DB(ctx) 自动获取事务或普通连接
 // example: db := p.data.DB(ctx)

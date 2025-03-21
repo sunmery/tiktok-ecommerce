@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "定义包名，用于命名空间隔离",
+    "title": "v1/checkout.proto",
     "version": "version not set"
   },
   "tags": [
@@ -79,43 +79,6 @@
         }
       }
     },
-    "v1Address": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "地址 ID"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string",
-          "title": "城市，必填字段"
-        },
-        "state": {
-          "type": "string",
-          "title": "州/省，必填字段"
-        },
-        "country": {
-          "type": "string",
-          "title": "国家，必填字段"
-        },
-        "zipCode": {
-          "type": "string"
-        },
-        "streetAddress": {
-          "type": "string"
-        }
-      },
-      "title": "定义地址信息的消息结构",
-      "required": [
-        "userId",
-        "zipCode",
-        "streetAddress"
-      ]
-    },
     "v1CheckoutReq": {
       "type": "object",
       "properties": {
@@ -135,12 +98,15 @@
           "type": "string",
           "title": "用户的邮箱地址（必填），用于接收订单确认邮件等"
         },
-        "creditCard": {
-          "$ref": "#/definitions/v1CreditCards",
-          "title": "用户的信用卡信息（必填），用于支付"
+        "creditCardId": {
+          "type": "integer",
+          "format": "int64",
+          "title": "用户的信用卡id（必填），用于支付"
         },
-        "address": {
-          "$ref": "#/definitions/v1Address"
+        "addressId": {
+          "type": "integer",
+          "format": "int64",
+          "title": "地址 ID（必填），用于选择配送地址"
         }
       },
       "title": "结账请求的消息结构"
@@ -162,74 +128,6 @@
         }
       },
       "title": "结账响应的消息结构"
-    },
-    "v1CreditCard": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "ID"
-        },
-        "currency": {
-          "type": "string",
-          "title": "货币类型;"
-        },
-        "number": {
-          "type": "string",
-          "title": "卡号"
-        },
-        "cvv": {
-          "type": "string",
-          "title": "安全码"
-        },
-        "expYear": {
-          "type": "string",
-          "title": "过期年份;"
-        },
-        "expMonth": {
-          "type": "string",
-          "title": "过期月份;"
-        },
-        "owner": {
-          "type": "string",
-          "title": "持卡人姓名;"
-        },
-        "name": {
-          "type": "string",
-          "title": "卡名"
-        },
-        "type": {
-          "type": "string",
-          "title": "卡类型（如借记卡、信用卡）"
-        },
-        "brand": {
-          "type": "string",
-          "title": "卡品牌（如 Visa、MasterCard）"
-        },
-        "country": {
-          "type": "string",
-          "title": "卡所属国家"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "创建时间"
-        }
-      },
-      "title": "定义信用卡信息的消息结构"
-    },
-    "v1CreditCards": {
-      "type": "object",
-      "properties": {
-        "creditCards": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1CreditCard"
-          }
-        }
-      }
     }
   }
 }

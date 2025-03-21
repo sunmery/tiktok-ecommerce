@@ -42,13 +42,13 @@ type Payment struct {
 
 type (
 	CreatePaymentReq struct {
+		Subject       string // 订单主题, 例如Iphone6 16G, 不可使用特殊字符，如 /，=，& 等。
 		OrderId       uuid.UUID
 		Currency      string
 		Amount        string
 		PaymentMethod string
 		Method        string
 		Status        PaymentStatus
-		GatewayTxID   *string
 		Metadata      map[string]string
 	}
 	CreatePaymentRes struct {

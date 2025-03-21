@@ -1,15 +1,17 @@
 package data
 
 import (
-	"backend/application/user/internal/biz"
-	"backend/application/user/internal/data/models"
 	"context"
 	"fmt"
+
+	"backend/application/user/internal/biz"
+	"backend/application/user/internal/data/models"
+
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (u *userRepo) CreateCreditCard(ctx context.Context, req *biz.CreditCard) (*emptypb.Empty, error) {
-	params:=models.InsertCreditCardParams{
+	params := models.InsertCreditCardParams{
 		Number:   req.Number,
 		Cvv:      req.Cvv,
 		ExpYear:  req.ExpYear,
@@ -37,6 +39,33 @@ func (u *userRepo) DeleteCreditCard(ctx context.Context, req *biz.DeleteCreditCa
 	}
 	return nil, nil
 }
+
+func (u *userRepo) GetCreditCard(ctx context.Context, req *biz.GetCreditCardRequest) (*biz.CreditCard, error) {
+	creditCard, err := u.data.db.GetCreditCard(ctx, models.GetCreditCardParams{
+		ID:     int32(req.Id),
+		UserID: req.UserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.CreditCard{
+		Number:    creditCard.Number,
+		Cvv:       creditCard.Cvv,
+		Id:        uint32(creditCard.ID),
+		Owner:     creditCard.Owner,
+		Name:      *creditCard.Name,
+		Brand:     creditCard.Brand,
+		Country:   creditCard.Country,
+		Type:      creditCard.Type,
+		UserID:    creditCard.UserID,
+		Currency:  creditCard.Currency,
+		ExpYear:   creditCard.ExpYear,
+		ExpMonth:  creditCard.ExpMonth,
+		CreatedAt: creditCard.CreatedTime,
+	}, nil
+}
+
 func (u *userRepo) ListCreditCards(ctx context.Context, req *biz.ListCreditCardsRequest) (*biz.CreditCards, error) {
 	cards, err := u.data.db.ListCreditCards(ctx, req.UserID)
 	if err != nil {
@@ -45,19 +74,19 @@ func (u *userRepo) ListCreditCards(ctx context.Context, req *biz.ListCreditCards
 	var res []*biz.CreditCard
 	for _, card := range cards {
 		res = append(res, &biz.CreditCard{
-			Number:          card.Number,
-			Cvv:             card.Cvv,
-			Id:              uint32(card.ID),
-			Owner:           card.Owner,
-			Name:           *card.Name,
-			Brand:           card.Brand,
-			Country:         card.Country,
-			Type:            card.Type,
-			UserID:          card.UserID,
-			Currency:        card.Currency,
-			ExpYear:  card.ExpYear,
-			ExpMonth: card.ExpMonth,
-			CreatedAt:       card.CreatedTime,
+			Number:    card.Number,
+			Cvv:       card.Cvv,
+			Id:        uint32(card.ID),
+			Owner:     card.Owner,
+			Name:      *card.Name,
+			Brand:     card.Brand,
+			Country:   card.Country,
+			Type:      card.Type,
+			UserID:    card.UserID,
+			Currency:  card.Currency,
+			ExpYear:   card.ExpYear,
+			ExpMonth:  card.ExpMonth,
+			CreatedAt: card.CreatedTime,
 		})
 	}
 	return &biz.CreditCards{

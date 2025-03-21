@@ -18,13 +18,13 @@
   "paths": {
     "/v1/users/address": {
       "get": {
-        "summary": "获取用户地址列表",
-        "operationId": "UserService_GetAddresses",
+        "summary": "根据 ID获取用户地址",
+        "operationId": "UserService_GetAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetAddressesReply"
+              "$ref": "#/definitions/v1Address"
             }
           },
           "default": {
@@ -34,6 +34,22 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "addressId",
+            "description": "地址 ID，必填字段",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "tags": [
           "UserService"
         ]
@@ -137,7 +153,51 @@
         ]
       }
     },
+    "/v1/users/addresses": {
+      "get": {
+        "summary": "获取用户地址列表",
+        "operationId": "UserService_GetAddresses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAddressesReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/v1/users/credit_cards": {
+      "get": {
+        "summary": "列出用户的信用卡信息",
+        "operationId": "UserService_ListCreditCards",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreditCards"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UserService"
+        ]
+      },
       "post": {
         "summary": "创建用户的信用卡信息",
         "operationId": "UserService_CreateCreditCard",
@@ -171,15 +231,15 @@
         ]
       }
     },
-    "/v1/users/credit_cards/all": {
+    "/v1/users/credit_cards/{id}": {
       "get": {
-        "summary": "列出用户的信用卡信息",
-        "operationId": "UserService_ListCreditCards",
+        "summary": "根据ID搜索用户的信用卡信息",
+        "operationId": "UserService_GetCreditCard",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CreditCards"
+              "$ref": "#/definitions/v1CreditCard"
             }
           },
           "default": {
@@ -189,12 +249,26 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "要获取的信用卡 ID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "tags": [
           "UserService"
         ]
-      }
-    },
-    "/v1/users/credit_cards/{id}": {
+      },
       "delete": {
         "summary": "删除用户的信用卡信息",
         "operationId": "UserService_DeleteCreditCard",

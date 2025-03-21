@@ -3,10 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-
-	paymentv1 "backend/api/payment/v1"
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
@@ -41,10 +38,15 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	for _, item := range req.OrderItems {
 		// 序列化订单项
 		type SubOrderItem struct {
-			Item *biz.CartItem `json:"item"`
-			Cost float64       `json:"cost"`
+			Item *biz.CartItem
+			Cost float64
 		}
-		items := []SubOrderItem{{Item: item.Item, Cost: item.Cost}}
+		items := []SubOrderItem{
+			{
+				Item: item.Item,
+				Cost: item.Cost,
+			},
+		}
 		itemsJSON, err := json.Marshal(items)
 		if err != nil {
 			return nil, fmt.Errorf("序列化订单项失败: %w", err)
@@ -72,30 +74,10 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 	}
 
-	// 调用支付
-	totalAmount := 0.0
-	for _, item := range req.OrderItems {
-		totalAmount += item.Cost * float64(item.Item.Quantity)
-	}
-	// 将 totalAmount 转换为字符串，并保留两位小数
-	amountStr := fmt.Sprintf("%.2f", totalAmount)
-	fmt.Printf("order.ID.String(): %v", order.ID.String())
-	payment, paymentErr := o.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
-		OrderId:       order.ID.String(),
-		Currency:      req.Currency,
-		Amount:        amountStr,
-		PaymentMethod: "AliPay",
-	})
-	if paymentErr != nil {
-		return nil, errors.New(fmt.Sprintf("创建支付失败: %v", paymentErr))
-	}
-	fmt.Printf("payment: %v", payment)
-
 	return &biz.PlaceOrderResp{
 		Order: &biz.OrderResult{
 			OrderId: order.ID.String(),
 		},
-		URL: payment.PaymentUrl,
 	}, nil
 }
 
@@ -129,12 +111,12 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 // 自定义JSON解析
 func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	type dbSubOrder struct {
-		ID          string          `json:"id"`
-		MerchantID  string          `json:"merchant_id"`
-		TotalAmount float64         `json:"total_amount"`
-		Currency    string          `json:"currency"`
-		Status      string          `json:"status"`
-		Items       json.RawMessage `json:"items"`
+		ID          string
+		MerchantID  string
+		TotalAmount float64
+		Currency    string
+		Status      string
+		Items       json.RawMessage
 	}
 
 	var dbSubs []dbSubOrder

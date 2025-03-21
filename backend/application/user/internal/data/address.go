@@ -59,7 +59,7 @@ func (u *userRepo) UpdateAddress(ctx context.Context, req *biz.Address) (*biz.Ad
 	}, err
 }
 
-func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRequest) (*biz.DeleteAddressesReply, error) {
+func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.AddressRequest) (*biz.DeleteAddressesReply, error) {
 	reply, err := u.data.db.DeleteAddress(ctx, models.DeleteAddressParams{
 		UserID: req.UserId,
 		ID:     int32(req.AddressId),
@@ -71,6 +71,29 @@ func (u *userRepo) DeleteAddress(ctx context.Context, req *biz.DeleteAddressesRe
 		Message: "OK",
 		Id:      uint32(reply.ID),
 		Code:    http.StatusOK,
+	}, nil
+}
+
+func (u *userRepo) GetAddress(ctx context.Context, req *biz.AddressRequest) (*biz.Address, error) {
+	address, aErr := u.data.db.GetAddress(ctx, models.GetAddressParams{
+		ID:     int32(req.AddressId),
+		UserID: req.UserId,
+	})
+	if aErr != nil {
+		if errors.Is(aErr, pgx.ErrNoRows) {
+			return &biz.Address{}, nil // 返回空列表
+		}
+		return nil, aErr
+	}
+
+	return &biz.Address{
+		Id:            uint32(address.ID),
+		UserId:        address.UserID,
+		StreetAddress: address.StreetAddress,
+		City:          address.City,
+		State:         address.State,
+		Country:       address.Country,
+		ZipCode:       address.ZipCode,
 	}, nil
 }
 

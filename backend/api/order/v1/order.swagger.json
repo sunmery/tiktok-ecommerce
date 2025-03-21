@@ -203,7 +203,8 @@
       "type": "object",
       "properties": {
         "merchantId": {
-          "type": "string"
+          "type": "string",
+          "title": "商家ID"
         },
         "productId": {
           "type": "string",
@@ -211,8 +212,16 @@
         },
         "quantity": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64",
           "title": "商品数量"
+        },
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "picture": {
+          "type": "string",
+          "title": "商品主图"
         }
       },
       "title": "购物车商品"
@@ -347,10 +356,6 @@
         "order": {
           "$ref": "#/definitions/v1OrderResult",
           "title": "订单结果"
-        },
-        "url": {
-          "type": "string",
-          "title": "支付跳转 URL"
         }
       },
       "title": "创建订单响应的消息结构"
