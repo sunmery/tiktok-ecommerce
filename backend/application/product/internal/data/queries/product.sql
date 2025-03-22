@@ -117,43 +117,7 @@ WHERE p.id = ANY(@product_ids::UUID[])
   AND p.merchant_id = ANY(@merchant_ids::UUID[])
   AND p.deleted_at IS NULL;
 
--- name: GetMerchantProducts :many
-SELECT p.id,
-       p.name,
-       p.description,
-       p.price,
-       p.status,
-       p.merchant_id,
-       p.category_id,
-       p.created_at,
-       p.updated_at,
-       i.stock,
-       (SELECT jsonb_agg(jsonb_build_object(
-               'url', pi.url,
-               'is_primary', pi.is_primary,
-               'sort_order', pi.sort_order
-                         ))
-        FROM products.product_images pi
-        WHERE pi.merchant_id = p.merchant_id) AS images,
-       pa.attributes,
-       (SELECT jsonb_build_object(
-                       'id', a.id,
-                       'old_status', a.old_status,
-                       'new_status', a.new_status,
-                       'reason', a.reason,
-                       'created_at', a.created_at
-               )
-        FROM products.product_audits a
-        WHERE a.merchant_id = p.merchant_id
-        ORDER BY a.created_at DESC
-        LIMIT 1)                              AS latest_audit
-FROM products.products p
-         INNER JOIN products.inventory i
-                    ON p.id = i.product_id AND p.merchant_id = i.merchant_id
-         LEFT JOIN products.product_attributes pa
-                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-WHERE p.merchant_id = $1
-  AND p.deleted_at IS NULL;
+
 
 -- 商品搜索查询
 -- name: SearchFullProductsByName :many
@@ -187,12 +151,13 @@ ORDER BY ts_rank(to_tsvector('simple', p.name), plainto_tsquery('simple', @query
 LIMIT @page OFFSET @page_size;
 
 -- 软删除商品，设置删除时间戳
--- name: SoftDeleteProduct :exec
+-- name: SoftDeleteProduct :one
 UPDATE products.products
 SET deleted_at = NOW(),
     status     = $3
 WHERE merchant_id = $1
-  AND id = $2;
+  AND id = $2
+RETURNING *;
 
 -- name: CreateProductImages :copyfrom
 INSERT INTO products.product_images (merchant_id, -- 新增分片键
@@ -297,6 +262,7 @@ SELECT p.id,
        p.category_id,
        p.created_at,
        p.updated_at,
+       i.stock,
        -- 图片信息
        (SELECT jsonb_agg(jsonb_build_object(
                'url', pi.url,
@@ -309,6 +275,8 @@ SELECT p.id,
        -- 属性信息
        pa.attributes
 FROM products.products p
+         INNER JOIN products.inventory i
+                    ON p.id = i.product_id AND p.merchant_id = i.merchant_id
          LEFT JOIN products.product_attributes pa
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 WHERE p.status = $1
@@ -379,6 +347,7 @@ SELECT p.id,
        p.category_id,
        p.created_at,
        p.updated_at,
+       i.stock,
        (SELECT jsonb_agg(jsonb_build_object(
                'url', pi.url,
                'is_primary', pi.is_primary,
@@ -389,6 +358,8 @@ SELECT p.id,
           AND pi.merchant_id = p.merchant_id) AS images,
        pa.attributes
 FROM products.products p
+         INNER JOIN products.inventory i
+                    ON p.id = i.product_id AND p.merchant_id = i.merchant_id
          LEFT JOIN products.product_attributes pa
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 WHERE p.category_id = ANY ($1::bigint[])

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package ecommerce.merchant.v1;
+
+option go_package = "backend/api/merchant/product/v1;productv1";
+
+import "google/api/annotations.proto";
+import "backend/api/product/v1/product.proto";
+
+service Product {
+  // 获取商家对应的商品
+  rpc GetMerchantProducts(GetMerchantProductRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/merchants/products"
+    };
+  }
+}
+
+// 获取商家对应的商品
+message GetMerchantProductRequest {}
+
+// 商品数组
+message Products {
+  repeated product.v1.Product items = 1;
+}

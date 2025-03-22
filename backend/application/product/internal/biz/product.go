@@ -170,10 +170,6 @@ type GetProductRequest struct {
 	MerchantID uuid.UUID
 }
 
-type GetMerchantProducts struct {
-	MerchantID uuid.UUID
-}
-
 // CreateProductRequest 完善CreateProductRequest
 type (
 	CreateProductRequest struct {
@@ -198,7 +194,7 @@ type (
 type Inventory struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
-	Stock      int32
+	Stock      uint32
 }
 
 type ImageModel struct {
@@ -278,7 +274,6 @@ type ProductRepo interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
-	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
@@ -325,10 +320,6 @@ func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest)
 
 func (p *ProductUsecase) GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error) {
 	return p.repo.GetProductBatch(ctx, req)
-}
-
-func (p *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
-	return p.repo.GetMerchantProducts(ctx, req)
 }
 
 func (p *ProductUsecase) DeleteProduct(ctx context.Context, req DeleteProductRequest) (*emptypb.Empty, error) {

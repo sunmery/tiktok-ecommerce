@@ -10,4 +10,5 @@ const (
 	CheckoutServiceV1  = "ecommerce-checkout-v1"
 	OrderServiceV1     = "ecommerce-order-v1"
 	AssistantServiceV1 = "ecommerce-assistant-v1"
+	MerchantServiceV1  = "ecommerce-merchant-v1"
 )

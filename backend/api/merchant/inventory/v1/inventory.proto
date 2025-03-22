@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package ecommerce.merchant.v1;
+
+option go_package = "backend/api/merchant/inventory/v1;inventoryv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service Inventory {
+  // 设置库存警报阈值
+  rpc SetStockAlert(SetStockAlertRequest) returns (SetStockAlertResponse) {
+    option (google.api.http) = {
+      post: "/v1/merchants/inventory/alerts"
+      body: "*"
+    };
+  }
+
+  // 获取库存警报配置
+  rpc GetStockAlerts(GetStockAlertsRequest) returns (GetStockAlertsResponse) {
+    option (google.api.http) = {
+      get: "/v1/merchants/inventory/alerts"
+    };
+  }
+
+  // 获取低库存产品列表
+  rpc GetLowStockProducts(GetLowStockProductsRequest) returns (GetLowStockProductsResponse) {
+    option (google.api.http) = {
+      get: "/v1/merchants/inventory/low-stock"
+    };
+  }
+
+  // 记录库存调整
+  rpc RecordStockAdjustment(RecordStockAdjustmentRequest) returns (RecordStockAdjustmentResponse) {
+    option (google.api.http) = {
+      post: "/v1/merchants/inventory/adjustments"
+      body: "*"
+    };
+  }
+
+  // 获取库存调整历史
+  rpc GetStockAdjustmentHistory(GetStockAdjustmentHistoryRequest) returns (GetStockAdjustmentHistoryResponse) {
+    option (google.api.http) = {
+      get: "/v1/merchants/inventory/adjustments/{product_id}"
+    };
+  }
+
+  // 获取产品当前库存
+  rpc GetProductStock(GetProductStockRequest) returns (GetProductStockResponse) {
+    option (google.api.http) = {
+      get: "/v1/merchants/inventory/{product_id}"
+    };
+  }
+
+  // 更新产品库存
+  rpc UpdateProductStock(UpdateProductStockRequest) returns (UpdateProductStockResponse) {
+    option (google.api.http) = {
+      put: "/v1/merchants/inventory/{product_id}"
+      body: "*"
+    };
+  }
+
+}
+
+// 获取产品库存请求
+message GetProductStockRequest {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+}
+
+// 获取产品库存响应
+message GetProductStockResponse {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  int32 stock = 3; // 当前库存
+  int32 alert_threshold = 4; // 警报阈值，如果设置了的话
+  bool is_low_stock = 5; // 是否低库存
+}
+
+// 更新产品库存请求
+message UpdateProductStockRequest {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  int32 stock = 3; // 新库存值
+  string reason = 4; // 更新原因
+}
+
+// 更新产品库存响应
+message UpdateProductStockResponse {
+  bool success = 1; // 操作是否成功
+  string message = 2; // 操作结果消息
+}
+
+// 设置库存警报阈值请求
+message SetStockAlertRequest {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  int32 threshold = 3; // 警报阈值
+}
+
+// 设置库存警报阈值响应
+message SetStockAlertResponse {
+  bool success = 1; // 操作是否成功
+  string message = 2; // 操作结果消息
+}
+
+// 获取库存警报配置请求
+message GetStockAlertsRequest {
+  string merchant_id = 1; // 商家ID，可选，如果提供则只返回该商家的警报
+  uint32 page = 2; // 分页页码
+  uint32 page_size = 3; // 每页大小
+}
+
+// 库存警报配置
+message StockAlert {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  string product_name = 3; // 产品名称
+  int32 current_stock = 4; // 当前库存
+  int32 threshold = 5; // 警报阈值
+  google.protobuf.Timestamp created_at = 6; // 创建时间
+  google.protobuf.Timestamp updated_at = 7; // 更新时间
+}
+
+// 获取库存警报配置响应
+message GetStockAlertsResponse {
+  repeated StockAlert alerts = 1; // 警报配置列表
+  uint32 total = 2; // 总记录数
+}
+
+// 获取低库存产品请求
+message GetLowStockProductsRequest {
+  string merchant_id = 1; // 商家ID，可选，如果提供则只返回该商家的低库存产品
+  uint32 page = 2; // 分页页码
+  uint32 page_size = 3; // 每页大小
+}
+
+// 低库存产品信息
+message LowStockProduct {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  string product_name = 3; // 产品名称
+  int32 current_stock = 4; // 当前库存
+  int32 threshold = 5; // 警报阈值
+  string image_url = 6; // 产品图片URL
+}
+
+// 获取低库存产品响应
+message GetLowStockProductsResponse {
+  repeated LowStockProduct products = 1; // 低库存产品列表
+  uint32 total = 2; // 总记录数
+}
+
+// 记录库存调整请求
+message RecordStockAdjustmentRequest {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
+  int32 quantity = 3; // 调整数量（正数增加，负数减少）
+  string reason = 4; // 调整原因
+  string operator_id = 5; // 操作人ID
+}
+
+// 记录库存调整响应
+message RecordStockAdjustmentResponse {
+  bool success = 1; // 操作是否成功
+  string message = 2; // 操作结果消息
+  string adjustment_id = 3; // 调整记录ID
+}
+
+// 获取库存调整历史请求
+message GetStockAdjustmentHistoryRequest {
+  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID，可选
+  uint32 page = 3; // 分页页码
+  uint32 page_size = 4; // 每页大小
+}
+
+// 库存调整记录
+message StockAdjustment {
+  string id = 1; // 调整记录ID
+  string product_id = 2; //  商品ID
+  string merchant_id = 3; // 商家ID
+  string product_name = 4; // 产品名称
+  int32 quantity = 5; // 调整数量
+  string reason = 6; // 调整原因
+  string operator_id = 7; // 操作人ID
+  google.protobuf.Timestamp created_at = 8; // 创建时间
+}
+
+// 获取库存调整历史响应
+message GetStockAdjustmentHistoryResponse {
+  repeated StockAdjustment adjustments = 1; // 调整记录列表
+  uint32 total = 2; // 总记录数
+}
