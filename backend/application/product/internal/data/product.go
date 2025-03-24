@@ -27,6 +27,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
+)
+
 type productRepo struct {
 	data *Data
 	log  *log.Helper
@@ -120,10 +124,6 @@ func (p *productRepo) GetCategoryProducts(ctx context.Context, req *biz.GetCateg
 
 	return &biz.Products{Items: items}, err
 }
-
-const (
-	defaultExpiryTime = time.Second * 24 * 60 * 60 // 1 day
-)
 
 func (p *productRepo) UploadProductFile(ctx context.Context, req *biz.UploadProductFileRequest) (*biz.UploadProductFileReply, error) {
 	expiry := defaultExpiryTime
@@ -504,7 +504,10 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 		if len(product.Attributes) > 0 {
 			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
 				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+				attributes = nil
 			}
+		} else {
+			attributes = nil
 		}
 
 		items = append(items, &biz.Product{
@@ -793,10 +796,13 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 
 	// 处理属性
 	var attributes map[string]interface{}
-	err = json.Unmarshal(product.Attributes, &attributes)
-	if err != nil {
-		p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
-		return nil, errors.New(fmt.Sprintf("unmarshal attributes error: %v", err))
+	if len(product.Attributes) > 0 {
+		if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+			attributes = nil
+		}
+	} else {
+		attributes = nil
 	}
 
 	// 组装返回结果

@@ -300,9 +300,21 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 	if err != nil {
 		return nil, err
 	}
+	if listRandomProducts == nil {
+		return &pb.Products{
+			Items: []*pb.Product{},
+		}, nil
+	}
+	if listRandomProducts.Items == nil {
+		return &pb.Products{
+			Items: []*pb.Product{},
+		}, nil
+	}
 	var pbProducts []*pb.Product
 	for _, product := range listRandomProducts.Items {
-		pbProducts = append(pbProducts, convertBizProductToPB(product))
+		if product != nil {
+			pbProducts = append(pbProducts, convertBizProductToPB(product))
+		}
 	}
 	return &pb.Products{
 		Items: pbProducts,
@@ -363,24 +375,37 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 	}
 
 	// 转换图片
-	images := make([]*pb.Image, 0, len(p.Images))
-	for _, img := range p.Images {
-		images = append(images, &pb.Image{
-			Url:       img.URL,
-			IsPrimary: img.IsPrimary,
-			SortOrder: int32(*img.SortOrder),
-		})
+	images := make([]*pb.Image, 0)
+	if p.Images != nil {
+		for _, img := range p.Images {
+			if img != nil {
+				sortOrder := int32(0)
+				if img.SortOrder != nil {
+					sortOrder = int32(*img.SortOrder)
+				}
+				images = append(images, &pb.Image{
+					Url:       img.URL,
+					IsPrimary: img.IsPrimary,
+					SortOrder: sortOrder,
+				})
+			}
+		}
 	}
 
-	// 转换属性
-	// 创建嵌套结构
-	protoStruct, err := structpb.NewStruct(p.Attributes)
-	if err != nil {
-		log.Warn("Error creating struct: %w", err)
-		protoStruct = nil
+	// 转换商品属性
+	var attributes *structpb.Value
+	if p.Attributes != nil && len(p.Attributes) > 0 {
+		protoStruct, err := structpb.NewStruct(p.Attributes)
+		if err != nil {
+			log.Warn("Error creating struct: %w", err)
+			attributes = nil
+		} else {
+			attributes = structpb.NewStructValue(protoStruct)
+		}
 	}
 
-	return &pb.Product{
+	// 构建返回结果
+	result := &pb.Product{
 		Id:          p.ID.String(),
 		Name:        p.Name,
 		Description: p.Description,
@@ -388,19 +413,25 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId.String(),
 		Images:      images,
-		Attributes:  structpb.NewStructValue(protoStruct),
+		Attributes:  attributes,
 		Category: &pb.CategoryInfo{
 			CategoryId:   uint32(p.Category.CategoryId),
 			CategoryName: p.Category.CategoryName,
 		},
 		CreatedAt: timestamppb.New(p.CreatedAt),
 		UpdatedAt: timestamppb.New(p.UpdatedAt),
-		Inventory: &pb.Inventory{
+	}
+
+	// 添加库存信息
+	if p.Inventory.ProductId != uuid.Nil {
+		result.Inventory = &pb.Inventory{
 			ProductId:  p.Inventory.ProductId.String(),
 			MerchantId: p.Inventory.MerchantId.String(),
 			Stock:      p.Inventory.Stock,
-		},
+		}
 	}
+
+	return result
 }
 
 // 其他辅助转换函数
@@ -517,6 +548,9 @@ var validTransitions = map[biz.ProductStatus]map[biz.ProductStatus]bool{
 
 func parseProtoValue(v *structpb.Value) map[string]any {
 	if v == nil {
+		return nil
+	}
+	if v.GetStructValue() == nil {
 		return nil
 	}
 	return v.GetStructValue().AsMap()
