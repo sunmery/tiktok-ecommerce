@@ -26,7 +26,7 @@ service OrderService {
   }
 
   // 查询订单列表
-  rpc ListOrder(ListOrderReq) returns (ListOrderResp) {
+  rpc QueryOrders(ListOrderReq) returns (ListOrderResp) {
     option (google.api.http) = {
       get: "/v1/orders" // 定义 HTTP GET 请求路径
     };
@@ -63,7 +63,6 @@ message OrderResult {
 // 创建订单响应的消息结构
 message PlaceOrderResp {
   OrderResult order = 1; // 订单结果
-  string url = 2; // 支付跳转 URL
 }
 
 // 支付状态的枚举类型
@@ -77,7 +76,7 @@ enum PaymentStatus {
 
 // 订单的消息结构
 message Order {
-  repeated OrderItem order_items = 1; // 订单项列表
+  repeated OrderItem items = 1; // 订单项列表
   string order_id = 2; // 订单 ID
   string user_id = 3 [
     (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32

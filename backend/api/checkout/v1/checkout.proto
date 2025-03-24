@@ -1,16 +1,11 @@
-syntax = "proto3"; // 指定使用 proto3 语法
+syntax = "proto3";
 
-package ecommerce.checkout.v1; // 定义包名，用于命名空间隔离
+package ecommerce.checkout.v1;
 
-// 导入外部依赖
-import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
-import "backend/api/user/v1/user.proto"; // 导入用户相关的消息定义
+import "google/api/annotations.proto";
 
 // Go 语言生成代码的选项
 option go_package = "backend/api/v1/checkout;checkoutv1";
-// `go_package` 指定了生成的 Go 代码的包路径和别名：
-// - "backend/api/v1/checkout" 是生成代码的完整路径
-// - "checkoutv1" 是生成代码的包别名
 
 // 结账服务接口定义
 service CheckoutService {
@@ -29,8 +24,8 @@ message CheckoutReq {
   string firstname = 2; // 用户的名字（必填），允许非注册用户直接填写信息下单
   string lastname = 3; // 用户的姓氏（必填）
   string email = 4; // 用户的邮箱地址（必填），用于接收订单确认邮件等
-  user.v1.CreditCards credit_card = 6; // 用户的信用卡信息（必填），用于支付
-  user.v1.Address address = 7;
+  uint32 credit_card_id = 6; // 用户的信用卡id（必填），用于支付
+  uint32 address_id = 7; // 地址 ID（必填），用于选择配送地址
 }
 
 // 结账响应的消息结构

@@ -27,8 +27,47 @@ func (q *Queries) DeleteCreditCard(ctx context.Context, id int32) error {
 	return err
 }
 
+const GetCreditCard = `-- name: GetCreditCard :one
+SELECT id, user_id, number, currency, cvv, exp_year, exp_month, owner, name, type, brand, country, created_time
+FROM users.credit_cards
+WHERE user_id = $1
+  AND id = $2
+`
+
+type GetCreditCardParams struct {
+	UserID uuid.UUID `json:"userID"`
+	ID     int32     `json:"id"`
+}
+
+// GetCreditCard
+//
+//	SELECT id, user_id, number, currency, cvv, exp_year, exp_month, owner, name, type, brand, country, created_time
+//	FROM users.credit_cards
+//	WHERE user_id = $1
+//	  AND id = $2
+func (q *Queries) GetCreditCard(ctx context.Context, arg GetCreditCardParams) (UsersCreditCards, error) {
+	row := q.db.QueryRow(ctx, GetCreditCard, arg.UserID, arg.ID)
+	var i UsersCreditCards
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Number,
+		&i.Currency,
+		&i.Cvv,
+		&i.ExpYear,
+		&i.ExpMonth,
+		&i.Owner,
+		&i.Name,
+		&i.Type,
+		&i.Brand,
+		&i.Country,
+		&i.CreatedTime,
+	)
+	return i, err
+}
+
 const InsertCreditCard = `-- name: InsertCreditCard :exec
-INSERT INTO users.credit_cards (user_id, currency,number, cvv, exp_year, exp_month, owner, name, type, brand, country)
+INSERT INTO users.credit_cards (user_id, currency, number, cvv, exp_year, exp_month, owner, name, type, brand, country)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 `
 
@@ -48,7 +87,7 @@ type InsertCreditCardParams struct {
 
 // InsertCreditCard
 //
-//	INSERT INTO users.credit_cards (user_id, currency,number, cvv, exp_year, exp_month, owner, name, type, brand, country)
+//	INSERT INTO users.credit_cards (user_id, currency, number, cvv, exp_year, exp_month, owner, name, type, brand, country)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 func (q *Queries) InsertCreditCard(ctx context.Context, arg InsertCreditCardParams) error {
 	_, err := q.db.Exec(ctx, InsertCreditCard,

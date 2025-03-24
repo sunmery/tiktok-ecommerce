@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # https://argo-cd.readthedocs.io/en/stable/user-guide/compare-options/
+  # 在某些情况下，您可能希望从应用程序的整体同步状态中排除资源。例如，如果它们是由工具生成的。这可以通过在您想要排除的资源上添加此注释来完成
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  name: kratos-template
+  labels:
+    app: kratos-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kratos-template
+  template:
+    metadata:
+      name: kratos-template
+      labels:
+        app: kratos-template
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: kratos-template
+          image: example
+          imagePullPolicy: Always
+          args:
+            - /bin/user
+            - -conf
+            - /bin/configs
+          ports:
+            - containerPort: 30001
+              protocol: TCP
+              name: http-server
+            - containerPort: 30002
+              protocol: TCP
+              name: grpc-server

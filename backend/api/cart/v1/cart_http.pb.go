@@ -28,7 +28,7 @@ type CartServiceHTTPServer interface {
 	// EmptyCart清空购物车
 	EmptyCart(context.Context, *EmptyCartReq) (*EmptyCartResp, error)
 	// GetCart获取购物车信息
-	GetCart(context.Context, *GetCartReq) (*Cart, error)
+	GetCart(context.Context, *GetCartReq) (*GetCartRelpy, error)
 	// RemoveCartItem删除购物车商品
 	RemoveCartItem(context.Context, *RemoveCartItemReq) (*RemoveCartItemResp, error)
 	// UpsertItem新增购物车商品
@@ -79,7 +79,7 @@ func _CartService_GetCart0_HTTP_Handler(srv CartServiceHTTPServer) func(ctx http
 		if err != nil {
 			return err
 		}
-		reply := out.(*Cart)
+		reply := out.(*GetCartRelpy)
 		return ctx.Result(200, reply)
 	}
 }
@@ -124,7 +124,7 @@ func _CartService_RemoveCartItem0_HTTP_Handler(srv CartServiceHTTPServer) func(c
 
 type CartServiceHTTPClient interface {
 	EmptyCart(ctx context.Context, req *EmptyCartReq, opts ...http.CallOption) (rsp *EmptyCartResp, err error)
-	GetCart(ctx context.Context, req *GetCartReq, opts ...http.CallOption) (rsp *Cart, err error)
+	GetCart(ctx context.Context, req *GetCartReq, opts ...http.CallOption) (rsp *GetCartRelpy, err error)
 	RemoveCartItem(ctx context.Context, req *RemoveCartItemReq, opts ...http.CallOption) (rsp *RemoveCartItemResp, err error)
 	UpsertItem(ctx context.Context, req *UpsertItemReq, opts ...http.CallOption) (rsp *UpsertItemResp, err error)
 }
@@ -150,8 +150,8 @@ func (c *CartServiceHTTPClientImpl) EmptyCart(ctx context.Context, in *EmptyCart
 	return &out, nil
 }
 
-func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *GetCartReq, opts ...http.CallOption) (*Cart, error) {
-	var out Cart
+func (c *CartServiceHTTPClientImpl) GetCart(ctx context.Context, in *GetCartReq, opts ...http.CallOption) (*GetCartRelpy, error) {
+	var out GetCartRelpy
 	pattern := "/v1/carts"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationCartServiceGetCart))

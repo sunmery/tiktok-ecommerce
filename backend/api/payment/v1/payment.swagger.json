@@ -182,7 +182,7 @@
       "properties": {
         "orderId": {
           "type": "string",
-          "title": "主订单 ID，唯一标识一笔订单"
+          "title": "商户订单号。 由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。"
         },
         "currency": {
           "type": "string",
@@ -195,9 +195,17 @@
         "paymentMethod": {
           "type": "string",
           "title": "支付方式，例如 \"alipay\", \"wechatpay\", \"credit_card\""
+        },
+        "subject": {
+          "type": "string",
+          "title": "订单主题, 例如Iphone6 16G, 不可使用特殊字符，如 /，=，\u0026 等。"
+        },
+        "timeExpire": {
+          "type": "string",
+          "title": "订单过期时间, 例如 yyyy-MM-dd HH:mm:ss 例如2016-12-31 10:05:01"
         }
       },
-      "title": "定义创建支付请求消息"
+      "title": "定义创建支付请求消息\n支付宝沙箱文档: https://opendocs.alipay.com/open/00dn7o?pathHash=c1e36251"
     },
     "v1PaymentCallbackReq": {
       "type": "object",

@@ -88,6 +88,41 @@ func (q *Queries) DeleteAddress(ctx context.Context, arg DeleteAddressParams) (U
 	return i, err
 }
 
+const GetAddress = `-- name: GetAddress :one
+SELECT id, user_id, street_address, city, state, country, zip_code
+FROM users.addresses
+WHERE id = $1
+  AND user_id = $2
+LIMIT 1
+`
+
+type GetAddressParams struct {
+	ID     int32     `json:"id"`
+	UserID uuid.UUID `json:"userID"`
+}
+
+// GetAddress
+//
+//	SELECT id, user_id, street_address, city, state, country, zip_code
+//	FROM users.addresses
+//	WHERE id = $1
+//	  AND user_id = $2
+//	LIMIT 1
+func (q *Queries) GetAddress(ctx context.Context, arg GetAddressParams) (UsersAddresses, error) {
+	row := q.db.QueryRow(ctx, GetAddress, arg.ID, arg.UserID)
+	var i UsersAddresses
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.StreetAddress,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.ZipCode,
+	)
+	return i, err
+}
+
 const GetAddresses = `-- name: GetAddresses :many
 SELECT id, user_id, street_address, city, state, country, zip_code
 FROM users.addresses
@@ -136,7 +171,6 @@ SET street_address = coalesce($1, street_address),
     zip_code       = coalesce($5, zip_code)
 WHERE id = $6
   AND user_id = $7
-
 RETURNING id, user_id, street_address, city, state, country, zip_code
 `
 
@@ -160,7 +194,6 @@ type UpdateAddressParams struct {
 //	    zip_code       = coalesce($5, zip_code)
 //	WHERE id = $6
 //	  AND user_id = $7
-//
 //	RETURNING id, user_id, street_address, city, state, country, zip_code
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (UsersAddresses, error) {
 	row := q.db.QueryRow(ctx, UpdateAddress,

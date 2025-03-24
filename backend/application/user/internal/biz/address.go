@@ -10,7 +10,7 @@ type Request struct {
 	UserId uuid.UUID
 }
 
-type DeleteAddressesRequest struct {
+type AddressRequest struct {
 	AddressId uint32
 	UserId    uuid.UUID
 }
@@ -45,9 +45,14 @@ func (cc *UserUsecase) UpdateAddress(ctx context.Context, req *Address) (*Addres
 	return cc.repo.UpdateAddress(ctx, req)
 }
 
-func (cc *UserUsecase) DeleteAddress(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
+func (cc *UserUsecase) DeleteAddress(ctx context.Context, req *AddressRequest) (*DeleteAddressesReply, error) {
 	cc.log.WithContext(ctx).Infof("DeleteAddress: %+v", req)
 	return cc.repo.DeleteAddress(ctx, req)
+}
+
+func (cc *UserUsecase) GetAddress(ctx context.Context, req *AddressRequest) (*Address, error) {
+	cc.log.WithContext(ctx).Infof("GetAddresses: %+v", req)
+	return cc.repo.GetAddress(ctx, req)
 }
 
 func (cc *UserUsecase) GetAddresses(ctx context.Context, req *Request) (*Addresses, error) {

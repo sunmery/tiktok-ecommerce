@@ -2,28 +2,34 @@ package biz
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"time"
 )
 
 type CreditCard struct {
-	Number    string    `json:"number,omitempty"`
-	Cvv       string    `json:"cvv,omitempty"`
-	Id        uint32    `json:"id,omitempty"`
-	Owner     string    `json:"owner,omitempty"`
-	Name      string    `json:"name,omitempty"`
-	Brand     string    `json:"brand,omitempty"`
-	Country   string    `json:"country,omitempty"`
-	Type      string    `json:"type,omitempty"`
-	UserID    uuid.UUID `json:"userId,omitempty"`
-	Currency  string    `json:"currency,omitempty"`
-	ExpYear   string    `json:"expYear,omitempty"`
-	ExpMonth  string    `json:"expMonth,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
+	Number    string
+	Cvv       string
+	Id        uint32
+	Owner     string
+	Name      string
+	Brand     string
+	Country   string
+	Type      string
+	UserID    uuid.UUID
+	Currency  string
+	ExpYear   string
+	ExpMonth  string
+	CreatedAt time.Time
 }
 type CreditCards struct {
 	CreditCards []*CreditCard
+}
+
+type GetCreditCardRequest struct {
+	UserID uuid.UUID
+	Id     uint32
 }
 type ListCreditCardsRequest struct {
 	UserID uuid.UUID
@@ -51,4 +57,9 @@ func (cc *UserUsecase) DeleteCreditCard(ctx context.Context, req *DeleteCreditCa
 // ListCreditCards 获取银行卡列表
 func (cc *UserUsecase) ListCreditCards(ctx context.Context, req *ListCreditCardsRequest) (*CreditCards, error) {
 	return cc.repo.ListCreditCards(ctx, req)
+}
+
+// GetCreditCard 根据ID获取单个银行卡
+func (cc *UserUsecase) GetCreditCard(ctx context.Context, req *GetCreditCardRequest) (*CreditCard, error) {
+	return cc.repo.GetCreditCard(ctx, req)
 }

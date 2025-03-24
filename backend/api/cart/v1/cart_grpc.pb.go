@@ -32,7 +32,7 @@ type CartServiceClient interface {
 	// 新增购物车商品
 	UpsertItem(ctx context.Context, in *UpsertItemReq, opts ...grpc.CallOption) (*UpsertItemResp, error)
 	// 获取购物车信息
-	GetCart(ctx context.Context, in *GetCartReq, opts ...grpc.CallOption) (*Cart, error)
+	GetCart(ctx context.Context, in *GetCartReq, opts ...grpc.CallOption) (*GetCartRelpy, error)
 	// 清空购物车
 	EmptyCart(ctx context.Context, in *EmptyCartReq, opts ...grpc.CallOption) (*EmptyCartResp, error)
 	// 删除购物车商品
@@ -57,9 +57,9 @@ func (c *cartServiceClient) UpsertItem(ctx context.Context, in *UpsertItemReq, o
 	return out, nil
 }
 
-func (c *cartServiceClient) GetCart(ctx context.Context, in *GetCartReq, opts ...grpc.CallOption) (*Cart, error) {
+func (c *cartServiceClient) GetCart(ctx context.Context, in *GetCartReq, opts ...grpc.CallOption) (*GetCartRelpy, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Cart)
+	out := new(GetCartRelpy)
 	err := c.cc.Invoke(ctx, CartService_GetCart_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ type CartServiceServer interface {
 	// 新增购物车商品
 	UpsertItem(context.Context, *UpsertItemReq) (*UpsertItemResp, error)
 	// 获取购物车信息
-	GetCart(context.Context, *GetCartReq) (*Cart, error)
+	GetCart(context.Context, *GetCartReq) (*GetCartRelpy, error)
 	// 清空购物车
 	EmptyCart(context.Context, *EmptyCartReq) (*EmptyCartResp, error)
 	// 删除购物车商品
@@ -112,7 +112,7 @@ type UnimplementedCartServiceServer struct{}
 func (UnimplementedCartServiceServer) UpsertItem(context.Context, *UpsertItemReq) (*UpsertItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertItem not implemented")
 }
-func (UnimplementedCartServiceServer) GetCart(context.Context, *GetCartReq) (*Cart, error) {
+func (UnimplementedCartServiceServer) GetCart(context.Context, *GetCartReq) (*GetCartRelpy, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCart not implemented")
 }
 func (UnimplementedCartServiceServer) EmptyCart(context.Context, *EmptyCartReq) (*EmptyCartResp, error) {

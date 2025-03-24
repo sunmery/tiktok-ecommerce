@@ -74,18 +74,18 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	// types.Float64ToNumeric(req.Amount)
 
 	// fmt.Printf("req: %v\n", r.pay.Alipay)
+	fmt.Printf("req: %+v\n", req)
 	tradeNo := fmt.Sprintf("%d", xid.Next())
 	pay := alipay.TradePagePay{ // 电脑网站支付
 		Trade: alipay.Trade{
-			Subject: "支付测试:" + tradeNo, // 订单主题
+			NotifyURL: r.pay.Alipay.NotifyUrl, // 异步通知地址
+			ReturnURL: r.pay.Alipay.ReturnUrl, // 回调地址
+			Subject:   "支付测试:" + req.Subject,  // 订单主题
 			// OutTradeNo:  fmt.Sprintf("%d", time.Now().Unix()), // 商户订单号，必须唯一
-			OutTradeNo:  req.OrderId.String(),     // 商户订单号，必须唯一
+			// OutTradeNo: req.OrderId.String(), // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
+			OutTradeNo:  tradeNo,                  // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
 			TotalAmount: req.Amount,               // 订单金额
 			ProductCode: "FAST_INSTANT_TRADE_PAY", // 电脑网站支付，产品码为固定值
-			NotifyURL:   r.pay.Alipay.NotifyUrl,   // 异步通知地址
-			ReturnURL:   r.pay.Alipay.ReturnUrl,   // 回调地址
-			// NotifyURL: "http://localhost:30013/v1/payments/notify",   // 异步通知地址
-			// ReturnURL: "http://localhost:30013/v1/payments/callback", // 回调地址
 		},
 	}
 	url, err := r.data.alipay.TradePagePay(pay) // 生成支付链接
@@ -102,19 +102,18 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	}
 
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
-		PaymentID:   uuid.New(),
-		OrderID:     req.OrderId,
-		Amount:      amount,
-		Currency:    req.Currency,
-		Method:      req.Method,
-		Status:      string(biz.PaymentPending),
-		GatewayTxID: req.GatewayTxID,
-		Metadata:    nil,
+		PaymentID: uuid.New(),
+		OrderID:   req.OrderId,
+		Amount:    amount,
+		Currency:  req.Currency,
+		Method:    req.Method,
+		Status:    string(biz.PaymentPending),
+		Metadata:  nil,
 	})
 	if paymentsErr != nil {
 		return nil, fmt.Errorf("failed to create payment: %v", paymentsErr)
 	}
-	fmt.Printf("payments: %v\n", payments)
+	fmt.Printf("payments: %+v\n", payments)
 
 	return &biz.CreatePaymentRes{
 		PaymentId:  payments.PaymentID.String(),

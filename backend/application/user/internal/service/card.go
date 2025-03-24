@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
+	"fmt"
+
 	pb "backend/api/user/v1"
 	"backend/application/user/internal/biz"
 	"backend/pkg"
-	"context"
-	"fmt"
+
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -17,15 +19,15 @@ func (s *UserService) CreateCreditCard(ctx context.Context, req *pb.CreditCard) 
 	}
 	fmt.Printf("req: %+v\n", req)
 	_, err = s.uc.CreateCreditCard(ctx, &biz.CreditCard{
-		Number:          req.Number,
-		Cvv:             req.Cvv,
-		Owner:           req.Owner,
-		Name:            req.Name,
-		Brand:           req.Brand,
-		Country:         req.Country,
-		Type:            req.Type,
-		UserID:          userID,
-		Currency:        req.Currency,
+		Number:   req.Number,
+		Cvv:      req.Cvv,
+		Owner:    req.Owner,
+		Name:     req.Name,
+		Brand:    req.Brand,
+		Country:  req.Country,
+		Type:     req.Type,
+		UserID:   userID,
+		Currency: req.Currency,
 		ExpYear:  req.ExpYear,
 		ExpMonth: req.ExpMonth,
 	})
@@ -82,5 +84,35 @@ func (s *UserService) ListCreditCards(ctx context.Context, _ *emptypb.Empty) (*p
 	}
 	return &pb.CreditCards{
 		CreditCards: res,
+	}, nil
+}
+
+func (s *UserService) GetCreditCard(ctx context.Context, req *pb.GetCreditCardRequest) (*pb.CreditCard, error) {
+	userID, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get user id failed: %v", err)
+	}
+
+	creditCard, err := s.uc.GetCreditCard(ctx, &biz.GetCreditCardRequest{
+		Id:     req.Id,
+		UserID: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CreditCard{
+		Number:    creditCard.Number,
+		Cvv:       creditCard.Cvv,
+		Id:        creditCard.Id,
+		Owner:     creditCard.Owner,
+		Name:      creditCard.Name,
+		Brand:     creditCard.Brand,
+		Country:   creditCard.Country,
+		Type:      creditCard.Type,
+		Currency:  creditCard.Currency,
+		ExpYear:   creditCard.ExpYear,
+		ExpMonth:  creditCard.ExpMonth,
+		CreatedAt: timestamppb.New(creditCard.CreatedAt),
 	}, nil
 }

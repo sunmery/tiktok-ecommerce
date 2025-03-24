@@ -15,59 +15,73 @@ service UserService {
   // 获取用户个人资料
   rpc GetUserProfile(GetProfileRequest) returns (GetProfileResponse) {
     option (google.api.http) = {
-      get: "/v1/users/profile" // 定义 HTTP GET 请求路径
+      get: "/v1/users/profile"
     };
   }
 
   // 创建用户地址
   rpc CreateAddresses(Address) returns (Address) {
     option (google.api.http) = {
-      post: "/v1/users/address" // 定义 HTTP POST 请求路径
-      body: "*"                 // 表示请求体包含所有字段
+      post: "/v1/users/address"
+      body: "*"
     };
   }
 
   // 更新用户地址
   rpc UpdateAddresses(Address) returns (Address) {
     option (google.api.http) = {
-      patch: "/v1/users/address" // 定义 HTTP PATCH 请求路径
-      body: "*"                  // 表示请求体包含所有字段
+      patch: "/v1/users/address"
+      body: "*"
     };
   }
 
   // 删除用户地址
   rpc DeleteAddresses(DeleteAddressesRequest) returns (DeleteAddressesReply) {
     option (google.api.http) = {
-      delete: "/v1/users/address" // 定义 HTTP DELETE 请求路径
+      delete: "/v1/users/address"
     };
   }
 
-  // 获取用户地址列表
-  rpc GetAddresses(google.protobuf.Empty) returns (GetAddressesReply) {
+  // 根据 ID获取用户地址
+  rpc GetAddress(GetAddressRequest) returns (Address) {
     option (google.api.http) = {
-      get: "/v1/users/address" // 定义 HTTP GET 请求路径
-    };
-  }
-
-  // 列出用户的信用卡信息
-  rpc ListCreditCards(google.protobuf.Empty) returns (CreditCards) {
-    option (google.api.http) = {
-      get: "/v1/users/credit_cards/all" // 定义 HTTP GET 请求路径
+      get: "/v1/users/address"
     };
   }
 
   // 创建用户的信用卡信息
   rpc CreateCreditCard(CreditCard) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/users/credit_cards" // 定义 HTTP POST 请求路径
-      body: "*"                      // 表示请求体包含所有字段
+      post: "/v1/users/credit_cards"
+      body: "*"
+    };
+  }
+
+  // 获取用户地址列表
+  rpc GetAddresses(google.protobuf.Empty) returns (GetAddressesReply) {
+    option (google.api.http) = {
+      get: "/v1/users/addresses"
+    };
+  }
+
+  // 列出用户的信用卡信息
+  rpc ListCreditCards(google.protobuf.Empty) returns (CreditCards) {
+    option (google.api.http) = {
+      get: "/v1/users/credit_cards"
+    };
+  }
+
+  // 根据ID搜索用户的信用卡信息
+  rpc GetCreditCard(GetCreditCardRequest) returns (CreditCard) {
+    option (google.api.http) = {
+      get: "/v1/users/credit_cards/{id}"
     };
   }
 
   // 删除用户的信用卡信息
   rpc DeleteCreditCard(DeleteCreditCardsRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/v1/users/credit_cards/{id}" // 定义 HTTP DELETE 请求路径，路径参数为 id
+      delete: "/v1/users/credit_cards/{id}"
     };
   }
 }
@@ -94,6 +108,16 @@ message CreditCard {
 
 message CreditCards {
   repeated CreditCard credit_cards = 1;
+}
+
+message GetCreditCardRequest {
+  uint32 id = 1; // 要获取的信用卡 ID
+  string user_id =2[
+    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
+    (validate.rules).string.len = 36, // 验证字段长度为 36
+    // 验证字段为 UUID 格式
+    (validate.rules).string.uuid = true
+  ];
 }
 
 // 定义通用的卡片操作响应消息
@@ -158,6 +182,16 @@ message DeleteAddressesRequest {
 message AddressReply {
   uint32 id = 1 ; // 地址 ID，必填字段
   Address address = 2 ; // 地址信息，必填字段
+}
+
+message GetAddressRequest {
+  uint32 address_id = 1; // 地址 ID，必填字段
+  string user_id = 2[
+    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
+    (validate.rules).string.len = 36, // 验证字段长度为 36
+    // 验证字段为 UUID 格式
+    (validate.rules).string.uuid = true
+  ];
 }
 
 // 定义获取地址列表响应的消息结构

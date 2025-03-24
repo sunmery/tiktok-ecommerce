@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+
 	v1 "backend/api/checkout/v1"
 	"backend/application/checkout/internal/conf"
 	"backend/application/checkout/internal/service"
@@ -43,7 +45,7 @@ func NewGRPCServer(
 		log.Warnf("There was a problem creating the resource: %v", err)
 	}
 
-	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
+	_, err2 := initGrpcTracerProvider(ctx, res, obs.Trace.Grpc.Endpoint)
 	if err2 != nil {
 		log.Errorf("There was a problem initializing the tracer: %v", err)
 	}
@@ -51,6 +53,7 @@ func NewGRPCServer(
 
 	opts := []grpc.ServerOption{
 		grpc.Middleware(
+			metadata.Server(),    // 元数据
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {

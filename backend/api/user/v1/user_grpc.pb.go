@@ -24,9 +24,11 @@ const (
 	UserService_CreateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/CreateAddresses"
 	UserService_UpdateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/UpdateAddresses"
 	UserService_DeleteAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/DeleteAddresses"
+	UserService_GetAddress_FullMethodName       = "/ecommerce.user.v1.UserService/GetAddress"
+	UserService_CreateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/CreateCreditCard"
 	UserService_GetAddresses_FullMethodName     = "/ecommerce.user.v1.UserService/GetAddresses"
 	UserService_ListCreditCards_FullMethodName  = "/ecommerce.user.v1.UserService/ListCreditCards"
-	UserService_CreateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/CreateCreditCard"
+	UserService_GetCreditCard_FullMethodName    = "/ecommerce.user.v1.UserService/GetCreditCard"
 	UserService_DeleteCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/DeleteCreditCard"
 )
 
@@ -44,12 +46,16 @@ type UserServiceClient interface {
 	UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
 	// 删除用户地址
 	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error)
+	// 根据 ID获取用户地址
+	GetAddress(ctx context.Context, in *GetAddressRequest, opts ...grpc.CallOption) (*Address, error)
+	// 创建用户的信用卡信息
+	CreateCreditCard(ctx context.Context, in *CreditCard, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取用户地址列表
 	GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CreditCards, error)
-	// 创建用户的信用卡信息
-	CreateCreditCard(ctx context.Context, in *CreditCard, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 根据ID搜索用户的信用卡信息
+	GetCreditCard(ctx context.Context, in *GetCreditCardRequest, opts ...grpc.CallOption) (*CreditCard, error)
 	// 删除用户的信用卡信息
 	DeleteCreditCard(ctx context.Context, in *DeleteCreditCardsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -102,6 +108,26 @@ func (c *userServiceClient) DeleteAddresses(ctx context.Context, in *DeleteAddre
 	return out, nil
 }
 
+func (c *userServiceClient) GetAddress(ctx context.Context, in *GetAddressRequest, opts ...grpc.CallOption) (*Address, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Address)
+	err := c.cc.Invoke(ctx, UserService_GetAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateCreditCard(ctx context.Context, in *CreditCard, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserService_CreateCreditCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAddressesReply)
@@ -122,10 +148,10 @@ func (c *userServiceClient) ListCreditCards(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
-func (c *userServiceClient) CreateCreditCard(ctx context.Context, in *CreditCard, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *userServiceClient) GetCreditCard(ctx context.Context, in *GetCreditCardRequest, opts ...grpc.CallOption) (*CreditCard, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, UserService_CreateCreditCard_FullMethodName, in, out, cOpts...)
+	out := new(CreditCard)
+	err := c.cc.Invoke(ctx, UserService_GetCreditCard_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,12 +182,16 @@ type UserServiceServer interface {
 	UpdateAddresses(context.Context, *Address) (*Address, error)
 	// 删除用户地址
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	// 根据 ID获取用户地址
+	GetAddress(context.Context, *GetAddressRequest) (*Address, error)
+	// 创建用户的信用卡信息
+	CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error)
 	// 获取用户地址列表
 	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error)
-	// 创建用户的信用卡信息
-	CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error)
+	// 根据ID搜索用户的信用卡信息
+	GetCreditCard(context.Context, *GetCreditCardRequest) (*CreditCard, error)
 	// 删除用户的信用卡信息
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -186,14 +216,20 @@ func (UnimplementedUserServiceServer) UpdateAddresses(context.Context, *Address)
 func (UnimplementedUserServiceServer) DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddresses not implemented")
 }
+func (UnimplementedUserServiceServer) GetAddress(context.Context, *GetAddressRequest) (*Address, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAddress not implemented")
+}
+func (UnimplementedUserServiceServer) CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCreditCard not implemented")
+}
 func (UnimplementedUserServiceServer) GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddresses not implemented")
 }
 func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCreditCards not implemented")
 }
-func (UnimplementedUserServiceServer) CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCreditCard not implemented")
+func (UnimplementedUserServiceServer) GetCreditCard(context.Context, *GetCreditCardRequest) (*CreditCard, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCreditCard not implemented")
 }
 func (UnimplementedUserServiceServer) DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCreditCard not implemented")
@@ -291,6 +327,42 @@ func _UserService_DeleteAddresses_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetAddress(ctx, req.(*GetAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreditCard)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateCreditCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateCreditCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateCreditCard(ctx, req.(*CreditCard))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -327,20 +399,20 @@ func _UserService_ListCreditCards_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_CreateCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreditCard)
+func _UserService_GetCreditCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCreditCardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).CreateCreditCard(ctx, in)
+		return srv.(UserServiceServer).GetCreditCard(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_CreateCreditCard_FullMethodName,
+		FullMethod: UserService_GetCreditCard_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).CreateCreditCard(ctx, req.(*CreditCard))
+		return srv.(UserServiceServer).GetCreditCard(ctx, req.(*GetCreditCardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -387,6 +459,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_DeleteAddresses_Handler,
 		},
 		{
+			MethodName: "GetAddress",
+			Handler:    _UserService_GetAddress_Handler,
+		},
+		{
+			MethodName: "CreateCreditCard",
+			Handler:    _UserService_CreateCreditCard_Handler,
+		},
+		{
 			MethodName: "GetAddresses",
 			Handler:    _UserService_GetAddresses_Handler,
 		},
@@ -395,8 +475,8 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_ListCreditCards_Handler,
 		},
 		{
-			MethodName: "CreateCreditCard",
-			Handler:    _UserService_CreateCreditCard_Handler,
+			MethodName: "GetCreditCard",
+			Handler:    _UserService_GetCreditCard_Handler,
 		},
 		{
 			MethodName: "DeleteCreditCard",

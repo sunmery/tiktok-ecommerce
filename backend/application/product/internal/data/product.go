@@ -170,6 +170,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		Status:      int16(req.Status),
 		MerchantID:  req.MerchantId,
 		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
+
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
@@ -178,7 +179,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	// 2. 并行创建图片、属性、库存
 	var eg errgroup.Group
 
-	// 图片
+	// 插入图片
 	eg.Go(func() error {
 		if len(req.Images) > 0 {
 			return p.createProductImages(ctx, result.ID, req.MerchantId, req.Images)
@@ -186,7 +187,7 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		return nil
 	})
 
-	// 属性
+	// 插入属性
 	eg.Go(func() error {
 		attributes, err := json.Marshal(req.Attributes)
 		if err != nil {
@@ -199,9 +200,9 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		})
 	})
 
-	// 库存
+	// 插入库存
 	eg.Go(func() error {
-		_, err := db.CreateInventory(ctx, models.CreateInventoryParams{
+		_, err = db.CreateInventory(ctx, models.CreateInventoryParams{
 			ProductID:  result.ID,
 			MerchantID: req.MerchantId,
 			Stock:      int32(req.Stock),
@@ -453,6 +454,11 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 			CreatedAt:  product.CreatedAt,
 			UpdatedAt:  product.UpdatedAt,
 			Attributes: attributes,
+			Inventory: biz.Inventory{
+				ProductId:  product.ID,
+				MerchantId: product.MerchantID,
+				Stock:      uint32(product.Stock),
+			},
 		})
 	}
 
@@ -562,7 +568,7 @@ func (p *productRepo) SearchProductsByName(ctx context.Context, req *biz.SearchP
 				Inventory: biz.Inventory{
 					ProductId:  product.ID,
 					MerchantId: product.MerchantID,
-					Stock:      product.Stock,
+					Stock:      uint32(product.Stock),
 				},
 			}
 
@@ -665,52 +671,31 @@ func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsB
 			CreatedAt:  product.CreatedAt,
 			UpdatedAt:  product.UpdatedAt,
 			Attributes: attributes,
+			Inventory: biz.Inventory{
+				ProductId:  product.ID,
+				MerchantId: product.MerchantID,
+				Stock:      uint32(product.Stock),
+			},
 		})
 	}
 
 	return &biz.Products{Items: items}, err
 }
 
-func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerchantProducts) (*biz.Products, error) {
-	db := p.data.DB(ctx)
-
-	// 获取基础信息
-	merchantProducts, err := db.GetMerchantProducts(ctx, req.MerchantID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到商家的商品")
-		}
-		return nil, v1.ErrorInvalidStatus("GetMerchantProducts 内部错误")
-	}
-	var products []*biz.Product
-	for _, product := range merchantProducts {
-		products = append(products, &biz.Product{
-			ID:         product.ID,
-			MerchantId: product.MerchantID,
-			Name:       product.Name,
-			// Price:       price,
-			Description: *product.Description,
-			// Images:      convertImages(product.Images),
-			Status:    biz.ProductStatus(product.Status),
-			CreatedAt: product.CreatedAt,
-			UpdatedAt: product.UpdatedAt,
-			// Attributes:  product.Attributes,
-		})
-	}
-
-	return &biz.Products{Items: products}, nil
-}
-
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
-	err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
+	result, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
 		ID:         req.ID,
 		MerchantID: req.MerchantID,
 		Status:     int16(req.Status), // 下架状态
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
 		return err
 	}
+	log.Debugf("result: %+v", result)
 	return nil
 }
 
@@ -733,13 +718,19 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 		ID:          product.ID,
 		MerchantId:  product.MerchantID,
 		Name:        product.Name,
-		Description: *product.Description,
 		Price:       float64(price.IntPart()),
+		Description: *product.Description,
+		Images:      convertImages(images),
 		Status:      biz.ProductStatus(product.Status),
+		Category:    biz.CategoryInfo{},
 		CreatedAt:   product.CreatedAt,
 		UpdatedAt:   product.UpdatedAt,
-		Images:      convertImages(images),
-		// 其他字段根据实际需求补充
+		Attributes:  nil,
+		Inventory: biz.Inventory{
+			ProductId:  product.ID,
+			MerchantId: product.MerchantID,
+			Stock:      uint32(product.Stock),
+		},
 	}, nil
 }
 

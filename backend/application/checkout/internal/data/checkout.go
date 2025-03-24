@@ -2,8 +2,10 @@ package data
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strconv"
+
+	paymentv1 "backend/api/payment/v1"
 
 	productv1 "backend/api/product/v1"
 
@@ -11,7 +13,6 @@ import (
 
 	cartv1 "backend/api/cart/v1"
 	v1 "backend/api/order/v1"
-	paymentv1 "backend/api/payment/v1"
 	userv1 "backend/api/user/v1"
 	"backend/application/checkout/internal/biz"
 	"backend/constants"
@@ -58,7 +59,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 
 	var cartItems []cartv1.CartItem
 	var orderItems []*v1.OrderItem
-	var amount float64
+	var amount string
 	for _, cart := range carts.Items {
 		for _, p := range products.Items {
 			productId, err := uuid.Parse(p.Id)
@@ -84,35 +85,53 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 					Name:       p.Name,
 					Picture:    picture,
 				})
+
+				orderItems = append(orderItems, &v1.OrderItem{
+					Item: &cartv1.CartItem{
+						MerchantId: cart.MerchantId,
+						ProductId:  cart.ProductId,
+						Quantity:   cart.Quantity,
+					},
+					Cost: p.Price,
+				})
+
+				amount += fmt.Sprintf("%.2f", p.Price*float64(cart.Quantity))
+				fmt.Printf("amount: %v\n", amount)
 			}
-
-			amount += float64(cart.Quantity) * p.Price
-			orderItems = append(orderItems, &v1.OrderItem{
-				Item: &cartv1.CartItem{
-					MerchantId: cart.MerchantId,
-					ProductId:  cart.ProductId,
-					Quantity:   cart.Quantity,
-				},
-				Cost: float64(cart.Quantity) * p.Price,
-			})
-
 		}
 	}
 
-	fmt.Printf("cartItems: %+v\n", cartItems)
-	// 转成订单商品类型
+	// 获取用户地址
+	address, err := c.data.userv1.GetAddress(ctx, &userv1.GetAddressRequest{
+		AddressId: req.AddressId,
+		UserId:    req.UserId.String(),
+	})
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("获取用户地址失败: %v", err))
+	}
+
+	log.Debugf("cartItems: %+v", cartItems)
+
+	// 获取用户支付卡信息
+	creditCard, err := c.data.userv1.GetCreditCard(ctx, &userv1.GetCreditCardRequest{
+		Id:     req.CreditCardId,
+		UserId: req.UserId.String(),
+	})
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("获取用户支付卡信息失败: %v", err))
+	}
 
 	// 调用订单微服务创建订单
 	order, orderErr := c.data.orderv1.PlaceOrder(ctx, &v1.PlaceOrderReq{
-		Currency: req.Currency,
+		Currency: creditCard.Currency,
 		Address: &userv1.Address{
-			Id:            req.Address.Id,
-			UserId:        req.UserId.String(),
-			City:          req.Address.City,
-			State:         req.Address.State,
-			Country:       req.Address.Country,
-			ZipCode:       req.Address.ZipCode,
-			StreetAddress: req.Address.StreetAddress,
+			Id:            address.Id,
+			UserId:        address.UserId,
+			City:          address.City,
+			State:         address.State,
+			Country:       address.Country,
+			ZipCode:       address.ZipCode,
+			StreetAddress: address.StreetAddress,
 		},
 		Email:      req.Email,
 		OrderItems: orderItems,
@@ -127,9 +146,11 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	// 调用支付微服务生成支付URL
 	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
 		OrderId:       order.Order.OrderId,
-		Currency:      req.Currency,
-		Amount:        strconv.Itoa(int(amount)),
+		Currency:      creditCard.Currency,
+		Amount:        amount,
 		PaymentMethod: req.PaymentMethod,
+		Subject:       "支付测试",
+		TimeExpire:    "",
 	})
 	if paymentErr != nil || payment == nil {
 		// 订单回滚
@@ -142,7 +163,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	return &biz.CheckoutReply{
 		OrderId:    order.Order.OrderId,
 		PaymentId:  payment.PaymentId,
-		PaymentURL: order.Url,
+		PaymentURL: payment.PaymentUrl,
 	}, err
 }
 

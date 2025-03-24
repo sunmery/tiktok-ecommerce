@@ -1,9 +1,10 @@
 package service
 
 import (
-	"backend/pkg"
 	"context"
 	"fmt"
+
+	"backend/pkg"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -13,7 +14,6 @@ import (
 
 // CreateAddresses 创建地址
 func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1.Address, error) {
-
 	userId, uErr := pkg.GetMetadataUesrID(ctx)
 	if uErr != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -77,7 +77,7 @@ func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddress
 		return nil, fmt.Errorf("错误的UserID")
 	}
 
-	reply, err := s.uc.DeleteAddress(ctx, &biz.DeleteAddressesRequest{
+	reply, err := s.uc.DeleteAddress(ctx, &biz.AddressRequest{
 		AddressId: uint32(req.AddressesId),
 		UserId:    userId,
 	})
@@ -91,7 +91,32 @@ func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddress
 	}, nil
 }
 
-// GetAddresses 获取地址
+// GetAddress 根据ID获取地址
+func (s *UserService) GetAddress(ctx context.Context, req *v1.GetAddressRequest) (*v1.Address, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("错误的UserID")
+	}
+	addresses, err := s.uc.GetAddress(ctx, &biz.AddressRequest{
+		AddressId: req.AddressId,
+		UserId:    userId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.Address{
+		Id:            addresses.Id,
+		UserId:        addresses.UserId.String(),
+		City:          addresses.City,
+		State:         addresses.State,
+		Country:       addresses.Country,
+		ZipCode:       addresses.ZipCode,
+		StreetAddress: addresses.StreetAddress,
+	}, nil
+}
+
+// GetAddresses 获取地址列表
 func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.GetAddressesReply, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {

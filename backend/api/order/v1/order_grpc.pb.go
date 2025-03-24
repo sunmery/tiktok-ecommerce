@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	OrderService_PlaceOrder_FullMethodName    = "/ecommerce.order.v1.OrderService/PlaceOrder"
-	OrderService_ListOrder_FullMethodName     = "/ecommerce.order.v1.OrderService/ListOrder"
+	OrderService_QueryOrders_FullMethodName   = "/ecommerce.order.v1.OrderService/QueryOrders"
 	OrderService_MarkOrderPaid_FullMethodName = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 )
 
@@ -33,7 +33,7 @@ type OrderServiceClient interface {
 	// 创建订单
 	PlaceOrder(ctx context.Context, in *PlaceOrderReq, opts ...grpc.CallOption) (*PlaceOrderResp, error)
 	// 查询订单列表
-	ListOrder(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error)
+	QueryOrders(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
 }
@@ -56,10 +56,10 @@ func (c *orderServiceClient) PlaceOrder(ctx context.Context, in *PlaceOrderReq, 
 	return out, nil
 }
 
-func (c *orderServiceClient) ListOrder(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error) {
+func (c *orderServiceClient) QueryOrders(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListOrderResp)
-	err := c.cc.Invoke(ctx, OrderService_ListOrder_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, OrderService_QueryOrders_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ type OrderServiceServer interface {
 	// 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
 	// 查询订单列表
-	ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error)
+	QueryOrders(context.Context, *ListOrderReq) (*ListOrderResp, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
@@ -101,8 +101,8 @@ type UnimplementedOrderServiceServer struct{}
 func (UnimplementedOrderServiceServer) PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PlaceOrder not implemented")
 }
-func (UnimplementedOrderServiceServer) ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListOrder not implemented")
+func (UnimplementedOrderServiceServer) QueryOrders(context.Context, *ListOrderReq) (*ListOrderResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryOrders not implemented")
 }
 func (UnimplementedOrderServiceServer) MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderPaid not implemented")
@@ -146,20 +146,20 @@ func _OrderService_PlaceOrder_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_ListOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OrderService_QueryOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListOrderReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).ListOrder(ctx, in)
+		return srv.(OrderServiceServer).QueryOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrderService_ListOrder_FullMethodName,
+		FullMethod: OrderService_QueryOrders_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).ListOrder(ctx, req.(*ListOrderReq))
+		return srv.(OrderServiceServer).QueryOrders(ctx, req.(*ListOrderReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -194,8 +194,8 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_PlaceOrder_Handler,
 		},
 		{
-			MethodName: "ListOrder",
-			Handler:    _OrderService_ListOrder_Handler,
+			MethodName: "QueryOrders",
+			Handler:    _OrderService_QueryOrders_Handler,
 		},
 		{
 			MethodName: "MarkOrderPaid",

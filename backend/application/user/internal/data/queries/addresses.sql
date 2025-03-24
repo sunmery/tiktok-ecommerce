@@ -3,6 +3,13 @@ INSERT INTO users.addresses(user_id, street_address, city, state, country, zip_c
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
+-- name: GetAddress :one
+SELECT *
+FROM users.addresses
+WHERE id = @id
+  AND user_id = @user_id
+LIMIT 1;
+
 -- name: GetAddresses :many
 SELECT *
 FROM users.addresses
@@ -17,7 +24,6 @@ SET street_address = coalesce(sqlc.narg(street_address), street_address),
     zip_code       = coalesce(sqlc.narg(zip_code), zip_code)
 WHERE id = @id
   AND user_id = @user_id
-
 RETURNING *;
 
 -- name: DeleteAddress :one

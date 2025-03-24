@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"backend/constants"
 
@@ -18,7 +19,7 @@ func GetMetadataUesrID(ctx context.Context) (uuid.UUID, error) {
 	}
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil || userId == uuid.Nil {
-		return uuid.Nil, errors.New("无效的用户ID")
+		return uuid.Nil, errors.New(fmt.Sprintf("invalid user id: '%s' error: %v", userIdStr, err))
 	}
 
 	return userId, nil

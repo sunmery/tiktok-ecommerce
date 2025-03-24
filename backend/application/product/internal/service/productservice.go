@@ -261,27 +261,6 @@ func (s *ProductService) GetProductsBatch(ctx context.Context, req *pb.GetProduc
 	}, nil
 }
 
-func (s *ProductService) GetMerchantProducts(ctx context.Context, _ *pb.GetMerchantProductRequest) (*pb.Products, error) {
-	merchantId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
-	}
-	products, err := s.uc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
-		MerchantID: merchantId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var pbProducts []*pb.Product
-	for _, product := range products.Items {
-		pbProducts = append(pbProducts, convertBizProductToPB(product))
-	}
-	return &pb.Products{
-		Items: pbProducts,
-	}, nil
-}
-
 func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*emptypb.Empty, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
@@ -289,14 +268,13 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 	}
 
 	// 从网关获取用户ID, 这里的用户是商户, 只有商户角色才能删除商品
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
-	merchantId := uuid.MustParse(userId)
 	bizReq := biz.DeleteProductRequest{
 		ID:         id,
-		MerchantID: merchantId,
+		MerchantID: userId,
 		Status:     4,
 	}
 
@@ -305,7 +283,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, nil
+	return &emptypb.Empty{}, err
 }
 
 // ListRandomProducts 随机返回商品数据
@@ -383,11 +361,19 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		Price:       p.Price,
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId.String(),
+		Images:      nil,
+		Attributes:  nil,
+		AuditInfo:   nil,
 		CreatedAt:   timestamppb.New(p.CreatedAt),
 		UpdatedAt:   timestamppb.New(p.UpdatedAt),
 		Category: &pb.CategoryInfo{
 			CategoryId:   uint32(p.Category.CategoryId),
 			CategoryName: p.Category.CategoryName,
+		},
+		Inventory: &pb.Inventory{
+			ProductId:  p.ID.String(),
+			MerchantId: p.MerchantId.String(),
+			Stock:      p.Inventory.Stock,
 		},
 	}
 
