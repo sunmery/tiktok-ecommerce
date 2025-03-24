@@ -11,11 +11,11 @@ import (
 type PaymentStatus string
 
 const (
-	PaymentPending    PaymentStatus = "pending"
-	PaymentPaid       PaymentStatus = "paid"
-	PaymentCancelled  PaymentStatus = "cancelled"
-	PaymentFailed     PaymentStatus = "failed"
-	PaymentProcessing PaymentStatus = "processing"
+	PaymentPending    PaymentStatus = "PENDING"
+	PaymentProcessing PaymentStatus = "PROCESSING"
+	PaymentPaid       PaymentStatus = "PAID"
+	PaymentFailed     PaymentStatus = "FAILED"
+	PaymentCancelled  PaymentStatus = "CANCELLED"
 )
 
 type Address struct {
@@ -45,23 +45,28 @@ type Order struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	SubOrders     []*SubOrder
-	PaymentStatus PaymentStatus // 支付状态 'pending', 'paid', 'cancelled', 'failed'
+	PaymentStatus PaymentStatus // 支付状态
 }
 
-// CartItem 购物车商品
+// CartItem 购物车商品, 是以 JSON 存储到数据库中, 需要添加tags
+// 最终是给前端展示, 所以使用小驼峰符合前端变量命名规范
 type CartItem struct {
-	MerchantId uuid.UUID `json:"merchant_id"`
-	ProductId  uuid.UUID `json:"product_id"`
+	MerchantId uuid.UUID `json:"merchantId"`
+	ProductId  uuid.UUID `json:"productId"`
 	Quantity   uint32    `json:"quantity"`
 }
 
+// OrderItem 订单商品, 是以 JSON 存储到数据库中, 需要添加tags
+// 最终是给前端展示, 所以使用小驼峰符合前端变量命名规范
 type OrderItem struct {
 	Item *CartItem `json:"item"`
 	Cost float64   `json:"cost"`
 }
+
 type OrderResult struct {
 	OrderId string
 }
+
 type PlaceOrderReq struct {
 	UserId     uuid.UUID
 	Currency   string
