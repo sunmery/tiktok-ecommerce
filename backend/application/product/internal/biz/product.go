@@ -43,20 +43,6 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 
 type (
 	AuditAction int
-
-	ArrayValue struct {
-		Items []string `json:"items"`
-	}
-
-	NestedObject struct {
-		Fields map[string]*AttributeValue `json:"fields,omitempty"`
-	}
-
-	AttributeValue struct {
-		StringValue string        `json:"stringValue,omitempty"`
-		ArrayValue  *ArrayValue   `json:"arrayValue,omitempty"`
-		ObjectValue *NestedObject `json:"objectValue,omitempty"`
-	}
 )
 
 // AuditRecord 完善AuditRecord定义
@@ -99,7 +85,7 @@ type Product struct {
 	Category    CategoryInfo
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	Attributes  map[string]*AttributeValue
+	Attributes  map[string]any
 	Inventory   Inventory // 库存
 }
 
@@ -180,7 +166,7 @@ type (
 		Images      []*ProductImage
 		Status      ProductStatus
 		Category    CategoryInfo
-		Attributes  map[string]*AttributeValue
+		Attributes  map[string]any
 		Stock       uint32
 	}
 	CreateProductReply struct {

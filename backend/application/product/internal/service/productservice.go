@@ -5,6 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-kratos/kratos/v2/log"
+
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"backend/pkg"
 
 	"github.com/google/uuid"
@@ -66,7 +70,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 			CategoryId:   uint64(req.Category.CategoryId),
 			CategoryName: req.Category.CategoryName,
 		},
-		Attributes: convertPBAttributes(req.Attributes),
+		Attributes: parseProtoValue(req.Attributes),
 		Stock:      req.Stock,
 	})
 	if createdErr != nil {
@@ -354,142 +358,48 @@ func (s *ProductService) SearchProductsByName(ctx context.Context, req *pb.Searc
 
 // 辅助转换方法
 func convertBizProductToPB(p *biz.Product) *pb.Product {
-	pbProduct := &pb.Product{
+	if p == nil {
+		return nil
+	}
+
+	// 转换图片
+	images := make([]*pb.Image, 0, len(p.Images))
+	for _, img := range p.Images {
+		images = append(images, &pb.Image{
+			Url:       img.URL,
+			IsPrimary: img.IsPrimary,
+			SortOrder: int32(*img.SortOrder),
+		})
+	}
+
+	// 转换属性
+	// 创建嵌套结构
+	protoStruct, err := structpb.NewStruct(p.Attributes)
+	if err != nil {
+		log.Warn("Error creating struct: %w", err)
+		protoStruct = nil
+	}
+
+	return &pb.Product{
 		Id:          p.ID.String(),
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId.String(),
-		Images:      nil,
-		Attributes:  nil,
-		AuditInfo:   nil,
-		CreatedAt:   timestamppb.New(p.CreatedAt),
-		UpdatedAt:   timestamppb.New(p.UpdatedAt),
+		Images:      images,
+		Attributes:  structpb.NewStructValue(protoStruct),
 		Category: &pb.CategoryInfo{
 			CategoryId:   uint32(p.Category.CategoryId),
 			CategoryName: p.Category.CategoryName,
 		},
+		CreatedAt: timestamppb.New(p.CreatedAt),
+		UpdatedAt: timestamppb.New(p.UpdatedAt),
 		Inventory: &pb.Inventory{
-			ProductId:  p.ID.String(),
-			MerchantId: p.MerchantId.String(),
+			ProductId:  p.Inventory.ProductId.String(),
+			MerchantId: p.Inventory.MerchantId.String(),
 			Stock:      p.Inventory.Stock,
 		},
-	}
-
-	for _, img := range p.Images {
-		// 安全转换 SortOrder
-		var sortOrder int32
-		if img.SortOrder != nil {
-			sortOrder = int32(*img.SortOrder) // 解引用并转换类型
-		} else {
-			sortOrder = 0 // 默认值
-		}
-		pbProduct.Images = append(pbProduct.Images, &pb.Image{
-			Url:       img.URL,
-			IsPrimary: img.IsPrimary,
-			SortOrder: sortOrder,
-		})
-	}
-
-	return pbProduct
-}
-
-// func convertPBToBizProduct(p *pb.Product) (*biz.Product, error) {
-// 	merchantId, err := uuid.Parse(p.MerchantId)
-// 	if err != nil {
-// 		return nil, errors.New("invalid merchant ID")
-// 	}
-//
-// 	return &biz.Product{
-// 		MerchantId:  merchantId,
-// 		Name:        p.GetName(),
-// 		Price:       p.GetPrice(),
-// 		Description: p.GetDescription(),
-// 		Images:      convertPBImagesToBiz(p.GetImages()),
-// 		Status:      convertPBStatusToBiz(p.GetStatus()),
-// 		Category: biz.CategoryInfo{
-// 			CategoryId:   uint64(p.GetCategory().GetCategoryId()),
-// 			CategoryName: p.GetCategory().GetCategoryName(),
-// 		},
-// 		Attributes: convertPBObject(p.Attributes)
-// 	},nil
-// }
-
-// 顶层转换函数
-func convertPBToBizProduct(ctx context.Context, p *pb.Product) (*biz.Product, error) {
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
-	}
-	merchantID, err := uuid.Parse(userId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid merchant ID: %w", err)
-	}
-
-	return &biz.Product{
-		MerchantId:  merchantID,
-		Name:        p.GetName(),
-		Price:       p.GetPrice(),
-		Description: p.GetDescription(),
-		Images:      convertPBImagesToBiz(p.GetImages()),
-		Status:      convertPBStatusToBiz(p.GetStatus()),
-		Category:    convertPBCategoryToBiz(p.GetCategory()),
-		Attributes:  convertPBAttributes(p.GetAttributes()),
-	}, nil
-}
-
-// 递归处理属性转换
-func convertPBAttributes(pbAttrs map[string]*pb.AttributeValue) map[string]*biz.AttributeValue {
-	if pbAttrs == nil {
-		return nil
-	}
-
-	bizAttrs := make(map[string]*biz.AttributeValue)
-	for k, v := range pbAttrs {
-		bizAttrs[k] = convertPBAttributeValue(v)
-	}
-	return bizAttrs
-}
-
-// 转换入口函数
-func convertPBAttributeValue(pbVal *pb.AttributeValue) *biz.AttributeValue {
-	if pbVal == nil {
-		return nil
-	}
-
-	return &biz.AttributeValue{
-		StringValue: pbVal.GetStringValue(),
-		ArrayValue:  convertPBStringArray(pbVal.GetArrayValue()),
-		ObjectValue: convertPBNestedObject(pbVal.GetObjectValue()),
-	}
-}
-
-// 转换字符串数组
-func convertPBStringArray(pbArr *pb.StringArray) *biz.ArrayValue {
-	if pbArr == nil {
-		return nil
-	}
-
-	// Protobuf 的 StringArray 应该包含 Items 字段
-	return &biz.ArrayValue{
-		Items: pbArr.GetItems(), // 直接映射到业务层的 ArrayValue.Items
-	}
-}
-
-// 递归处理嵌套对象
-func convertPBNestedObject(pbObj *pb.NestedObject) *biz.NestedObject {
-	if pbObj == nil || pbObj.GetFields() == nil {
-		return nil
-	}
-
-	fields := make(map[string]*biz.AttributeValue)
-	for k, v := range pbObj.GetFields() {
-		fields[k] = convertPBAttributeValue(v)
-	}
-
-	return &biz.NestedObject{
-		Fields: fields,
 	}
 }
 
@@ -603,4 +513,11 @@ var validTransitions = map[biz.ProductStatus]map[biz.ProductStatus]bool{
 	biz.ProductStatusApproved: {
 		// 已审核状态不允许修改
 	},
+}
+
+func parseProtoValue(v *structpb.Value) map[string]any {
+	if v == nil {
+		return nil
+	}
+	return v.GetStructValue().AsMap()
 }

@@ -1348,49 +1348,32 @@ func (m *Product) validate(all bool) error {
 
 	}
 
-	{
-		sorted_keys := make([]string, len(m.GetAttributes()))
-		i := 0
-		for key := range m.GetAttributes() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetAttributes()[key]
-			_ = val
-
-			// no validation rules for Attributes[key]
-
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, ProductValidationError{
-							field:  fmt.Sprintf("Attributes[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, ProductValidationError{
-							field:  fmt.Sprintf("Attributes[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return ProductValidationError{
-						field:  fmt.Sprintf("Attributes[%v]", key),
-						reason: "embedded message failed validation",
-						cause:  err,
-					}
-				}
+	if all {
+		switch v := interface{}(m.GetAttributes()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProductValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProductValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAttributes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProductValidationError{
+				field:  "Attributes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
@@ -1615,410 +1598,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductValidationError{}
-
-// Validate checks the field values on StringArray with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *StringArray) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on StringArray with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in StringArrayMultiError, or
-// nil if none found.
-func (m *StringArray) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *StringArray) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return StringArrayMultiError(errors)
-	}
-
-	return nil
-}
-
-// StringArrayMultiError is an error wrapping multiple validation errors
-// returned by StringArray.ValidateAll() if the designated constraints aren't met.
-type StringArrayMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m StringArrayMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m StringArrayMultiError) AllErrors() []error { return m }
-
-// StringArrayValidationError is the validation error returned by
-// StringArray.Validate if the designated constraints aren't met.
-type StringArrayValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e StringArrayValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e StringArrayValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e StringArrayValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e StringArrayValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e StringArrayValidationError) ErrorName() string { return "StringArrayValidationError" }
-
-// Error satisfies the builtin error interface
-func (e StringArrayValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sStringArray.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = StringArrayValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = StringArrayValidationError{}
-
-// Validate checks the field values on NestedObject with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *NestedObject) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on NestedObject with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in NestedObjectMultiError, or
-// nil if none found.
-func (m *NestedObject) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *NestedObject) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	{
-		sorted_keys := make([]string, len(m.GetFields()))
-		i := 0
-		for key := range m.GetFields() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetFields()[key]
-			_ = val
-
-			// no validation rules for Fields[key]
-
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, NestedObjectValidationError{
-							field:  fmt.Sprintf("Fields[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, NestedObjectValidationError{
-							field:  fmt.Sprintf("Fields[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return NestedObjectValidationError{
-						field:  fmt.Sprintf("Fields[%v]", key),
-						reason: "embedded message failed validation",
-						cause:  err,
-					}
-				}
-			}
-
-		}
-	}
-
-	if len(errors) > 0 {
-		return NestedObjectMultiError(errors)
-	}
-
-	return nil
-}
-
-// NestedObjectMultiError is an error wrapping multiple validation errors
-// returned by NestedObject.ValidateAll() if the designated constraints aren't met.
-type NestedObjectMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m NestedObjectMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m NestedObjectMultiError) AllErrors() []error { return m }
-
-// NestedObjectValidationError is the validation error returned by
-// NestedObject.Validate if the designated constraints aren't met.
-type NestedObjectValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e NestedObjectValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e NestedObjectValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e NestedObjectValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e NestedObjectValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e NestedObjectValidationError) ErrorName() string { return "NestedObjectValidationError" }
-
-// Error satisfies the builtin error interface
-func (e NestedObjectValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sNestedObject.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = NestedObjectValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = NestedObjectValidationError{}
-
-// Validate checks the field values on AttributeValue with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *AttributeValue) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on AttributeValue with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in AttributeValueMultiError,
-// or nil if none found.
-func (m *AttributeValue) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *AttributeValue) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for StringValue
-
-	if all {
-		switch v := interface{}(m.GetArrayValue()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, AttributeValueValidationError{
-					field:  "ArrayValue",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, AttributeValueValidationError{
-					field:  "ArrayValue",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetArrayValue()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return AttributeValueValidationError{
-				field:  "ArrayValue",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetObjectValue()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, AttributeValueValidationError{
-					field:  "ObjectValue",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, AttributeValueValidationError{
-					field:  "ObjectValue",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetObjectValue()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return AttributeValueValidationError{
-				field:  "ObjectValue",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return AttributeValueMultiError(errors)
-	}
-
-	return nil
-}
-
-// AttributeValueMultiError is an error wrapping multiple validation errors
-// returned by AttributeValue.ValidateAll() if the designated constraints
-// aren't met.
-type AttributeValueMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m AttributeValueMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m AttributeValueMultiError) AllErrors() []error { return m }
-
-// AttributeValueValidationError is the validation error returned by
-// AttributeValue.Validate if the designated constraints aren't met.
-type AttributeValueValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e AttributeValueValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e AttributeValueValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e AttributeValueValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e AttributeValueValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e AttributeValueValidationError) ErrorName() string { return "AttributeValueValidationError" }
-
-// Error satisfies the builtin error interface
-func (e AttributeValueValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sAttributeValue.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = AttributeValueValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = AttributeValueValidationError{}
 
 // Validate checks the field values on CreateProductReply with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2398,49 +1977,32 @@ func (m *CreateProductRequest) validate(all bool) error {
 
 	}
 
-	{
-		sorted_keys := make([]string, len(m.GetAttributes()))
-		i := 0
-		for key := range m.GetAttributes() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetAttributes()[key]
-			_ = val
-
-			// no validation rules for Attributes[key]
-
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, CreateProductRequestValidationError{
-							field:  fmt.Sprintf("Attributes[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, CreateProductRequestValidationError{
-							field:  fmt.Sprintf("Attributes[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return CreateProductRequestValidationError{
-						field:  fmt.Sprintf("Attributes[%v]", key),
-						reason: "embedded message failed validation",
-						cause:  err,
-					}
-				}
+	if all {
+		switch v := interface{}(m.GetAttributes()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateProductRequestValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateProductRequestValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAttributes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateProductRequestValidationError{
+				field:  "Attributes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
