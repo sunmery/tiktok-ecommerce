@@ -44,6 +44,19 @@ WHERE o.user_id = $1::uuid
 GROUP BY o.id
 ORDER BY o.created_at DESC;
 
+-- name: QuerySubOrders :many
+SELECT id,
+       merchant_id,
+       total_amount,
+       currency,
+       status,
+       items,
+       created_at,
+       updated_at
+FROM orders.sub_orders
+WHERE order_id = $1
+ORDER BY created_at;
+
 -- name: CreateSubOrder :one
 INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
                                currency, status, items)
@@ -55,3 +68,23 @@ UPDATE orders.sub_orders
 SET status     = $2,
     updated_at = $3
 WHERE id = $1;
+
+-- name: UpdatePaymentStatus :one
+SELECT id, user_id, payment_status
+FROM orders.orders
+WHERE id = $1
+    FOR UPDATE;
+
+-- name: MarkOrderAsPaid :one
+UPDATE orders.orders
+SET payment_status = $1,
+    updated_at     = now()
+WHERE id = $2
+RETURNING *;
+
+-- name: MarkSubOrderAsPaid :one
+UPDATE orders.sub_orders
+SET payment_status = $1,
+    updated_at     = now()
+WHERE order_id = $2
+RETURNING *;

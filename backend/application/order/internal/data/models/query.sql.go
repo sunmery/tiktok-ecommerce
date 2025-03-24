@@ -299,6 +299,177 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 	return items, nil
 }
 
+const MarkOrderAsPaid = `-- name: MarkOrderAsPaid :one
+UPDATE orders.orders
+SET payment_status = $1,
+    updated_at     = now()
+WHERE id = $2
+RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+`
+
+type MarkOrderAsPaidParams struct {
+	PaymentStatus string    `json:"paymentStatus"`
+	ID            uuid.UUID `json:"id"`
+}
+
+// MarkOrderAsPaid
+//
+//	UPDATE orders.orders
+//	SET payment_status = $1,
+//	    updated_at     = now()
+//	WHERE id = $2
+//	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+func (q *Queries) MarkOrderAsPaid(ctx context.Context, arg MarkOrderAsPaidParams) (OrdersOrders, error) {
+	row := q.db.QueryRow(ctx, MarkOrderAsPaid, arg.PaymentStatus, arg.ID)
+	var i OrdersOrders
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Currency,
+		&i.StreetAddress,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.ZipCode,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaymentStatus,
+	)
+	return i, err
+}
+
+const MarkSubOrderAsPaid = `-- name: MarkSubOrderAsPaid :one
+UPDATE orders.sub_orders
+SET payment_status = $1,
+    updated_at     = now()
+WHERE order_id = $2
+RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+`
+
+type MarkSubOrderAsPaidParams struct {
+	PaymentStatus string    `json:"paymentStatus"`
+	OrderID       uuid.UUID `json:"orderID"`
+}
+
+// MarkSubOrderAsPaid
+//
+//	UPDATE orders.sub_orders
+//	SET payment_status = $1,
+//	    updated_at     = now()
+//	WHERE order_id = $2
+//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+func (q *Queries) MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaidParams) (OrdersSubOrders, error) {
+	row := q.db.QueryRow(ctx, MarkSubOrderAsPaid, arg.PaymentStatus, arg.OrderID)
+	var i OrdersSubOrders
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.MerchantID,
+		&i.TotalAmount,
+		&i.Currency,
+		&i.Status,
+		&i.Items,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaymentStatus,
+	)
+	return i, err
+}
+
+const QuerySubOrders = `-- name: QuerySubOrders :many
+SELECT id,
+       merchant_id,
+       total_amount,
+       currency,
+       status,
+       items,
+       created_at,
+       updated_at
+FROM orders.sub_orders
+WHERE order_id = $1
+ORDER BY created_at
+`
+
+type QuerySubOrdersRow struct {
+	ID          uuid.UUID      `json:"id"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	TotalAmount pgtype.Numeric `json:"totalAmount"`
+	Currency    string         `json:"currency"`
+	Status      string         `json:"status"`
+	Items       []byte         `json:"items"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+}
+
+// QuerySubOrders
+//
+//	SELECT id,
+//	       merchant_id,
+//	       total_amount,
+//	       currency,
+//	       status,
+//	       items,
+//	       created_at,
+//	       updated_at
+//	FROM orders.sub_orders
+//	WHERE order_id = $1
+//	ORDER BY created_at
+func (q *Queries) QuerySubOrders(ctx context.Context, orderID uuid.UUID) ([]QuerySubOrdersRow, error) {
+	rows, err := q.db.Query(ctx, QuerySubOrders, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QuerySubOrdersRow
+	for rows.Next() {
+		var i QuerySubOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.TotalAmount,
+			&i.Currency,
+			&i.Status,
+			&i.Items,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const UpdatePaymentStatus = `-- name: UpdatePaymentStatus :one
+SELECT id, user_id, payment_status
+FROM orders.orders
+WHERE id = $1
+    FOR UPDATE
+`
+
+type UpdatePaymentStatusRow struct {
+	ID            uuid.UUID `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
+	PaymentStatus string    `json:"paymentStatus"`
+}
+
+// UpdatePaymentStatus
+//
+//	SELECT id, user_id, payment_status
+//	FROM orders.orders
+//	WHERE id = $1
+//	    FOR UPDATE
+func (q *Queries) UpdatePaymentStatus(ctx context.Context, id uuid.UUID) (UpdatePaymentStatusRow, error) {
+	row := q.db.QueryRow(ctx, UpdatePaymentStatus, id)
+	var i UpdatePaymentStatusRow
+	err := row.Scan(&i.ID, &i.UserID, &i.PaymentStatus)
+	return i, err
+}
+
 const UpdateSubOrderStatus = `-- name: UpdateSubOrderStatus :exec
 UPDATE orders.sub_orders
 SET status     = $2,

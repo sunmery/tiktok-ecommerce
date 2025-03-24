@@ -68,6 +68,50 @@ type Querier interface {
 	//  ORDER BY created_at DESC
 	//  LIMIT $2 OFFSET $3
 	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error)
+	//MarkOrderAsPaid
+	//
+	//  UPDATE orders.orders
+	//  SET payment_status = $1,
+	//      updated_at     = now()
+	//  WHERE id = $2
+	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+	MarkOrderAsPaid(ctx context.Context, arg MarkOrderAsPaidParams) (OrdersOrders, error)
+	//MarkSubOrderAsPaid
+	//
+	//  UPDATE orders.sub_orders
+	//  SET payment_status = $1,
+	//      updated_at     = now()
+	//  WHERE order_id = $2
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+	MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaidParams) (OrdersSubOrders, error)
+	//QuerySubOrders
+	//
+	//  SELECT id,
+	//         merchant_id,
+	//         total_amount,
+	//         currency,
+	//         status,
+	//         items,
+	//         created_at,
+	//         updated_at
+	//  FROM orders.sub_orders
+	//  WHERE order_id = $1
+	//  ORDER BY created_at
+	QuerySubOrders(ctx context.Context, orderID uuid.UUID) ([]QuerySubOrdersRow, error)
+	//UpdateOrderPaymentStatus
+	//
+	//  UPDATE orders.orders
+	//  SET payment_status = $2,
+	//      updated_at = now()
+	//  WHERE id = $1
+	UpdateOrderPaymentStatus(ctx context.Context, arg UpdateOrderPaymentStatusParams) error
+	//UpdatePaymentStatus
+	//
+	//  SELECT id, user_id, payment_status
+	//  FROM orders.orders
+	//  WHERE id = $1
+	//      FOR UPDATE
+	UpdatePaymentStatus(ctx context.Context, id uuid.UUID) (UpdatePaymentStatusRow, error)
 	//UpdateSubOrderStatus
 	//
 	//  UPDATE orders.sub_orders

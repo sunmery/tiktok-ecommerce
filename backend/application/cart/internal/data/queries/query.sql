@@ -20,7 +20,7 @@ VALUES (
 )
 ON CONFLICT (cart_id, merchant_id, product_id)  -- 如果购物车ID、商家ID和商品ID组合重复
 DO UPDATE SET 
-    quantity = cart_items.quantity + EXCLUDED.quantity,  -- 更新商品数量
+    quantity = EXCLUDED.quantity,  -- 直接设置商品数量，而不是累加
     updated_at = CURRENT_TIMESTAMP  -- 更新时间
 RETURNING *;
 

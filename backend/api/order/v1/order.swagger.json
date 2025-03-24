@@ -19,7 +19,7 @@
     "/v1/orders": {
       "get": {
         "summary": "查询订单列表",
-        "operationId": "OrderService_ListOrder",
+        "operationId": "OrderService_QueryOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -247,7 +247,7 @@
     "v1Order": {
       "type": "object",
       "properties": {
-        "orderItems": {
+        "items": {
           "type": "array",
           "items": {
             "type": "object",
