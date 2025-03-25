@@ -5,21 +5,38 @@ package ecommerce.merchant.v1;
 option go_package = "backend/api/merchant/product/v1;productv1";
 
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 import "backend/api/product/v1/product.proto";
 
 service Product {
   // 获取商家对应的商品
-  rpc GetMerchantProducts(GetMerchantProductRequest) returns (Products) {
+  rpc GetMerchantProducts(GetMerchantProductRequest) returns (product.v1.Products) {
     option (google.api.http) = {
       get: "/v1/merchants/products"
     };
   }
+
+  // 更新商品信息
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductReply) {
+    option (google.api.http) = {
+      put: "/v1/merchants/products/{id}"
+      body: "*"
+    };
+  }
 }
 
-// 获取商家对应的商品
 message GetMerchantProductRequest {}
 
-// 商品数组
-message Products {
-  repeated product.v1.Product items = 1;
+// 更新商品请求
+message UpdateProductRequest {
+  string id = 1;
+  string merchant_id = 2;
+  string name = 3;
+  string description = 4;
+  double price = 5;
+}
+
+message UpdateProductReply {
+  string message = 1;
+  int32 code = 2;
 }

@@ -23,8 +23,6 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/shopspring/decimal"
 )
 
 const (
@@ -254,75 +252,6 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
 	}, nil
-}
-
-func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductRequest) (*biz.Product, error) {
-	db := p.data.DB(ctx)
-
-	// 获取当前版本
-	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         req.ID,
-		MerchantID: req.MerchantID,
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到该商品")
-		}
-		return nil, v1.ErrorInvalidStatus("failed to get product: %w", err)
-	}
-
-	// 准备更新参数
-	params := models.UpdateProductParams{
-		ID:         req.ID,
-		MerchantID: req.MerchantID,
-		UpdatedAt:  pgtype.Timestamptz{Time: current.UpdatedAt, Valid: true},
-	}
-
-	// 字段掩码处理
-	if req.Name != nil {
-		params.Name = *req.Name
-	} else {
-		params.Name = current.Name
-	}
-
-	if req.Price != nil {
-		price, err := decimal.NewFromString(fmt.Sprintf("%.2f", *req.Price))
-		if err != nil {
-			return nil, fmt.Errorf("invalid price format: %w", err)
-		}
-		params.Price = pgtype.Numeric{Int: price.Coefficient(), Exp: price.Exponent()}
-	} else {
-		params.Price = current.Price
-	}
-
-	// stock := int32(req.Stock)
-	// if req.Stock != nil {
-	// 	params.Stock = &stock
-	// } else {
-	// 	params.Stock = current.Stock
-	// }
-
-	if req.Description != "" {
-		params.Description = &req.Description
-	} else {
-		params.Description = current.Description
-	}
-
-	// 执行更新
-	if err := db.UpdateProduct(ctx, params); err != nil {
-		return nil, fmt.Errorf("failed to update product: %w", err)
-	}
-
-	// 获取更新后的数据
-	updated, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         req.ID,
-		MerchantID: req.MerchantID,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get updated product: %w", err)
-	}
-
-	return p.fullProductData(ctx, updated)
 }
 
 func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRequest) (*biz.AuditRecord, error) {

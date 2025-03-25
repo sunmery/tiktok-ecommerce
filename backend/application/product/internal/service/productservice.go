@@ -83,48 +83,6 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}, nil
 }
 
-func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Product, error) {
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
-	}
-	merchantId, err := uuid.Parse(req.Product.MerchantId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
-	}
-
-	updateReq := biz.UpdateProductRequest{
-		ID:         id,
-		MerchantID: merchantId,
-	}
-
-	// 使用指针实现字段掩码
-	pbProduct := req.GetProduct()
-	if pbProduct.Name != "" {
-		updateReq.Name = &pbProduct.Name
-	}
-	if pbProduct.Price > 0 {
-		updateReq.Price = &pbProduct.Price
-	}
-
-	if pbProduct.Description != "" {
-		updateReq.Description = pbProduct.Description
-	}
-	if pbProduct.Category != nil {
-		updateReq.Category = biz.CategoryInfo{
-			CategoryId:   uint64(pbProduct.Category.CategoryId),
-			CategoryName: pbProduct.Category.CategoryName,
-		}
-	}
-
-	updatedProduct, err := s.uc.UpdateProduct(ctx, &updateReq)
-	if err != nil {
-		return nil, err
-	}
-
-	return convertBizProductToPB(updatedProduct), nil
-}
-
 func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
 	productId, err := uuid.Parse(req.ProductId)
 	if err != nil {

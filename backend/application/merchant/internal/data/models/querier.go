@@ -108,7 +108,7 @@ type Querier interface {
 	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 	//  WHERE p.merchant_id = $1
 	//    AND p.deleted_at IS NULL
-	GetMerchantProducts(ctx context.Context, dollar_1 pgtype.UUID) ([]GetMerchantProductsRow, error)
+	GetMerchantProducts(ctx context.Context, merchantID pgtype.UUID) ([]GetMerchantProductsRow, error)
 	// 获取产品库存
 	//
 	//  SELECT p.id                                                                     as product_id,
@@ -178,6 +178,16 @@ type Querier interface {
 	//          updated_at = NOW()
 	//  RETURNING id, merchant.stock_alerts.product_id, merchant_id, threshold, created_at, updated_at
 	SetStockAlert(ctx context.Context, arg SetStockAlertParams) (MerchantStockAlerts, error)
+	//UpdateProduct
+	//
+	//  UPDATE products.products
+	//  SET name        = coalesce($1, name),
+	//      description = coalesce($2, description),
+	//      price       = coalesce($3, price),
+	//      updated_at  = now()
+	//  WHERE id = $4
+	//    AND merchant_id = $5
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	// 更新产品库存
 	//
 	//  UPDATE products.inventory

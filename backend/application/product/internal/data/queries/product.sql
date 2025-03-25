@@ -21,19 +21,6 @@ INSERT INTO products.inventory (product_id, merchant_id, stock)
 VALUES ($1, $2, $3)
 RETURNING *;
 
--- name: UpdateProduct :exec
--- 更新商品基础信息，使用乐观锁控制并发
-UPDATE products.products
-SET name        = $2,
-    description = $3,
-    price       = $4,
-    status      = $5,
-    updated_at  = NOW()
-WHERE id = $1
-  AND merchant_id = $6
-  AND updated_at = $7;
--- 乐观锁版本控制
-
 -- 获取商品详情，包含软删除检查
 -- name: GetProduct :one
 SELECT p.id,
@@ -198,7 +185,6 @@ INSERT INTO products.product_audits (product_id,
                                      operator_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at;
-
 
 -- name: UpdateProductStatus :exec
 -- 更新商品状态并记录当前审核ID

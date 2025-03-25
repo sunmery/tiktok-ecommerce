@@ -18,7 +18,7 @@ $$ LANGUAGE sql volatile;
 -----------------------------
 CREATE TABLE products.products
 (
-    id               UUID  DEFAULT uuidv7_sub_ms(),
+    id               UUID                  DEFAULT uuidv7_sub_ms(),
     merchant_id      UUID         NOT NULL, -- 分片键（必须）
     name             VARCHAR(255) NOT NULL,
     description      TEXT,
@@ -51,7 +51,7 @@ CREATE TABLE products.inventory
 -----------------------------
 CREATE TABLE products.product_images
 (
-    id          UUID DEFAULT uuidv7_sub_ms(),
+    id          UUID                  DEFAULT uuidv7_sub_ms(),
     merchant_id UUID         NOT NULL, -- 分片键（必须）
     product_id  UUID         NOT NULL,
     url         VARCHAR(512) NOT NULL,
@@ -60,15 +60,6 @@ CREATE TABLE products.product_images
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     PRIMARY KEY (merchant_id, id)
 );
-
--- 创建共置分片表
--- SELECT create_distributed_table('products.product_images', 'merchant_id',
---     colocate_with => 'products');
-
--- 唯一约束需要包含分片键
-CREATE UNIQUE INDEX idx_unique_primary_image
-    ON products.product_images (merchant_id, product_id, is_primary)
-    WHERE is_primary = true;
 
 -----------------------------
 -- 商品属性表（共置分片表）
@@ -91,7 +82,7 @@ CREATE TABLE products.product_attributes
 -----------------------------
 CREATE TABLE products.product_audits
 (
-    id          UUID DEFAULT uuidv7_sub_ms(),
+    id          UUID                 DEFAULT uuidv7_sub_ms(),
     merchant_id UUID        NOT NULL, -- 分片键（必须）
     product_id  UUID        NOT NULL,
     old_status  SMALLINT    NOT NULL,

@@ -103,17 +103,6 @@ type SubmitAuditRequest struct {
 	OperatedAt time.Time
 }
 
-// UpdateProductRequest 更新商品请求结构体
-type UpdateProductRequest struct {
-	ID          uuid.UUID
-	MerchantID  uuid.UUID // 添加缺失字段
-	Name        *string
-	Price       *float64
-	Description string
-	Stock       *int
-	Category    CategoryInfo
-}
-
 type ListProductsReq struct {
 	Page         uint   `json:"page"`
 	PageSize     uint   `json:"pageSize"`
@@ -176,7 +165,7 @@ type (
 	}
 )
 
-// 库存
+// Inventory 库存
 type Inventory struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
@@ -255,7 +244,6 @@ type GetCategoryProducts struct {
 type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
-	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
@@ -286,10 +274,6 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
 	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
-}
-
-func (p *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error) {
-	return p.repo.UpdateProduct(ctx, req)
 }
 
 func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error) {

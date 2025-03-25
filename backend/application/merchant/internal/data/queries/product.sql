@@ -1,3 +1,5 @@
+SET SEARCH_PATH to merchant,products;
+
 -- name: GetMerchantProducts :many
 SELECT p.id,
        p.name,
@@ -33,5 +35,14 @@ FROM products.products p
                     ON p.id = i.product_id AND p.merchant_id = i.merchant_id
          LEFT JOIN products.product_attributes pa
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-WHERE p.merchant_id = $1
+WHERE p.merchant_id = @merchant_id
   AND p.deleted_at IS NULL;
+
+-- name: UpdateProduct :exec
+UPDATE products.products
+SET name        = coalesce(sqlc.narg(name), name),
+    description = coalesce(sqlc.narg(description), description),
+    price       = coalesce(sqlc.narg(price), price),
+    updated_at  = now()
+WHERE id = sqlc.arg(id)
+  AND merchant_id = sqlc.arg(merchant_id);

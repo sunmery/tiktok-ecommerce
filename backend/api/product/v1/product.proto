@@ -29,14 +29,6 @@ service ProductService {
     };
   }
 
-  // 更新商品信息
-  rpc UpdateProduct(UpdateProductRequest) returns (Product) {
-    option (google.api.http) = {
-      put: "/v1/products/{id}"
-      body: "*"
-    };
-  }
-
   // 提交商品审核
   rpc SubmitForAudit(SubmitAuditRequest) returns (AuditRecord) {
     option (google.api.http) = {
@@ -300,12 +292,6 @@ message CreateProductRequest {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
   CategoryInfo category = 13;
-}
-
-// 更新商品请求
-message UpdateProductRequest {
-  string id = 1;
-  Product product = 2 [(validate.rules).message.required = true];
 }
 
 // 提交审核请求

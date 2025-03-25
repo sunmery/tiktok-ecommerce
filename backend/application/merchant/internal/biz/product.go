@@ -24,7 +24,6 @@ type (
 	CategoryInfo struct {
 		CategoryId   uint64
 		CategoryName string
-		SortOrder    int32
 	}
 	AuditAction int
 
@@ -62,6 +61,25 @@ type Products struct {
 	Items []*Product
 }
 
+// UpdateProductRequest 更新商品请求结构体
+type (
+	UpdateProductRequest struct {
+		ID          uuid.UUID
+		MerchantID  uuid.UUID // 添加缺失字段
+		Name        *string
+		Price       *float64
+		Description *string
+	}
+	UpdateProductReply struct {
+		Code    uint
+		Message string
+	}
+)
+
 func (uc *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
 	return uc.repo.GetMerchantProducts(ctx, req)
+}
+
+func (uc *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*UpdateProductReply, error) {
+	return uc.repo.UpdateProduct(ctx, req)
 }
