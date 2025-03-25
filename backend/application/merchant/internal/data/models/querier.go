@@ -156,12 +156,11 @@ type Querier interface {
 	//         sa.created_at,
 	//         sa.updated_at
 	//  FROM merchant.stock_alerts sa
-	//           JOIN products.products p ON sa.product_id = p.id::uuid  -- 显式转换
+	//           JOIN products.products p ON sa.product_id = p.id::uuid -- 显式转换
 	//           JOIN products.inventory i ON sa.product_id = i.product_id::uuid
-	//  WHERE sa.merchant_id = $1::uuid  -- 强制类型
+	//  WHERE sa.merchant_id = $1::uuid -- 强制类型
 	//  ORDER BY sa.updated_at DESC
-	//  LIMIT $3::int
-	//      OFFSET $2::int
+	//  LIMIT $3 OFFSET $2
 	GetStockAlerts(ctx context.Context, arg GetStockAlertsParams) ([]GetStockAlertsRow, error)
 	// 记录库存调整
 	//

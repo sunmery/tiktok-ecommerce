@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	GetProductStockNotFound = "GetProductStockNotFound"
+	GetProductStockInternal = "GetProductStockInternal"
+)
+
 // GetProductStockRequest 获取产品库存请求
 type GetProductStockRequest struct {
 	ProductId  uuid.UUID
@@ -53,8 +58,8 @@ type SetStockAlertResponse struct {
 // 获取库存警报配置请求
 type GetStockAlertsRequest struct {
 	MerchantId uuid.UUID
-	Page       int32
-	PageSize   int32
+	Page       int64
+	PageSize   int64
 }
 
 // 库存警报配置
@@ -78,7 +83,7 @@ type GetStockAlertsResponse struct {
 // 获取低库存产品请求
 type GetLowStockProductsRequest struct {
 	MerchantId uuid.UUID
-	Threshold  *int32
+	Threshold  int32
 	Page       int64
 	PageSize   int64
 }
@@ -123,7 +128,7 @@ type GetStockAdjustmentHistoryRequest struct {
 	PageSize   int64
 }
 
-// 库存调整记录
+// StockAdjustment 库存调整记录
 type StockAdjustment struct {
 	Id          uuid.UUID
 	ProductId   uuid.UUID
@@ -138,7 +143,7 @@ type StockAdjustment struct {
 // 获取库存调整历史响应
 type GetStockAdjustmentHistoryResponse struct {
 	Adjustments []StockAdjustment
-	Total       uint32
+	Total       int64
 }
 
 // 库存
@@ -171,6 +176,7 @@ func (uc *InventoryUsecase) GetStockAlerts(ctx context.Context, req *GetStockAle
 
 // GetLowStockProducts 获取低库存产品列表
 func (uc *InventoryUsecase) GetLowStockProducts(ctx context.Context, req *GetLowStockProductsRequest) (*GetLowStockProductsResponse, error) {
+	uc.log.WithContext(ctx).Debugf("获取低库存产品列表: %+v", req)
 	return uc.repo.GetLowStockProducts(ctx, req)
 }
 

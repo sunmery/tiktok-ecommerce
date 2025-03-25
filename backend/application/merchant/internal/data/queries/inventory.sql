@@ -43,12 +43,11 @@ SELECT sa.id,
        sa.created_at,
        sa.updated_at
 FROM merchant.stock_alerts sa
-         JOIN products.products p ON sa.product_id = p.id::uuid  -- 显式转换
+         JOIN products.products p ON sa.product_id = p.id::uuid -- 显式转换
          JOIN products.inventory i ON sa.product_id = i.product_id::uuid
-WHERE sa.merchant_id = @merchant_id::uuid  -- 强制类型
+WHERE sa.merchant_id = @merchant_id::uuid -- 强制类型
 ORDER BY sa.updated_at DESC
-LIMIT @page_size::int
-    OFFSET @page::int;
+LIMIT @page_size OFFSET @page;
 
 -- 获取库存警报配置总数
 -- name: CountStockAlerts :one

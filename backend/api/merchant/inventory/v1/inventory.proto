@@ -133,6 +133,7 @@ message GetLowStockProductsRequest {
   string merchant_id = 1; // 商家ID，可选，如果提供则只返回该商家的低库存产品
   uint32 page = 2; // 分页页码
   uint32 page_size = 3; // 每页大小
+  uint32 threshold = 4; // 库存阈值
 }
 
 // 低库存产品信息

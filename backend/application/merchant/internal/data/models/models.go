@@ -13,7 +13,7 @@ type MerchantStockAdjustments struct {
 	ID         uuid.UUID
 	ProductID  uuid.UUID
 	MerchantID uuid.UUID
-	Quantity   uint32
+	Quantity   int32
 	Reason     *string
 	OperatorID uuid.UUID
 	CreatedAt  pgtype.Timestamptz
@@ -23,7 +23,7 @@ type MerchantStockAlerts struct {
 	ID         uuid.UUID
 	ProductID  uuid.UUID
 	MerchantID uuid.UUID
-	Threshold  uint32
+	Threshold  int32
 	CreatedAt  pgtype.Timestamptz
 	UpdatedAt  pgtype.Timestamptz
 }

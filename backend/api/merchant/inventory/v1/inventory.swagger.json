@@ -224,6 +224,14 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "threshold",
+            "description": "库存阈值",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
