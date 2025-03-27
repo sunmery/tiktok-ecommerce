@@ -10,6 +10,8 @@ import (
 // GetMerchantProducts 获取商家自身商品列表请求
 type GetMerchantProducts struct {
 	MerchantID uuid.UUID
+	Page       int64
+	PageSize   int64
 }
 
 // Product 商品实体

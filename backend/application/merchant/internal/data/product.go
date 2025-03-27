@@ -29,7 +29,11 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 
 	// 获取基础信息
 	merchantID := types.ToPgUUID(req.MerchantID)
-	merchantProducts, err := db.GetMerchantProducts(ctx, merchantID)
+	merchantProducts, err := db.GetMerchantProducts(ctx, models.GetMerchantProductsParams{
+		MerchantID: merchantID,
+		Page:       &req.Page,
+		Pagesize:   &req.PageSize,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, v1.ErrorProductNotFound("查询不到商家的商品")

@@ -217,6 +217,35 @@ func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *empty
 	return &pb.Categories{Categories: pbCategories}, nil
 }
 
+// GetDirectSubCategories 获取直接子分类（只返回下一级）
+func (s *CategoryServiceService) GetDirectSubCategories(ctx context.Context, req *pb.GetDirectSubCategoriesRequest) (*pb.Categories, error) {
+	if req.ParentId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "父分类ID不能为空")
+	}
+
+	subCategories, err := s.uc.GetDirectSubCategories(ctx, req.ParentId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var pbCategories []*pb.Category
+	for _, c := range subCategories {
+		pbCategories = append(pbCategories, &pb.Category{
+			Id:        int64(c.ID),
+			ParentId:  int64(c.ParentID),
+			Level:     int32(c.Level),
+			Path:      c.Path,
+			Name:      c.Name,
+			SortOrder: int32(c.SortOrder),
+			IsLeaf:    c.IsLeaf,
+			CreatedAt: timestamppb.New(c.CreatedAt),
+			UpdatedAt: timestamppb.New(c.UpdatedAt),
+		})
+	}
+
+	return &pb.Categories{Categories: pbCategories}, nil
+}
+
 // GetClosureRelations 获取闭包关系
 func (s *CategoryServiceService) GetClosureRelations(ctx context.Context, req *pb.GetClosureRequest) (*pb.ClosureRelations, error) {
 	if req.CategoryId == 0 {

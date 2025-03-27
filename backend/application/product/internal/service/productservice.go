@@ -110,8 +110,8 @@ func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAudit
 	return &pb.AuditRecord{
 		Id:         record.ID.String(),
 		ProductId:  productId.String(),
-		OldStatus:  convertBizStatusToPB(record.OldStatus),
-		NewStatus:  convertBizStatusToPB(record.NewStatus),
+		OldStatus:  uint32(record.OldStatus),
+		NewStatus:  uint32(record.NewStatus),
 		Reason:     record.Reason,
 		OperatorId: record.OperatorID.String(),
 		OperatedAt: timestamppb.New(record.OperatedAt),
@@ -131,11 +131,7 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
 
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
-	}
-	operatorId, err := uuid.Parse(userId)
+	operatorId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid operatorId ID")
 	}
@@ -156,8 +152,8 @@ func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductR
 	return &pb.AuditRecord{
 		Id:         record.ID.String(),
 		ProductId:  record.ProductID.String(),
-		OldStatus:  convertBizStatusToPB(record.OldStatus),
-		NewStatus:  convertBizStatusToPB(record.NewStatus),
+		OldStatus:  uint32(record.OldStatus),
+		NewStatus:  uint32(record.NewStatus),
 		Reason:     record.Reason,
 		OperatorId: record.OperatorID.String(),
 		OperatedAt: timestamppb.New(record.OperatedAt),
@@ -280,19 +276,23 @@ func (s *ProductService) ListRandomProducts(ctx context.Context, req *pb.ListRan
 }
 
 func (s *ProductService) GetCategoryProducts(ctx context.Context, req *pb.GetCategoryProductsRequest) (*pb.Products, error) {
+	// 设置默认分页参数
 	page := uint32(1)
-	pageSize := uint32(100)
-	if req.Page == 0 {
-		req.Page = pageSize
+	pageSize := uint32(10)
+
+	// 使用请求中的参数，如果有提供的话
+	if req.Page > 0 {
+		page = req.Page
 	}
-	if req.Page == 0 {
-		req.Page = page
+	if req.PageSize > 0 {
+		pageSize = req.PageSize
 	}
+
 	listRandomProducts, err := s.uc.GetCategoryProducts(ctx, &biz.GetCategoryProducts{
 		CategoryID: req.CategoryId,
 		Status:     req.Status,
 		Page:       int64(page),
-		PageSize:   int64(req.PageSize),
+		PageSize:   int64(pageSize),
 	})
 	if err != nil {
 		return nil, err
@@ -301,6 +301,39 @@ func (s *ProductService) GetCategoryProducts(ctx context.Context, req *pb.GetCat
 	for _, product := range listRandomProducts.Items {
 		pbProducts = append(pbProducts, convertBizProductToPB(product))
 	}
+	return &pb.Products{
+		Items: pbProducts,
+	}, nil
+}
+
+func (s *ProductService) GetCategoryWithChildrenProducts(ctx context.Context, req *pb.GetCategoryProductsRequest) (*pb.Products, error) {
+	// 设置默认分页参数
+	page := uint32(1)
+	pageSize := uint32(10)
+
+	// 使用请求中的参数，如果有提供的话
+	if req.Page > 0 {
+		page = req.Page
+	}
+	if req.PageSize > 0 {
+		pageSize = req.PageSize
+	}
+
+	products, err := s.uc.GetCategoryWithChildrenProducts(ctx, &biz.GetCategoryWithChildrenProducts{
+		CategoryID: req.CategoryId,
+		Status:     req.Status,
+		Page:       int64(page),
+		PageSize:   int64(pageSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var pbProducts []*pb.Product
+	for _, product := range products.Items {
+		pbProducts = append(pbProducts, convertBizProductToPB(product))
+	}
+
 	return &pb.Products{
 		Items: pbProducts,
 	}, nil
@@ -368,7 +401,7 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
-		Status:      convertBizStatusToPB(p.Status),
+		Status:      uint32(p.Status),
 		MerchantId:  p.MerchantId.String(),
 		Images:      images,
 		Attributes:  attributes,

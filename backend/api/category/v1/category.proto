@@ -64,6 +64,13 @@ service CategoryService {
     };
   }
 
+  // 获取直接子分类（只返回下一级）
+  rpc GetDirectSubCategories(GetDirectSubCategoriesRequest) returns (Categories) {
+    option (google.api.http) = {
+      get: "/v1/categories/{parent_id}/children"
+    };
+  }
+
   // 获取分类路径
   rpc GetCategoryPath(GetCategoryPathRequest) returns (Categories) {
     option (google.api.http) = {
@@ -149,6 +156,11 @@ message GetSubTreeRequest {
 // 获取分类路径请求
 message GetCategoryPathRequest {
   uint64 category_id = 1; // 分类的唯一标识符，用于获取其完整路径。
+}
+
+// 获取直接子分类请求
+message GetDirectSubCategoriesRequest {
+  uint64 parent_id = 1; // 父分类的唯一标识符，用于获取其直接子分类。
 }
 
 // 获取闭包关系请求

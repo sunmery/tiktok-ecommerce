@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type ProductStatus uint
+type ProductStatus int32
 
 const (
 	ProductStatusDraft    ProductStatus = iota // 商品草稿
@@ -240,6 +240,14 @@ type GetCategoryProducts struct {
 	PageSize   int64
 }
 
+// GetCategoryWithChildrenProducts 根据分类及其所有子分类获取商品
+type GetCategoryWithChildrenProducts struct {
+	CategoryID uint32
+	Status     uint32 // 商品状态机
+	Page       int64
+	PageSize   int64
+}
+
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
@@ -249,6 +257,7 @@ type ProductRepo interface {
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
+	GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryWithChildrenProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
@@ -306,4 +315,8 @@ func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchPr
 
 func (p *ProductUsecase) GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error) {
 	return p.repo.GetCategoryProducts(ctx, req)
+}
+
+func (p *ProductUsecase) GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryWithChildrenProducts) (*Products, error) {
+	return p.repo.GetCategoryWithChildrenProducts(ctx, req)
 }

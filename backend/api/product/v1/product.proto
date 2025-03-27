@@ -59,6 +59,13 @@ service ProductService {
     };
   }
 
+  // 根据分类及其所有子分类返回商品数据
+  rpc GetCategoryWithChildrenProducts(GetCategoryProductsRequest) returns (Products) {
+    option (google.api.http) = {
+      get: "/v1/products/category/{category_id}/with-children"
+    };
+  }
+
   // 批量获取商品详情
   rpc GetProductsBatch(GetProductsBatchRequest) returns (Products) {
     option (google.api.http) = {
@@ -102,12 +109,12 @@ enum ProductStatus {
   PRODUCT_STATUS_PENDING = 1;  // 待审核
   PRODUCT_STATUS_APPROVED = 2; // 审核通过
   PRODUCT_STATUS_REJECTED = 3; // 审核驳回
-  PRODUCT_STATUS_SOLDOUT = 4; // 下架
+  PRODUCT_STATUS_SOLD_OUT = 4; // 下架
 }
 
 // 审核动作枚举
 enum AuditAction {
-  AUDIT_ACTION_APPROVE = 0; // 通过审核
+  AUDIT_ACTION_APPROVED = 0; // 通过审核
   AUDIT_ACTION_REJECT = 1;  // 驳回审核
 }
 
@@ -180,7 +187,6 @@ message UploadProductFileReply {
   ];
 }
 
-
 // 返回随机顺序的商品数据
 message ListRandomProductsRequest {
   uint32 page = 1;
@@ -247,7 +253,7 @@ message Product {
   string name = 2 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   double price = 4; // 商品价格（单位：元）
-  ProductStatus status = 6; // 当前状态
+  uint32 status = 6; // 当前状态
   string merchant_id = 7;    // 所属商家ID
   repeated Image images = 8; // 商品图片列表
 
@@ -330,8 +336,8 @@ message DeleteProductRequest {
 message AuditRecord {
   string id = 1;
   string product_id = 2;
-  ProductStatus old_status = 3;
-  ProductStatus new_status = 4;
+  uint32 old_status = 3;
+  uint32 new_status = 4;
   string reason = 5;
   string operator_id = 6;
   google.protobuf.Timestamp operated_at = 7;

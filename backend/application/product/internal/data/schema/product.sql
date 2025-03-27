@@ -19,17 +19,17 @@ $$ LANGUAGE sql volatile;
 CREATE TABLE products.products
 (
     id               UUID                  DEFAULT uuidv7_sub_ms(),
-    merchant_id      UUID         NOT NULL, -- 分片键（必须）
+    merchant_id      UUID         NOT NULL,
     name             VARCHAR(255) NOT NULL,
     description      TEXT,
     price            NUMERIC(15, 2) CHECK (price >= 0),
     status           SMALLINT     NOT NULL DEFAULT 1,
     current_audit_id UUID,
-    category_id      int8         NOT NULL, -- 商品分类 ID
+    category_id      int8         NOT NULL,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     deleted_at       TIMESTAMPTZ,
-    PRIMARY KEY (merchant_id, id)           -- Citus 分片表需要包含分片键在PK中
+    PRIMARY KEY (merchant_id, id)
 );
 
 -----------------------------
@@ -61,7 +61,6 @@ CREATE TABLE products.product_images
     PRIMARY KEY (merchant_id, id)
 );
 
------------------------------
 -- 商品属性表（共置分片表）
 -----------------------------
 CREATE TABLE products.product_attributes

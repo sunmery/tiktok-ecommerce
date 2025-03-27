@@ -50,7 +50,14 @@ FROM products.products p
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 WHERE p.merchant_id = $1
   AND p.deleted_at IS NULL
+LIMIT $3 OFFSET $2
 `
+
+type GetMerchantProductsParams struct {
+	MerchantID pgtype.UUID
+	Page       *int64
+	Pagesize   *int64
+}
 
 type GetMerchantProductsRow struct {
 	ID          uuid.UUID
@@ -106,8 +113,9 @@ type GetMerchantProductsRow struct {
 //	                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 //	WHERE p.merchant_id = $1
 //	  AND p.deleted_at IS NULL
-func (q *Queries) GetMerchantProducts(ctx context.Context, merchantID pgtype.UUID) ([]GetMerchantProductsRow, error) {
-	rows, err := q.db.Query(ctx, GetMerchantProducts, merchantID)
+//	LIMIT $3 OFFSET $2
+func (q *Queries) GetMerchantProducts(ctx context.Context, arg GetMerchantProductsParams) ([]GetMerchantProductsRow, error) {
+	rows, err := q.db.Query(ctx, GetMerchantProducts, arg.MerchantID, arg.Page, arg.Pagesize)
 	if err != nil {
 		return nil, err
 	}

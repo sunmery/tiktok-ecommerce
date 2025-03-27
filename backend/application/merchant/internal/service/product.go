@@ -19,13 +19,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (uc *ProductService) GetMerchantProducts(ctx context.Context, _ *v1.GetMerchantProductRequest) (*productv1.Products, error) {
+func (uc *ProductService) GetMerchantProducts(ctx context.Context, req *v1.GetMerchantProductRequest) (*productv1.Products, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
+	page := (req.Page - 1) * req.PageSize
 	products, err := uc.pc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
 		MerchantID: merchantId,
+		Page:       int64(page),
+		PageSize:   int64(req.PageSize),
 	})
 	if err != nil {
 		return nil, err

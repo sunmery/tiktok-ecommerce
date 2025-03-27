@@ -1311,6 +1311,111 @@ var _ interface {
 	ErrorName() string
 } = GetCategoryPathRequestValidationError{}
 
+// Validate checks the field values on GetDirectSubCategoriesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetDirectSubCategoriesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetDirectSubCategoriesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetDirectSubCategoriesRequestMultiError, or nil if none found.
+func (m *GetDirectSubCategoriesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetDirectSubCategoriesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ParentId
+
+	if len(errors) > 0 {
+		return GetDirectSubCategoriesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetDirectSubCategoriesRequestMultiError is an error wrapping multiple
+// validation errors returned by GetDirectSubCategoriesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetDirectSubCategoriesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetDirectSubCategoriesRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetDirectSubCategoriesRequestMultiError) AllErrors() []error { return m }
+
+// GetDirectSubCategoriesRequestValidationError is the validation error
+// returned by GetDirectSubCategoriesRequest.Validate if the designated
+// constraints aren't met.
+type GetDirectSubCategoriesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetDirectSubCategoriesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetDirectSubCategoriesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetDirectSubCategoriesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetDirectSubCategoriesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetDirectSubCategoriesRequestValidationError) ErrorName() string {
+	return "GetDirectSubCategoriesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetDirectSubCategoriesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetDirectSubCategoriesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetDirectSubCategoriesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetDirectSubCategoriesRequestValidationError{}
+
 // Validate checks the field values on GetClosureRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.

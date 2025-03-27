@@ -320,6 +320,39 @@
         ]
       }
     },
+    "/v1/categories/{parentId}/children": {
+      "get": {
+        "summary": "获取直接子分类（只返回下一级）",
+        "operationId": "CategoryService_GetDirectSubCategories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Categories"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parentId",
+            "description": "父分类的唯一标识符，用于获取其直接子分类。",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
     "/v1/categories/{rootId}/subtree": {
       "get": {
         "summary": "获取子树",

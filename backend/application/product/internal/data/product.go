@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
 	"sync"
 	"time"
 
@@ -439,6 +440,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 			attributes = nil
 		}
 
+		log.Debugf("Status: %+v", product.Status)
 		items = append(items, &biz.Product{
 			ID:          product.ID,
 			MerchantId:  product.MerchantID,
@@ -800,6 +802,106 @@ func (p *productRepo) createProductImages(ctx context.Context, productID uuid.UU
 	}
 
 	return p.data.DB(ctx).BulkCreateProductImages(ctx, bulkParams)
+}
+
+func (p *productRepo) GetCategoryWithChildrenProducts(ctx context.Context, req *biz.GetCategoryWithChildrenProducts) (*biz.Products, error) {
+	id := int64(req.CategoryID)
+	page := (req.Page - 1) * req.PageSize
+	productStatus := int16(req.Status)
+	products, err := p.data.DB(ctx).GetCategoryWithChildrenProducts(ctx, models.GetCategoryWithChildrenProductsParams{
+		ID:       &id,
+		Status:   &productStatus,
+		Page:     &page,
+		PageSize: &req.PageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 收集所有不同的分类ID
+	categoryIDs := make([]int64, 0)
+	categoryIDMap := make(map[int64]bool)
+	for _, product := range products {
+		if !categoryIDMap[product.CategoryID] {
+			categoryIDMap[product.CategoryID] = true
+			categoryIDs = append(categoryIDs, product.CategoryID)
+		}
+	}
+
+	// 从分类服务获取分类信息
+	var categoryMap map[int64]*category.Category
+	if len(categoryIDs) > 0 {
+		categoriesResp, err := p.data.categoryClient.BatchGetCategories(ctx, &category.BatchGetCategoriesRequest{
+			Ids: categoryIDs,
+		})
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("failed to get categories: %v", err)
+		} else {
+			categoryMap = make(map[int64]*category.Category)
+			for _, cat := range categoriesResp.Categories {
+				categoryMap[cat.Id] = cat
+			}
+		}
+	}
+
+	items := make([]*biz.Product, 0)
+	for _, product := range products {
+		var images []*biz.ProductImage
+		if len(product.Images) > 0 {
+			if err := json.Unmarshal(product.Images, &images); err != nil {
+				// 处理错误或记录日志
+				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+			}
+		}
+
+		price, err := types.NumericToFloat(product.Price.(pgtype.Numeric))
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
+		}
+
+		// 构建分类信息
+		categoryInfo := biz.CategoryInfo{
+			CategoryId: uint64(product.CategoryID),
+		}
+
+		// 如果找到了分类信息，则设置分类名称
+		if c, ok := categoryMap[product.CategoryID]; ok {
+			categoryInfo.CategoryName = c.Name
+			categoryInfo.SortOrder = c.SortOrder
+		}
+
+		// 处理商品属性
+		var attributes map[string]any
+		if len(product.Attributes) > 0 {
+			if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
+				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+				attributes = nil
+			}
+		} else {
+			attributes = nil
+		}
+
+		items = append(items, &biz.Product{
+			ID:          product.ID,
+			MerchantId:  product.MerchantID,
+			Name:        product.Name,
+			Price:       price,
+			Description: *product.Description,
+			Images:      images,
+			Status:      biz.ProductStatus(product.Status),
+			Category:    categoryInfo,
+			CreatedAt:   product.CreatedAt.Time.Add(8 * time.Hour),
+			UpdatedAt:   product.UpdatedAt.Time.Add(8 * time.Hour),
+			Attributes:  attributes,
+			Inventory: biz.Inventory{
+				ProductId:  product.ID,
+				MerchantId: product.MerchantID,
+				Stock:      uint32(*product.Stock),
+			},
+		})
+	}
+
+	return &biz.Products{Items: items}, nil
 }
 
 func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {

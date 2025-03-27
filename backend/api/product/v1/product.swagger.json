@@ -224,6 +224,60 @@
         ]
       }
     },
+    "/v1/products/category/{categoryId}/with-children": {
+      "get": {
+        "summary": "根据分类及其所有子分类返回商品数据",
+        "operationId": "ProductService_GetCategoryWithChildrenProducts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Products"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "status",
+            "description": "商品状态",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/v1/products/uploadfile": {
       "post": {
         "summary": "上传商品文件",
@@ -333,43 +387,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          }
-        ],
-        "tags": [
-          "ProductService"
-        ]
-      },
-      "put": {
-        "summary": "更新商品信息",
-        "operationId": "ProductService_UpdateProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1Product"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/ProductServiceUpdateProductBody"
-            }
           }
         ],
         "tags": [
@@ -532,15 +549,6 @@
       "type": "object",
       "title": "提交审核请求"
     },
-    "ProductServiceUpdateProductBody": {
-      "type": "object",
-      "properties": {
-        "product": {
-          "$ref": "#/definitions/v1Product"
-        }
-      },
-      "title": "更新商品请求"
-    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -582,11 +590,11 @@
     "v1AuditAction": {
       "type": "string",
       "enum": [
-        "AUDIT_ACTION_APPROVE",
+        "AUDIT_ACTION_APPROVED",
         "AUDIT_ACTION_REJECT"
       ],
-      "default": "AUDIT_ACTION_APPROVE",
-      "description": "- AUDIT_ACTION_APPROVE: 通过审核\n - AUDIT_ACTION_REJECT: 驳回审核",
+      "default": "AUDIT_ACTION_APPROVED",
+      "description": "- AUDIT_ACTION_APPROVED: 通过审核\n - AUDIT_ACTION_REJECT: 驳回审核",
       "title": "审核动作枚举"
     },
     "v1AuditInfo": {
@@ -622,10 +630,12 @@
           "type": "string"
         },
         "oldStatus": {
-          "$ref": "#/definitions/v1ProductStatus"
+          "type": "integer",
+          "format": "int64"
         },
         "newStatus": {
-          "$ref": "#/definitions/v1ProductStatus"
+          "type": "integer",
+          "format": "int64"
         },
         "reason": {
           "type": "string"
@@ -771,7 +781,8 @@
           "title": "商品价格（单位：元）"
         },
         "status": {
-          "$ref": "#/definitions/v1ProductStatus",
+          "type": "integer",
+          "format": "int64",
           "title": "当前状态"
         },
         "merchantId": {
@@ -811,19 +822,6 @@
         }
       },
       "title": "商品核心数据结构"
-    },
-    "v1ProductStatus": {
-      "type": "string",
-      "enum": [
-        "PRODUCT_STATUS_DRAFT",
-        "PRODUCT_STATUS_PENDING",
-        "PRODUCT_STATUS_APPROVED",
-        "PRODUCT_STATUS_REJECTED",
-        "PRODUCT_STATUS_SOLDOUT"
-      ],
-      "default": "PRODUCT_STATUS_DRAFT",
-      "description": "- PRODUCT_STATUS_DRAFT: 草稿状态\n - PRODUCT_STATUS_PENDING: 待审核\n - PRODUCT_STATUS_APPROVED: 审核通过\n - PRODUCT_STATUS_REJECTED: 审核驳回\n - PRODUCT_STATUS_SOLDOUT: 下架",
-      "title": "商品状态枚举定义"
     },
     "v1Products": {
       "type": "object",

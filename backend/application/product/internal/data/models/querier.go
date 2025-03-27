@@ -132,6 +132,81 @@ type Querier interface {
 	//  ORDER BY fp.created_at DESC
 	//  LIMIT $3 OFFSET $4
 	GetCategoryProducts(ctx context.Context, arg GetCategoryProductsParams) ([]GetCategoryProductsRow, error)
+	// 根据分类及其所有子分类获取商品列表
+	//
+	//  WITH RECURSIVE category_hierarchy AS (
+	//      -- 基础情况：指定的分类
+	//      SELECT id, parent_id
+	//      FROM categories.categories
+	//      WHERE id = $3
+	//
+	//      UNION ALL
+	//
+	//      -- 递归情况：所有子分类
+	//      SELECT c.id, c.parent_id
+	//      FROM categories.categories c
+	//      JOIN category_hierarchy ch ON c.parent_id = ch.id
+	//  ),
+	//  filtered_products AS (
+	//      SELECT p.id,
+	//             p.merchant_id,
+	//             p.name,
+	//             p.description,
+	//             p.price,
+	//             p.status,
+	//             p.category_id,
+	//             p.created_at,
+	//             p.updated_at
+	//      FROM products.products p
+	//      JOIN category_hierarchy ch ON p.category_id = ch.id
+	//      WHERE p.status = $4      -- 商品状态机
+	//        AND p.deleted_at IS NULL
+	//  ),
+	//  product_images_agg AS (
+	//      SELECT pi.product_id,
+	//             jsonb_agg(
+	//                 jsonb_build_object(
+	//                     'id', pi.id,
+	//                     'url', pi.url,
+	//                     'is_primary', pi.is_primary,
+	//                     'sort_order', pi.sort_order
+	//                 )
+	//             ) AS images
+	//      FROM products.product_images pi
+	//      INNER JOIN filtered_products fp ON pi.product_id = fp.id AND pi.merchant_id = fp.merchant_id
+	//      GROUP BY pi.product_id
+	//  ),
+	//  product_attributes_agg AS (
+	//      SELECT pa.product_id,
+	//             pa.attributes
+	//      FROM products.product_attributes pa
+	//      INNER JOIN filtered_products fp ON pa.product_id = fp.id AND pa.merchant_id = fp.merchant_id
+	//  ),
+	//  inventory_agg AS (
+	//      SELECT i.product_id,
+	//             i.stock
+	//      FROM products.inventory i
+	//      INNER JOIN filtered_products fp ON i.product_id = fp.id AND i.merchant_id = fp.merchant_id
+	//  )
+	//  SELECT fp.id,
+	//         fp.merchant_id,
+	//         fp.name,
+	//         fp.description,
+	//         fp.price,
+	//         fp.status,
+	//         fp.category_id,
+	//         fp.created_at,
+	//         fp.updated_at,
+	//         COALESCE(ia.stock, 0) AS stock,
+	//         COALESCE(pia.images, '[]'::jsonb) AS images,
+	//         COALESCE(paa.attributes, '{}'::jsonb) AS attributes
+	//  FROM filtered_products fp
+	//  LEFT JOIN product_images_agg pia ON fp.id = pia.product_id
+	//  LEFT JOIN product_attributes_agg paa ON fp.id = paa.product_id
+	//  LEFT JOIN inventory_agg ia ON fp.id = ia.product_id
+	//  ORDER BY fp.created_at DESC
+	//  LIMIT $2 OFFSET $1
+	GetCategoryWithChildrenProducts(ctx context.Context, arg GetCategoryWithChildrenProductsParams) ([]GetCategoryWithChildrenProductsRow, error)
 	// 获取最新审核记录
 	//
 	//  INSERT INTO products.product_audits (merchant_id, -- 新增分片键
@@ -143,9 +218,7 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, created_at
 	GetLatestAudit(ctx context.Context, arg GetLatestAuditParams) (GetLatestAuditRow, error)
-	// 乐观锁版本控制
 	// 获取商品详情，包含软删除检查
-	//
 	//
 	//  SELECT p.id,
 	//         p.name,
@@ -383,18 +456,6 @@ type Querier interface {
 	//    AND id = $2
 	//  RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
 	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error)
-	// 更新商品基础信息，使用乐观锁控制并发
-	//
-	//  UPDATE products.products
-	//  SET name        = $2,
-	//      description = $3,
-	//      price       = $4,
-	//      status      = $5,
-	//      updated_at  = NOW()
-	//  WHERE id = $1
-	//    AND merchant_id = $6
-	//    AND updated_at = $7
-	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	//UpdateProductAttribute
 	//
 	//  UPDATE products.product_attributes

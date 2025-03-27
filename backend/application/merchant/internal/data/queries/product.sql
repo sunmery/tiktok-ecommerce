@@ -36,7 +36,8 @@ FROM products.products p
          LEFT JOIN products.product_attributes pa
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 WHERE p.merchant_id = @merchant_id
-  AND p.deleted_at IS NULL;
+  AND p.deleted_at IS NULL
+LIMIT @pageSize OFFSET @page;
 
 -- name: UpdateProduct :exec
 UPDATE products.products

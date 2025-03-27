@@ -119,20 +119,64 @@ WHERE id = (SELECT parent_id FROM deleted_nodes LIMIT 1)
   AND (SELECT parent_id FROM deleted_nodes LIMIT 1) IS NOT NULL;
 
 -- name: GetSubTree :many
+WITH RECURSIVE category_tree AS (
+    -- 基本情况：直接获取所有子节点作为起点
+    SELECT
+        c.id,
+        c.parent_id,
+        c.level,
+        c.path,
+        c.name,
+        c.sort_order,
+        c.is_leaf,
+        c.created_at,
+        c.updated_at
+    FROM categories.categories c
+    WHERE c.parent_id = $1
+    
+    UNION ALL
+    
+    -- 递归情况：获取所有直接子节点
+    SELECT
+        c.id,
+        c.parent_id,
+        c.level,
+        c.path,
+        c.name,
+        c.sort_order,
+        c.is_leaf,
+        c.created_at,
+        c.updated_at
+    FROM categories.categories c
+    JOIN category_tree ct ON c.parent_id = ct.id
+)
 SELECT
-    c.id,
-    COALESCE(c.parent_id, 0) AS parent_id,
-    c.level,
-    c.path::text,
-    c.name,
-    c.sort_order,
-    c.is_leaf,
-    c.created_at,
-    c.updated_at
-FROM categories.category_closure cc
-         JOIN categories.categories c ON cc.descendant = c.id
-WHERE cc.ancestor = $1 AND cc.depth >= 0
-ORDER BY cc.depth;
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS cpath,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM category_tree
+ORDER BY level, id;
+
+-- name: GetDirectSubCategories :many
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS cpath,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories
+WHERE parent_id = $1
+ORDER BY sort_order, id;
 
 -- name: GetCategoryPath :many
 SELECT

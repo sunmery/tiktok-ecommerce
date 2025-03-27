@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -108,7 +107,8 @@ type Querier interface {
 	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 	//  WHERE p.merchant_id = $1
 	//    AND p.deleted_at IS NULL
-	GetMerchantProducts(ctx context.Context, merchantID pgtype.UUID) ([]GetMerchantProductsRow, error)
+	//  LIMIT $3 OFFSET $2
+	GetMerchantProducts(ctx context.Context, arg GetMerchantProductsParams) ([]GetMerchantProductsRow, error)
 	// 获取产品库存
 	//
 	//  SELECT p.id                                                                     as product_id,

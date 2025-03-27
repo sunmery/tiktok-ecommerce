@@ -492,6 +492,79 @@ func (q *Queries) GetClosureRelations(ctx context.Context, descendant int64) ([]
 	return items, nil
 }
 
+const GetDirectSubCategories = `-- name: GetDirectSubCategories :many
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS cpath,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories
+WHERE parent_id = $1
+ORDER BY sort_order, id
+`
+
+type GetDirectSubCategoriesRow struct {
+	ID        int64
+	ParentID  int64
+	Level     int16
+	Cpath     string
+	Name      string
+	SortOrder int16
+	IsLeaf    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// GetDirectSubCategories
+//
+//	SELECT
+//	    id,
+//	    COALESCE(parent_id, 0) AS parent_id,
+//	    level,
+//	    path::text AS cpath,
+//	    name,
+//	    sort_order,
+//	    is_leaf,
+//	    created_at,
+//	    updated_at
+//	FROM categories.categories
+//	WHERE parent_id = $1
+//	ORDER BY sort_order, id
+func (q *Queries) GetDirectSubCategories(ctx context.Context, parentID *int64) ([]GetDirectSubCategoriesRow, error) {
+	rows, err := q.db.Query(ctx, GetDirectSubCategories, parentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDirectSubCategoriesRow
+	for rows.Next() {
+		var i GetDirectSubCategoriesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ParentID,
+			&i.Level,
+			&i.Cpath,
+			&i.Name,
+			&i.SortOrder,
+			&i.IsLeaf,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetLeafCategories = `-- name: GetLeafCategories :many
 SELECT
     id,
@@ -564,27 +637,56 @@ func (q *Queries) GetLeafCategories(ctx context.Context) ([]GetLeafCategoriesRow
 }
 
 const GetSubTree = `-- name: GetSubTree :many
+WITH RECURSIVE category_tree AS (
+    -- 基本情况：直接获取所有子节点作为起点
+    SELECT
+        c.id,
+        c.parent_id,
+        c.level,
+        c.path,
+        c.name,
+        c.sort_order,
+        c.is_leaf,
+        c.created_at,
+        c.updated_at
+    FROM categories.categories c
+    WHERE c.parent_id = $1
+    
+    UNION ALL
+    
+    -- 递归情况：获取所有直接子节点
+    SELECT
+        c.id,
+        c.parent_id,
+        c.level,
+        c.path,
+        c.name,
+        c.sort_order,
+        c.is_leaf,
+        c.created_at,
+        c.updated_at
+    FROM categories.categories c
+    JOIN category_tree ct ON c.parent_id = ct.id
+)
 SELECT
-    c.id,
-    COALESCE(c.parent_id, 0) AS parent_id,
-    c.level,
-    c.path::text,
-    c.name,
-    c.sort_order,
-    c.is_leaf,
-    c.created_at,
-    c.updated_at
-FROM categories.category_closure cc
-         JOIN categories.categories c ON cc.descendant = c.id
-WHERE cc.ancestor = $1 AND cc.depth >= 0
-ORDER BY cc.depth
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS cpath,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM category_tree
+ORDER BY level, id
 `
 
 type GetSubTreeRow struct {
 	ID        int64
 	ParentID  int64
 	Level     int16
-	CPath     string
+	Cpath     string
 	Name      string
 	SortOrder int16
 	IsLeaf    bool
@@ -594,22 +696,51 @@ type GetSubTreeRow struct {
 
 // GetSubTree
 //
+//	WITH RECURSIVE category_tree AS (
+//	    -- 基本情况：直接获取所有子节点作为起点
+//	    SELECT
+//	        c.id,
+//	        c.parent_id,
+//	        c.level,
+//	        c.path,
+//	        c.name,
+//	        c.sort_order,
+//	        c.is_leaf,
+//	        c.created_at,
+//	        c.updated_at
+//	    FROM categories.categories c
+//	    WHERE c.parent_id = $1
+//
+//	    UNION ALL
+//
+//	    -- 递归情况：获取所有直接子节点
+//	    SELECT
+//	        c.id,
+//	        c.parent_id,
+//	        c.level,
+//	        c.path,
+//	        c.name,
+//	        c.sort_order,
+//	        c.is_leaf,
+//	        c.created_at,
+//	        c.updated_at
+//	    FROM categories.categories c
+//	    JOIN category_tree ct ON c.parent_id = ct.id
+//	)
 //	SELECT
-//	    c.id,
-//	    COALESCE(c.parent_id, 0) AS parent_id,
-//	    c.level,
-//	    c.path::text,
-//	    c.name,
-//	    c.sort_order,
-//	    c.is_leaf,
-//	    c.created_at,
-//	    c.updated_at
-//	FROM categories.category_closure cc
-//	         JOIN categories.categories c ON cc.descendant = c.id
-//	WHERE cc.ancestor = $1 AND cc.depth >= 0
-//	ORDER BY cc.depth
-func (q *Queries) GetSubTree(ctx context.Context, ancestor int64) ([]GetSubTreeRow, error) {
-	rows, err := q.db.Query(ctx, GetSubTree, ancestor)
+//	    id,
+//	    COALESCE(parent_id, 0) AS parent_id,
+//	    level,
+//	    path::text AS cpath,
+//	    name,
+//	    sort_order,
+//	    is_leaf,
+//	    created_at,
+//	    updated_at
+//	FROM category_tree
+//	ORDER BY level, id
+func (q *Queries) GetSubTree(ctx context.Context, parentID *int64) ([]GetSubTreeRow, error) {
+	rows, err := q.db.Query(ctx, GetSubTree, parentID)
 	if err != nil {
 		return nil, err
 	}
@@ -621,7 +752,7 @@ func (q *Queries) GetSubTree(ctx context.Context, ancestor int64) ([]GetSubTreeR
 			&i.ID,
 			&i.ParentID,
 			&i.Level,
-			&i.CPath,
+			&i.Cpath,
 			&i.Name,
 			&i.SortOrder,
 			&i.IsLeaf,

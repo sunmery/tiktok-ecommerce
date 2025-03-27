@@ -25,7 +25,10 @@ service Product {
   }
 }
 
-message GetMerchantProductRequest {}
+message GetMerchantProductRequest {
+  uint32 page = 1;
+  uint32 page_size = 2;
+}
 
 // 更新商品请求
 message UpdateProductRequest {
