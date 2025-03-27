@@ -23,7 +23,7 @@ import (
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server,
-	payment *service.PaymentServiceService,
+	payment *service.PaymentService,
 	obs *conf.Observability,
 	logger log.Logger,
 ) *http.Server {

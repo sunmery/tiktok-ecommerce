@@ -50,7 +50,14 @@ FROM products.products p
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 WHERE p.merchant_id = $1
   AND p.deleted_at IS NULL
+LIMIT $3 OFFSET $2
 `
+
+type GetMerchantProductsParams struct {
+	MerchantID pgtype.UUID
+	Page       *int64
+	Pagesize   *int64
+}
 
 type GetMerchantProductsRow struct {
 	ID          uuid.UUID
@@ -106,8 +113,9 @@ type GetMerchantProductsRow struct {
 //	                   ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 //	WHERE p.merchant_id = $1
 //	  AND p.deleted_at IS NULL
-func (q *Queries) GetMerchantProducts(ctx context.Context, dollar_1 pgtype.UUID) ([]GetMerchantProductsRow, error) {
-	rows, err := q.db.Query(ctx, GetMerchantProducts, dollar_1)
+//	LIMIT $3 OFFSET $2
+func (q *Queries) GetMerchantProducts(ctx context.Context, arg GetMerchantProductsParams) ([]GetMerchantProductsRow, error) {
+	rows, err := q.db.Query(ctx, GetMerchantProducts, arg.MerchantID, arg.Page, arg.Pagesize)
 	if err != nil {
 		return nil, err
 	}
@@ -138,4 +146,42 @@ func (q *Queries) GetMerchantProducts(ctx context.Context, dollar_1 pgtype.UUID)
 		return nil, err
 	}
 	return items, nil
+}
+
+const UpdateProduct = `-- name: UpdateProduct :exec
+UPDATE products.products
+SET name        = coalesce($1, name),
+    description = coalesce($2, description),
+    price       = coalesce($3, price),
+    updated_at  = now()
+WHERE id = $4
+  AND merchant_id = $5
+`
+
+type UpdateProductParams struct {
+	Name        *string
+	Description *string
+	Price       pgtype.Numeric
+	ID          pgtype.UUID
+	MerchantID  pgtype.UUID
+}
+
+// UpdateProduct
+//
+//	UPDATE products.products
+//	SET name        = coalesce($1, name),
+//	    description = coalesce($2, description),
+//	    price       = coalesce($3, price),
+//	    updated_at  = now()
+//	WHERE id = $4
+//	  AND merchant_id = $5
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
+	_, err := q.db.Exec(ctx, UpdateProduct,
+		arg.Name,
+		arg.Description,
+		arg.Price,
+		arg.ID,
+		arg.MerchantID,
+	)
+	return err
 }

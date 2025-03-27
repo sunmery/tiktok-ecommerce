@@ -7,6 +7,7 @@
 package productv1
 
 import (
+	v1 "backend/api/product/v1"
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
@@ -20,15 +21,19 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationProductGetMerchantProducts = "/ecommerce.merchant.v1.Product/GetMerchantProducts"
+const OperationProductUpdateProduct = "/ecommerce.merchant.v1.Product/UpdateProduct"
 
 type ProductHTTPServer interface {
 	// GetMerchantProducts 获取商家对应的商品
-	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error)
+	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*v1.Products, error)
+	// UpdateProduct 更新商品信息
+	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductReply, error)
 }
 
 func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/merchants/products", _Product_GetMerchantProducts0_HTTP_Handler(srv))
+	r.PUT("/v1/merchants/products/{id}", _Product_UpdateProduct0_HTTP_Handler(srv))
 }
 
 func _Product_GetMerchantProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -45,13 +50,39 @@ func _Product_GetMerchantProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx 
 		if err != nil {
 			return err
 		}
-		reply := out.(*Products)
+		reply := out.(*v1.Products)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_UpdateProduct0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateProductRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductUpdateProduct)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateProduct(ctx, req.(*UpdateProductRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateProductReply)
 		return ctx.Result(200, reply)
 	}
 }
 
 type ProductHTTPClient interface {
-	GetMerchantProducts(ctx context.Context, req *GetMerchantProductRequest, opts ...http.CallOption) (rsp *Products, err error)
+	GetMerchantProducts(ctx context.Context, req *GetMerchantProductRequest, opts ...http.CallOption) (rsp *v1.Products, err error)
+	UpdateProduct(ctx context.Context, req *UpdateProductRequest, opts ...http.CallOption) (rsp *UpdateProductReply, err error)
 }
 
 type ProductHTTPClientImpl struct {
@@ -62,13 +93,26 @@ func NewProductHTTPClient(client *http.Client) ProductHTTPClient {
 	return &ProductHTTPClientImpl{client}
 }
 
-func (c *ProductHTTPClientImpl) GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...http.CallOption) (*Products, error) {
-	var out Products
+func (c *ProductHTTPClientImpl) GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...http.CallOption) (*v1.Products, error) {
+	var out v1.Products
 	pattern := "/v1/merchants/products"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationProductGetMerchantProducts))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductHTTPClientImpl) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...http.CallOption) (*UpdateProductReply, error) {
+	var out UpdateProductReply
+	pattern := "/v1/merchants/products/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductUpdateProduct))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

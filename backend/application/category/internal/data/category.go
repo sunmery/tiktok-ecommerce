@@ -63,6 +63,7 @@ func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category
 // 1. 开启事务
 // 2. 删除所有关联闭包记录
 // 3. 删除分类记录
+// 4. 更新父节点的is_leaf状态（如果没有其他子节点则设为true）
 // 数据访问层实现
 func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
 
@@ -90,9 +91,10 @@ func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
 }
 
 // GetSubTree 获取指定分类的子树
-// GetSubTree 获取子树（使用WITH RECURSIVE查询优化）
+// 只返回后代节点，不包含指定节点本身
 func (r *categoryRepo) GetSubTree(ctx context.Context, rootId uint64) ([]*biz.Category, error) {
-	dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, int64(rootId))
+	id := int64(rootId)
+	dbCategories, err := r.data.DB(ctx).GetSubTree(ctx, &id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, biz.ErrCategoryNotFound
@@ -106,7 +108,7 @@ func (r *categoryRepo) GetSubTree(ctx context.Context, rootId uint64) ([]*biz.Ca
 			ID:        c.ID,
 			ParentID:  &c.ParentID,
 			Level:     c.Level,
-			Path:      c.CPath,
+			Path:      c.Cpath,
 			Name:      c.Name,
 			SortOrder: c.SortOrder,
 			IsLeaf:    c.IsLeaf,
@@ -203,7 +205,7 @@ func (r *categoryRepo) UpdateClosureDepth(ctx context.Context, req *biz.UpdateCl
 // 自动处理根分类：
 // 通过 root_check 确保根分类（id=0）存在，无需手动初始化。
 // 层级验证：
-// 父分类层级 ≥3 时禁止插入（new_level 会设为 NULL，跳过插入）。
+// 父分类层级 ≥n 时禁止插入（new_level 会设为 NULL，跳过插入）。
 // 路径生成：
 // 根据父分类的 path 生成唯一路径（使用 gen_random_uuid() 避免冲突）。
 // 更新父分类状态：
@@ -323,4 +325,30 @@ func convertDBGetLeafCategoriesRow(dbCategory models.GetLeafCategoriesRow) *biz.
 		CreatedAt: dbCategory.CreatedAt,
 		UpdatedAt: dbCategory.UpdatedAt,
 	}
+}
+
+// GetDirectSubCategories 获取指定分类的直接子分类
+// 只返回下一级子分类，不包含更深层次的子分类
+func (r *categoryRepo) GetDirectSubCategories(ctx context.Context, parentId uint64) ([]*biz.Category, error) {
+	id := int64(parentId)
+	dbCategories, err := r.data.DB(ctx).GetDirectSubCategories(ctx, &id)
+	if err != nil {
+		return nil, fmt.Errorf("get direct sub categories failed: %w", err)
+	}
+
+	result := make([]*biz.Category, 0, len(dbCategories))
+	for _, c := range dbCategories {
+		result = append(result, convertDBCategory(models.CategoriesCategories{
+			ID:        c.ID,
+			ParentID:  &c.ParentID,
+			Level:     c.Level,
+			Path:      c.Cpath,
+			Name:      c.Name,
+			SortOrder: c.SortOrder,
+			IsLeaf:    c.IsLeaf,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+		}))
+	}
+	return result, nil
 }

@@ -199,8 +199,37 @@ func (s *CategoryServiceService) GetLeafCategories(ctx context.Context, _ *empty
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	pbCategories := make([]*pb.Category, 0, len(leafCategories)) // 预分配容量，但长度为0
+	var pbCategories []*pb.Category
 	for _, c := range leafCategories {
+		pbCategories = append(pbCategories, &pb.Category{
+			Id:        int64(c.ID),
+			ParentId:  int64(c.ParentID),
+			Level:     int32(c.Level),
+			Path:      c.Path,
+			Name:      c.Name,
+			SortOrder: int32(c.SortOrder),
+			IsLeaf:    c.IsLeaf,
+			CreatedAt: timestamppb.New(c.CreatedAt),
+			UpdatedAt: timestamppb.New(c.UpdatedAt),
+		})
+	}
+
+	return &pb.Categories{Categories: pbCategories}, nil
+}
+
+// GetDirectSubCategories 获取直接子分类（只返回下一级）
+func (s *CategoryServiceService) GetDirectSubCategories(ctx context.Context, req *pb.GetDirectSubCategoriesRequest) (*pb.Categories, error) {
+	if req.ParentId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "父分类ID不能为空")
+	}
+
+	subCategories, err := s.uc.GetDirectSubCategories(ctx, req.ParentId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var pbCategories []*pb.Category
+	for _, c := range subCategories {
 		pbCategories = append(pbCategories, &pb.Category{
 			Id:        int64(c.ID),
 			ParentId:  int64(c.ParentID),
@@ -273,7 +302,7 @@ func (s *CategoryServiceService) BatchGetCategories(ctx context.Context, req *pb
 	}
 
 	rows, err := s.uc.GetCategories(ctx, ids)
-	if err!= nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to get categories: %v", err)
 	}
 
@@ -282,7 +311,7 @@ func (s *CategoryServiceService) BatchGetCategories(ctx context.Context, req *pb
 	for _, row := range rows {
 		categories = append(categories, &pb.Category{
 			Id:        int64(row.ID),
-			ParentId: int64(row.ParentID),
+			ParentId:  int64(row.ParentID),
 			Level:     int32(row.Level),
 			Path:      row.Path,
 			Name:      row.Name,

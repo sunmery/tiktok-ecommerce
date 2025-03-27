@@ -1124,6 +1124,8 @@ func (m *GetLowStockProductsRequest) validate(all bool) error {
 
 	// no validation rules for PageSize
 
+	// no validation rules for Threshold
+
 	if len(errors) > 0 {
 		return GetLowStockProductsRequestMultiError(errors)
 	}
@@ -1699,8 +1701,6 @@ func (m *GetStockAdjustmentHistoryRequest) validate(all bool) error {
 	}
 
 	var errors []error
-
-	// no validation rules for ProductId
 
 	// no validation rules for MerchantId
 

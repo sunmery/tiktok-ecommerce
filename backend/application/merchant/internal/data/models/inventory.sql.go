@@ -270,14 +270,12 @@ FROM merchant.stock_adjustments sa
          JOIN products.products p
               ON sa.product_id = p.id
                   AND sa.merchant_id = p.merchant_id
-WHERE sa.product_id = $1::uuid
-  AND sa.merchant_id = $2::uuid
+WHERE sa.merchant_id = $1::uuid
 ORDER BY sa.created_at DESC
-LIMIT $4 OFFSET $3
+LIMIT $3 OFFSET $2
 `
 
 type GetStockAdjustmentHistoryParams struct {
-	ProductID  pgtype.UUID
 	MerchantID pgtype.UUID
 	Page       *int64
 	PageSize   *int64
@@ -295,6 +293,7 @@ type GetStockAdjustmentHistoryRow struct {
 }
 
 // 获取库存调整历史
+// WHERE sa.product_id = @product_id::uuid
 //
 //	SELECT sa.id,
 //	       sa.product_id,
@@ -308,17 +307,11 @@ type GetStockAdjustmentHistoryRow struct {
 //	         JOIN products.products p
 //	              ON sa.product_id = p.id
 //	                  AND sa.merchant_id = p.merchant_id
-//	WHERE sa.product_id = $1::uuid
-//	  AND sa.merchant_id = $2::uuid
+//	WHERE sa.merchant_id = $1::uuid
 //	ORDER BY sa.created_at DESC
-//	LIMIT $4 OFFSET $3
+//	LIMIT $3 OFFSET $2
 func (q *Queries) GetStockAdjustmentHistory(ctx context.Context, arg GetStockAdjustmentHistoryParams) ([]GetStockAdjustmentHistoryRow, error) {
-	rows, err := q.db.Query(ctx, GetStockAdjustmentHistory,
-		arg.ProductID,
-		arg.MerchantID,
-		arg.Page,
-		arg.PageSize,
-	)
+	rows, err := q.db.Query(ctx, GetStockAdjustmentHistory, arg.MerchantID, arg.Page, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -356,18 +349,17 @@ SELECT sa.id,
        sa.created_at,
        sa.updated_at
 FROM merchant.stock_alerts sa
-         JOIN products.products p ON sa.product_id = p.id::uuid  -- 显式转换
+         JOIN products.products p ON sa.product_id = p.id::uuid -- 显式转换
          JOIN products.inventory i ON sa.product_id = i.product_id::uuid
-WHERE sa.merchant_id = $1::uuid  -- 强制类型
+WHERE sa.merchant_id = $1::uuid -- 强制类型
 ORDER BY sa.updated_at DESC
-LIMIT $3::int
-    OFFSET $2::int
+LIMIT $3 OFFSET $2
 `
 
 type GetStockAlertsParams struct {
 	MerchantID pgtype.UUID
-	Page       *int32
-	PageSize   *int32
+	Page       *int64
+	PageSize   *int64
 }
 
 type GetStockAlertsRow struct {
@@ -392,12 +384,11 @@ type GetStockAlertsRow struct {
 //	       sa.created_at,
 //	       sa.updated_at
 //	FROM merchant.stock_alerts sa
-//	         JOIN products.products p ON sa.product_id = p.id::uuid  -- 显式转换
+//	         JOIN products.products p ON sa.product_id = p.id::uuid -- 显式转换
 //	         JOIN products.inventory i ON sa.product_id = i.product_id::uuid
-//	WHERE sa.merchant_id = $1::uuid  -- 强制类型
+//	WHERE sa.merchant_id = $1::uuid -- 强制类型
 //	ORDER BY sa.updated_at DESC
-//	LIMIT $3::int
-//	    OFFSET $2::int
+//	LIMIT $3 OFFSET $2
 func (q *Queries) GetStockAlerts(ctx context.Context, arg GetStockAlertsParams) ([]GetStockAlertsRow, error) {
 	rows, err := q.db.Query(ctx, GetStockAlerts, arg.MerchantID, arg.Page, arg.PageSize)
 	if err != nil {

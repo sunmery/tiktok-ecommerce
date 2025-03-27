@@ -13,16 +13,16 @@ import (
 type Querier interface {
 	//CreateOrder
 	//
-	//  INSERT INTO orders.orders (user_id, currency, street_address,
+	//  INSERT INTO orders.orders (id,user_id, currency, street_address,
 	//                             city, state, country, zip_code, email)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
 	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error)
 	//CreateSubOrder
 	//
-	//  INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+	//  INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 	//                                 currency, status, items)
-	//  VALUES ($1, $2, $3, $4, $5, $6)
+	//  VALUES ($1, $2, $3, $4, $5, $6,$7)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
 	//GetOrderByID
@@ -30,7 +30,7 @@ type Querier interface {
 	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 	//  FROM orders.orders
 	//  WHERE id = $1
-	GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error)
+	GetOrderByID(ctx context.Context, id int64) (OrdersOrders, error)
 	//GetUserOrdersWithSuborders
 	//
 	//  SELECT o.id         AS order_id,
@@ -57,7 +57,7 @@ type Querier interface {
 	//  FROM orders.orders o
 	//           LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 	//  WHERE o.user_id = $1::uuid
-	//  GROUP BY o.id
+	//  GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at
 	//  ORDER BY o.created_at DESC
 	GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
 	//ListOrdersByUser
@@ -97,7 +97,7 @@ type Querier interface {
 	//  FROM orders.sub_orders
 	//  WHERE order_id = $1
 	//  ORDER BY created_at
-	QuerySubOrders(ctx context.Context, orderID uuid.UUID) ([]QuerySubOrdersRow, error)
+	QuerySubOrders(ctx context.Context, orderID int64) ([]QuerySubOrdersRow, error)
 	//UpdateOrderPaymentStatus
 	//
 	//  UPDATE orders.orders
@@ -111,7 +111,7 @@ type Querier interface {
 	//  FROM orders.orders
 	//  WHERE id = $1
 	//      FOR UPDATE
-	UpdatePaymentStatus(ctx context.Context, id uuid.UUID) (UpdatePaymentStatusRow, error)
+	UpdatePaymentStatus(ctx context.Context, id int64) (UpdatePaymentStatusRow, error)
 	//UpdateSubOrderStatus
 	//
 	//  UPDATE orders.sub_orders

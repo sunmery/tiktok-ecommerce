@@ -32,7 +32,7 @@ type InventoryHTTPServer interface {
 	GetLowStockProducts(context.Context, *GetLowStockProductsRequest) (*GetLowStockProductsResponse, error)
 	// GetProductStock 获取产品当前库存
 	GetProductStock(context.Context, *GetProductStockRequest) (*GetProductStockResponse, error)
-	// GetStockAdjustmentHistory 获取库存调整历史
+	// GetStockAdjustmentHistory 获取产品库存调整历史
 	GetStockAdjustmentHistory(context.Context, *GetStockAdjustmentHistoryRequest) (*GetStockAdjustmentHistoryResponse, error)
 	// GetStockAlerts 获取库存警报配置
 	GetStockAlerts(context.Context, *GetStockAlertsRequest) (*GetStockAlertsResponse, error)
@@ -50,7 +50,7 @@ func RegisterInventoryHTTPServer(s *http.Server, srv InventoryHTTPServer) {
 	r.GET("/v1/merchants/inventory/alerts", _Inventory_GetStockAlerts0_HTTP_Handler(srv))
 	r.GET("/v1/merchants/inventory/low-stock", _Inventory_GetLowStockProducts0_HTTP_Handler(srv))
 	r.POST("/v1/merchants/inventory/adjustments", _Inventory_RecordStockAdjustment0_HTTP_Handler(srv))
-	r.GET("/v1/merchants/inventory/adjustments/{product_id}", _Inventory_GetStockAdjustmentHistory0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/inventory/adjustments", _Inventory_GetStockAdjustmentHistory0_HTTP_Handler(srv))
 	r.GET("/v1/merchants/inventory/{product_id}", _Inventory_GetProductStock0_HTTP_Handler(srv))
 	r.PUT("/v1/merchants/inventory/{product_id}", _Inventory_UpdateProductStock0_HTTP_Handler(srv))
 }
@@ -141,9 +141,6 @@ func _Inventory_GetStockAdjustmentHistory0_HTTP_Handler(srv InventoryHTTPServer)
 	return func(ctx http.Context) error {
 		var in GetStockAdjustmentHistoryRequest
 		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationInventoryGetStockAdjustmentHistory)
@@ -252,7 +249,7 @@ func (c *InventoryHTTPClientImpl) GetProductStock(ctx context.Context, in *GetPr
 
 func (c *InventoryHTTPClientImpl) GetStockAdjustmentHistory(ctx context.Context, in *GetStockAdjustmentHistoryRequest, opts ...http.CallOption) (*GetStockAdjustmentHistoryResponse, error) {
 	var out GetStockAdjustmentHistoryResponse
-	pattern := "/v1/merchants/inventory/adjustments/{product_id}"
+	pattern := "/v1/merchants/inventory/adjustments"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationInventoryGetStockAdjustmentHistory))
 	opts = append(opts, http.PathTemplate(pattern))

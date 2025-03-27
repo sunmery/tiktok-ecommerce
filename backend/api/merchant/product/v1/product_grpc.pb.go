@@ -7,6 +7,7 @@
 package productv1
 
 import (
+	v1 "backend/api/product/v1"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -20,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Product_GetMerchantProducts_FullMethodName = "/ecommerce.merchant.v1.Product/GetMerchantProducts"
+	Product_UpdateProduct_FullMethodName       = "/ecommerce.merchant.v1.Product/UpdateProduct"
 )
 
 // ProductClient is the client API for Product service.
@@ -27,7 +29,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductClient interface {
 	// 获取商家对应的商品
-	GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...grpc.CallOption) (*Products, error)
+	GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...grpc.CallOption) (*v1.Products, error)
+	// 更新商品信息
+	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductReply, error)
 }
 
 type productClient struct {
@@ -38,10 +42,20 @@ func NewProductClient(cc grpc.ClientConnInterface) ProductClient {
 	return &productClient{cc}
 }
 
-func (c *productClient) GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...grpc.CallOption) (*Products, error) {
+func (c *productClient) GetMerchantProducts(ctx context.Context, in *GetMerchantProductRequest, opts ...grpc.CallOption) (*v1.Products, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Products)
+	out := new(v1.Products)
 	err := c.cc.Invoke(ctx, Product_GetMerchantProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateProductReply)
+	err := c.cc.Invoke(ctx, Product_UpdateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +67,9 @@ func (c *productClient) GetMerchantProducts(ctx context.Context, in *GetMerchant
 // for forward compatibility.
 type ProductServer interface {
 	// 获取商家对应的商品
-	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error)
+	GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*v1.Products, error)
+	// 更新商品信息
+	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductReply, error)
 	mustEmbedUnimplementedProductServer()
 }
 
@@ -64,8 +80,11 @@ type ProductServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProductServer struct{}
 
-func (UnimplementedProductServer) GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*Products, error) {
+func (UnimplementedProductServer) GetMerchantProducts(context.Context, *GetMerchantProductRequest) (*v1.Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantProducts not implemented")
+}
+func (UnimplementedProductServer) UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
 }
 func (UnimplementedProductServer) mustEmbedUnimplementedProductServer() {}
 func (UnimplementedProductServer) testEmbeddedByValue()                 {}
@@ -106,6 +125,24 @@ func _Product_GetMerchantProducts_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).UpdateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_UpdateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Product_ServiceDesc is the grpc.ServiceDesc for Product service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +153,10 @@ var Product_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMerchantProducts",
 			Handler:    _Product_GetMerchantProducts_Handler,
+		},
+		{
+			MethodName: "UpdateProduct",
+			Handler:    _Product_UpdateProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

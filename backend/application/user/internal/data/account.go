@@ -1,9 +1,11 @@
 package data
 
 import (
-	"backend/application/user/internal/biz"
 	"context"
 	"fmt"
+
+	"backend/application/user/internal/biz"
+
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -21,12 +23,18 @@ func (u *userRepo) GetProfile(ctx context.Context, req *biz.GetProfileRequest) (
 
 	// 组装数据
 	return &biz.GetProfileReply{
-		Owner:  user.Owner,
-		Name:   user.Name,
-		Id:     req.UserId,
-		Avatar: user.Avatar,
-		Email:  user.Email,
-		Role:   user.Roles[0].Name,
+		Id:                req.UserId,
+		Role:              user.Roles[0].Name,
+		IsDeleted:         false,
+		CreatedTime:       user.CreatedTime,
+		UpdatedTime:       user.UpdatedTime,
+		Owner:             user.Owner,
+		SignupApplication: user.SignupApplication,
+		Name:              user.Name,
+		Email:             user.Email,
+		Avatar:            user.Avatar,
+		// DeletedTime:        user.DeletedTime,
+		DisplayName: user.DisplayName,
 	}, nil
 }
 

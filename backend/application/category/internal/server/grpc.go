@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
 	v1 "backend/api/category/v1"
 	"backend/application/category/internal/conf"
@@ -51,6 +52,7 @@ func NewGRPCServer(
 
 	opts := []grpc.ServerOption{
 		grpc.Middleware(
+			metadata.Server(),
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {

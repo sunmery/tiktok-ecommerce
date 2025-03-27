@@ -34,6 +34,7 @@ message Pay {
     string return_url = 5;
     string app_public_cert = 6;
     string alipay_root_cert = 7;
+    string secret = 8;
   }
   Alipay alipay = 1;
 }

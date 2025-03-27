@@ -404,6 +404,215 @@ func (q *Queries) GetCategoryProducts(ctx context.Context, arg GetCategoryProduc
 	return items, nil
 }
 
+const GetCategoryWithChildrenProducts = `-- name: GetCategoryWithChildrenProducts :many
+WITH RECURSIVE category_hierarchy AS (
+    -- 基础情况：指定的分类
+    SELECT id, parent_id
+    FROM categories.categories
+    WHERE id = $3
+    
+    UNION ALL
+    
+    -- 递归情况：所有子分类
+    SELECT c.id, c.parent_id
+    FROM categories.categories c
+    JOIN category_hierarchy ch ON c.parent_id = ch.id
+),
+filtered_products AS (
+    SELECT p.id,
+           p.merchant_id,
+           p.name,
+           p.description,
+           p.price,
+           p.status,
+           p.category_id,
+           p.created_at,
+           p.updated_at
+    FROM products.products p
+    JOIN category_hierarchy ch ON p.category_id = ch.id
+    WHERE p.status = $4      -- 商品状态机
+      AND p.deleted_at IS NULL
+),
+product_images_agg AS (
+    SELECT pi.product_id,
+           jsonb_agg(
+               jsonb_build_object(
+                   'id', pi.id,
+                   'url', pi.url,
+                   'is_primary', pi.is_primary,
+                   'sort_order', pi.sort_order
+               )
+           ) AS images
+    FROM products.product_images pi
+    INNER JOIN filtered_products fp ON pi.product_id = fp.id AND pi.merchant_id = fp.merchant_id
+    GROUP BY pi.product_id
+),
+product_attributes_agg AS (
+    SELECT pa.product_id,
+           pa.attributes
+    FROM products.product_attributes pa
+    INNER JOIN filtered_products fp ON pa.product_id = fp.id AND pa.merchant_id = fp.merchant_id
+),
+inventory_agg AS (
+    SELECT i.product_id,
+           i.stock
+    FROM products.inventory i
+    INNER JOIN filtered_products fp ON i.product_id = fp.id AND i.merchant_id = fp.merchant_id
+)
+SELECT fp.id,
+       fp.merchant_id,
+       fp.name,
+       fp.description,
+       fp.price,
+       fp.status,
+       fp.category_id,
+       fp.created_at,
+       fp.updated_at,
+       COALESCE(ia.stock, 0) AS stock,
+       COALESCE(pia.images, '[]'::jsonb) AS images,
+       COALESCE(paa.attributes, '{}'::jsonb) AS attributes
+FROM filtered_products fp
+LEFT JOIN product_images_agg pia ON fp.id = pia.product_id
+LEFT JOIN product_attributes_agg paa ON fp.id = paa.product_id
+LEFT JOIN inventory_agg ia ON fp.id = ia.product_id
+ORDER BY fp.created_at DESC
+LIMIT $2 OFFSET $1
+`
+
+type GetCategoryWithChildrenProductsParams struct {
+	Page     *int64 `json:"page"`
+	PageSize *int64 `json:"pageSize"`
+	ID       *int64 `json:"id"`
+	Status   *int16 `json:"status"`
+}
+
+type GetCategoryWithChildrenProductsRow struct {
+	ID          uuid.UUID          `json:"id"`
+	MerchantID  uuid.UUID          `json:"merchantID"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	Price       interface{}        `json:"price"`
+	Status      int16              `json:"status"`
+	CategoryID  int64              `json:"categoryID"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	Stock       *int32             `json:"stock"`
+	Images      []byte             `json:"images"`
+	Attributes  []byte             `json:"attributes"`
+}
+
+// 根据分类及其所有子分类获取商品列表
+//
+//	WITH RECURSIVE category_hierarchy AS (
+//	    -- 基础情况：指定的分类
+//	    SELECT id, parent_id
+//	    FROM categories.categories
+//	    WHERE id = $3
+//
+//	    UNION ALL
+//
+//	    -- 递归情况：所有子分类
+//	    SELECT c.id, c.parent_id
+//	    FROM categories.categories c
+//	    JOIN category_hierarchy ch ON c.parent_id = ch.id
+//	),
+//	filtered_products AS (
+//	    SELECT p.id,
+//	           p.merchant_id,
+//	           p.name,
+//	           p.description,
+//	           p.price,
+//	           p.status,
+//	           p.category_id,
+//	           p.created_at,
+//	           p.updated_at
+//	    FROM products.products p
+//	    JOIN category_hierarchy ch ON p.category_id = ch.id
+//	    WHERE p.status = $4      -- 商品状态机
+//	      AND p.deleted_at IS NULL
+//	),
+//	product_images_agg AS (
+//	    SELECT pi.product_id,
+//	           jsonb_agg(
+//	               jsonb_build_object(
+//	                   'id', pi.id,
+//	                   'url', pi.url,
+//	                   'is_primary', pi.is_primary,
+//	                   'sort_order', pi.sort_order
+//	               )
+//	           ) AS images
+//	    FROM products.product_images pi
+//	    INNER JOIN filtered_products fp ON pi.product_id = fp.id AND pi.merchant_id = fp.merchant_id
+//	    GROUP BY pi.product_id
+//	),
+//	product_attributes_agg AS (
+//	    SELECT pa.product_id,
+//	           pa.attributes
+//	    FROM products.product_attributes pa
+//	    INNER JOIN filtered_products fp ON pa.product_id = fp.id AND pa.merchant_id = fp.merchant_id
+//	),
+//	inventory_agg AS (
+//	    SELECT i.product_id,
+//	           i.stock
+//	    FROM products.inventory i
+//	    INNER JOIN filtered_products fp ON i.product_id = fp.id AND i.merchant_id = fp.merchant_id
+//	)
+//	SELECT fp.id,
+//	       fp.merchant_id,
+//	       fp.name,
+//	       fp.description,
+//	       fp.price,
+//	       fp.status,
+//	       fp.category_id,
+//	       fp.created_at,
+//	       fp.updated_at,
+//	       COALESCE(ia.stock, 0) AS stock,
+//	       COALESCE(pia.images, '[]'::jsonb) AS images,
+//	       COALESCE(paa.attributes, '{}'::jsonb) AS attributes
+//	FROM filtered_products fp
+//	LEFT JOIN product_images_agg pia ON fp.id = pia.product_id
+//	LEFT JOIN product_attributes_agg paa ON fp.id = paa.product_id
+//	LEFT JOIN inventory_agg ia ON fp.id = ia.product_id
+//	ORDER BY fp.created_at DESC
+//	LIMIT $2 OFFSET $1
+func (q *Queries) GetCategoryWithChildrenProducts(ctx context.Context, arg GetCategoryWithChildrenProductsParams) ([]GetCategoryWithChildrenProductsRow, error) {
+	rows, err := q.db.Query(ctx, GetCategoryWithChildrenProducts,
+		arg.Page,
+		arg.PageSize,
+		arg.ID,
+		arg.Status,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCategoryWithChildrenProductsRow
+	for rows.Next() {
+		var i GetCategoryWithChildrenProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Status,
+			&i.CategoryID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Stock,
+			&i.Images,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetLatestAudit = `-- name: GetLatestAudit :one
 INSERT INTO products.product_audits (merchant_id, -- 新增分片键
                                      product_id,
@@ -454,7 +663,6 @@ func (q *Queries) GetLatestAudit(ctx context.Context, arg GetLatestAuditParams) 
 }
 
 const GetProduct = `-- name: GetProduct :one
-
 SELECT p.id,
        p.name,
        p.description,
@@ -517,7 +725,6 @@ type GetProductRow struct {
 	LatestAudit []byte         `json:"latestAudit"`
 }
 
-// 乐观锁版本控制
 // 获取商品详情，包含软删除检查
 //
 //	SELECT p.id,
@@ -1242,52 +1449,6 @@ func (q *Queries) SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductPa
 		&i.DeletedAt,
 	)
 	return i, err
-}
-
-const UpdateProduct = `-- name: UpdateProduct :exec
-UPDATE products.products
-SET name        = $2,
-    description = $3,
-    price       = $4,
-    status      = $5,
-    updated_at  = NOW()
-WHERE id = $1
-  AND merchant_id = $6
-  AND updated_at = $7
-`
-
-type UpdateProductParams struct {
-	ID          uuid.UUID          `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	Price       pgtype.Numeric     `json:"price"`
-	Status      int16              `json:"status"`
-	MerchantID  uuid.UUID          `json:"merchantID"`
-	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
-}
-
-// 更新商品基础信息，使用乐观锁控制并发
-//
-//	UPDATE products.products
-//	SET name        = $2,
-//	    description = $3,
-//	    price       = $4,
-//	    status      = $5,
-//	    updated_at  = NOW()
-//	WHERE id = $1
-//	  AND merchant_id = $6
-//	  AND updated_at = $7
-func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
-	_, err := q.db.Exec(ctx, UpdateProduct,
-		arg.ID,
-		arg.Name,
-		arg.Description,
-		arg.Price,
-		arg.Status,
-		arg.MerchantID,
-		arg.UpdatedAt,
-	)
-	return err
 }
 
 const UpdateProductAttribute = `-- name: UpdateProductAttribute :exec

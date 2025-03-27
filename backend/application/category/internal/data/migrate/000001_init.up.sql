@@ -13,7 +13,7 @@ CREATE SEQUENCE categories.categories_id_seq
 CREATE TABLE categories.categories (
     id         BIGINT PRIMARY KEY DEFAULT nextval('categories_id_seq'),
     parent_id  BIGINT,
-    level      SMALLINT NOT NULL CHECK (level BETWEEN 0 AND 3),
+    level      SMALLINT NOT NULL CHECK (level BETWEEN 0 AND 6),
     path       LTREE NOT NULL,
     name       VARCHAR(50) NOT NULL,
     sort_order SMALLINT NOT NULL DEFAULT 0 CHECK (sort_order >= 0),

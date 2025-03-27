@@ -1907,63 +1907,9 @@ func (m *GetProfileResponse) validate(all bool) error {
 
 	// no validation rules for IsDeleted
 
-	if all {
-		switch v := interface{}(m.GetCreatedTime()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetProfileResponseValidationError{
-					field:  "CreatedTime",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetProfileResponseValidationError{
-					field:  "CreatedTime",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedTime()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetProfileResponseValidationError{
-				field:  "CreatedTime",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for CreatedTime
 
-	if all {
-		switch v := interface{}(m.GetUpdatedTime()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetProfileResponseValidationError{
-					field:  "UpdatedTime",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetProfileResponseValidationError{
-					field:  "UpdatedTime",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetUpdatedTime()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetProfileResponseValidationError{
-				field:  "UpdatedTime",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for UpdatedTime
 
 	if len(errors) > 0 {
 		return GetProfileResponseMultiError(errors)

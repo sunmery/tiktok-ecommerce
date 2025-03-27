@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -108,7 +107,8 @@ type Querier interface {
 	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
 	//  WHERE p.merchant_id = $1
 	//    AND p.deleted_at IS NULL
-	GetMerchantProducts(ctx context.Context, dollar_1 pgtype.UUID) ([]GetMerchantProductsRow, error)
+	//  LIMIT $3 OFFSET $2
+	GetMerchantProducts(ctx context.Context, arg GetMerchantProductsParams) ([]GetMerchantProductsRow, error)
 	// 获取产品库存
 	//
 	//  SELECT p.id                                                                     as product_id,
@@ -127,6 +127,7 @@ type Querier interface {
 	//    AND p.merchant_id = $2::uuid
 	GetProductStock(ctx context.Context, arg GetProductStockParams) (GetProductStockRow, error)
 	// 获取库存调整历史
+	// WHERE sa.product_id = @product_id::uuid
 	//
 	//  SELECT sa.id,
 	//         sa.product_id,
@@ -140,10 +141,9 @@ type Querier interface {
 	//           JOIN products.products p
 	//                ON sa.product_id = p.id
 	//                    AND sa.merchant_id = p.merchant_id
-	//  WHERE sa.product_id = $1::uuid
-	//    AND sa.merchant_id = $2::uuid
+	//  WHERE sa.merchant_id = $1::uuid
 	//  ORDER BY sa.created_at DESC
-	//  LIMIT $4 OFFSET $3
+	//  LIMIT $3 OFFSET $2
 	GetStockAdjustmentHistory(ctx context.Context, arg GetStockAdjustmentHistoryParams) ([]GetStockAdjustmentHistoryRow, error)
 	// 获取库存警报配置
 	//
@@ -156,12 +156,11 @@ type Querier interface {
 	//         sa.created_at,
 	//         sa.updated_at
 	//  FROM merchant.stock_alerts sa
-	//           JOIN products.products p ON sa.product_id = p.id::uuid  -- 显式转换
+	//           JOIN products.products p ON sa.product_id = p.id::uuid -- 显式转换
 	//           JOIN products.inventory i ON sa.product_id = i.product_id::uuid
-	//  WHERE sa.merchant_id = $1::uuid  -- 强制类型
+	//  WHERE sa.merchant_id = $1::uuid -- 强制类型
 	//  ORDER BY sa.updated_at DESC
-	//  LIMIT $3::int
-	//      OFFSET $2::int
+	//  LIMIT $3 OFFSET $2
 	GetStockAlerts(ctx context.Context, arg GetStockAlertsParams) ([]GetStockAlertsRow, error)
 	// 记录库存调整
 	//
@@ -178,6 +177,16 @@ type Querier interface {
 	//          updated_at = NOW()
 	//  RETURNING id, merchant.stock_alerts.product_id, merchant_id, threshold, created_at, updated_at
 	SetStockAlert(ctx context.Context, arg SetStockAlertParams) (MerchantStockAlerts, error)
+	//UpdateProduct
+	//
+	//  UPDATE products.products
+	//  SET name        = coalesce($1, name),
+	//      description = coalesce($2, description),
+	//      price       = coalesce($3, price),
+	//      updated_at  = now()
+	//  WHERE id = $4
+	//    AND merchant_id = $5
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	// 更新产品库存
 	//
 	//  UPDATE products.inventory

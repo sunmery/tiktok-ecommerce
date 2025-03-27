@@ -18,13 +18,13 @@
   "paths": {
     "/v1/payments": {
       "post": {
-        "summary": "创建支付记录",
+        "summary": "创建支付订单",
         "operationId": "PaymentService_CreatePayment",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1PaymentResp"
+              "$ref": "#/definitions/v1CreatePaymentResponse"
             }
           },
           "default": {
@@ -40,7 +40,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreatePaymentReq"
+              "$ref": "#/definitions/v1CreatePaymentRequest"
             }
           }
         ],
@@ -50,14 +50,14 @@
       }
     },
     "/v1/payments/callback": {
-      "post": {
-        "summary": "支付宝回调处理接口",
-        "operationId": "PaymentService_ProcessPaymentCallback",
+      "get": {
+        "summary": "支付成功后的回调处理",
+        "operationId": "PaymentService_HandlePaymentCallback",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1PaymentCallbackResp"
+              "$ref": "#/definitions/v1HandlePaymentCallbackResponse"
             }
           },
           "default": {
@@ -69,12 +69,29 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1PaymentCallbackReq"
-            }
+            "name": "outTradeNo",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tradeNo",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "totalAmount",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "params",
+            "description": "存储所有回调参数\n\nThis is a request variable of the map type. The query format is \"map_name[key]=value\", e.g. If the map name is Age, the key type is string, and the value type is integer, the query parameter is expressed as Age[\"bob\"]=18",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -84,13 +101,13 @@
     },
     "/v1/payments/notify": {
       "post": {
-        "summary": "异步通知接口",
-        "operationId": "PaymentService_PaymentNotify",
+        "summary": "处理支付回调通知",
+        "operationId": "PaymentService_HandlePaymentNotify",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1PaymentNotifyResp"
+              "$ref": "#/definitions/v1HandlePaymentNotifyResponse"
             }
           },
           "default": {
@@ -106,7 +123,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1PaymentNotifyReq"
+              "$ref": "#/definitions/v1HandlePaymentNotifyRequest"
             }
           }
         ],
@@ -115,15 +132,15 @@
         ]
       }
     },
-    "/v1/payments/{paymentId}": {
+    "/v1/payments/{paymentId}/status": {
       "get": {
-        "summary": "获取支付信息接口",
-        "operationId": "PaymentService_GetPayment",
+        "summary": "查询支付状态",
+        "operationId": "PaymentService_GetPaymentStatus",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1PaymentResp"
+              "$ref": "#/definitions/v1GetPaymentStatusResponse"
             }
           },
           "default": {
@@ -136,10 +153,10 @@
         "parameters": [
           {
             "name": "paymentId",
-            "description": "支付记录的唯一标识符，用于查询具体的支付信息",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -177,133 +194,144 @@
         }
       }
     },
-    "v1CreatePaymentReq": {
+    "v1CreatePaymentRequest": {
       "type": "object",
       "properties": {
         "orderId": {
           "type": "string",
-          "title": "商户订单号。 由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。"
+          "format": "int64"
         },
-        "currency": {
-          "type": "string",
-          "title": "支付货币类型，例如 \"USD\", \"CNY\""
+        "userId": {
+          "type": "string"
         },
         "amount": {
-          "type": "string",
-          "title": "支付金额，通常以字符串形式存储以避免精度问题"
+          "type": "string"
         },
-        "paymentMethod": {
-          "type": "string",
-          "title": "支付方式，例如 \"alipay\", \"wechatpay\", \"credit_card\""
+        "currency": {
+          "type": "string"
         },
         "subject": {
-          "type": "string",
-          "title": "订单主题, 例如Iphone6 16G, 不可使用特殊字符，如 /，=，\u0026 等。"
+          "type": "string"
         },
-        "timeExpire": {
-          "type": "string",
-          "title": "订单过期时间, 例如 yyyy-MM-dd HH:mm:ss 例如2016-12-31 10:05:01"
+        "returnUrl": {
+          "type": "string"
         }
       },
-      "title": "定义创建支付请求消息\n支付宝沙箱文档: https://opendocs.alipay.com/open/00dn7o?pathHash=c1e36251"
+      "title": "创建支付订单请求"
     },
-    "v1PaymentCallbackReq": {
+    "v1CreatePaymentResponse": {
       "type": "object",
       "properties": {
         "paymentId": {
           "type": "string",
-          "title": "支付记录的唯一标识符"
+          "format": "int64"
         },
-        "status": {
-          "type": "string",
-          "title": "回调返回的支付状态"
-        },
-        "gatewayResponse": {
-          "type": "string",
-          "title": "第三方支付网关的原始响应数据"
-        },
-        "processedAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "回调处理的时间戳"
-        },
-        "requestForm": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/v1StringList"
-          },
-          "title": "回调请求中的表单数据，键值对结构"
+        "payUrl": {
+          "type": "string"
         }
       },
-      "title": "定义支付回调请求消息"
+      "title": "创建支付订单响应"
     },
-    "v1PaymentCallbackResp": {
-      "type": "object",
-      "description": "此处可以扩展字段，目前为空",
-      "title": "定义支付回调响应消息"
-    },
-    "v1PaymentNotifyReq": {
-      "type": "object",
-      "properties": {
-        "values": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/v1StringList"
-          },
-          "title": "使用 map 定义一个键值对结构，键为字符串，值为 StringList 类型\n 适用于传递动态键值对数据"
-        }
-      },
-      "title": "定义支付异步通知请求消息"
-    },
-    "v1PaymentNotifyResp": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "title": "响应状态码"
-        },
-        "msg": {
-          "type": "string",
-          "title": "响应消息"
-        }
-      },
-      "title": "定义支付异步通知响应消息"
-    },
-    "v1PaymentResp": {
+    "v1GetPaymentStatusResponse": {
       "type": "object",
       "properties": {
         "paymentId": {
           "type": "string",
-          "title": "支付记录的唯一标识符"
+          "format": "int64"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "int64"
         },
         "status": {
-          "type": "string",
-          "title": "支付状态，可能值包括 CREATED/PENDING/SUCCEEDED/FAILED"
+          "$ref": "#/definitions/v1PaymentStatus"
         },
-        "paymentUrl": {
+        "tradeNo": {
           "type": "string",
-          "title": "第三方支付平台提供的支付链接"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "支付记录创建的时间戳"
+          "title": "支付宝交易号"
         }
       },
-      "title": "定义支付响应消息"
+      "title": "查询支付状态响应"
     },
-    "v1StringList": {
+    "v1HandlePaymentCallbackResponse": {
       "type": "object",
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "title": "支付回调响应"
+    },
+    "v1HandlePaymentNotifyRequest": {
+      "type": "object",
+      "properties": {
+        "appId": {
+          "type": "string"
+        },
+        "tradeNo": {
+          "type": "string"
+        },
+        "outTradeNo": {
+          "type": "string"
+        },
+        "totalAmount": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "tradeStatus": {
+          "type": "string"
+        },
+        "gmtPayment": {
+          "type": "string"
+        },
+        "gmtCreate": {
+          "type": "string"
+        },
+        "sign": {
+          "type": "string"
+        },
+        "signType": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
             "type": "string"
           },
-          "title": "使用 repeated 关键字定义一个字符串数组 ([]string)"
+          "title": "存储所有回调参数"
         }
       },
-      "title": "定义 StringList 消息类型，表示一个字符串列表"
+      "title": "支付通知请求"
+    },
+    "v1HandlePaymentNotifyResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "title": "支付通知响应"
+    },
+    "v1PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "PAYMENT_STATUS_UNKNOWN",
+        "PAYMENT_STATUS_PENDING",
+        "PAYMENT_STATUS_PROCESSING",
+        "PAYMENT_STATUS_SUCCESS",
+        "PAYMENT_STATUS_FAILED",
+        "PAYMENT_STATUS_CLOSED"
+      ],
+      "default": "PAYMENT_STATUS_UNKNOWN",
+      "title": "支付状态"
     }
   }
 }

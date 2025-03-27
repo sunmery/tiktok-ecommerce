@@ -2,8 +2,11 @@ package data
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
+	"github.com/go-kratos/kratos/v2/log"
+
+	"github.com/go-kratos/kratos/v2/errors"
 
 	"github.com/jackc/pgx/v5"
 
@@ -24,10 +27,9 @@ func (i *inventoryRepo) GetProductStock(ctx context.Context, req *biz.GetProduct
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			i.log.WithContext(ctx).Infof(" 查询不到该商家'%s'的ID为'%s'的商品", req.MerchantId, req.ProductId)
-			return nil, nil
+			return nil, errors.New(404, biz.GetProductStockNotFound, fmt.Sprintf("未找到该商家'%s'的ID为'%s'的商品", req.MerchantId, req.ProductId))
 		}
-		return nil, fmt.Errorf("failed to get product stock: %w", err)
+		return nil, errors.New(500, biz.GetProductStockInternal, fmt.Sprintf("failed to get product stock: %v", err))
 	}
 
 	return &biz.GetProductStockResponse{
@@ -102,8 +104,8 @@ func (i *inventoryRepo) GetStockAlerts(ctx context.Context, req *biz.GetStockAle
 	pageSize := (req.Page - 1) * req.PageSize
 	alerts, err := i.data.DB(ctx).GetStockAlerts(ctx, models.GetStockAlertsParams{
 		MerchantID: merchantId,
-		Page:       &req.Page,
-		PageSize:   &pageSize,
+		Page:       &pageSize,
+		PageSize:   &req.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stock alerts: %w", err)
@@ -143,8 +145,8 @@ func (i *inventoryRepo) GetLowStockProducts(ctx context.Context, req *biz.GetLow
 	pageSize := (req.Page - 1) * req.PageSize
 	products, err := i.data.DB(ctx).GetLowStockProducts(ctx, models.GetLowStockProductsParams{
 		MerchantID: merchantId,
-		Page:       &req.PageSize,
-		PageSize:   &pageSize,
+		Page:       &pageSize,
+		PageSize:   &req.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get low stock products: %w", err)
@@ -152,7 +154,7 @@ func (i *inventoryRepo) GetLowStockProducts(ctx context.Context, req *biz.GetLow
 
 	// 获取总数
 	count, err := i.data.DB(ctx).CountLowStockProducts(ctx, models.CountLowStockProductsParams{
-		Threshold:  req.Threshold,
+		Threshold:  &req.Threshold,
 		MerchantID: merchantId,
 	})
 	if err != nil {
@@ -160,7 +162,7 @@ func (i *inventoryRepo) GetLowStockProducts(ctx context.Context, req *biz.GetLow
 	}
 
 	// 转换为业务模型
-	result := make([]biz.LowStockProduct, 0, len(products))
+	var result []biz.LowStockProduct
 	for _, product := range products {
 		result = append(result, biz.LowStockProduct{
 			ProductId:    product.ProductID,
@@ -171,6 +173,7 @@ func (i *inventoryRepo) GetLowStockProducts(ctx context.Context, req *biz.GetLow
 			ImageUrl:     *product.ImageUrl,
 		})
 	}
+	log.Debugf("result: %v", result)
 
 	return &biz.GetLowStockProductsResponse{
 		Products: result,
@@ -214,14 +217,14 @@ func (i *inventoryRepo) RecordStockAdjustment(ctx context.Context, req *biz.Reco
 // GetStockAdjustmentHistory 获取库存调整历史
 func (i *inventoryRepo) GetStockAdjustmentHistory(ctx context.Context, req *biz.GetStockAdjustmentHistoryRequest) (*biz.GetStockAdjustmentHistoryResponse, error) {
 	// 获取库存调整历史
-	productId := types.ToPgUUID(req.ProductId)
+	// productId := types.ToPgUUID(req.ProductId)
 	merchantId := types.ToPgUUID(req.MerchantId)
 	pageSize := (req.Page - 1) * req.PageSize
 	adjustments, err := i.data.DB(ctx).GetStockAdjustmentHistory(ctx, models.GetStockAdjustmentHistoryParams{
-		ProductID:  productId,
+		// ProductID:  productId,
 		MerchantID: merchantId,
-		Page:       &req.Page,
-		PageSize:   &pageSize,
+		Page:       &pageSize,
+		PageSize:   &req.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stock adjustment history: %w", err)
@@ -229,7 +232,7 @@ func (i *inventoryRepo) GetStockAdjustmentHistory(ctx context.Context, req *biz.
 
 	// 获取总数
 	count, err := i.data.DB(ctx).CountStockAdjustmentHistory(ctx, models.CountStockAdjustmentHistoryParams{
-		ProductID:  req.ProductId,
+		// ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
 	})
 	if err != nil {
@@ -253,6 +256,6 @@ func (i *inventoryRepo) GetStockAdjustmentHistory(ctx context.Context, req *biz.
 
 	return &biz.GetStockAdjustmentHistoryResponse{
 		Adjustments: result,
-		Total:       uint32(count),
+		Total:       count,
 	}, nil
 }

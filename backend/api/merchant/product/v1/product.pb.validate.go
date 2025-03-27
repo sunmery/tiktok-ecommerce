@@ -57,6 +57,10 @@ func (m *GetMerchantProductRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Page
+
+	// no validation rules for PageSize
+
 	if len(errors) > 0 {
 		return GetMerchantProductRequestMultiError(errors)
 	}
@@ -137,75 +141,52 @@ var _ interface {
 	ErrorName() string
 } = GetMerchantProductRequestValidationError{}
 
-// Validate checks the field values on Products with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *Products) Validate() error {
+// Validate checks the field values on UpdateProductRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateProductRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Products with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in ProductsMultiError, or nil
-// if none found.
-func (m *Products) ValidateAll() error {
+// ValidateAll checks the field values on UpdateProductRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateProductRequestMultiError, or nil if none found.
+func (m *UpdateProductRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Products) validate(all bool) error {
+func (m *UpdateProductRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	for idx, item := range m.GetItems() {
-		_, _ = idx, item
+	// no validation rules for Id
 
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ProductsValidationError{
-						field:  fmt.Sprintf("Items[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, ProductsValidationError{
-						field:  fmt.Sprintf("Items[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ProductsValidationError{
-					field:  fmt.Sprintf("Items[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
+	// no validation rules for MerchantId
 
-	}
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Price
 
 	if len(errors) > 0 {
-		return ProductsMultiError(errors)
+		return UpdateProductRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ProductsMultiError is an error wrapping multiple validation errors returned
-// by Products.ValidateAll() if the designated constraints aren't met.
-type ProductsMultiError []error
+// UpdateProductRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateProductRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateProductRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ProductsMultiError) Error() string {
+func (m UpdateProductRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -214,11 +195,11 @@ func (m ProductsMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ProductsMultiError) AllErrors() []error { return m }
+func (m UpdateProductRequestMultiError) AllErrors() []error { return m }
 
-// ProductsValidationError is the validation error returned by
-// Products.Validate if the designated constraints aren't met.
-type ProductsValidationError struct {
+// UpdateProductRequestValidationError is the validation error returned by
+// UpdateProductRequest.Validate if the designated constraints aren't met.
+type UpdateProductRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -226,22 +207,24 @@ type ProductsValidationError struct {
 }
 
 // Field function returns field value.
-func (e ProductsValidationError) Field() string { return e.field }
+func (e UpdateProductRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ProductsValidationError) Reason() string { return e.reason }
+func (e UpdateProductRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ProductsValidationError) Cause() error { return e.cause }
+func (e UpdateProductRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ProductsValidationError) Key() bool { return e.key }
+func (e UpdateProductRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ProductsValidationError) ErrorName() string { return "ProductsValidationError" }
+func (e UpdateProductRequestValidationError) ErrorName() string {
+	return "UpdateProductRequestValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e ProductsValidationError) Error() string {
+func (e UpdateProductRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -253,14 +236,14 @@ func (e ProductsValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sProducts.%s: %s%s",
+		"invalid %sUpdateProductRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ProductsValidationError{}
+var _ error = UpdateProductRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -268,4 +251,110 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ProductsValidationError{}
+} = UpdateProductRequestValidationError{}
+
+// Validate checks the field values on UpdateProductReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateProductReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateProductReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateProductReplyMultiError, or nil if none found.
+func (m *UpdateProductReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateProductReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Message
+
+	// no validation rules for Code
+
+	if len(errors) > 0 {
+		return UpdateProductReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateProductReplyMultiError is an error wrapping multiple validation errors
+// returned by UpdateProductReply.ValidateAll() if the designated constraints
+// aren't met.
+type UpdateProductReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateProductReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateProductReplyMultiError) AllErrors() []error { return m }
+
+// UpdateProductReplyValidationError is the validation error returned by
+// UpdateProductReply.Validate if the designated constraints aren't met.
+type UpdateProductReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateProductReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateProductReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateProductReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateProductReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateProductReplyValidationError) ErrorName() string {
+	return "UpdateProductReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateProductReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateProductReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateProductReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateProductReplyValidationError{}

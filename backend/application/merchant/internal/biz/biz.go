@@ -41,6 +41,7 @@ type InventoryRepo interface {
 type ProductRepo interface {
 	// GetMerchantProducts 获取商家自身商品列表
 	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
+	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*UpdateProductReply, error)
 }
 
 type InventoryUsecase struct {

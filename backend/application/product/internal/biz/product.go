@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type ProductStatus uint
+type ProductStatus int32
 
 const (
 	ProductStatusDraft    ProductStatus = iota // 商品草稿
@@ -43,20 +43,6 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 
 type (
 	AuditAction int
-
-	ArrayValue struct {
-		Items []string `json:"items"`
-	}
-
-	NestedObject struct {
-		Fields map[string]*AttributeValue `json:"fields,omitempty"`
-	}
-
-	AttributeValue struct {
-		StringValue string        `json:"stringValue,omitempty"`
-		ArrayValue  *ArrayValue   `json:"arrayValue,omitempty"`
-		ObjectValue *NestedObject `json:"objectValue,omitempty"`
-	}
 )
 
 // AuditRecord 完善AuditRecord定义
@@ -99,7 +85,7 @@ type Product struct {
 	Category    CategoryInfo
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	Attributes  map[string]*AttributeValue
+	Attributes  map[string]any
 	Inventory   Inventory // 库存
 }
 
@@ -115,17 +101,6 @@ type SubmitAuditRequest struct {
 	Reason     string
 	OperatorID uuid.UUID
 	OperatedAt time.Time
-}
-
-// UpdateProductRequest 更新商品请求结构体
-type UpdateProductRequest struct {
-	ID          uuid.UUID
-	MerchantID  uuid.UUID // 添加缺失字段
-	Name        *string
-	Price       *float64
-	Description string
-	Stock       *int
-	Category    CategoryInfo
 }
 
 type ListProductsReq struct {
@@ -180,7 +155,7 @@ type (
 		Images      []*ProductImage
 		Status      ProductStatus
 		Category    CategoryInfo
-		Attributes  map[string]*AttributeValue
+		Attributes  map[string]any
 		Stock       uint32
 	}
 	CreateProductReply struct {
@@ -190,7 +165,7 @@ type (
 	}
 )
 
-// 库存
+// Inventory 库存
 type Inventory struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
@@ -265,16 +240,24 @@ type GetCategoryProducts struct {
 	PageSize   int64
 }
 
+// GetCategoryWithChildrenProducts 根据分类及其所有子分类获取商品
+type GetCategoryWithChildrenProducts struct {
+	CategoryID uint32
+	Status     uint32 // 商品状态机
+	Page       int64
+	PageSize   int64
+}
+
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
-	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
+	GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryWithChildrenProducts) (*Products, error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
@@ -300,10 +283,6 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
 	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
-}
-
-func (p *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*Product, error) {
-	return p.repo.UpdateProduct(ctx, req)
 }
 
 func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error) {
@@ -336,4 +315,8 @@ func (p *ProductUsecase) SearchProductsByName(ctx context.Context, req *SearchPr
 
 func (p *ProductUsecase) GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error) {
 	return p.repo.GetCategoryProducts(ctx, req)
+}
+
+func (p *ProductUsecase) GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryWithChildrenProducts) (*Products, error) {
+	return p.repo.GetCategoryWithChildrenProducts(ctx, req)
 }

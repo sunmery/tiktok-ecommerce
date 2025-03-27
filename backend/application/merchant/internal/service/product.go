@@ -3,25 +3,32 @@ package service
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	productv1 "backend/api/product/v1"
 
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1 "backend/api/merchant/product/v1"
 	"backend/application/merchant/internal/biz"
 	"backend/pkg"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (uc *ProductService) GetMerchantProducts(ctx context.Context, _ *v1.GetMerchantProductRequest) (*v1.Products, error) {
+func (uc *ProductService) GetMerchantProducts(ctx context.Context, req *v1.GetMerchantProductRequest) (*productv1.Products, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
+	page := (req.Page - 1) * req.PageSize
 	products, err := uc.pc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
 		MerchantID: merchantId,
+		Page:       int64(page),
+		PageSize:   int64(req.PageSize),
 	})
 	if err != nil {
 		return nil, err
@@ -31,44 +38,121 @@ func (uc *ProductService) GetMerchantProducts(ctx context.Context, _ *v1.GetMerc
 	for _, product := range products.Items {
 		pbProducts = append(pbProducts, convertBizProductToPB(product))
 	}
-	return &v1.Products{
+	return &productv1.Products{
 		Items: pbProducts,
+	}, nil
+}
+
+func (uc *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProductRequest) (*v1.UpdateProductReply, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid productId")
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId")
+	}
+
+	updateReq := biz.UpdateProductRequest{
+		ID:          id,
+		MerchantID:  merchantId,
+		Name:        &req.Name,
+		Price:       &req.Price,
+		Description: &req.Description,
+	}
+
+	result, err := uc.pc.UpdateProduct(ctx, &updateReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.UpdateProductReply{
+		Message: result.Message,
+		Code:    int32(result.Code),
 	}, nil
 }
 
 // 辅助转换方法
 func convertBizProductToPB(p *biz.Product) *productv1.Product {
-	pbProduct := &productv1.Product{
+	if p == nil {
+		return nil
+	}
+
+	// 转换图片
+	images := make([]*productv1.Image, 0)
+	if p.Images != nil {
+		for _, img := range p.Images {
+			if img != nil {
+				sortOrder := int32(0)
+				if img.SortOrder != nil {
+					sortOrder = int32(*img.SortOrder)
+				}
+				images = append(images, &productv1.Image{
+					Url:       img.URL,
+					IsPrimary: img.IsPrimary,
+					SortOrder: sortOrder,
+				})
+			}
+		}
+	}
+
+	// 转换商品属性
+	var attributes *structpb.Value
+	if p.Attributes != nil && len(p.Attributes) > 0 {
+		// 将 biz.AttributeValue 转换为 map[string]interface{}
+		rawMap := make(map[string]interface{})
+		for key, value := range p.Attributes {
+			if value.StringValue != "" {
+				rawMap[key] = value.StringValue
+			} else if value.ArrayValue != nil {
+				rawMap[key] = value.ArrayValue.Items
+			} else if value.ObjectValue != nil {
+				objMap := make(map[string]interface{})
+				for k, v := range value.ObjectValue.Fields {
+					objMap[k] = v.StringValue
+				}
+				rawMap[key] = objMap
+			}
+		}
+
+		// 转换为 structpb.Struct
+		protoStruct, err := structpb.NewStruct(rawMap)
+		if err != nil {
+			log.Warn("Error creating struct: %v", err)
+			attributes = nil
+		} else {
+			attributes = structpb.NewStructValue(protoStruct)
+		}
+	}
+
+	// 构建返回结果
+	result := &productv1.Product{
 		Id:          p.ID.String(),
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
 		Status:      convertBizStatusToPB(p.Status),
 		MerchantId:  p.MerchantId.String(),
-		CreatedAt:   timestamppb.New(p.CreatedAt),
-		UpdatedAt:   timestamppb.New(p.UpdatedAt),
+		Images:      images,
+		Attributes:  attributes,
 		Category: &productv1.CategoryInfo{
 			CategoryId:   uint32(p.Category.CategoryId),
 			CategoryName: p.Category.CategoryName,
 		},
+		CreatedAt: timestamppb.New(p.CreatedAt),
+		UpdatedAt: timestamppb.New(p.UpdatedAt),
 	}
 
-	for _, img := range p.Images {
-		// 安全转换 SortOrder
-		var sortOrder int32
-		if img.SortOrder != nil {
-			sortOrder = int32(*img.SortOrder) // 解引用并转换类型
-		} else {
-			sortOrder = 0 // 默认值
+	// 添加库存信息
+	if p.Inventory.ProductId != uuid.Nil {
+		result.Inventory = &productv1.Inventory{
+			ProductId:  p.Inventory.ProductId.String(),
+			MerchantId: p.Inventory.MerchantId.String(),
+			Stock:      uint32(p.Inventory.Stock),
 		}
-		pbProduct.Images = append(pbProduct.Images, &productv1.Image{
-			Url:       img.URL,
-			IsPrimary: img.IsPrimary,
-			SortOrder: sortOrder,
-		})
 	}
 
-	return pbProduct
+	return result
 }
 
 func convertBizStatusToPB(s biz.ProductStatus) productv1.ProductStatus {

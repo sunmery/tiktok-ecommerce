@@ -14,13 +14,14 @@ import (
 )
 
 const CreateOrder = `-- name: CreateOrder :one
-INSERT INTO orders.orders (user_id, currency, street_address,
+INSERT INTO orders.orders (id,user_id, currency, street_address,
                            city, state, country, zip_code, email)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
 RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 `
 
 type CreateOrderParams struct {
+	ID            int64     `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
 	Currency      string    `json:"currency"`
 	StreetAddress string    `json:"streetAddress"`
@@ -33,12 +34,13 @@ type CreateOrderParams struct {
 
 // CreateOrder
 //
-//	INSERT INTO orders.orders (user_id, currency, street_address,
+//	INSERT INTO orders.orders (id,user_id, currency, street_address,
 //	                           city, state, country, zip_code, email)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
 //	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, CreateOrder,
+		arg.ID,
 		arg.UserID,
 		arg.Currency,
 		arg.StreetAddress,
@@ -67,14 +69,15 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 }
 
 const CreateSubOrder = `-- name: CreateSubOrder :one
-INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
                                currency, status, items)
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6,$7)
 RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 `
 
 type CreateSubOrderParams struct {
-	OrderID     uuid.UUID      `json:"orderID"`
+	ID          int64          `json:"id"`
+	OrderID     int64          `json:"orderID"`
 	MerchantID  uuid.UUID      `json:"merchantID"`
 	TotalAmount pgtype.Numeric `json:"totalAmount"`
 	Currency    string         `json:"currency"`
@@ -84,12 +87,13 @@ type CreateSubOrderParams struct {
 
 // CreateSubOrder
 //
-//	INSERT INTO orders.sub_orders (order_id, merchant_id, total_amount,
+//	INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 //	                               currency, status, items)
-//	VALUES ($1, $2, $3, $4, $5, $6)
+//	VALUES ($1, $2, $3, $4, $5, $6,$7)
 //	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error) {
 	row := q.db.QueryRow(ctx, CreateSubOrder,
+		arg.ID,
 		arg.OrderID,
 		arg.MerchantID,
 		arg.TotalAmount,
@@ -124,7 +128,7 @@ WHERE id = $1
 //	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 //	FROM orders.orders
 //	WHERE id = $1
-func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (OrdersOrders, error) {
+func (q *Queries) GetOrderByID(ctx context.Context, id int64) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, GetOrderByID, id)
 	var i OrdersOrders
 	err := row.Scan(
@@ -169,12 +173,12 @@ SELECT o.id         AS order_id,
 FROM orders.orders o
          LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 WHERE o.user_id = $1::uuid
-GROUP BY o.id
+GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at
 ORDER BY o.created_at DESC
 `
 
 type GetUserOrdersWithSubordersRow struct {
-	OrderID       uuid.UUID `json:"orderID"`
+	OrderID       int64     `json:"orderID"`
 	OrderCurrency string    `json:"orderCurrency"`
 	StreetAddress string    `json:"streetAddress"`
 	City          string    `json:"city"`
@@ -212,7 +216,7 @@ type GetUserOrdersWithSubordersRow struct {
 //	FROM orders.orders o
 //	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 //	WHERE o.user_id = $1::uuid
-//	GROUP BY o.id
+//	GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at
 //	ORDER BY o.created_at DESC
 func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error) {
 	rows, err := q.db.Query(ctx, GetUserOrdersWithSuborders, dollar_1)
@@ -308,8 +312,8 @@ RETURNING id, user_id, currency, street_address, city, state, country, zip_code,
 `
 
 type MarkOrderAsPaidParams struct {
-	PaymentStatus string    `json:"paymentStatus"`
-	ID            uuid.UUID `json:"id"`
+	PaymentStatus string `json:"paymentStatus"`
+	ID            int64  `json:"id"`
 }
 
 // MarkOrderAsPaid
@@ -348,8 +352,8 @@ RETURNING id, order_id, merchant_id, total_amount, currency, status, items, crea
 `
 
 type MarkSubOrderAsPaidParams struct {
-	PaymentStatus string    `json:"paymentStatus"`
-	OrderID       uuid.UUID `json:"orderID"`
+	PaymentStatus string `json:"paymentStatus"`
+	OrderID       int64  `json:"orderID"`
 }
 
 // MarkSubOrderAsPaid
@@ -392,7 +396,7 @@ ORDER BY created_at
 `
 
 type QuerySubOrdersRow struct {
-	ID          uuid.UUID      `json:"id"`
+	ID          int64          `json:"id"`
 	MerchantID  uuid.UUID      `json:"merchantID"`
 	TotalAmount pgtype.Numeric `json:"totalAmount"`
 	Currency    string         `json:"currency"`
@@ -415,7 +419,7 @@ type QuerySubOrdersRow struct {
 //	FROM orders.sub_orders
 //	WHERE order_id = $1
 //	ORDER BY created_at
-func (q *Queries) QuerySubOrders(ctx context.Context, orderID uuid.UUID) ([]QuerySubOrdersRow, error) {
+func (q *Queries) QuerySubOrders(ctx context.Context, orderID int64) ([]QuerySubOrdersRow, error) {
 	rows, err := q.db.Query(ctx, QuerySubOrders, orderID)
 	if err != nil {
 		return nil, err
@@ -444,6 +448,29 @@ func (q *Queries) QuerySubOrders(ctx context.Context, orderID uuid.UUID) ([]Quer
 	return items, nil
 }
 
+const UpdateOrderPaymentStatus = `-- name: UpdateOrderPaymentStatus :exec
+UPDATE orders.orders
+SET payment_status = $2,
+    updated_at = now()
+WHERE id = $1
+`
+
+type UpdateOrderPaymentStatusParams struct {
+	ID            int64  `json:"id"`
+	PaymentStatus string `json:"paymentStatus"`
+}
+
+// UpdateOrderPaymentStatus
+//
+//	UPDATE orders.orders
+//	SET payment_status = $2,
+//	    updated_at = now()
+//	WHERE id = $1
+func (q *Queries) UpdateOrderPaymentStatus(ctx context.Context, arg UpdateOrderPaymentStatusParams) error {
+	_, err := q.db.Exec(ctx, UpdateOrderPaymentStatus, arg.ID, arg.PaymentStatus)
+	return err
+}
+
 const UpdatePaymentStatus = `-- name: UpdatePaymentStatus :one
 SELECT id, user_id, payment_status
 FROM orders.orders
@@ -452,7 +479,7 @@ WHERE id = $1
 `
 
 type UpdatePaymentStatusRow struct {
-	ID            uuid.UUID `json:"id"`
+	ID            int64     `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
 	PaymentStatus string    `json:"paymentStatus"`
 }
@@ -463,7 +490,7 @@ type UpdatePaymentStatusRow struct {
 //	FROM orders.orders
 //	WHERE id = $1
 //	    FOR UPDATE
-func (q *Queries) UpdatePaymentStatus(ctx context.Context, id uuid.UUID) (UpdatePaymentStatusRow, error) {
+func (q *Queries) UpdatePaymentStatus(ctx context.Context, id int64) (UpdatePaymentStatusRow, error) {
 	row := q.db.QueryRow(ctx, UpdatePaymentStatus, id)
 	var i UpdatePaymentStatusRow
 	err := row.Scan(&i.ID, &i.UserID, &i.PaymentStatus)
@@ -478,7 +505,7 @@ WHERE id = $1
 `
 
 type UpdateSubOrderStatusParams struct {
-	ID        uuid.UUID          `json:"id"`
+	ID        int64              `json:"id"`
 	Status    string             `json:"status"`
 	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }

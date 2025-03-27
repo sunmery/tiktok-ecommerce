@@ -10,9 +10,11 @@ import (
 // GetMerchantProducts 获取商家自身商品列表请求
 type GetMerchantProducts struct {
 	MerchantID uuid.UUID
+	Page       int64
+	PageSize   int64
 }
 
-// 商品实体
+// Product 商品实体
 type (
 	ProductStatus uint
 
@@ -24,7 +26,6 @@ type (
 	CategoryInfo struct {
 		CategoryId   uint64
 		CategoryName string
-		SortOrder    int32
 	}
 	AuditAction int
 
@@ -62,6 +63,25 @@ type Products struct {
 	Items []*Product
 }
 
+// UpdateProductRequest 更新商品请求结构体
+type (
+	UpdateProductRequest struct {
+		ID          uuid.UUID
+		MerchantID  uuid.UUID // 添加缺失字段
+		Name        *string
+		Price       *float64
+		Description *string
+	}
+	UpdateProductReply struct {
+		Code    uint
+		Message string
+	}
+)
+
 func (uc *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
 	return uc.repo.GetMerchantProducts(ctx, req)
+}
+
+func (uc *ProductUsecase) UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*UpdateProductReply, error) {
+	return uc.repo.UpdateProduct(ctx, req)
 }

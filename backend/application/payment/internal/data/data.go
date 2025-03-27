@@ -4,6 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+
+	orderv1 "backend/api/order/v1"
+	"backend/constants"
+
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
+	consulAPI "github.com/hashicorp/consul/api"
+
 	"backend/application/payment/internal/data/models"
 
 	"github.com/smartwalle/alipay/v3"
@@ -19,15 +31,16 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewPaymentRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewPaymentRepo)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
-	logger *log.Helper
-	alipay *alipay.Client
-	pay    *conf.Pay
+	db      *models.Queries
+	pgx     *pgxpool.Pool
+	rdb     *redis.Client
+	logger  *log.Helper
+	alipay  *alipay.Client
+	pay     *conf.Pay
+	orderv1 orderv1.OrderServiceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -40,17 +53,19 @@ func NewData(
 	logger log.Logger,
 	alipay *alipay.Client,
 	pay *conf.Pay,
+	orderv1 orderv1.OrderServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:     models.New(db),        // 数据库
-		pgx:    db,                    // 数据库事务
-		rdb:    rdb,                   // 缓存
-		logger: log.NewHelper(logger), // 注入日志
-		alipay: alipay,
-		pay:    pay,
+		db:      models.New(db),        // 数据库
+		pgx:     db,                    // 数据库事务
+		rdb:     rdb,                   // 缓存
+		logger:  log.NewHelper(logger), // 注入日志
+		alipay:  alipay,
+		pay:     pay,
+		orderv1: orderv1,
 	}, cleanup, nil
 }
 
@@ -71,23 +86,78 @@ func NewCache(c *conf.Data) *redis.Client {
 
 // NewAlipay 支付宝
 func NewAlipay(c *conf.Pay) *alipay.Client {
+	log.Debugf("config Pay: %+v", c)
 	client, err := alipay.New(c.Alipay.AppId, c.Alipay.PrivateKey, false)
 	if err != nil {
 		panic(fmt.Errorf("new alipay client failed: %v", err))
 	}
+
 	// 加载应用公钥证书
-	if err := client.LoadAppCertPublicKey(c.Alipay.AppPublicCert); err != nil {
+	if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load app public cert failed: %v", err))
 	}
 	// 加载支付宝根证书
-	if err := client.LoadAliPayRootCert(c.Alipay.AlipayRootCert); err != nil {
+	if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay root cert failed: %v", err))
 	}
 	// 加载支付宝公钥证书
-	if err := client.LoadAlipayCertPublicKey(c.Alipay.AliPublicKey); err != nil {
+	if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay public cert failed: %v", err))
 	}
+
+	// 加载应用公钥证书
+	// if err := client.LoadAppCertPublicKey(c.Alipay.AppPublicCert); err != nil {
+	// 	panic(fmt.Errorf("load app public cert failed: %v", err))
+	// }
+
+	// // 加载支付宝根证书
+	// if err := client.LoadAliPayRootCert(c.Alipay.AlipayRootCert); err != nil {
+	// 	panic(fmt.Errorf("load alipay root cert failed: %v", err))
+	// }
+
+	// // 加载支付宝公钥证书
+	// if err := client.LoadAlipayCertPublicKey(c.Alipay.AliPublicKey); err != nil {
+	// 	panic(fmt.Errorf("load alipay public cert failed: %v", err))
+	// }
+
+	// 设置加密密钥
+	// if err := client.SetEncryptKey(c.Alipay.Secret); err != nil {
+	// 	panic("设置加密密钥失败")
+	// }
+
 	return client
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewOrderServiceClient 订单微服务
+func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.OrderServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.OrderServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return orderv1.NewOrderServiceClient(conn), nil
 }
 
 // NewDB 数据库

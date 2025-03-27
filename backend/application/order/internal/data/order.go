@@ -9,6 +9,7 @@ import (
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
+	"backend/application/payment/pkg"
 	"backend/pkg/types"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -21,7 +22,11 @@ type orderRepo struct {
 }
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
+	// 生成雪花ID
+	orderID := pkg.SnowflakeID()
+
 	order, err := o.data.db.CreateOrder(ctx, models.CreateOrderParams{
+		ID:            orderID,
 		UserID:        req.UserId,
 		Currency:      req.Currency,
 		StreetAddress: req.Address.StreetAddress,
@@ -57,7 +62,11 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		}
 		fmt.Printf("totalAmount: %v", totalAmount)
 
+		// 创建子订单ID
+		subOrderID := pkg.SnowflakeID()
+
 		subOrder, subOrderErr := o.data.db.CreateSubOrder(ctx, models.CreateSubOrderParams{
+			ID:          subOrderID,
 			OrderID:     order.ID,
 			MerchantID:  item.Item.MerchantId,
 			TotalAmount: totalAmount,
@@ -74,7 +83,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 	return &biz.PlaceOrderResp{
 		Order: &biz.OrderResult{
-			OrderId: order.ID.String(),
+			OrderId: order.ID,
 		},
 	}, nil
 }
@@ -124,16 +133,16 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 		// 先检查上下文是否已取消
 		select {
 		case <-ctx.Done():
-			o.log.WithContext(ctx).Warnf("Context canceled before fetching sub orders for order %s", order.ID)
+			o.log.WithContext(ctx).Warnf("Context canceled before fetching sub orders for order %d", order.ID)
 			// 上下文已取消，不执行查询，继续处理其他字段
 		default:
 			// 上下文未取消，执行查询
 			subOrders, err = o.getSubOrders(ctx, order.ID)
 			if err != nil {
 				if errors.Is(ctx.Err(), context.Canceled) {
-					o.log.WithContext(ctx).Warnf("Context canceled during fetching sub orders for order %s", order.ID)
+					o.log.WithContext(ctx).Warnf("Context canceled during fetching sub orders for order %d", order.ID)
 				} else {
-					o.log.WithContext(ctx).Errorf("Failed to get sub orders for order %s: %v", order.ID, err)
+					o.log.WithContext(ctx).Errorf("Failed to get sub orders for order %d: %v", order.ID, err)
 				}
 				// 错误发生时继续处理，不中断整个列表查询
 			}
@@ -165,7 +174,7 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 // 自定义JSON解析
 func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	type dbSubOrder struct {
-		ID          string
+		ID          int64
 		MerchantID  string
 		TotalAmount float64
 		Currency    string
@@ -199,11 +208,12 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 			Items:       items,
 		})
 	}
+
 	return subOrders, nil
 }
 
 // 获取订单的子订单信息
-func (o *orderRepo) getSubOrders(ctx context.Context, orderID uuid.UUID) ([]*biz.SubOrder, error) {
+func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.SubOrder, error) {
 	// 创建独立上下文，设置合理超时（如5秒）
 	subCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -213,7 +223,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID uuid.UUID) ([]*biz
 	if err != nil {
 		// 检查是否是上下文取消导致的错误
 		if ctx.Err() != nil {
-			o.log.WithContext(ctx).Warnf("Context canceled during database query for order %s", orderID)
+			o.log.WithContext(ctx).Warnf("Context canceled during database query for order %d", orderID)
 			return nil, fmt.Errorf("failed to query sub orders: %w", ctx.Err())
 		}
 		return nil, fmt.Errorf("failed to query sub orders: %w", err)
@@ -254,7 +264,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID uuid.UUID) ([]*biz
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:          order.ID.String(),
+			ID:          order.ID,
 			MerchantID:  order.MerchantID,
 			TotalAmount: amount,
 			Currency:    order.Currency,
@@ -269,49 +279,42 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID uuid.UUID) ([]*biz
 }
 
 func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
-	o.log.WithContext(ctx).Infof("Marking order %s as paid for user %s", req.OrderId, req.UserId)
+	o.log.WithContext(ctx).Infof("Marking order %d as paid for user %s", req.OrderId, req.UserId)
 	tx := o.data.DB(ctx)
-
-	// 解析订单ID
-	orderID, err := uuid.Parse(req.OrderId)
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Invalid order ID format: %v", err)
-		return nil, fmt.Errorf("invalid order ID format: %w", err)
-	}
 
 	// 获取订单信息，确认订单存在且属于该用户，使用FOR UPDATE锁定行
 	var order struct {
-		ID            uuid.UUID
+		ID            int64
 		UserID        uuid.UUID
 		PaymentStatus string
 	}
-	updatePaymentStatusResult, err := tx.UpdatePaymentStatus(ctx, orderID)
+	updatePaymentStatusResult, err := tx.UpdatePaymentStatus(ctx, req.OrderId)
 	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to get order %s: %v", req.OrderId, err)
+		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
 	fmt.Printf("updatePaymentStatusResult: %#v", updatePaymentStatusResult)
 
 	// 验证订单所有者
 	if order.UserID != req.UserId {
-		o.log.WithContext(ctx).Warnf("Order %s does not belong to user %s", req.OrderId, req.UserId)
+		o.log.WithContext(ctx).Warnf("Order %d does not belong to user %s", req.OrderId, req.UserId)
 		return nil, fmt.Errorf("order does not belong to user")
 	}
 
 	// 检查订单当前支付状态
 	if order.PaymentStatus == string(biz.PaymentPaid) {
 		// 订单已经是已支付状态，直接返回成功
-		o.log.WithContext(ctx).Infof("Order %s is already marked as paid", req.OrderId)
+		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
 		return &biz.MarkOrderPaidResp{}, nil
 	}
 
-	o.log.WithContext(ctx).Infof("Updating order %s payment status from %s to %s",
+	o.log.WithContext(ctx).Infof("Updating order %d payment status from %s to %s",
 		req.OrderId, order.PaymentStatus, string(biz.PaymentPaid))
 
 	// 更新订单支付状态为已支付
 	markOrderAsPaidResult, err := tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
 		PaymentStatus: string(biz.PaymentPaid),
-		ID:            orderID,
+		ID:            req.OrderId,
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update order payment status: %v", err)
@@ -323,7 +326,7 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	// 更新子订单状态
 	markSubOrderAsPaidResult, err := tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
 		PaymentStatus: string(biz.PaymentPaid),
-		OrderID:       orderID,
+		OrderID:       req.OrderId,
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
@@ -335,7 +338,7 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	// rowsAffected := markSubOrderAsPaidResult.
 	// 	o.log.WithContext(ctx).Infof("Updated %d sub orders for order %s", rowsAffected, req.OrderId)
 
-	o.log.WithContext(ctx).Infof("Successfully marked order %s as paid for user %s", req.OrderId, req.UserId)
+	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
 }
 

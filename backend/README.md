@@ -6,13 +6,14 @@ https://i0jecrneytu.feishu.cn/docx/WoStdOA3zo7KF1xnOM5caU8cnUg?from=from_copylin
 - auth: 30001,30002
 - user: 30003,30004
 - product: 30005,30006
-- cart: 30007, 30008
-- order: 30009, 30010
-- checkout: 30011, 30012
-- payment: 30013, 30014
-- category: 30015, 30016
-- assistant: 30017, 30018
-
+- cart: 30007,30008
+- order: 30009,30010
+- checkout: 30011,30012
+- payment: 30013,30014
+- category: 30015,30016
+- assistant: 30017,30018
+- merchants: 30019,30020
+- admin: 30021, 30022
 ## 启动基础设施
 ```bash
 make infra

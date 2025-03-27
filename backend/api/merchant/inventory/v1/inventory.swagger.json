@@ -17,6 +17,52 @@
   ],
   "paths": {
     "/v1/merchants/inventory/adjustments": {
+      "get": {
+        "summary": "获取产品库存调整历史",
+        "operationId": "Inventory_GetStockAdjustmentHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetStockAdjustmentHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "merchantId",
+            "description": "string product_id = 1; //  商品ID\n\n商家ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "分页页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "description": "每页大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Inventory"
+        ]
+      },
       "post": {
         "summary": "记录库存调整",
         "operationId": "Inventory_RecordStockAdjustment",
@@ -42,61 +88,6 @@
             "schema": {
               "$ref": "#/definitions/v1RecordStockAdjustmentRequest"
             }
-          }
-        ],
-        "tags": [
-          "Inventory"
-        ]
-      }
-    },
-    "/v1/merchants/inventory/adjustments/{productId}": {
-      "get": {
-        "summary": "获取库存调整历史",
-        "operationId": "Inventory_GetStockAdjustmentHistory",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetStockAdjustmentHistoryResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "productId",
-            "description": "商品ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "merchantId",
-            "description": "商家ID，可选",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "page",
-            "description": "分页页码",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "pageSize",
-            "description": "每页大小",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
           }
         ],
         "tags": [
@@ -220,6 +211,14 @@
           {
             "name": "pageSize",
             "description": "每页大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "threshold",
+            "description": "库存阈值",
             "in": "query",
             "required": false,
             "type": "integer",

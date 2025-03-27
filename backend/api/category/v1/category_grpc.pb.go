@@ -22,16 +22,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CategoryService_CreateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/CreateCategory"
-	CategoryService_GetLeafCategories_FullMethodName   = "/ecommerce.category.v1.CategoryService/GetLeafCategories"
-	CategoryService_BatchGetCategories_FullMethodName  = "/ecommerce.category.v1.CategoryService/BatchGetCategories"
-	CategoryService_GetCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/GetCategory"
-	CategoryService_UpdateCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/UpdateCategory"
-	CategoryService_DeleteCategory_FullMethodName      = "/ecommerce.category.v1.CategoryService/DeleteCategory"
-	CategoryService_GetSubTree_FullMethodName          = "/ecommerce.category.v1.CategoryService/GetSubTree"
-	CategoryService_GetCategoryPath_FullMethodName     = "/ecommerce.category.v1.CategoryService/GetCategoryPath"
-	CategoryService_GetClosureRelations_FullMethodName = "/ecommerce.category.v1.CategoryService/GetClosureRelations"
-	CategoryService_UpdateClosureDepth_FullMethodName  = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
+	CategoryService_CreateCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/CreateCategory"
+	CategoryService_GetLeafCategories_FullMethodName      = "/ecommerce.category.v1.CategoryService/GetLeafCategories"
+	CategoryService_BatchGetCategories_FullMethodName     = "/ecommerce.category.v1.CategoryService/BatchGetCategories"
+	CategoryService_GetCategory_FullMethodName            = "/ecommerce.category.v1.CategoryService/GetCategory"
+	CategoryService_UpdateCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/UpdateCategory"
+	CategoryService_DeleteCategory_FullMethodName         = "/ecommerce.category.v1.CategoryService/DeleteCategory"
+	CategoryService_GetSubTree_FullMethodName             = "/ecommerce.category.v1.CategoryService/GetSubTree"
+	CategoryService_GetDirectSubCategories_FullMethodName = "/ecommerce.category.v1.CategoryService/GetDirectSubCategories"
+	CategoryService_GetCategoryPath_FullMethodName        = "/ecommerce.category.v1.CategoryService/GetCategoryPath"
+	CategoryService_GetClosureRelations_FullMethodName    = "/ecommerce.category.v1.CategoryService/GetClosureRelations"
+	CategoryService_UpdateClosureDepth_FullMethodName     = "/ecommerce.category.v1.CategoryService/UpdateClosureDepth"
 )
 
 // CategoryServiceClient is the client API for CategoryService service.
@@ -54,6 +55,8 @@ type CategoryServiceClient interface {
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取子树
 	GetSubTree(ctx context.Context, in *GetSubTreeRequest, opts ...grpc.CallOption) (*Categories, error)
+	// 获取直接子分类（只返回下一级）
+	GetDirectSubCategories(ctx context.Context, in *GetDirectSubCategoriesRequest, opts ...grpc.CallOption) (*Categories, error)
 	// 获取分类路径
 	GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error)
 	// 获取闭包关系
@@ -140,6 +143,16 @@ func (c *categoryServiceClient) GetSubTree(ctx context.Context, in *GetSubTreeRe
 	return out, nil
 }
 
+func (c *categoryServiceClient) GetDirectSubCategories(ctx context.Context, in *GetDirectSubCategoriesRequest, opts ...grpc.CallOption) (*Categories, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Categories)
+	err := c.cc.Invoke(ctx, CategoryService_GetDirectSubCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *categoryServiceClient) GetCategoryPath(ctx context.Context, in *GetCategoryPathRequest, opts ...grpc.CallOption) (*Categories, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Categories)
@@ -190,6 +203,8 @@ type CategoryServiceServer interface {
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*emptypb.Empty, error)
 	// 获取子树
 	GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error)
+	// 获取直接子分类（只返回下一级）
+	GetDirectSubCategories(context.Context, *GetDirectSubCategoriesRequest) (*Categories, error)
 	// 获取分类路径
 	GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error)
 	// 获取闭包关系
@@ -226,6 +241,9 @@ func (UnimplementedCategoryServiceServer) DeleteCategory(context.Context, *Delet
 }
 func (UnimplementedCategoryServiceServer) GetSubTree(context.Context, *GetSubTreeRequest) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubTree not implemented")
+}
+func (UnimplementedCategoryServiceServer) GetDirectSubCategories(context.Context, *GetDirectSubCategoriesRequest) (*Categories, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDirectSubCategories not implemented")
 }
 func (UnimplementedCategoryServiceServer) GetCategoryPath(context.Context, *GetCategoryPathRequest) (*Categories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryPath not implemented")
@@ -383,6 +401,24 @@ func _CategoryService_GetSubTree_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CategoryService_GetDirectSubCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDirectSubCategoriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).GetDirectSubCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_GetDirectSubCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).GetDirectSubCategories(ctx, req.(*GetDirectSubCategoriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CategoryService_GetCategoryPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetCategoryPathRequest)
 	if err := dec(in); err != nil {
@@ -471,6 +507,10 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSubTree",
 			Handler:    _CategoryService_GetSubTree_Handler,
+		},
+		{
+			MethodName: "GetDirectSubCategories",
+			Handler:    _CategoryService_GetDirectSubCategories_Handler,
 		},
 		{
 			MethodName: "GetCategoryPath",

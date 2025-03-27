@@ -20,18 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProductService_UploadProductFile_FullMethodName      = "/ecommerce.product.v1.ProductService/UploadProductFile"
-	ProductService_CreateProduct_FullMethodName          = "/ecommerce.product.v1.ProductService/CreateProduct"
-	ProductService_UpdateProduct_FullMethodName          = "/ecommerce.product.v1.ProductService/UpdateProduct"
-	ProductService_SubmitForAudit_FullMethodName         = "/ecommerce.product.v1.ProductService/SubmitForAudit"
-	ProductService_AuditProduct_FullMethodName           = "/ecommerce.product.v1.ProductService/AuditProduct"
-	ProductService_ListRandomProducts_FullMethodName     = "/ecommerce.product.v1.ProductService/ListRandomProducts"
-	ProductService_GetCategoryProducts_FullMethodName    = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
-	ProductService_GetProductsBatch_FullMethodName       = "/ecommerce.product.v1.ProductService/GetProductsBatch"
-	ProductService_GetProduct_FullMethodName             = "/ecommerce.product.v1.ProductService/GetProduct"
-	ProductService_SearchProductsByName_FullMethodName   = "/ecommerce.product.v1.ProductService/SearchProductsByName"
-	ProductService_ListProductsByCategory_FullMethodName = "/ecommerce.product.v1.ProductService/ListProductsByCategory"
-	ProductService_DeleteProduct_FullMethodName          = "/ecommerce.product.v1.ProductService/DeleteProduct"
+	ProductService_UploadProductFile_FullMethodName               = "/ecommerce.product.v1.ProductService/UploadProductFile"
+	ProductService_CreateProduct_FullMethodName                   = "/ecommerce.product.v1.ProductService/CreateProduct"
+	ProductService_SubmitForAudit_FullMethodName                  = "/ecommerce.product.v1.ProductService/SubmitForAudit"
+	ProductService_AuditProduct_FullMethodName                    = "/ecommerce.product.v1.ProductService/AuditProduct"
+	ProductService_ListRandomProducts_FullMethodName              = "/ecommerce.product.v1.ProductService/ListRandomProducts"
+	ProductService_GetCategoryProducts_FullMethodName             = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
+	ProductService_GetCategoryWithChildrenProducts_FullMethodName = "/ecommerce.product.v1.ProductService/GetCategoryWithChildrenProducts"
+	ProductService_GetProductsBatch_FullMethodName                = "/ecommerce.product.v1.ProductService/GetProductsBatch"
+	ProductService_GetProduct_FullMethodName                      = "/ecommerce.product.v1.ProductService/GetProduct"
+	ProductService_SearchProductsByName_FullMethodName            = "/ecommerce.product.v1.ProductService/SearchProductsByName"
+	ProductService_ListProductsByCategory_FullMethodName          = "/ecommerce.product.v1.ProductService/ListProductsByCategory"
+	ProductService_DeleteProduct_FullMethodName                   = "/ecommerce.product.v1.ProductService/DeleteProduct"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -44,8 +44,6 @@ type ProductServiceClient interface {
 	UploadProductFile(ctx context.Context, in *UploadProductFileRequest, opts ...grpc.CallOption) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error)
-	// 更新商品信息
-	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// 提交商品审核
 	SubmitForAudit(ctx context.Context, in *SubmitAuditRequest, opts ...grpc.CallOption) (*AuditRecord, error)
 	// 审核商品
@@ -54,6 +52,8 @@ type ProductServiceClient interface {
 	ListRandomProducts(ctx context.Context, in *ListRandomProductsRequest, opts ...grpc.CallOption) (*Products, error)
 	// 根据分类返回商品数据
 	GetCategoryProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error)
+	// 根据分类及其所有子分类返回商品数据
+	GetCategoryWithChildrenProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error)
 	// 批量获取商品详情
 	GetProductsBatch(ctx context.Context, in *GetProductsBatchRequest, opts ...grpc.CallOption) (*Products, error)
 	// 获取单个商品详情
@@ -94,16 +94,6 @@ func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProd
 	return out, nil
 }
 
-func (c *productServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Product)
-	err := c.cc.Invoke(ctx, ProductService_UpdateProduct_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *productServiceClient) SubmitForAudit(ctx context.Context, in *SubmitAuditRequest, opts ...grpc.CallOption) (*AuditRecord, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuditRecord)
@@ -138,6 +128,16 @@ func (c *productServiceClient) GetCategoryProducts(ctx context.Context, in *GetC
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Products)
 	err := c.cc.Invoke(ctx, ProductService_GetCategoryProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetCategoryWithChildrenProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Products)
+	err := c.cc.Invoke(ctx, ProductService_GetCategoryWithChildrenProducts_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,6 @@ type ProductServiceServer interface {
 	UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
-	// 更新商品信息
-	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
 	// 提交商品审核
 	SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error)
 	// 审核商品
@@ -214,6 +212,8 @@ type ProductServiceServer interface {
 	ListRandomProducts(context.Context, *ListRandomProductsRequest) (*Products, error)
 	// 根据分类返回商品数据
 	GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error)
+	// 根据分类及其所有子分类返回商品数据
+	GetCategoryWithChildrenProducts(context.Context, *GetCategoryProductsRequest) (*Products, error)
 	// 批量获取商品详情
 	GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error)
 	// 获取单个商品详情
@@ -240,9 +240,6 @@ func (UnimplementedProductServiceServer) UploadProductFile(context.Context, *Upl
 func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
-func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
-}
 func (UnimplementedProductServiceServer) SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitForAudit not implemented")
 }
@@ -254,6 +251,9 @@ func (UnimplementedProductServiceServer) ListRandomProducts(context.Context, *Li
 }
 func (UnimplementedProductServiceServer) GetCategoryProducts(context.Context, *GetCategoryProductsRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryProducts not implemented")
+}
+func (UnimplementedProductServiceServer) GetCategoryWithChildrenProducts(context.Context, *GetCategoryProductsRequest) (*Products, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryWithChildrenProducts not implemented")
 }
 func (UnimplementedProductServiceServer) GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductsBatch not implemented")
@@ -327,24 +327,6 @@ func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateProductRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductServiceServer).UpdateProduct(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ProductService_UpdateProduct_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ProductService_SubmitForAudit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SubmitAuditRequest)
 	if err := dec(in); err != nil {
@@ -413,6 +395,24 @@ func _ProductService_GetCategoryProducts_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).GetCategoryProducts(ctx, req.(*GetCategoryProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetCategoryWithChildrenProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCategoryProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetCategoryWithChildrenProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_GetCategoryWithChildrenProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetCategoryWithChildrenProducts(ctx, req.(*GetCategoryProductsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -523,10 +523,6 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_CreateProduct_Handler,
 		},
 		{
-			MethodName: "UpdateProduct",
-			Handler:    _ProductService_UpdateProduct_Handler,
-		},
-		{
 			MethodName: "SubmitForAudit",
 			Handler:    _ProductService_SubmitForAudit_Handler,
 		},
@@ -541,6 +537,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCategoryProducts",
 			Handler:    _ProductService_GetCategoryProducts_Handler,
+		},
+		{
+			MethodName: "GetCategoryWithChildrenProducts",
+			Handler:    _ProductService_GetCategoryWithChildrenProducts_Handler,
 		},
 		{
 			MethodName: "GetProductsBatch",

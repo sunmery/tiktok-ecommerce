@@ -12,7 +12,7 @@ sql:
         out: "internal/data/models"
         sql_package: "pgx/v5"
         emit_db_tags: false # 如果为 true，则将 DB 标记添加到生成的结构中。默认值为 false
-        emit_prepared_queries: true # 如果为 true，则包括对准备好的查询的支持。默认值为 false
+        emit_prepared_queries: true # 如果为 true，则包括对准备好地查询的支持。默认值为 false
         emit_interface: true # 如果为 true，则在生成的包中输出接口 Querier 。默认值为 false
         emit_exact_table_names: true # 如果为 true，则结构名称将使用复数表名称。否则，sqlc 会尝试单数化复数表名。默认值为 false 。
         emit_empty_slices: false # 如果为 true， :many 则查询返回的切片将为空，而不是 nil 。默认值为 false 。
@@ -44,8 +44,3 @@ sql:
             go_type: "time.Time"
           - db_type: "uuid"
             go_type: "github.com/google/uuid.UUID"
-          # 数值类型映射
-          - db_type: "pg_catalog.int4"
-            go_type: "uint32"
-          - db_type: "pg_catalog.int8"
-            go_type: "uint64"

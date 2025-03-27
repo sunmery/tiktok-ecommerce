@@ -27,7 +27,7 @@ type Address struct {
 }
 
 type SubOrder struct {
-	ID          string
+	ID          int64
 	MerchantID  uuid.UUID
 	TotalAmount float64
 	Currency    string
@@ -37,7 +37,7 @@ type SubOrder struct {
 	UpdatedAt   time.Time
 }
 type Order struct {
-	OrderID       uuid.UUID
+	OrderID       int64
 	UserID        uuid.UUID
 	Currency      string
 	Address       *Address
@@ -64,7 +64,7 @@ type OrderItem struct {
 }
 
 type OrderResult struct {
-	OrderId string
+	OrderId int64
 }
 
 type PlaceOrderReq struct {
@@ -91,7 +91,7 @@ type MarkOrderPaidResp struct{}
 
 type MarkOrderPaidReq struct {
 	UserId  uuid.UUID
-	OrderId string
+	OrderId int64
 }
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)

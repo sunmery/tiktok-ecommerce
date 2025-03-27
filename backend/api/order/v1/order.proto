@@ -57,7 +57,7 @@ message OrderItem {
 
 // 创建订单响应的消息结构
 message OrderResult {
-  string order_id = 1; // 订单 ID
+  int64 order_id = 1; // 订单 ID
 }
 
 // 创建订单响应的消息结构
@@ -77,7 +77,7 @@ enum PaymentStatus {
 // 订单的消息结构
 message Order {
   repeated OrderItem items = 1; // 订单项列表
-  string order_id = 2; // 订单 ID
+  int64 order_id = 2; // 订单 ID
   string user_id = 3 [
     (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
     (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
@@ -102,7 +102,7 @@ message ListOrderResp {
 
 // 标记订单为已支付请求的消息结构
 message MarkOrderPaidReq {
-  string order_id = 2; // 订单 ID
+  int64 order_id = 2; // 订单 ID
 }
 
 // 标记订单为已支付响应的消息结构

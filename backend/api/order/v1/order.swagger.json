@@ -112,7 +112,8 @@
             "description": "订单 ID",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "int64"
           },
           {
             "name": "body",
@@ -257,6 +258,7 @@
         },
         "orderId": {
           "type": "string",
+          "format": "int64",
           "title": "订单 ID"
         },
         "userId": {
@@ -306,6 +308,7 @@
       "properties": {
         "orderId": {
           "type": "string",
+          "format": "int64",
           "title": "订单 ID"
         }
       },

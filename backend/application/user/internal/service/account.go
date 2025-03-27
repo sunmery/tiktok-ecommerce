@@ -1,12 +1,11 @@
 package service
 
 import (
-	"backend/application/user/internal/biz"
-	"backend/pkg"
 	"context"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1 "backend/api/user/v1"
+	"backend/application/user/internal/biz"
+	"backend/pkg"
 )
 
 func (s *UserService) GetUserProfile(ctx context.Context, _ *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
@@ -36,7 +35,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, _ *v1.GetProfileReques
 		Role:        profile.Role,
 		DisplayName: profile.DisplayName,
 		IsDeleted:   profile.IsDeleted,
-		CreatedTime: timestamppb.New(profile.CreatedTime),
-		UpdatedTime: timestamppb.New(profile.UpdatedTime),
+		CreatedTime: profile.CreatedTime,
+		UpdatedTime: profile.UpdatedTime,
 	}, nil
 }

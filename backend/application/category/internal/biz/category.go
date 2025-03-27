@@ -60,6 +60,8 @@ type CategoryRepo interface {
 	GetSubTree(ctx context.Context, rootID uint64) ([]*Category, error)
 	GetCategoryPath(ctx context.Context, categoryId uint64) ([]*Category, error)
 	GetLeafCategories(ctx context.Context) ([]*Category, error)
+	// GetDirectSubCategories 获取指定分类的直接子分类（只返回下一级）
+	GetDirectSubCategories(ctx context.Context, parentId uint64) ([]*Category, error)
 
 	// GetClosureRelations 闭包关系
 	GetClosureRelations(ctx context.Context, categoryId uint64) ([]*ClosureRelation, error)
@@ -135,6 +137,12 @@ func (uc *CategoryUsecase) GetCategoryPath(ctx context.Context, categoryID uint6
 func (uc *CategoryUsecase) GetLeafCategories(ctx context.Context) ([]*Category, error) {
 	// uc.log.WithContext(ctx).Debugf("GetLeafCategories request: %d", level)
 	return uc.repo.GetLeafCategories(ctx)
+}
+
+// GetDirectSubCategories 获取指定分类的直接子分类（只返回下一级）
+func (uc *CategoryUsecase) GetDirectSubCategories(ctx context.Context, parentId uint64) ([]*Category, error) {
+	uc.log.WithContext(ctx).Debugf("GetDirectSubCategories request: %d", parentId)
+	return uc.repo.GetDirectSubCategories(ctx, parentId)
 }
 
 // GetClosureRelations 获取闭包关系

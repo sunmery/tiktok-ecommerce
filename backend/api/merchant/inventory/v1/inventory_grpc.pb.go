@@ -40,7 +40,7 @@ type InventoryClient interface {
 	GetLowStockProducts(ctx context.Context, in *GetLowStockProductsRequest, opts ...grpc.CallOption) (*GetLowStockProductsResponse, error)
 	// 记录库存调整
 	RecordStockAdjustment(ctx context.Context, in *RecordStockAdjustmentRequest, opts ...grpc.CallOption) (*RecordStockAdjustmentResponse, error)
-	// 获取库存调整历史
+	// 获取产品库存调整历史
 	GetStockAdjustmentHistory(ctx context.Context, in *GetStockAdjustmentHistoryRequest, opts ...grpc.CallOption) (*GetStockAdjustmentHistoryResponse, error)
 	// 获取产品当前库存
 	GetProductStock(ctx context.Context, in *GetProductStockRequest, opts ...grpc.CallOption) (*GetProductStockResponse, error)
@@ -138,7 +138,7 @@ type InventoryServer interface {
 	GetLowStockProducts(context.Context, *GetLowStockProductsRequest) (*GetLowStockProductsResponse, error)
 	// 记录库存调整
 	RecordStockAdjustment(context.Context, *RecordStockAdjustmentRequest) (*RecordStockAdjustmentResponse, error)
-	// 获取库存调整历史
+	// 获取产品库存调整历史
 	GetStockAdjustmentHistory(context.Context, *GetStockAdjustmentHistoryRequest) (*GetStockAdjustmentHistoryResponse, error)
 	// 获取产品当前库存
 	GetProductStock(context.Context, *GetProductStockRequest) (*GetProductStockResponse, error)
