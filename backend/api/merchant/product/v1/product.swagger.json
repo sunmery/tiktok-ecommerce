@@ -244,7 +244,8 @@
           "title": "商品价格（单位：元）"
         },
         "status": {
-          "$ref": "#/definitions/v1ProductStatus",
+          "type": "integer",
+          "format": "int64",
           "title": "当前状态"
         },
         "merchantId": {
@@ -284,19 +285,6 @@
         }
       },
       "title": "商品核心数据结构"
-    },
-    "v1ProductStatus": {
-      "type": "string",
-      "enum": [
-        "PRODUCT_STATUS_DRAFT",
-        "PRODUCT_STATUS_PENDING",
-        "PRODUCT_STATUS_APPROVED",
-        "PRODUCT_STATUS_REJECTED",
-        "PRODUCT_STATUS_SOLDOUT"
-      ],
-      "default": "PRODUCT_STATUS_DRAFT",
-      "description": "- PRODUCT_STATUS_DRAFT: 草稿状态\n - PRODUCT_STATUS_PENDING: 待审核\n - PRODUCT_STATUS_APPROVED: 审核通过\n - PRODUCT_STATUS_REJECTED: 审核驳回\n - PRODUCT_STATUS_SOLDOUT: 下架",
-      "title": "商品状态枚举定义"
     },
     "v1Products": {
       "type": "object",

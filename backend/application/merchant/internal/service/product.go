@@ -131,7 +131,7 @@ func convertBizProductToPB(p *biz.Product) *productv1.Product {
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
-		Status:      convertBizStatusToPB(p.Status),
+		Status:      uint32(p.Status),
 		MerchantId:  p.MerchantId.String(),
 		Images:      images,
 		Attributes:  attributes,
