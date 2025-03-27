@@ -18,7 +18,7 @@ type GetProductStockRequest struct {
 	MerchantId uuid.UUID
 }
 
-// 获取产品库存响应
+// GetProductStockResponse 获取产品库存响应
 type GetProductStockResponse struct {
 	ProductId      uuid.UUID
 	MerchantId     uuid.UUID
@@ -27,7 +27,7 @@ type GetProductStockResponse struct {
 	IsLowStock     bool
 }
 
-// 更新产品库存请求
+// UpdateProductStockRequest 更新产品库存请求
 type UpdateProductStockRequest struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
@@ -36,33 +36,33 @@ type UpdateProductStockRequest struct {
 	OperatorId uuid.UUID
 }
 
-// 更新产品库存响应
+// UpdateProductStockResponse 更新产品库存响应
 type UpdateProductStockResponse struct {
 	Success bool
 	Message string
 }
 
-// 设置库存警报阈值请求
+// SetStockAlertRequest 设置库存警报阈值请求
 type SetStockAlertRequest struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
 	Threshold  int32
 }
 
-// 设置库存警报阈值响应
+// SetStockAlertResponse 设置库存警报阈值响应
 type SetStockAlertResponse struct {
 	Success bool
 	Message string
 }
 
-// 获取库存警报配置请求
+// GetStockAlertsRequest 获取库存警报配置请求
 type GetStockAlertsRequest struct {
 	MerchantId uuid.UUID
 	Page       int64
 	PageSize   int64
 }
 
-// 库存警报配置
+// StockAlert 库存警报配置
 type StockAlert struct {
 	Id           uuid.UUID
 	ProductId    uuid.UUID
@@ -74,13 +74,13 @@ type StockAlert struct {
 	UpdatedAt    time.Time
 }
 
-// 获取库存警报配置响应
+// GetStockAlertsResponse 获取库存警报配置响应
 type GetStockAlertsResponse struct {
 	Alerts []StockAlert
 	Total  uint32
 }
 
-// 获取低库存产品请求
+// GetLowStockProductsRequest 获取低库存产品请求
 type GetLowStockProductsRequest struct {
 	MerchantId uuid.UUID
 	Threshold  int32
@@ -88,7 +88,7 @@ type GetLowStockProductsRequest struct {
 	PageSize   int64
 }
 
-// 低库存产品信息
+// LowStockProduct 低库存产品信息
 type LowStockProduct struct {
 	ProductId    uuid.UUID
 	MerchantId   uuid.UUID
@@ -98,13 +98,13 @@ type LowStockProduct struct {
 	ImageUrl     string
 }
 
-// 获取低库存产品响应
+// GetLowStockProductsResponse 获取低库存产品响应
 type GetLowStockProductsResponse struct {
 	Products []LowStockProduct
 	Total    int64
 }
 
-// 记录库存调整请求
+// RecordStockAdjustmentRequest 记录库存调整请求
 type RecordStockAdjustmentRequest struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
@@ -113,16 +113,16 @@ type RecordStockAdjustmentRequest struct {
 	OperatorId uuid.UUID
 }
 
-// 记录库存调整响应
+// RecordStockAdjustmentResponse 记录库存调整响应
 type RecordStockAdjustmentResponse struct {
 	Success      bool
 	Message      string
 	AdjustmentId uuid.UUID
 }
 
-// 获取库存调整历史请求
+// GetStockAdjustmentHistoryRequest 获取库存调整历史请求
 type GetStockAdjustmentHistoryRequest struct {
-	ProductId  uuid.UUID
+	// ProductId  uuid.UUID
 	MerchantId uuid.UUID
 	Page       int64
 	PageSize   int64
@@ -140,13 +140,13 @@ type StockAdjustment struct {
 	CreatedAt   time.Time
 }
 
-// 获取库存调整历史响应
+// GetStockAdjustmentHistoryResponse 获取库存调整历史响应
 type GetStockAdjustmentHistoryResponse struct {
 	Adjustments []StockAdjustment
 	Total       int64
 }
 
-// 库存
+// Inventory 库存
 type Inventory struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID

@@ -12,7 +12,7 @@ type GetMerchantProducts struct {
 	MerchantID uuid.UUID
 }
 
-// 商品实体
+// Product 商品实体
 type (
 	ProductStatus uint
 

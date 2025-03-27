@@ -132,7 +132,7 @@ func (s *OrderServiceService) QueryOrders(ctx context.Context, req *v1.ListOrder
 		// 添加订单到响应列表
 		orders = append(orders, &v1.Order{
 			Items:         orderItems,
-			OrderId:       order.OrderID.String(),
+			OrderId:       order.OrderID,
 			UserId:        order.UserID.String(),
 			Currency:      order.Currency,
 			Address:       address,
@@ -153,7 +153,7 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	}
 
 	// 验证订单ID
-	if req.OrderId == "" {
+	if req.OrderId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "order ID is required")
 	}
 

@@ -231,7 +231,7 @@ evans:
 .PHONY: sqlc
 # 生成sql代码
 sqlc:
-	#rm -rf internal/data/models/*
+	rm -rf internal/data/models/*
 	sqlc generate
 
 .PHONY: help

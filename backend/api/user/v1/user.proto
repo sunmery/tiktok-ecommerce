@@ -219,7 +219,7 @@ message GetProfileResponse {
   string role = 6;
   string display_name = 9;
   bool is_deleted = 10; // 用户是否注销
-  google.protobuf.Timestamp created_time = 7;
-  google.protobuf.Timestamp updated_time = 8;
+  string created_time = 7;
+  string updated_time = 8;
   //  repeated string roles = 6;
 }

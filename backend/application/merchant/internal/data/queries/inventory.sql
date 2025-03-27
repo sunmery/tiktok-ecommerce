@@ -107,8 +107,8 @@ FROM merchant.stock_adjustments sa
          JOIN products.products p
               ON sa.product_id = p.id
                   AND sa.merchant_id = p.merchant_id
-WHERE sa.product_id = @product_id::uuid
-  AND sa.merchant_id = @merchant_id::uuid
+-- WHERE sa.product_id = @product_id::uuid
+WHERE sa.merchant_id = @merchant_id::uuid
 ORDER BY sa.created_at DESC
 LIMIT @page_size OFFSET @page;
 

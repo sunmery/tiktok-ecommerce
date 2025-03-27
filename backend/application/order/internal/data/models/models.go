@@ -13,7 +13,7 @@ import (
 
 // 主订单表，记录订单汇总信息
 type OrdersOrders struct {
-	ID            uuid.UUID `json:"id"`
+	ID            int64     `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
 	Currency      string    `json:"currency"`
 	StreetAddress string    `json:"streetAddress"`
@@ -29,8 +29,8 @@ type OrdersOrders struct {
 
 // 子订单表，按商家分单存储
 type OrdersSubOrders struct {
-	ID            uuid.UUID      `json:"id"`
-	OrderID       uuid.UUID      `json:"orderID"`
+	ID            int64          `json:"id"`
+	OrderID       int64          `json:"orderID"`
 	MerchantID    uuid.UUID      `json:"merchantID"`
 	TotalAmount   pgtype.Numeric `json:"totalAmount"`
 	Currency      string         `json:"currency"`

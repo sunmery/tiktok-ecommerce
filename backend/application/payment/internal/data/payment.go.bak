@@ -67,7 +67,7 @@ func (r *paymentRepo) PaymentNotify(ctx context.Context, req *biz.PaymentNotifyR
 func (r *paymentRepo) ProcessPaymentCallback(ctx context.Context, req *biz.AliPayCallbackReq) (*biz.PaymentCallbackResp, error) {
 	r.log.Infof("Received payment callback: %+v", req)
 
-	tradeNo := fmt.Sprintf("%v", req.TradeNo)
+	tradeNo := strconv.FormatInt(req.TradeNo, 10)
 
 	requestForm := url.Values{
 		"app_id":       []string{req.AppId},
@@ -119,11 +119,11 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 		Trade: alipay.Trade{
 			NotifyURL: r.pay.Alipay.NotifyUrl, // 异步通知地址
 			ReturnURL: r.pay.Alipay.ReturnUrl, // 回调地址
-			Subject:   req.Subject,            // 订单主题
+			Subject:   "支付测试:" + req.Subject,  // 订单主题
 			// OutTradeNo:  fmt.Sprintf("%d", time.Now().Unix()), // 商户订单号，必须唯一
 			// OutTradeNo: req.OrderId.String(), // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
 			OutTradeNo:  tradeNo,                  // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
-			TotalAmount: req.Amount,               // 直接使用字符串金额               // 订单金额
+			TotalAmount: req.Amount,               // 订单金额
 			ProductCode: "FAST_INSTANT_TRADE_PAY", // 电脑网站支付，产品码为固定值
 		},
 	}

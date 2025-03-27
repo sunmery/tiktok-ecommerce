@@ -30,7 +30,7 @@ message CheckoutReq {
 
 // 结账响应的消息结构
 message CheckoutResp {
-  string order_id = 1; // 唯一标识订单，用于后续查询、退换货等操作
-  string payment_id = 2; // 支付ID
+  int64 order_id = 1; // 唯一标识订单，用于后续查询、退换货等操作
+  int64 payment_id = 2; // 支付ID
   string payment_url = 3; // 支付链接
 }

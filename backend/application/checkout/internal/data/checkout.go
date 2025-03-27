@@ -144,13 +144,13 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	}
 
 	// 调用支付微服务生成支付URL
-	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentReq{
-		OrderId:       order.Order.OrderId,
-		Currency:      creditCard.Currency,
-		Amount:        amount,
-		PaymentMethod: req.PaymentMethod,
-		Subject:       "支付测试",
-		TimeExpire:    "",
+	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentRequest{
+		OrderId:   order.Order.OrderId,
+		UserId:    req.UserId.String(),
+		Amount:    amount,
+		Currency:  creditCard.Currency,
+		Subject:   "支付测试",
+		ReturnUrl: "",
 	})
 	if paymentErr != nil || payment == nil {
 		// 订单回滚
@@ -163,7 +163,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	return &biz.CheckoutReply{
 		OrderId:    order.Order.OrderId,
 		PaymentId:  payment.PaymentId,
-		PaymentURL: payment.PaymentUrl,
+		PaymentURL: payment.PayUrl,
 	}, err
 }
 

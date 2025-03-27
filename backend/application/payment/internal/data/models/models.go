@@ -12,13 +12,17 @@ import (
 )
 
 type PaymentsPayments struct {
-	PaymentID   uuid.UUID      `json:"paymentID"`
-	OrderID     uuid.UUID      `json:"orderID"`
+	ID          int64          `json:"id"`
+	OrderID     int64          `json:"orderID"`
+	UserID      uuid.UUID      `json:"userID"`
 	Amount      pgtype.Numeric `json:"amount"`
 	Currency    string         `json:"currency"`
 	Method      string         `json:"method"`
 	Status      string         `json:"status"`
-	GatewayTxID *string        `json:"gatewayTxID"`
+	Subject     string         `json:"subject"`
+	TradeNo     string         `json:"tradeNo"`
+	GatewayTxID string         `json:"gatewayTxID"`
+	PayUrl      string         `json:"payUrl"`
 	Metadata    []byte         `json:"metadata"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`

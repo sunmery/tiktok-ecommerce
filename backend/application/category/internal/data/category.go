@@ -63,6 +63,7 @@ func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category
 // 1. 开启事务
 // 2. 删除所有关联闭包记录
 // 3. 删除分类记录
+// 4. 更新父节点的is_leaf状态（如果没有其他子节点则设为true）
 // 数据访问层实现
 func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
 
@@ -203,7 +204,7 @@ func (r *categoryRepo) UpdateClosureDepth(ctx context.Context, req *biz.UpdateCl
 // 自动处理根分类：
 // 通过 root_check 确保根分类（id=0）存在，无需手动初始化。
 // 层级验证：
-// 父分类层级 ≥3 时禁止插入（new_level 会设为 NULL，跳过插入）。
+// 父分类层级 ≥n 时禁止插入（new_level 会设为 NULL，跳过插入）。
 // 路径生成：
 // 根据父分类的 path 生成唯一路径（使用 gen_random_uuid() 避免冲突）。
 // 更新父分类状态：

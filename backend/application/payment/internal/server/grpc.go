@@ -22,7 +22,7 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
-	payment *service.PaymentServiceService,
+	payment *service.PaymentService,
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,

@@ -203,13 +203,13 @@ func (uc *InventoryService) GetStockAdjustmentHistory(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
-	productId, err := uuid.Parse(req.ProductId)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid product id: '%s' error: %v", req.ProductId, err))
-	}
+	// productId, err := uuid.Parse(req.ProductId)
+	// if err != nil {
+	// 	return nil, errors.New(fmt.Sprintf("invalid product id: '%s' error: %v", req.ProductId, err))
+	// }
 
 	result, err := uc.ic.GetStockAdjustmentHistory(ctx, &biz.GetStockAdjustmentHistoryRequest{
-		ProductId:  productId,
+		// ProductId:  productId,
 		MerchantId: userId,
 		Page:       int64(req.Page),
 		PageSize:   int64(req.PageSize),

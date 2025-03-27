@@ -523,12 +523,10 @@
           "title": "用户是否注销"
         },
         "createdTime": {
-          "type": "string",
-          "format": "date-time"
+          "type": "string"
         },
         "updatedTime": {
           "type": "string",
-          "format": "date-time",
           "title": "repeated string roles = 6;"
         }
       },

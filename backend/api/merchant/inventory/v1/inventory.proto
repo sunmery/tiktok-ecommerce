@@ -38,10 +38,10 @@ service Inventory {
     };
   }
 
-  // 获取库存调整历史
+  // 获取产品库存调整历史
   rpc GetStockAdjustmentHistory(GetStockAdjustmentHistoryRequest) returns (GetStockAdjustmentHistoryResponse) {
     option (google.api.http) = {
-      get: "/v1/merchants/inventory/adjustments/{product_id}"
+      get: "/v1/merchants/inventory/adjustments"
     };
   }
 
@@ -170,8 +170,8 @@ message RecordStockAdjustmentResponse {
 
 // 获取库存调整历史请求
 message GetStockAdjustmentHistoryRequest {
-  string product_id = 1; //  商品ID
-  string merchant_id = 2; // 商家ID，可选
+//  string product_id = 1; //  商品ID
+  string merchant_id = 2; // 商家ID
   uint32 page = 3; // 分页页码
   uint32 page_size = 4; // 每页大小
 }

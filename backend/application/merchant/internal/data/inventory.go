@@ -104,8 +104,8 @@ func (i *inventoryRepo) GetStockAlerts(ctx context.Context, req *biz.GetStockAle
 	pageSize := (req.Page - 1) * req.PageSize
 	alerts, err := i.data.DB(ctx).GetStockAlerts(ctx, models.GetStockAlertsParams{
 		MerchantID: merchantId,
-		Page:       &req.Page,
-		PageSize:   &pageSize,
+		Page:       &pageSize,
+		PageSize:   &req.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stock alerts: %w", err)
@@ -217,14 +217,14 @@ func (i *inventoryRepo) RecordStockAdjustment(ctx context.Context, req *biz.Reco
 // GetStockAdjustmentHistory 获取库存调整历史
 func (i *inventoryRepo) GetStockAdjustmentHistory(ctx context.Context, req *biz.GetStockAdjustmentHistoryRequest) (*biz.GetStockAdjustmentHistoryResponse, error) {
 	// 获取库存调整历史
-	productId := types.ToPgUUID(req.ProductId)
+	// productId := types.ToPgUUID(req.ProductId)
 	merchantId := types.ToPgUUID(req.MerchantId)
 	pageSize := (req.Page - 1) * req.PageSize
 	adjustments, err := i.data.DB(ctx).GetStockAdjustmentHistory(ctx, models.GetStockAdjustmentHistoryParams{
-		ProductID:  productId,
+		// ProductID:  productId,
 		MerchantID: merchantId,
-		Page:       &req.Page,
-		PageSize:   &pageSize,
+		Page:       &pageSize,
+		PageSize:   &req.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stock adjustment history: %w", err)
@@ -232,7 +232,7 @@ func (i *inventoryRepo) GetStockAdjustmentHistory(ctx context.Context, req *biz.
 
 	// 获取总数
 	count, err := i.data.DB(ctx).CountStockAdjustmentHistory(ctx, models.CountStockAdjustmentHistoryParams{
-		ProductID:  req.ProductId,
+		// ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
 	})
 	if err != nil {

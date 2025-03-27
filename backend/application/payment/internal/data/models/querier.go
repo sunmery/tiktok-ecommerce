@@ -6,36 +6,82 @@ package models
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type Querier interface {
 	//CreatePaymentQuery
 	//
-	//  INSERT INTO payments.payments (payment_id, order_id, amount, currency, method, status,
-	//                                 gateway_tx_id, metadata)
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+	//  INSERT INTO payments.payments (id, order_id, user_id, amount, currency, method, status,
+	//                                 subject, trade_no, gateway_tx_id, pay_url, metadata)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	//  RETURNING id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
 	CreatePaymentQuery(ctx context.Context, arg CreatePaymentQueryParams) (PaymentsPayments, error)
 	//GetByIDQuery
 	//
-	//  SELECT payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+	//  SELECT id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
 	//  FROM payments.payments
-	//  WHERE payment_id = $1
-	GetByIDQuery(ctx context.Context, paymentID uuid.UUID) (PaymentsPayments, error)
+	//  WHERE id = $1
+	GetByIDQuery(ctx context.Context, id int64) (PaymentsPayments, error)
 	//GetByOrderIDQuery
 	//
-	//  SELECT payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+	//  SELECT id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE order_id = $1
-	GetByOrderIDQuery(ctx context.Context, orderID uuid.UUID) (PaymentsPayments, error)
+	GetByOrderIDQuery(ctx context.Context, orderID int64) (PaymentsPayments, error)
+	//GetPayment
+	//
+	//  SELECT id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	//  FROM payments.payments
+	//  WHERE id = $1
+	GetPayment(ctx context.Context, id int64) (PaymentsPayments, error)
+	//GetPaymentByOrderID
+	//
+	//  SELECT id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	//  FROM payments.payments
+	//  WHERE order_id = $1
+	GetPaymentByOrderID(ctx context.Context, orderID int64) (PaymentsPayments, error)
+	//GetPaymentByTradeNo
+	//
+	//  SELECT id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	//  FROM payments.payments
+	//  WHERE trade_no = $1
+	GetPaymentByTradeNo(ctx context.Context, tradeNo string) (PaymentsPayments, error)
+	//UpdatePaymentStatus
+	//
+	//  UPDATE payments.payments
+	//  SET
+	//      status = $4,
+	//      gateway_tx_id = $3,
+	//      updated_at = now()
+	//  WHERE (id = $1 AND $1 != 0) OR (order_id = $2 AND $2 != 0)
+	//  RETURNING id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (PaymentsPayments, error)
+	//UpdatePaymentStatusByID
+	//
+	//  UPDATE payments.payments
+	//  SET status        = $2,
+	//      gateway_tx_id = $3,
+	//      updated_at    = now()
+	//  WHERE id = $1
+	//  RETURNING id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	UpdatePaymentStatusByID(ctx context.Context, arg UpdatePaymentStatusByIDParams) (PaymentsPayments, error)
+	//UpdatePaymentStatusByOrderID
+	//
+	//  UPDATE payments.payments
+	//  SET status        = $2,
+	//      gateway_tx_id = $3,
+	//      updated_at    = now()
+	//  WHERE order_id = $1
+	//  RETURNING id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
+	UpdatePaymentStatusByOrderID(ctx context.Context, arg UpdatePaymentStatusByOrderIDParams) (PaymentsPayments, error)
 	//UpdateStatusQuery
 	//
 	//  UPDATE payments.payments
 	//  SET status        = $2,
 	//      gateway_tx_id = $3,
-	//      updated_at    = $4
-	//  WHERE payment_id = $1 RETURNING payment_id, order_id, amount, currency, method, status, gateway_tx_id, metadata, created_at, updated_at
+	//      updated_at    = now()
+	//  WHERE id = $1
+	//  RETURNING id, order_id, user_id, amount, currency, method, status, subject, trade_no, gateway_tx_id, pay_url, metadata, created_at, updated_at
 	UpdateStatusQuery(ctx context.Context, arg UpdateStatusQueryParams) (PaymentsPayments, error)
 }
 

@@ -1,21 +1,14 @@
 services:
 
-  users:
-    image: tiktok/users:prod
+  user:
+    # image: ecommerce/users:prod
+    # pull_policy: build
     platform: linux/amd64
+    build:
+      dockerfile: .
+      context: .
     ports:
       - "30001:30001"
       - "30002:30002"
-    container_name: users
+    container_name: ecommerce-user-v1
     restart: always
-    networks:
-      - app-network
-    environment:
-      - DB_SOURCE=postgresql://postgres:postgres@postgres17:5432/simple_bank?sslmode=disable
-      - REDIS_ADDRESS=redis7:6379
-      - REDIS_USERNAME=default
-      - REDIS_PASSWORD=msdnmm
-    command:
-      - "/bin/user"
-      - "-conf"
-      - "/bin/configs"

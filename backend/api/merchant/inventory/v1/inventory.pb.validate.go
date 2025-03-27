@@ -1702,8 +1702,6 @@ func (m *GetStockAdjustmentHistoryRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ProductId
-
 	// no validation rules for MerchantId
 
 	// no validation rules for Page

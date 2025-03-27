@@ -127,6 +127,7 @@ type Querier interface {
 	//    AND p.merchant_id = $2::uuid
 	GetProductStock(ctx context.Context, arg GetProductStockParams) (GetProductStockRow, error)
 	// 获取库存调整历史
+	// WHERE sa.product_id = @product_id::uuid
 	//
 	//  SELECT sa.id,
 	//         sa.product_id,
@@ -140,10 +141,9 @@ type Querier interface {
 	//           JOIN products.products p
 	//                ON sa.product_id = p.id
 	//                    AND sa.merchant_id = p.merchant_id
-	//  WHERE sa.product_id = $1::uuid
-	//    AND sa.merchant_id = $2::uuid
+	//  WHERE sa.merchant_id = $1::uuid
 	//  ORDER BY sa.created_at DESC
-	//  LIMIT $4 OFFSET $3
+	//  LIMIT $3 OFFSET $2
 	GetStockAdjustmentHistory(ctx context.Context, arg GetStockAdjustmentHistoryParams) ([]GetStockAdjustmentHistoryRow, error)
 	// 获取库存警报配置
 	//

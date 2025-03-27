@@ -18,8 +18,8 @@ type (
 		PaymentMethod string
 	}
 	CheckoutReply struct {
-		OrderId    string // 唯一标识订单，用于后续查询、退换货等操作
-		PaymentId  string // 支付事务唯一标识，用于与支付网关对账或处理支付相关问题
+		OrderId    int64  // 唯一标识订单，用于后续查询、退换货等操作
+		PaymentId  int64  // 支付事务唯一标识，用于与支付网关对账或处理支付相关问题
 		PaymentURL string // 支付URL
 	}
 )

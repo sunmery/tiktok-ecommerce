@@ -23,7 +23,7 @@ WITH parent_cte AS (
 valid_parent AS (
     SELECT *
     FROM parent_cte
-    WHERE level < 3
+    WHERE level < 6
     AND EXISTS(SELECT 1 FROM categories.categories WHERE id = (SELECT id FROM parent_cte))
 ),
 new_category AS (
@@ -112,6 +112,7 @@ SET is_leaf = (
     SELECT NOT EXISTS (
         SELECT 1 FROM categories.categories
         WHERE parent_id = (SELECT parent_id FROM deleted_nodes LIMIT 1)
+          AND id != (SELECT id FROM deleted_nodes LIMIT 1)
     )
 )
 WHERE id = (SELECT parent_id FROM deleted_nodes LIMIT 1)

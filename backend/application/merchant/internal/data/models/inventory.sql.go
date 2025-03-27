@@ -270,14 +270,12 @@ FROM merchant.stock_adjustments sa
          JOIN products.products p
               ON sa.product_id = p.id
                   AND sa.merchant_id = p.merchant_id
-WHERE sa.product_id = $1::uuid
-  AND sa.merchant_id = $2::uuid
+WHERE sa.merchant_id = $1::uuid
 ORDER BY sa.created_at DESC
-LIMIT $4 OFFSET $3
+LIMIT $3 OFFSET $2
 `
 
 type GetStockAdjustmentHistoryParams struct {
-	ProductID  pgtype.UUID
 	MerchantID pgtype.UUID
 	Page       *int64
 	PageSize   *int64
@@ -295,6 +293,7 @@ type GetStockAdjustmentHistoryRow struct {
 }
 
 // 获取库存调整历史
+// WHERE sa.product_id = @product_id::uuid
 //
 //	SELECT sa.id,
 //	       sa.product_id,
@@ -308,17 +307,11 @@ type GetStockAdjustmentHistoryRow struct {
 //	         JOIN products.products p
 //	              ON sa.product_id = p.id
 //	                  AND sa.merchant_id = p.merchant_id
-//	WHERE sa.product_id = $1::uuid
-//	  AND sa.merchant_id = $2::uuid
+//	WHERE sa.merchant_id = $1::uuid
 //	ORDER BY sa.created_at DESC
-//	LIMIT $4 OFFSET $3
+//	LIMIT $3 OFFSET $2
 func (q *Queries) GetStockAdjustmentHistory(ctx context.Context, arg GetStockAdjustmentHistoryParams) ([]GetStockAdjustmentHistoryRow, error) {
-	rows, err := q.db.Query(ctx, GetStockAdjustmentHistory,
-		arg.ProductID,
-		arg.MerchantID,
-		arg.Page,
-		arg.PageSize,
-	)
+	rows, err := q.db.Query(ctx, GetStockAdjustmentHistory, arg.MerchantID, arg.Page, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}

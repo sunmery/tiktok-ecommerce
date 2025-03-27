@@ -116,10 +116,12 @@
       "properties": {
         "orderId": {
           "type": "string",
+          "format": "int64",
           "title": "唯一标识订单，用于后续查询、退换货等操作"
         },
         "paymentId": {
           "type": "string",
+          "format": "int64",
           "title": "支付ID"
         },
         "paymentUrl": {
