@@ -21,6 +21,13 @@ type orderRepo struct {
 	log  *log.Helper
 }
 
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
 	// 生成雪花ID
 	orderID := pkg.SnowflakeID()
@@ -88,7 +95,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}, nil
 }
 
-func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.ListOrderResp, error) {
+func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) (*biz.GetAllOrdersReply, error) {
 	// 设置默认分页参数
 	if req.Page == 0 {
 		req.Page = 1
@@ -101,13 +108,10 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 		req.PageSize = 100
 	}
 
-	o.log.WithContext(ctx).Infof("Listing orders for user %s, page %d, page size %d", req.UserID, req.Page, req.PageSize)
-
 	// 查询订单列表
-	orders, err := o.data.db.ListOrdersByUser(ctx, models.ListOrdersByUserParams{
-		UserID: req.UserID,
-		Limit:  int64(req.PageSize),
-		Offset: int64((req.Page - 1) * req.PageSize),
+	orders, err := o.data.db.ListOrders(ctx, models.ListOrdersParams{
+		PageSize: int64(req.PageSize),
+		Page:     int64((req.Page - 1) * req.PageSize),
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to list orders: %v", err)
@@ -167,8 +171,7 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 		})
 	}
 
-	o.log.WithContext(ctx).Infof("Listed %d orders for user %s", len(respOrders), req.UserID)
-	return &biz.ListOrderResp{Orders: respOrders}, nil
+	return &biz.GetAllOrdersReply{Orders: respOrders}, nil
 }
 
 // 自定义JSON解析
@@ -340,11 +343,4 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
-}
-
-func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
-	return &orderRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }

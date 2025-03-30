@@ -14,9 +14,9 @@ import (
 )
 
 const CreateOrder = `-- name: CreateOrder :one
-INSERT INTO orders.orders (id,user_id, currency, street_address,
+INSERT INTO orders.orders (id, user_id, currency, street_address,
                            city, state, country, zip_code, email)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 `
 
@@ -34,9 +34,9 @@ type CreateOrderParams struct {
 
 // CreateOrder
 //
-//	INSERT INTO orders.orders (id,user_id, currency, street_address,
+//	INSERT INTO orders.orders (id, user_id, currency, street_address,
 //	                           city, state, country, zip_code, email)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 //	RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error) {
 	row := q.db.QueryRow(ctx, CreateOrder,
@@ -71,7 +71,7 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 const CreateSubOrder = `-- name: CreateSubOrder :one
 INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
                                currency, status, items)
-VALUES ($1, $2, $3, $4, $5, $6,$7)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 `
 
@@ -89,7 +89,7 @@ type CreateSubOrderParams struct {
 //
 //	INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 //	                               currency, status, items)
-//	VALUES ($1, $2, $3, $4, $5, $6,$7)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7)
 //	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error) {
 	row := q.db.QueryRow(ctx, CreateSubOrder,
@@ -238,6 +238,57 @@ func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.
 			&i.Email,
 			&i.OrderCreated,
 			&i.Suborders,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListOrders = `-- name: ListOrders :many
+SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+FROM orders.orders
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $1
+`
+
+type ListOrdersParams struct {
+	Page     int64 `json:"page"`
+	PageSize int64 `json:"pageSize"`
+}
+
+// ListOrders
+//
+//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+//	FROM orders.orders
+//	ORDER BY created_at DESC
+//	LIMIT $2 OFFSET $1
+func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]OrdersOrders, error) {
+	rows, err := q.db.Query(ctx, ListOrders, arg.Page, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrdersOrders
+	for rows.Next() {
+		var i OrdersOrders
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Currency,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.Email,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -451,7 +502,7 @@ func (q *Queries) QuerySubOrders(ctx context.Context, orderID int64) ([]QuerySub
 const UpdateOrderPaymentStatus = `-- name: UpdateOrderPaymentStatus :exec
 UPDATE orders.orders
 SET payment_status = $2,
-    updated_at = now()
+    updated_at     = now()
 WHERE id = $1
 `
 
@@ -464,7 +515,7 @@ type UpdateOrderPaymentStatusParams struct {
 //
 //	UPDATE orders.orders
 //	SET payment_status = $2,
-//	    updated_at = now()
+//	    updated_at     = now()
 //	WHERE id = $1
 func (q *Queries) UpdateOrderPaymentStatus(ctx context.Context, arg UpdateOrderPaymentStatusParams) error {
 	_, err := q.db.Exec(ctx, UpdateOrderPaymentStatus, arg.ID, arg.PaymentStatus)

@@ -162,6 +162,39 @@ type Querier interface {
 	//  ORDER BY sa.updated_at DESC
 	//  LIMIT $3 OFFSET $2
 	GetStockAlerts(ctx context.Context, arg GetStockAlertsParams) ([]GetStockAlertsRow, error)
+	//ListOrdersByUser
+	//
+	//  SELECT id,
+	//         user_id,
+	//         currency,
+	//         street_address,
+	//         city,
+	//         state,
+	//         country,
+	//         zip_code,
+	//         email,
+	//         created_at,
+	//         updated_at,
+	//         payment_status
+	//  FROM orders.orders
+	//  WHERE user_id = $1
+	//  ORDER BY created_at DESC
+	//  LIMIT $3 OFFSET $2
+	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]ListOrdersByUserRow, error)
+	//QuerySubOrders
+	//
+	//  SELECT id,
+	//         merchant_id,
+	//         total_amount,
+	//         currency,
+	//         status,
+	//         items,
+	//         created_at,
+	//         updated_at
+	//  FROM orders.sub_orders
+	//  WHERE order_id = $1
+	//  ORDER BY created_at
+	QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySubOrdersRow, error)
 	// 记录库存调整
 	//
 	//  INSERT INTO merchant.stock_adjustments (product_id, merchant_id, quantity, reason, operator_id)

@@ -78,15 +78,16 @@ type PlaceOrderResp struct {
 	Order *OrderResult
 }
 
-type ListOrderReq struct {
-	UserID   uuid.UUID
-	Page     uint32 // 分页页码，从1开始
-	PageSize uint32 // 每页数量
-}
+type (
+	GetAllOrdersReq struct {
+		Page     uint32 // 分页页码，从1开始
+		PageSize uint32 // 每页数量
+	}
+	GetAllOrdersReply struct {
+		Orders []*Order
+	}
+)
 
-type ListOrderResp struct {
-	Orders []*Order
-}
 type MarkOrderPaidResp struct{}
 
 type MarkOrderPaidReq struct {
@@ -95,7 +96,8 @@ type MarkOrderPaidReq struct {
 }
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
-	ListOrder(ctx context.Context, req *ListOrderReq) (*ListOrderResp, error)
+	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
+
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 }
 
@@ -116,9 +118,9 @@ func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*Pl
 	return oc.repo.PlaceOrder(ctx, req)
 }
 
-func (oc *OrderUsecase) ListOrder(ctx context.Context, req *ListOrderReq) (*ListOrderResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order req:%+v", req)
-	return oc.repo.ListOrder(ctx, req)
+func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetAllOrders:%+v", req)
+	return oc.repo.GetAllOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {

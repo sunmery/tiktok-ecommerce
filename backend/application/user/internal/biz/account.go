@@ -29,7 +29,60 @@ type (
 	}
 )
 
+type (
+	GetUsersRequest struct {
+		AdminId uuid.UUID
+	}
+
+	GetUsersReply struct {
+		Users []*GetProfileReply
+	}
+)
+
+type (
+	DeleteUserRequest struct {
+		Owner  string
+		UserId uuid.UUID
+		Name   string
+	}
+	DeleteUserReply struct {
+		Code   int32
+		Status string
+	}
+)
+
+type (
+	UpdateUserRequest struct {
+		Owner             string
+		UserId            uuid.UUID
+		Name              string
+		Email             string
+		Avatar            string
+		DisplayName       string
+		SignupApplication string
+	}
+	UpdateUserReply struct {
+		Code   int32
+		Status string
+	}
+)
+
 func (cc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error) {
-	cc.log.WithContext(ctx).Infof("GetProfile: %+v", req)
+	cc.log.WithContext(ctx).Debugf("GetProfile: %+v", req)
 	return cc.repo.GetProfile(ctx, req)
+}
+
+func (cc *UserUsecase) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsersReply, error) {
+	cc.log.WithContext(ctx).Debugf("GetUsers: %+v", req)
+	return cc.repo.GetUsers(ctx, req)
+}
+
+func (cc *UserUsecase) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserReply, error) {
+	cc.log.WithContext(ctx).Debugf("DeleteUser: %+v", req)
+	return cc.repo.DeleteUser(ctx, req)
+}
+
+func (cc *UserUsecase) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserReply, error) {
+	cc.log.WithContext(ctx).Debugf("UpdateUser: %+v", req)
+	return cc.repo.UpdateUser(ctx, req)
 }

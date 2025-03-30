@@ -9,7 +9,7 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewInventoryUsecase, NewProductUsecase)
+var ProviderSet = wire.NewSet(NewInventoryUsecase, NewProductUsecase, NewOrderUsecase)
 
 const (
 	ProductStatusDraft    ProductStatus = iota // 商品草稿
@@ -44,6 +44,11 @@ type ProductRepo interface {
 	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*UpdateProductReply, error)
 }
 
+// OrderRepo  订单域方法
+type OrderRepo interface {
+	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
+}
+
 type InventoryUsecase struct {
 	repo InventoryRepo
 	log  *log.Helper
@@ -51,6 +56,10 @@ type InventoryUsecase struct {
 
 type ProductUsecase struct {
 	repo ProductRepo
+	log  *log.Helper
+}
+type OrderUsecase struct {
+	repo OrderRepo
 	log  *log.Helper
 }
 
@@ -63,6 +72,13 @@ func NewInventoryUsecase(repo InventoryRepo, logger log.Logger) *InventoryUsecas
 
 func NewProductUsecase(repo ProductRepo, logger log.Logger) *ProductUsecase {
 	return &ProductUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
+}
+
+func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
+	return &OrderUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}

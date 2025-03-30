@@ -79,22 +79,15 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 	}, nil
 }
 
-func (s *OrderServiceService) QueryOrders(ctx context.Context, req *v1.ListOrderReq) (*v1.ListOrderResp, error) {
-	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
-	}
-
+func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOrdersReq) (*v1.Orders, error) {
 	// 构建业务层请求
-	listReq := &biz.ListOrderReq{
-		UserID:   userId,
+	listReq := &biz.GetAllOrdersReq{
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}
 
 	// 调用业务层获取订单列表
-	resp, err := s.uc.ListOrder(ctx, listReq)
+	resp, err := s.uc.GetAllOrders(ctx, listReq)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list orders: %v", err)
 	}
@@ -142,7 +135,7 @@ func (s *OrderServiceService) QueryOrders(ctx context.Context, req *v1.ListOrder
 		})
 	}
 
-	return &v1.ListOrderResp{Orders: orders}, nil
+	return &v1.Orders{Orders: orders}, nil
 }
 
 func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrderPaidReq) (*v1.MarkOrderPaidResp, error) {

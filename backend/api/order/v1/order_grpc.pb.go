@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrderService_PlaceOrder_FullMethodName    = "/ecommerce.order.v1.OrderService/PlaceOrder"
-	OrderService_QueryOrders_FullMethodName   = "/ecommerce.order.v1.OrderService/QueryOrders"
-	OrderService_MarkOrderPaid_FullMethodName = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
+	OrderService_PlaceOrder_FullMethodName        = "/ecommerce.order.v1.OrderService/PlaceOrder"
+	OrderService_GetAllOrders_FullMethodName      = "/ecommerce.order.v1.OrderService/GetAllOrders"
+	OrderService_GetMerchantOrders_FullMethodName = "/ecommerce.order.v1.OrderService/GetMerchantOrders"
+	OrderService_MarkOrderPaid_FullMethodName     = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -32,8 +33,10 @@ const (
 type OrderServiceClient interface {
 	// 创建订单
 	PlaceOrder(ctx context.Context, in *PlaceOrderReq, opts ...grpc.CallOption) (*PlaceOrderResp, error)
-	// 查询订单列表
-	QueryOrders(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error)
+	// 查询全部订单列表(管理员侧)
+	GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error)
+	// 查询商家订单列表(商家侧)
+	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*Orders, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
 }
@@ -56,10 +59,20 @@ func (c *orderServiceClient) PlaceOrder(ctx context.Context, in *PlaceOrderReq, 
 	return out, nil
 }
 
-func (c *orderServiceClient) QueryOrders(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error) {
+func (c *orderServiceClient) GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListOrderResp)
-	err := c.cc.Invoke(ctx, OrderService_QueryOrders_FullMethodName, in, out, cOpts...)
+	out := new(Orders)
+	err := c.cc.Invoke(ctx, OrderService_GetAllOrders_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*Orders, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Orders)
+	err := c.cc.Invoke(ctx, OrderService_GetMerchantOrders_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +97,10 @@ func (c *orderServiceClient) MarkOrderPaid(ctx context.Context, in *MarkOrderPai
 type OrderServiceServer interface {
 	// 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
-	// 查询订单列表
-	QueryOrders(context.Context, *ListOrderReq) (*ListOrderResp, error)
+	// 查询全部订单列表(管理员侧)
+	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
+	// 查询商家订单列表(商家侧)
+	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*Orders, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
@@ -101,8 +116,11 @@ type UnimplementedOrderServiceServer struct{}
 func (UnimplementedOrderServiceServer) PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PlaceOrder not implemented")
 }
-func (UnimplementedOrderServiceServer) QueryOrders(context.Context, *ListOrderReq) (*ListOrderResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryOrders not implemented")
+func (UnimplementedOrderServiceServer) GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
+}
+func (UnimplementedOrderServiceServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*Orders, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantOrders not implemented")
 }
 func (UnimplementedOrderServiceServer) MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderPaid not implemented")
@@ -146,20 +164,38 @@ func _OrderService_PlaceOrder_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_QueryOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListOrderReq)
+func _OrderService_GetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllOrdersReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).QueryOrders(ctx, in)
+		return srv.(OrderServiceServer).GetAllOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrderService_QueryOrders_FullMethodName,
+		FullMethod: OrderService_GetAllOrders_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).QueryOrders(ctx, req.(*ListOrderReq))
+		return srv.(OrderServiceServer).GetAllOrders(ctx, req.(*GetAllOrdersReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_GetMerchantOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMerchantOrdersReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetMerchantOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetMerchantOrders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetMerchantOrders(ctx, req.(*GetMerchantOrdersReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -194,8 +230,12 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_PlaceOrder_Handler,
 		},
 		{
-			MethodName: "QueryOrders",
-			Handler:    _OrderService_QueryOrders_Handler,
+			MethodName: "GetAllOrders",
+			Handler:    _OrderService_GetAllOrders_Handler,
+		},
+		{
+			MethodName: "GetMerchantOrders",
+			Handler:    _OrderService_GetMerchantOrders_Handler,
 		},
 		{
 			MethodName: "MarkOrderPaid",
