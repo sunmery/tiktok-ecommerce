@@ -104,11 +104,11 @@ func (s *CartServiceService) RemoveCartItem(ctx context.Context, req *pb.RemoveC
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
-	productId, err := pkg.GetMetadataUesrID(ctx)
+	productId, err := uuid.Parse(req.ProductId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
 	}
-	merchantId, err := pkg.GetMetadataUesrID(ctx)
+	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid merchant ID")
 	}
