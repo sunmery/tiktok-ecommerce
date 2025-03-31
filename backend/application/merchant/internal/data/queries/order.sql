@@ -2,19 +2,17 @@ SET SEARCH_PATH to merchant,orders;
 
 -- name: ListOrdersByUser :many
 SELECT id,
-       user_id,
+       order_id,
+       merchant_id,
+       total_amount,
        currency,
-       street_address,
-       city,
-       state,
-       country,
-       zip_code,
-       email,
+       status,
+       items,
        created_at,
        updated_at,
        payment_status
-FROM orders.orders
-WHERE user_id = @user_id
+FROM orders.sub_orders
+WHERE merchant_id = @merchant_id
 ORDER BY created_at DESC
 LIMIT @page_size OFFSET @page;
 

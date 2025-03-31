@@ -165,19 +165,17 @@ type Querier interface {
 	//ListOrdersByUser
 	//
 	//  SELECT id,
-	//         user_id,
+	//         order_id,
+	//         merchant_id,
+	//         total_amount,
 	//         currency,
-	//         street_address,
-	//         city,
-	//         state,
-	//         country,
-	//         zip_code,
-	//         email,
+	//         status,
+	//         items,
 	//         created_at,
 	//         updated_at,
 	//         payment_status
-	//  FROM orders.orders
-	//  WHERE user_id = $1
+	//  FROM orders.sub_orders
+	//  WHERE merchant_id = $1
 	//  ORDER BY created_at DESC
 	//  LIMIT $3 OFFSET $2
 	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]ListOrdersByUserRow, error)

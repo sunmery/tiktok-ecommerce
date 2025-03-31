@@ -15,39 +15,35 @@ import (
 
 const ListOrdersByUser = `-- name: ListOrdersByUser :many
 SELECT id,
-       user_id,
+       order_id,
+       merchant_id,
+       total_amount,
        currency,
-       street_address,
-       city,
-       state,
-       country,
-       zip_code,
-       email,
+       status,
+       items,
        created_at,
        updated_at,
        payment_status
-FROM orders.orders
-WHERE user_id = $1
+FROM orders.sub_orders
+WHERE merchant_id = $1
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $2
 `
 
 type ListOrdersByUserParams struct {
-	UserID   pgtype.UUID
-	Page     *int64
-	PageSize *int64
+	MerchantID pgtype.UUID
+	Page       *int64
+	PageSize   *int64
 }
 
 type ListOrdersByUserRow struct {
 	ID            int64
-	UserID        uuid.UUID
+	OrderID       int64
+	MerchantID    uuid.UUID
+	TotalAmount   interface{}
 	Currency      string
-	StreetAddress string
-	City          string
-	State         string
-	Country       string
-	ZipCode       string
-	Email         string
+	Status        string
+	Items         []byte
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	PaymentStatus string
@@ -56,23 +52,21 @@ type ListOrdersByUserRow struct {
 // ListOrdersByUser
 //
 //	SELECT id,
-//	       user_id,
+//	       order_id,
+//	       merchant_id,
+//	       total_amount,
 //	       currency,
-//	       street_address,
-//	       city,
-//	       state,
-//	       country,
-//	       zip_code,
-//	       email,
+//	       status,
+//	       items,
 //	       created_at,
 //	       updated_at,
 //	       payment_status
-//	FROM orders.orders
-//	WHERE user_id = $1
+//	FROM orders.sub_orders
+//	WHERE merchant_id = $1
 //	ORDER BY created_at DESC
 //	LIMIT $3 OFFSET $2
 func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]ListOrdersByUserRow, error) {
-	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.UserID, arg.Page, arg.PageSize)
+	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.MerchantID, arg.Page, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -82,14 +76,12 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 		var i ListOrdersByUserRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
+			&i.OrderID,
+			&i.MerchantID,
+			&i.TotalAmount,
 			&i.Currency,
-			&i.StreetAddress,
-			&i.City,
-			&i.State,
-			&i.Country,
-			&i.ZipCode,
-			&i.Email,
+			&i.Status,
+			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.PaymentStatus,

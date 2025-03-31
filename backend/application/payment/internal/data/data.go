@@ -86,39 +86,40 @@ func NewCache(c *conf.Data) *redis.Client {
 
 // NewAlipay 支付宝
 func NewAlipay(c *conf.Pay) *alipay.Client {
-	log.Debugf("config Pay: %+v", c)
+	// log.Debugf("config Pay: %+v", c)
 	client, err := alipay.New(c.Alipay.AppId, c.Alipay.PrivateKey, false)
 	if err != nil {
 		panic(fmt.Errorf("new alipay client failed: %v", err))
 	}
 
-	// 加载应用公钥证书
-	if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
-		panic(fmt.Errorf("load app public cert failed: %v", err))
-	}
-	// 加载支付宝根证书
-	if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
-		panic(fmt.Errorf("load alipay root cert failed: %v", err))
-	}
-	// 加载支付宝公钥证书
-	if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
-		panic(fmt.Errorf("load alipay public cert failed: %v", err))
-	}
-
-	// 加载应用公钥证书
-	// if err := client.LoadAppCertPublicKey(c.Alipay.AppPublicCert); err != nil {
+	// 证书方式
+	// // 加载应用公钥证书
+	// if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
 	// 	panic(fmt.Errorf("load app public cert failed: %v", err))
 	// }
-
 	// // 加载支付宝根证书
-	// if err := client.LoadAliPayRootCert(c.Alipay.AlipayRootCert); err != nil {
+	// if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
 	// 	panic(fmt.Errorf("load alipay root cert failed: %v", err))
 	// }
-
 	// // 加载支付宝公钥证书
-	// if err := client.LoadAlipayCertPublicKey(c.Alipay.AliPublicKey); err != nil {
+	// if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
 	// 	panic(fmt.Errorf("load alipay public cert failed: %v", err))
 	// }
+
+	// 加载应用公钥证书
+	if err := client.LoadAppCertPublicKey(c.Alipay.AppPublicCert); err != nil {
+		panic(fmt.Errorf("load app public cert failed: %v", err))
+	}
+
+	// 加载支付宝根证书
+	if err := client.LoadAliPayRootCert(c.Alipay.AlipayRootCert); err != nil {
+		panic(fmt.Errorf("load alipay root cert failed: %v", err))
+	}
+
+	// 加载支付宝公钥证书
+	if err := client.LoadAlipayCertPublicKey(c.Alipay.AliPublicKey); err != nil {
+		panic(fmt.Errorf("load alipay public cert failed: %v", err))
+	}
 
 	// 设置加密密钥
 	// if err := client.SetEncryptKey(c.Alipay.Secret); err != nil {

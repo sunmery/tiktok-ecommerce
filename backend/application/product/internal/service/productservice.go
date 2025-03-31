@@ -64,8 +64,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		Price:       req.Price,
 		Description: req.Description,
 		MerchantId:  merchantId,
-		Images:      convertPBImagesToBiz(req.Images),
-		Status:      biz.ProductStatusPending,
+		// Images:      convertPBImagesToBiz(req.Images),
+		Status: biz.ProductStatusPending,
 		Category: biz.CategoryInfo{
 			CategoryId:   uint64(req.Category.CategoryId),
 			CategoryName: req.Category.CategoryName,

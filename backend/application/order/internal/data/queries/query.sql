@@ -11,23 +11,15 @@ WHERE id = $1;
 
 -- name: ListOrders :many
 SELECT *
-FROM orders.orders
+FROM orders.sub_orders
 ORDER BY created_at DESC
 LIMIT @page_size OFFSET @page;
 
--- name: GetUserOrdersWithSuborders :many
-SELECT o.id         AS order_id,
-       o.currency   AS order_currency,
-       o.street_address,
-       o.city,
-       o.state,
-       o.country,
-       o.zip_code,
-       o.email,
-       o.created_at AS order_created,
-       jsonb_agg(
-               jsonb_build_object(
-                       'suborder_id', so.id,
+-- name: GetConsumerOrders :many
+SELECT o.*,
+       json_agg(
+               json_build_object(
+                       'id', so.id,
                        'merchant_id', so.merchant_id,
                        'total_amount', so.total_amount,
                        'currency', so.currency,
@@ -35,20 +27,13 @@ SELECT o.id         AS order_id,
                        'items', so.items,
                        'created_at', so.created_at,
                        'updated_at', so.updated_at
-               ) ORDER BY so.created_at
-       )            AS suborders
+               )
+       ) AS sub_orders
 FROM orders.orders o
-         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
-WHERE o.user_id = $1::uuid
-GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at
-ORDER BY o.created_at DESC;
-
--- name: ListOrdersByUser :many
-SELECT *
-FROM orders.orders
-WHERE user_id = $1
-ORDER BY created_at DESC
-LIMIT $2 OFFSET $3;
+LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+WHERE o.user_id = @user_id
+GROUP BY o.id
+LIMIT @page_size OFFSET @page;
 
 -- name: GetUserOrdersWithSuborders :many
 SELECT o.id         AS order_id,

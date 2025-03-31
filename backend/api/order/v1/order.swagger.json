@@ -57,10 +57,10 @@
         ]
       }
     },
-    "/v1/merchant/orders": {
+    "/v1/orders": {
       "get": {
-        "summary": "查询商家订单列表(商家侧)",
-        "operationId": "OrderService_GetMerchantOrders",
+        "summary": "查询用户订单列表",
+        "operationId": "OrderService_GetConsumerOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -77,8 +77,8 @@
         },
         "parameters": [
           {
-            "name": "merchantId",
-            "description": "商家 ID",
+            "name": "userId",
+            "description": "用户 ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -103,9 +103,7 @@
         "tags": [
           "OrderService"
         ]
-      }
-    },
-    "/v1/orders": {
+      },
       "post": {
         "summary": "创建订单",
         "operationId": "OrderService_PlaceOrder",

@@ -36,17 +36,7 @@ type Address struct {
 	Country       string
 	ZipCode       string
 }
-type Order struct {
-	OrderID       int64
-	UserID        uuid.UUID
-	Currency      string
-	Address       *Address
-	Email         string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	SubOrders     []*SubOrder
-	PaymentStatus PaymentStatus // 支付状态
-}
+
 type SubOrder struct {
 	ID          int64
 	MerchantID  uuid.UUID
@@ -66,7 +56,7 @@ type (
 	}
 
 	GetMerchantOrdersReply struct {
-		Orders []*Order
+		Orders []*SubOrder
 	}
 )
 

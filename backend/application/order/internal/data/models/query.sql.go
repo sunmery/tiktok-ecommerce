@@ -117,6 +117,103 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 	return i, err
 }
 
+const GetConsumerOrders = `-- name: GetConsumerOrders :many
+SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
+       json_agg(
+               json_build_object(
+                       'id', so.id,
+                       'merchant_id', so.merchant_id,
+                       'total_amount', so.total_amount,
+                       'currency', so.currency,
+                       'status', so.status,
+                       'items', so.items,
+                       'created_at', so.created_at,
+                       'updated_at', so.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders o
+LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+WHERE o.user_id = $1
+GROUP BY o.id
+LIMIT $3 OFFSET $2
+`
+
+type GetConsumerOrdersParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
+}
+
+type GetConsumerOrdersRow struct {
+	ID            int64     `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
+	Currency      string    `json:"currency"`
+	StreetAddress string    `json:"streetAddress"`
+	City          string    `json:"city"`
+	State         string    `json:"state"`
+	Country       string    `json:"country"`
+	ZipCode       string    `json:"zipCode"`
+	Email         string    `json:"email"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	PaymentStatus string    `json:"paymentStatus"`
+	SubOrders     []byte    `json:"subOrders"`
+}
+
+// GetConsumerOrders
+//
+//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
+//	       json_agg(
+//	               json_build_object(
+//	                       'id', so.id,
+//	                       'merchant_id', so.merchant_id,
+//	                       'total_amount', so.total_amount,
+//	                       'currency', so.currency,
+//	                       'status', so.status,
+//	                       'items', so.items,
+//	                       'created_at', so.created_at,
+//	                       'updated_at', so.updated_at
+//	               )
+//	       ) AS sub_orders
+//	FROM orders.orders o
+//	LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+//	WHERE o.user_id = $1
+//	GROUP BY o.id
+//	LIMIT $3 OFFSET $2
+func (q *Queries) GetConsumerOrders(ctx context.Context, arg GetConsumerOrdersParams) ([]GetConsumerOrdersRow, error) {
+	rows, err := q.db.Query(ctx, GetConsumerOrders, arg.UserID, arg.Page, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetConsumerOrdersRow
+	for rows.Next() {
+		var i GetConsumerOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Currency,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.Email,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaymentStatus,
+			&i.SubOrders,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetOrderByID = `-- name: GetOrderByID :one
 SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 FROM orders.orders
@@ -250,8 +347,8 @@ func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.
 }
 
 const ListOrders = `-- name: ListOrders :many
-SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-FROM orders.orders
+SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+FROM orders.sub_orders
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $1
 `
@@ -263,83 +360,27 @@ type ListOrdersParams struct {
 
 // ListOrders
 //
-//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-//	FROM orders.orders
+//	SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+//	FROM orders.sub_orders
 //	ORDER BY created_at DESC
 //	LIMIT $2 OFFSET $1
-func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]OrdersOrders, error) {
+func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]OrdersSubOrders, error) {
 	rows, err := q.db.Query(ctx, ListOrders, arg.Page, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OrdersOrders
+	var items []OrdersSubOrders
 	for rows.Next() {
-		var i OrdersOrders
+		var i OrdersSubOrders
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
+			&i.OrderID,
+			&i.MerchantID,
+			&i.TotalAmount,
 			&i.Currency,
-			&i.StreetAddress,
-			&i.City,
-			&i.State,
-			&i.Country,
-			&i.ZipCode,
-			&i.Email,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.PaymentStatus,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const ListOrdersByUser = `-- name: ListOrdersByUser :many
-SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-FROM orders.orders
-WHERE user_id = $1
-ORDER BY created_at DESC
-LIMIT $2 OFFSET $3
-`
-
-type ListOrdersByUserParams struct {
-	UserID uuid.UUID `json:"userID"`
-	Limit  int64     `json:"limit"`
-	Offset int64     `json:"offset"`
-}
-
-// ListOrdersByUser
-//
-//	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-//	FROM orders.orders
-//	WHERE user_id = $1
-//	ORDER BY created_at DESC
-//	LIMIT $2 OFFSET $3
-func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error) {
-	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.UserID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []OrdersOrders
-	for rows.Next() {
-		var i OrdersOrders
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Currency,
-			&i.StreetAddress,
-			&i.City,
-			&i.State,
-			&i.Country,
-			&i.ZipCode,
-			&i.Email,
+			&i.Status,
+			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.PaymentStatus,

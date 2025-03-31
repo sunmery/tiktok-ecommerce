@@ -25,6 +25,27 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
+	//GetConsumerOrders
+	//
+	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
+	//         json_agg(
+	//                 json_build_object(
+	//                         'id', so.id,
+	//                         'merchant_id', so.merchant_id,
+	//                         'total_amount', so.total_amount,
+	//                         'currency', so.currency,
+	//                         'status', so.status,
+	//                         'items', so.items,
+	//                         'created_at', so.created_at,
+	//                         'updated_at', so.updated_at
+	//                 )
+	//         ) AS sub_orders
+	//  FROM orders.orders o
+	//  LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+	//  WHERE o.user_id = $1
+	//  GROUP BY o.id
+	//  LIMIT $3 OFFSET $2
+	GetConsumerOrders(ctx context.Context, arg GetConsumerOrdersParams) ([]GetConsumerOrdersRow, error)
 	//GetOrderByID
 	//
 	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
@@ -62,19 +83,11 @@ type Querier interface {
 	GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
 	//ListOrders
 	//
-	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-	//  FROM orders.orders
+	//  SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+	//  FROM orders.sub_orders
 	//  ORDER BY created_at DESC
 	//  LIMIT $2 OFFSET $1
-	ListOrders(ctx context.Context, arg ListOrdersParams) ([]OrdersOrders, error)
-	//ListOrdersByUser
-	//
-	//  SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-	//  FROM orders.orders
-	//  WHERE user_id = $1
-	//  ORDER BY created_at DESC
-	//  LIMIT $2 OFFSET $3
-	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]OrdersOrders, error)
+	ListOrders(ctx context.Context, arg ListOrdersParams) ([]OrdersSubOrders, error)
 	//MarkOrderAsPaid
 	//
 	//  UPDATE orders.orders

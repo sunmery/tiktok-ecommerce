@@ -288,7 +288,7 @@ message AuditInfo {
 
 // 创建商品请求
 message CreateProductRequest {
-  string name = 1 [(validate.rules).string = {min_len: 2, max_len: 200}]; // 商品名称
+  string name = 1; // 商品名称
   double price = 2; // 商品价格（单位：元
   string description = 3 [(validate.rules).string.max_len = 2000]; // 商品描述
   uint32 stock = 4; // 商品库存

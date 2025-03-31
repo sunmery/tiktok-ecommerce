@@ -34,13 +34,6 @@ service UserService {
     };
   }
 
-  // 更新用户信息
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
-    option (google.api.http) = {
-      post: "/v1/users/{user_id}",
-      body: "*"
-    };
-  }
 
   // 创建用户地址
   rpc CreateAddresses(Address) returns (Address) {
@@ -91,6 +84,14 @@ service UserService {
   rpc ListCreditCards(google.protobuf.Empty) returns (CreditCards) {
     option (google.api.http) = {
       get: "/v1/users/credit_cards"
+    };
+  }
+
+  // 更新用户信息
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/{user_id}",
+      body: "*"
     };
   }
 

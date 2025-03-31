@@ -8,7 +8,6 @@ package userv1
 
 import (
 	context "context"
-
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -16,28 +15,24 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the kratos package it is being compiled against.
-var (
-	_ = new(context.Context)
-	_ = binding.EncodeURL
-)
+var _ = new(context.Context)
+var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const (
-	OperationUserServiceCreateAddresses  = "/ecommerce.user.v1.UserService/CreateAddresses"
-	OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
-	OperationUserServiceDeleteAddresses  = "/ecommerce.user.v1.UserService/DeleteAddresses"
-	OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
-	OperationUserServiceDeleteUser       = "/ecommerce.user.v1.UserService/DeleteUser"
-	OperationUserServiceGetAddress       = "/ecommerce.user.v1.UserService/GetAddress"
-	OperationUserServiceGetAddresses     = "/ecommerce.user.v1.UserService/GetAddresses"
-	OperationUserServiceGetCreditCard    = "/ecommerce.user.v1.UserService/GetCreditCard"
-	OperationUserServiceGetUserProfile   = "/ecommerce.user.v1.UserService/GetUserProfile"
-	OperationUserServiceGetUsers         = "/ecommerce.user.v1.UserService/GetUsers"
-	OperationUserServiceListCreditCards  = "/ecommerce.user.v1.UserService/ListCreditCards"
-	OperationUserServiceUpdateAddresses  = "/ecommerce.user.v1.UserService/UpdateAddresses"
-	OperationUserServiceUpdateUser       = "/ecommerce.user.v1.UserService/UpdateUser"
-)
+const OperationUserServiceCreateAddresses = "/ecommerce.user.v1.UserService/CreateAddresses"
+const OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
+const OperationUserServiceDeleteAddresses = "/ecommerce.user.v1.UserService/DeleteAddresses"
+const OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
+const OperationUserServiceDeleteUser = "/ecommerce.user.v1.UserService/DeleteUser"
+const OperationUserServiceGetAddress = "/ecommerce.user.v1.UserService/GetAddress"
+const OperationUserServiceGetAddresses = "/ecommerce.user.v1.UserService/GetAddresses"
+const OperationUserServiceGetCreditCard = "/ecommerce.user.v1.UserService/GetCreditCard"
+const OperationUserServiceGetUserProfile = "/ecommerce.user.v1.UserService/GetUserProfile"
+const OperationUserServiceGetUsers = "/ecommerce.user.v1.UserService/GetUsers"
+const OperationUserServiceListCreditCards = "/ecommerce.user.v1.UserService/ListCreditCards"
+const OperationUserServiceUpdateAddresses = "/ecommerce.user.v1.UserService/UpdateAddresses"
+const OperationUserServiceUpdateUser = "/ecommerce.user.v1.UserService/UpdateUser"
 
 type UserServiceHTTPServer interface {
 	// CreateAddresses 创建用户地址
@@ -73,7 +68,6 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.GET("/v1/users/profile", _UserService_GetUserProfile0_HTTP_Handler(srv))
 	r.GET("/v1/users", _UserService_GetUsers0_HTTP_Handler(srv))
 	r.POST("/v1/users", _UserService_DeleteUser0_HTTP_Handler(srv))
-	r.POST("/v1/users/{user_id}", _UserService_UpdateUser0_HTTP_Handler(srv))
 	r.POST("/v1/users/address", _UserService_CreateAddresses0_HTTP_Handler(srv))
 	r.PATCH("/v1/users/address", _UserService_UpdateAddresses0_HTTP_Handler(srv))
 	r.DELETE("/v1/users/address", _UserService_DeleteAddresses0_HTTP_Handler(srv))
@@ -81,6 +75,7 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.POST("/v1/users/credit_cards", _UserService_CreateCreditCard0_HTTP_Handler(srv))
 	r.GET("/v1/users/addresses", _UserService_GetAddresses0_HTTP_Handler(srv))
 	r.GET("/v1/users/credit_cards", _UserService_ListCreditCards0_HTTP_Handler(srv))
+	r.POST("/v1/users/{user_id}", _UserService_UpdateUser0_HTTP_Handler(srv))
 	r.GET("/v1/users/credit_cards/{id}", _UserService_GetCreditCard0_HTTP_Handler(srv))
 	r.DELETE("/v1/users/credit_cards/{id}", _UserService_DeleteCreditCard0_HTTP_Handler(srv))
 }
@@ -141,31 +136,6 @@ func _UserService_DeleteUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx h
 			return err
 		}
 		reply := out.(*DeleteUserResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _UserService_UpdateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in UpdateUserRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationUserServiceUpdateUser)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*UpdateUserResponse)
 		return ctx.Result(200, reply)
 	}
 }
@@ -308,6 +278,31 @@ func _UserService_ListCreditCards0_HTTP_Handler(srv UserServiceHTTPServer) func(
 			return err
 		}
 		reply := out.(*CreditCards)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _UserService_UpdateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserServiceUpdateUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateUserResponse)
 		return ctx.Result(200, reply)
 	}
 }
