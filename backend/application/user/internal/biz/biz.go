@@ -18,6 +18,9 @@ var ProviderSet = wire.NewSet(NewUserUsecase)
 
 type UserRepo interface {
 	GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error)
+	GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsersReply, error)
+	DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserReply, error)
+	UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserReply, error)
 
 	CreateAddress(ctx context.Context, req *Address) (*Address, error)
 	UpdateAddress(ctx context.Context, req *Address) (*Address, error)

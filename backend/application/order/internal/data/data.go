@@ -48,13 +48,13 @@ func NewData(
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
+
 	return &Data{
 		db:        models.New(db),        // 数据库
 		pgx:       db,                    // 数据库事务
 		rdb:       rdb,                   // 缓存
 		logger:    log.NewHelper(logger), // 注入日志
 		paymentv1: paymentv1,             // 支付服务
-
 	}, cleanup, nil
 }
 

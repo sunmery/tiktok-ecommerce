@@ -40,12 +40,15 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	}
 	inventoryRepo := data.NewInventoryRepo(dataData, logger)
 	inventoryUsecase := biz.NewInventoryUsecase(inventoryRepo, logger)
+	inventoryService := service.NewInventoryService(inventoryUsecase)
 	productRepo := data.NewProductRepo(dataData, logger)
 	productUsecase := biz.NewProductUsecase(productRepo, logger)
-	inventoryService := service.NewInventoryService(inventoryUsecase, productUsecase)
 	productService := service.NewProductService(productUsecase)
-	grpcServer := server.NewGRPCServer(confServer, observability, logger, inventoryService, productService)
-	httpServer := server.NewHTTPServer(confServer, observability, logger, inventoryService, productService)
+	orderRepo := data.NewOrderRepo(dataData, logger)
+	orderUsecase := biz.NewOrderUsecase(orderRepo, logger)
+	orderServiceService := service.NewOrderService(orderUsecase)
+	grpcServer := server.NewGRPCServer(confServer, observability, logger, inventoryService, productService, orderServiceService)
+	httpServer := server.NewHTTPServer(confServer, observability, logger, inventoryService, productService, orderServiceService)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {

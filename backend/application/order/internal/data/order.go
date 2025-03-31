@@ -3,9 +3,14 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
+
+	userv1 "backend/api/user/v1"
+
+	cartv1 "backend/api/cart/v1"
+
+	v1 "backend/api/order/v1"
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
@@ -14,11 +19,118 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type orderRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
+func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.Orders, error) {
+	// 设置默认分页参数
+	if req.Page == 0 {
+		req.Page = 1
+	}
+	if req.PageSize == 0 {
+		req.PageSize = 20
+	}
+	// 限制最大页面大小
+	if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+
+	consumerOrders, err := o.data.db.GetConsumerOrders(ctx, models.GetConsumerOrdersParams{
+		UserID:   req.UserId,
+		PageSize: int64(req.PageSize),
+		Page:     int64((req.Page - 1) * req.PageSize),
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("获取用户订单列表失败: %v", err)
+		return nil, fmt.Errorf("获取用户订单列表失败: %w", err)
+	}
+
+	orders := make([]*v1.Order, 0, len(consumerOrders))
+	for _, order := range consumerOrders {
+		// 解析子订单JSON
+		var subOrdersData []byte
+		if order.SubOrders != nil {
+			subOrdersData = order.SubOrders
+		}
+
+		// 解析子订单并转换为OrderItem
+		subOrders, err := parseSubOrders(subOrdersData)
+		if err != nil {
+			o.log.WithContext(ctx).Warnf("解析订单 %d 的子订单失败: %v", order.ID, err)
+			// 继续处理其他订单，不中断
+			continue
+		}
+
+		// 将所有子订单的OrderItem合并到一个列表
+		var allItems []*v1.OrderItem
+		for _, subOrder := range subOrders {
+			for _, item := range subOrder.Items {
+				allItems = append(allItems, &v1.OrderItem{
+					Item: &cartv1.CartItem{
+						MerchantId: item.Item.MerchantId.String(),
+						ProductId:  item.Item.ProductId.String(),
+						Quantity:   item.Item.Quantity,
+					},
+					Cost: item.Cost,
+				})
+			}
+		}
+
+		// 构建主订单
+		orderProto := &v1.Order{
+			OrderId:  order.ID,
+			UserId:   order.UserID.String(),
+			Currency: order.Currency,
+			Address: &userv1.Address{
+				StreetAddress: order.StreetAddress,
+				City:          order.City,
+				State:         order.State,
+				Country:       order.Country,
+				ZipCode:       order.ZipCode,
+			},
+			Email:     order.Email,
+			CreatedAt: timestamppb.New(order.CreatedAt),
+			Items:     allItems,
+		}
+
+		// 设置支付状态（如果有）
+		// if order.PaymentStatus {
+		// 	switch order.PaymentStatus {
+		// 	case string(biz.PaymentPending):
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		// 	case string(biz.PaymentProcessing):
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
+		// 	case string(biz.PaymentPaid):
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_PAID
+		// 	case string(biz.PaymentFailed):
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_FAILED
+		// 	case string(biz.PaymentCancelled):
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
+		// 	default:
+		// 		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		// 	}
+		// } else {
+		// 	orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		// }
+
+		orders = append(orders, orderProto)
+	}
+
+	return &biz.Orders{
+		Orders: orders,
+	}, nil
 }
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
@@ -88,7 +200,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}, nil
 }
 
-func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.ListOrderResp, error) {
+func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) (*biz.GetAllOrdersReply, error) {
 	// 设置默认分页参数
 	if req.Page == 0 {
 		req.Page = 1
@@ -101,85 +213,88 @@ func (o *orderRepo) ListOrder(ctx context.Context, req *biz.ListOrderReq) (*biz.
 		req.PageSize = 100
 	}
 
-	o.log.WithContext(ctx).Infof("Listing orders for user %s, page %d, page size %d", req.UserID, req.Page, req.PageSize)
-
 	// 查询订单列表
-	orders, err := o.data.db.ListOrdersByUser(ctx, models.ListOrdersByUserParams{
-		UserID: req.UserID,
-		Limit:  int64(req.PageSize),
-		Offset: int64((req.Page - 1) * req.PageSize),
+	pageSize := int64(req.PageSize)
+	page := int64((req.Page - 1) * req.PageSize)
+	orders, err := o.data.db.ListOrders(ctx, models.ListOrdersParams{
+		PageSize: pageSize,
+		Page:     page,
 	})
 	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to list orders: %v", err)
-		return nil, fmt.Errorf("failed to list orders: %w", err)
+		o.log.WithContext(ctx).Errorf("获取订单列表失败: %v", err)
+		return nil, fmt.Errorf("获取订单列表失败: %w", err)
 	}
 
-	// 构建响应
-	var respOrders []*biz.Order
+	if len(orders) == 0 {
+		return &biz.GetAllOrdersReply{Orders: []*biz.SubOrder{}}, nil
+	}
+
+	// 创建一个映射以存储订单ID与子订单的关系
+	var respOrders []*biz.SubOrder
+	var orderIDs []int64
+
+	// 收集所有主订单ID
 	for _, order := range orders {
-		// 构建地址信息
-		address := &biz.Address{
-			StreetAddress: order.StreetAddress,
-			City:          order.City,
-			State:         order.State,
-			Country:       order.Country,
-			ZipCode:       order.ZipCode,
-		}
-
-		// 获取子订单信息
-		var subOrders []*biz.SubOrder
-		var err error
-
-		// 先检查上下文是否已取消
-		select {
-		case <-ctx.Done():
-			o.log.WithContext(ctx).Warnf("Context canceled before fetching sub orders for order %d", order.ID)
-			// 上下文已取消，不执行查询，继续处理其他字段
-		default:
-			// 上下文未取消，执行查询
-			subOrders, err = o.getSubOrders(ctx, order.ID)
-			if err != nil {
-				if errors.Is(ctx.Err(), context.Canceled) {
-					o.log.WithContext(ctx).Warnf("Context canceled during fetching sub orders for order %d", order.ID)
-				} else {
-					o.log.WithContext(ctx).Errorf("Failed to get sub orders for order %d: %v", order.ID, err)
-				}
-				// 错误发生时继续处理，不中断整个列表查询
-			}
-		}
-
-		// 解析支付状态
-		paymentStatus := biz.PaymentPending
-		if order.PaymentStatus != "" {
-			paymentStatus = biz.PaymentStatus(order.PaymentStatus)
-		}
-
-		respOrders = append(respOrders, &biz.Order{
-			OrderID:       order.ID,
-			UserID:        order.UserID,
-			Currency:      order.Currency,
-			Address:       address,
-			Email:         order.Email,
-			CreatedAt:     order.CreatedAt,
-			UpdatedAt:     order.UpdatedAt,
-			SubOrders:     subOrders,
-			PaymentStatus: paymentStatus,
-		})
+		orderIDs = append(orderIDs, order.OrderID)
 	}
 
-	o.log.WithContext(ctx).Infof("Listed %d orders for user %s", len(respOrders), req.UserID)
-	return &biz.ListOrderResp{Orders: respOrders}, nil
+	// 去重订单ID
+	uniqueOrderIDs := make(map[int64]bool)
+	var uniqueIDs []int64
+	for _, id := range orderIDs {
+		if !uniqueOrderIDs[id] {
+			uniqueOrderIDs[id] = true
+			uniqueIDs = append(uniqueIDs, id)
+		}
+	}
+
+	// 对每个唯一的订单ID获取子订单
+	for _, orderID := range uniqueIDs {
+		// 使用getSubOrders函数获取子订单
+		subOrders, err := o.getSubOrders(ctx, orderID)
+		if err != nil {
+			o.log.WithContext(ctx).Errorf("获取订单 %d 的子订单失败: %v", orderID, err)
+			// 继续处理其他订单，不因为一个订单失败而中断整个流程
+			continue
+		}
+
+		// 添加子订单到结果
+		for _, subOrder := range subOrders {
+			// 查找对应的原始订单以获取支付状态
+			paymentStatus := biz.PaymentPending
+			for _, order := range orders {
+				if order.ID == subOrder.ID {
+					if order.PaymentStatus != "" {
+						paymentStatus = biz.PaymentStatus(order.PaymentStatus)
+					}
+					break
+				}
+			}
+
+			// 更新子订单的支付状态
+			subOrder.Status = string(paymentStatus)
+			respOrders = append(respOrders, subOrder)
+		}
+	}
+
+	return &biz.GetAllOrdersReply{Orders: respOrders}, nil
 }
 
-// 自定义JSON解析
+// 解析GetConsumerOrders返回的子订单JSON
 func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
+	if data == nil || len(data) == 0 || string(data) == "null" || string(data) == "[null]" {
+		return []*biz.SubOrder{}, nil
+	}
+
 	type dbSubOrder struct {
-		ID          int64
-		MerchantID  string
-		TotalAmount float64
-		Currency    string
-		Status      string
-		Items       json.RawMessage
+		ID          int64           `json:"id"`
+		MerchantID  string          `json:"merchant_id"`
+		TotalAmount json.Number     `json:"total_amount"`
+		Currency    string          `json:"currency"`
+		Status      string          `json:"status"`
+		Items       json.RawMessage `json:"items"`
+		CreatedAt   time.Time       `json:"created_at"`
+		UpdatedAt   time.Time       `json:"updated_at"`
 	}
 
 	var dbSubs []dbSubOrder
@@ -189,23 +304,43 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 
 	subOrders := make([]*biz.SubOrder, 0, len(dbSubs))
 	for _, d := range dbSubs {
+		// 检查是否为空值
+		if d.ID == 0 {
+			continue
+		}
+
 		merchantID, err := uuid.Parse(d.MerchantID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid merchant id: %w", err)
 		}
 
-		var items []*biz.OrderItem
-		if err := json.Unmarshal(d.Items, &items); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal items: %w", err)
+		totalAmount, err := d.TotalAmount.Float64()
+		if err != nil {
+			return nil, fmt.Errorf("invalid total amount: %w", err)
+		}
+
+		var orderItems []*biz.OrderItem
+		if err := json.Unmarshal(d.Items, &orderItems); err != nil {
+			// 尝试另一种格式
+			type OrderItemWrapper struct {
+				Items []*biz.OrderItem `json:"items"`
+			}
+			var wrapper OrderItemWrapper
+			if wrapErr := json.Unmarshal(d.Items, &wrapper); wrapErr != nil {
+				return nil, fmt.Errorf("failed to unmarshal items: %w (original error: %v)", wrapErr, err)
+			}
+			orderItems = wrapper.Items
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{
 			ID:          d.ID,
 			MerchantID:  merchantID,
-			TotalAmount: d.TotalAmount,
+			TotalAmount: totalAmount,
 			Currency:    d.Currency,
 			Status:      d.Status,
-			Items:       items,
+			Items:       orderItems,
+			CreatedAt:   d.CreatedAt,
+			UpdatedAt:   d.UpdatedAt,
 		})
 	}
 
@@ -340,11 +475,4 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
-}
-
-func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
-	return &orderRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }

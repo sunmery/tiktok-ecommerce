@@ -15,6 +15,11 @@ type productRepo struct {
 	log  *log.Helper
 }
 
+type orderRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
 func NewInventoryRepo(data *Data, logger log.Logger) biz.InventoryRepo {
 	return &inventoryRepo{
 		data: data,
@@ -24,6 +29,13 @@ func NewInventoryRepo(data *Data, logger log.Logger) biz.InventoryRepo {
 
 func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {
 	return &productRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
 		data: data,
 		log:  log.NewHelper(logger),
 	}

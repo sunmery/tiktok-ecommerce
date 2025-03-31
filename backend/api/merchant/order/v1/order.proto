@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ecommerce.merchant.v1;
+
+option go_package = "backend/api/merchant/order/v1;orderv1";
+
+import "google/api/annotations.proto";
+import "backend/api/order/v1/order.proto";
+
+service Order {
+  // 查询商家订单列表(商家侧)
+  rpc GetMerchantOrders(GetMerchantOrdersReq) returns (order.v1.Orders) {
+    option (google.api.http) = {
+      get: "/v1/merchants/orders"
+    };
+  }
+}
+
+// 查询商家订单列表请求的消息结构
+message GetMerchantOrdersReq {
+  string merchant_id = 1; // 商家 ID
+  uint32 page = 2; // 分页参数：当前页码，默认值为 0
+  uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
+}

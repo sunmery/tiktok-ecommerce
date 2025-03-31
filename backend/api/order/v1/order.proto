@@ -25,10 +25,17 @@ service OrderService {
     };
   }
 
-  // 查询订单列表
-  rpc QueryOrders(ListOrderReq) returns (ListOrderResp) {
+  // 查询用户订单列表
+  rpc GetConsumerOrders(GetConsumerOrdersReq) returns (Orders) {
     option (google.api.http) = {
-      get: "/v1/orders" // 定义 HTTP GET 请求路径
+      get: "/v1/orders"
+    };
+  }
+
+  // 查询全部订单列表(管理员侧)
+  rpc GetAllOrders(GetAllOrdersReq) returns (Orders) {
+    option (google.api.http) = {
+      get: "/v1/admin/orders"
     };
   }
 
@@ -89,16 +96,23 @@ message Order {
   PaymentStatus payment_status = 8; // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
 }
 
+message GetConsumerOrdersReq {
+  string user_id = 1; // 用户 ID
+  uint32 page = 2; // 分页参数：当前页码，默认值为 0
+  uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
+}
+
 // 查询订单列表请求的消息结构
-message ListOrderReq {
-  uint32 page = 3; // 分页参数：当前页码，默认值为 0
-  uint32 page_size = 4; // 分页参数：每页大小，默认值为 20，最大值为 100
+message GetAllOrdersReq {
+  uint32 page = 1; // 分页参数：当前页码，默认值为 0
+  uint32 page_size = 2; // 分页参数：每页大小，默认值为 20，最大值为 100
 }
 
 // 查询订单列表响应的消息结构
-message ListOrderResp {
+message Orders {
   repeated Order orders = 1; // 订单列表
 }
+
 
 // 标记订单为已支付请求的消息结构
 message MarkOrderPaidReq {

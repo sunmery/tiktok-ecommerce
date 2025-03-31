@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgtype"
 	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/minio/minio-go/v7"
 

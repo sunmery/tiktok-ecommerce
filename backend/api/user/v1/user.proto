@@ -19,6 +19,22 @@ service UserService {
     };
   }
 
+  // 获取全部用户信息
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1/users"
+    };
+  }
+
+ // 删除用户
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users",
+      body: "*"
+    };
+  }
+
+
   // 创建用户地址
   rpc CreateAddresses(Address) returns (Address) {
     option (google.api.http) = {
@@ -68,6 +84,14 @@ service UserService {
   rpc ListCreditCards(google.protobuf.Empty) returns (CreditCards) {
     option (google.api.http) = {
       get: "/v1/users/credit_cards"
+    };
+  }
+
+  // 更新用户信息
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/{user_id}",
+      body: "*"
     };
   }
 
@@ -217,9 +241,43 @@ message GetProfileResponse {
   string email = 4;
   string id = 5;
   string role = 6;
-  string display_name = 9;
-  bool is_deleted = 10; // 用户是否注销
   string created_time = 7;
   string updated_time = 8;
+  string display_name = 9;
+  bool is_deleted = 10; // 用户是否注销
+  string signupApplication = 11;
   //  repeated string roles = 6;
+}
+
+message GetUsersRequest {}
+
+message GetUsersResponse {
+  repeated GetProfileResponse users = 1;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+  string owner = 2;
+  string name = 3;
+}
+
+message DeleteUserResponse {
+  string status = 1;
+  int32 code = 2;
+}
+
+
+message UpdateUserRequest {
+  string user_id = 1;
+  string owner = 2;
+  string name = 3;
+  string avatar = 4;
+  string email = 5;
+  string display_name = 6;
+  string signup_application = 7;
+}
+
+message UpdateUserResponse {
+  string status = 1;
+  int32 code = 2;
 }

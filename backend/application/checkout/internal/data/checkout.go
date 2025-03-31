@@ -59,7 +59,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 
 	var cartItems []cartv1.CartItem
 	var orderItems []*v1.OrderItem
-	var amount string
+	var amount float64
 	for _, cart := range carts.Items {
 		for _, p := range products.Items {
 			productId, err := uuid.Parse(p.Id)
@@ -95,7 +95,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 					Cost: p.Price,
 				})
 
-				amount += fmt.Sprintf("%.2f", p.Price*float64(cart.Quantity))
+				amount += p.Price * float64(cart.Quantity)
 				fmt.Printf("amount: %v\n", amount)
 			}
 		}
@@ -147,7 +147,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentRequest{
 		OrderId:   order.Order.OrderId,
 		UserId:    req.UserId.String(),
-		Amount:    amount,
+		Amount:    fmt.Sprintf("%.2f", amount),
 		Currency:  creditCard.Currency,
 		Subject:   "支付测试",
 		ReturnUrl: "",

@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 
+	orderv1 "backend/api/merchant/order/v1"
+
 	inventoryv1 "backend/api/merchant/inventory/v1"
 	productv1 "backend/api/merchant/product/v1"
 	"backend/application/merchant/internal/service"
@@ -27,6 +29,7 @@ func NewGRPCServer(
 	logger log.Logger,
 	inventoryService *service.InventoryService,
 	productService *service.ProductService,
+	orderService *service.OrderServiceService,
 ) *grpc.Server {
 	// trace start
 	ctx := context.Background()
@@ -78,6 +81,6 @@ func NewGRPCServer(
 
 	inventoryv1.RegisterInventoryServer(srv, inventoryService)
 	productv1.RegisterProductServer(srv, productService)
-
+	orderv1.RegisterOrderServer(srv, orderService)
 	return srv
 }

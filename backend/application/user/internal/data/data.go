@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"backend/application/user/internal/biz"
+
 	"backend/application/user/internal/conf"
 	"backend/application/user/internal/data/models"
 
@@ -104,6 +106,13 @@ func NewCache(c *conf.Data) *redis.Client {
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
+	return &userRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突

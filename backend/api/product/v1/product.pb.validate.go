@@ -1917,16 +1917,7 @@ func (m *CreateProductRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 200 {
-		err := CreateProductRequestValidationError{
-			field:  "Name",
-			reason: "value length must be between 2 and 200 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Name
 
 	// no validation rules for Price
 
