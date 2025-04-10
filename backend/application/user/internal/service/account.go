@@ -3,6 +3,11 @@ package service
 import (
 	"context"
 
+	pb "backend/api/product/v1"
+
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/google/uuid"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -128,4 +133,154 @@ func (s *UserService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 		Status: result.Status,
 		Code:   result.Code,
 	}, nil
+}
+
+// GetFavorites 获取用户的全部收藏
+func (s *UserService) GetFavorites(ctx context.Context, req *v1.GetFavoritesRequest) (*v1.Favorites, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	favorites, err := s.uc.GetFavorites(ctx, &biz.GetFavoritesRequest{
+		UserId:   userId,
+		Page:     int32(req.Page),
+		PageSize: int32(req.PageSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if favorites == nil {
+		return &v1.Favorites{
+			Items: []*pb.Product{},
+		}, nil
+	}
+	if favorites.Items == nil {
+		return &v1.Favorites{
+			Items: []*pb.Product{},
+		}, nil
+	}
+	var pbProducts []*pb.Product
+	for _, product := range favorites.Items {
+		if product != nil {
+			pbProducts = append(pbProducts, convertBizProductToPB(product))
+		}
+	}
+
+	return &v1.Favorites{
+		Items: pbProducts,
+	}, nil
+}
+
+// DeleteFavorites 删除收藏
+func (s *UserService) DeleteFavorites(ctx context.Context, req *v1.UpdateFavoritesRequest) (*v1.UpdateFavoritesResply, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	productId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, err
+	}
+	resply, err := s.uc.DeleteFavorites(ctx, &biz.UpdateFavoritesRequest{
+		UserId:    userId,
+		ProductId: productId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.UpdateFavoritesResply{
+		Message: resply.Message,
+		Code:    resply.Code,
+	}, nil
+}
+
+// SetFavorites 添加收藏
+func (s *UserService) SetFavorites(ctx context.Context, req *v1.UpdateFavoritesRequest) (*v1.UpdateFavoritesResply, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	productId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, err
+	}
+	resply, err := s.uc.SetFavorites(ctx, &biz.UpdateFavoritesRequest{
+		UserId:    userId,
+		ProductId: productId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.UpdateFavoritesResply{
+		Message: resply.Message,
+		Code:    resply.Code,
+	}, nil
+}
+
+func convertBizProductToPB(p *biz.Product) *pb.Product {
+	if p == nil {
+		return nil
+	}
+
+	// 转换图片
+	images := make([]*pb.Image, 0)
+	if p.Images != nil {
+		for _, img := range p.Images {
+			if img != nil {
+				sortOrder := int32(0)
+				if img.SortOrder != nil {
+					sortOrder = int32(*img.SortOrder)
+				}
+				images = append(images, &pb.Image{
+					Url:       img.URL,
+					IsPrimary: img.IsPrimary,
+					SortOrder: sortOrder,
+				})
+			}
+		}
+	}
+
+	// 转换商品属性
+	var attributes *structpb.Value
+	if p.Attributes != nil && len(p.Attributes) > 0 {
+		protoStruct, err := structpb.NewStruct(p.Attributes)
+		if err != nil {
+			log.Warn("Error creating struct: %w", err)
+			attributes = nil
+		} else {
+			attributes = structpb.NewStructValue(protoStruct)
+		}
+	}
+
+	// 构建返回结果
+	result := &pb.Product{
+		Id:          p.ID.String(),
+		Name:        p.Name,
+		Description: p.Description,
+		Price:       p.Price,
+		Status:      uint32(p.Status),
+		MerchantId:  p.MerchantId.String(),
+		Images:      images,
+		Attributes:  attributes,
+		Category: &pb.CategoryInfo{
+			CategoryId:   uint32(p.Category.CategoryId),
+			CategoryName: p.Category.CategoryName,
+		},
+		CreatedAt: timestamppb.New(p.CreatedAt),
+		UpdatedAt: timestamppb.New(p.UpdatedAt),
+	}
+
+	// 添加库存信息
+	if p.Inventory.ProductId != uuid.Nil {
+		result.Inventory = &pb.Inventory{
+			ProductId:  p.Inventory.ProductId.String(),
+			MerchantId: p.Inventory.MerchantId.String(),
+			Stock:      p.Inventory.Stock,
+		}
+	}
+
+	return result
 }

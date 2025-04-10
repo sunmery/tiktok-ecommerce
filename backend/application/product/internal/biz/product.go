@@ -10,8 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type ProductStatus int32
-
 const (
 	ProductStatusDraft    ProductStatus = iota // 商品草稿
 	ProductStatusPending                       // 商品待审核。
@@ -62,32 +60,45 @@ type AuditInfo struct {
 	OperatedAt time.Time // 操作时间
 }
 
-type CategoryInfo struct {
-	CategoryId   uint64
-	CategoryName string
-	SortOrder    int32
-}
-type ProductImage struct {
-	URL       string
-	IsPrimary bool
-	SortOrder *int
-}
-
 // Product 商品领域模型
-type Product struct {
-	ID          uuid.UUID
-	MerchantId  uuid.UUID
-	Name        string
-	Price       float64
-	Description string
-	Images      []*ProductImage
-	Status      ProductStatus
-	Category    CategoryInfo
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Attributes  map[string]any
-	Inventory   Inventory // 库存
-}
+type (
+	// ProductImage 商品图片信息
+	ProductImage struct {
+		URL       string
+		IsPrimary bool
+		SortOrder *int
+	}
+	// ProductStatus 商品状态
+	ProductStatus int32
+	// CategoryInfo 分类信息
+	CategoryInfo struct {
+		CategoryId   uint64
+		CategoryName string
+		SortOrder    int32
+	}
+
+	// Inventory 库存
+	Inventory struct {
+		ProductId  uuid.UUID
+		MerchantId uuid.UUID
+		Stock      uint32
+	}
+
+	Product struct {
+		ID          uuid.UUID
+		MerchantId  uuid.UUID
+		Name        string
+		Price       float64
+		Description string
+		Images      []*ProductImage
+		Status      ProductStatus
+		Category    CategoryInfo
+		CreatedAt   time.Time
+		UpdatedAt   time.Time
+		Attributes  map[string]any
+		Inventory   Inventory // 库存
+	}
+)
 
 type GetProductsBatchRequest struct {
 	ProductIds  []uuid.UUID
@@ -164,13 +175,6 @@ type (
 		UpdatedAt time.Time
 	}
 )
-
-// Inventory 库存
-type Inventory struct {
-	ProductId  uuid.UUID
-	MerchantId uuid.UUID
-	Stock      uint32
-}
 
 type ImageModel struct {
 	ID        uint `gorm:"primaryKey"`

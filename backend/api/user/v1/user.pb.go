@@ -7,6 +7,7 @@
 package userv1
 
 import (
+	v1 "backend/api/product/v1"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -24,6 +25,198 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type GetFavoritesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFavoritesRequest) Reset() {
+	*x = GetFavoritesRequest{}
+	mi := &file_v1_user_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFavoritesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFavoritesRequest) ProtoMessage() {}
+
+func (x *GetFavoritesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_user_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFavoritesRequest.ProtoReflect.Descriptor instead.
+func (*GetFavoritesRequest) Descriptor() ([]byte, []int) {
+	return file_v1_user_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GetFavoritesRequest) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetFavoritesRequest) GetPageSize() uint32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type UpdateFavoritesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateFavoritesRequest) Reset() {
+	*x = UpdateFavoritesRequest{}
+	mi := &file_v1_user_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateFavoritesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateFavoritesRequest) ProtoMessage() {}
+
+func (x *UpdateFavoritesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_user_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateFavoritesRequest.ProtoReflect.Descriptor instead.
+func (*UpdateFavoritesRequest) Descriptor() ([]byte, []int) {
+	return file_v1_user_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UpdateFavoritesRequest) GetProductId() string {
+	if x != nil {
+		return x.ProductId
+	}
+	return ""
+}
+
+type Favorites struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*v1.Product          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Favorites) Reset() {
+	*x = Favorites{}
+	mi := &file_v1_user_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Favorites) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Favorites) ProtoMessage() {}
+
+func (x *Favorites) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_user_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Favorites.ProtoReflect.Descriptor instead.
+func (*Favorites) Descriptor() ([]byte, []int) {
+	return file_v1_user_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Favorites) GetItems() []*v1.Product {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type UpdateFavoritesResply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Code          int32                  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateFavoritesResply) Reset() {
+	*x = UpdateFavoritesResply{}
+	mi := &file_v1_user_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateFavoritesResply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateFavoritesResply) ProtoMessage() {}
+
+func (x *UpdateFavoritesResply) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_user_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateFavoritesResply.ProtoReflect.Descriptor instead.
+func (*UpdateFavoritesResply) Descriptor() ([]byte, []int) {
+	return file_v1_user_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UpdateFavoritesResply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *UpdateFavoritesResply) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
 
 // 定义信用卡信息的消息结构
 type CreditCard struct {
@@ -46,7 +239,7 @@ type CreditCard struct {
 
 func (x *CreditCard) Reset() {
 	*x = CreditCard{}
-	mi := &file_v1_user_proto_msgTypes[0]
+	mi := &file_v1_user_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -58,7 +251,7 @@ func (x *CreditCard) String() string {
 func (*CreditCard) ProtoMessage() {}
 
 func (x *CreditCard) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[0]
+	mi := &file_v1_user_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -71,7 +264,7 @@ func (x *CreditCard) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreditCard.ProtoReflect.Descriptor instead.
 func (*CreditCard) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{0}
+	return file_v1_user_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreditCard) GetId() uint32 {
@@ -167,7 +360,7 @@ type CreditCards struct {
 
 func (x *CreditCards) Reset() {
 	*x = CreditCards{}
-	mi := &file_v1_user_proto_msgTypes[1]
+	mi := &file_v1_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -179,7 +372,7 @@ func (x *CreditCards) String() string {
 func (*CreditCards) ProtoMessage() {}
 
 func (x *CreditCards) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[1]
+	mi := &file_v1_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -192,7 +385,7 @@ func (x *CreditCards) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreditCards.ProtoReflect.Descriptor instead.
 func (*CreditCards) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{1}
+	return file_v1_user_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreditCards) GetCreditCards() []*CreditCard {
@@ -212,7 +405,7 @@ type GetCreditCardRequest struct {
 
 func (x *GetCreditCardRequest) Reset() {
 	*x = GetCreditCardRequest{}
-	mi := &file_v1_user_proto_msgTypes[2]
+	mi := &file_v1_user_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -224,7 +417,7 @@ func (x *GetCreditCardRequest) String() string {
 func (*GetCreditCardRequest) ProtoMessage() {}
 
 func (x *GetCreditCardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[2]
+	mi := &file_v1_user_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -237,7 +430,7 @@ func (x *GetCreditCardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCreditCardRequest.ProtoReflect.Descriptor instead.
 func (*GetCreditCardRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{2}
+	return file_v1_user_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetCreditCardRequest) GetId() uint32 {
@@ -265,7 +458,7 @@ type CardsReply struct {
 
 func (x *CardsReply) Reset() {
 	*x = CardsReply{}
-	mi := &file_v1_user_proto_msgTypes[3]
+	mi := &file_v1_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -277,7 +470,7 @@ func (x *CardsReply) String() string {
 func (*CardsReply) ProtoMessage() {}
 
 func (x *CardsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[3]
+	mi := &file_v1_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -290,7 +483,7 @@ func (x *CardsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CardsReply.ProtoReflect.Descriptor instead.
 func (*CardsReply) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{3}
+	return file_v1_user_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CardsReply) GetMessage() string {
@@ -317,7 +510,7 @@ type DeleteCreditCardsRequest struct {
 
 func (x *DeleteCreditCardsRequest) Reset() {
 	*x = DeleteCreditCardsRequest{}
-	mi := &file_v1_user_proto_msgTypes[4]
+	mi := &file_v1_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -329,7 +522,7 @@ func (x *DeleteCreditCardsRequest) String() string {
 func (*DeleteCreditCardsRequest) ProtoMessage() {}
 
 func (x *DeleteCreditCardsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[4]
+	mi := &file_v1_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -342,7 +535,7 @@ func (x *DeleteCreditCardsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCreditCardsRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCreditCardsRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{4}
+	return file_v1_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteCreditCardsRequest) GetId() uint32 {
@@ -362,7 +555,7 @@ type ListCreditCardsReply struct {
 
 func (x *ListCreditCardsReply) Reset() {
 	*x = ListCreditCardsReply{}
-	mi := &file_v1_user_proto_msgTypes[5]
+	mi := &file_v1_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -374,7 +567,7 @@ func (x *ListCreditCardsReply) String() string {
 func (*ListCreditCardsReply) ProtoMessage() {}
 
 func (x *ListCreditCardsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[5]
+	mi := &file_v1_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -387,7 +580,7 @@ func (x *ListCreditCardsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCreditCardsReply.ProtoReflect.Descriptor instead.
 func (*ListCreditCardsReply) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{5}
+	return file_v1_user_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListCreditCardsReply) GetCreditCards() []*CreditCards {
@@ -413,7 +606,7 @@ type Address struct {
 
 func (x *Address) Reset() {
 	*x = Address{}
-	mi := &file_v1_user_proto_msgTypes[6]
+	mi := &file_v1_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -425,7 +618,7 @@ func (x *Address) String() string {
 func (*Address) ProtoMessage() {}
 
 func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[6]
+	mi := &file_v1_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,7 +631,7 @@ func (x *Address) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Address.ProtoReflect.Descriptor instead.
 func (*Address) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{6}
+	return file_v1_user_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Address) GetId() uint32 {
@@ -501,7 +694,7 @@ type UpdateAddressesRequest struct {
 
 func (x *UpdateAddressesRequest) Reset() {
 	*x = UpdateAddressesRequest{}
-	mi := &file_v1_user_proto_msgTypes[7]
+	mi := &file_v1_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -513,7 +706,7 @@ func (x *UpdateAddressesRequest) String() string {
 func (*UpdateAddressesRequest) ProtoMessage() {}
 
 func (x *UpdateAddressesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[7]
+	mi := &file_v1_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -526,7 +719,7 @@ func (x *UpdateAddressesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAddressesRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAddressesRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{7}
+	return file_v1_user_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateAddressesRequest) GetAddresses() *Address {
@@ -547,7 +740,7 @@ type DeleteAddressesRequest struct {
 
 func (x *DeleteAddressesRequest) Reset() {
 	*x = DeleteAddressesRequest{}
-	mi := &file_v1_user_proto_msgTypes[8]
+	mi := &file_v1_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +752,7 @@ func (x *DeleteAddressesRequest) String() string {
 func (*DeleteAddressesRequest) ProtoMessage() {}
 
 func (x *DeleteAddressesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[8]
+	mi := &file_v1_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +765,7 @@ func (x *DeleteAddressesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAddressesRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAddressesRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{8}
+	return file_v1_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeleteAddressesRequest) GetAddressesId() int32 {
@@ -600,7 +793,7 @@ type AddressReply struct {
 
 func (x *AddressReply) Reset() {
 	*x = AddressReply{}
-	mi := &file_v1_user_proto_msgTypes[9]
+	mi := &file_v1_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -612,7 +805,7 @@ func (x *AddressReply) String() string {
 func (*AddressReply) ProtoMessage() {}
 
 func (x *AddressReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[9]
+	mi := &file_v1_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -625,7 +818,7 @@ func (x *AddressReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddressReply.ProtoReflect.Descriptor instead.
 func (*AddressReply) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{9}
+	return file_v1_user_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AddressReply) GetId() uint32 {
@@ -652,7 +845,7 @@ type GetAddressRequest struct {
 
 func (x *GetAddressRequest) Reset() {
 	*x = GetAddressRequest{}
-	mi := &file_v1_user_proto_msgTypes[10]
+	mi := &file_v1_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -664,7 +857,7 @@ func (x *GetAddressRequest) String() string {
 func (*GetAddressRequest) ProtoMessage() {}
 
 func (x *GetAddressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[10]
+	mi := &file_v1_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -677,7 +870,7 @@ func (x *GetAddressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAddressRequest.ProtoReflect.Descriptor instead.
 func (*GetAddressRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{10}
+	return file_v1_user_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetAddressRequest) GetAddressId() uint32 {
@@ -704,7 +897,7 @@ type GetAddressesReply struct {
 
 func (x *GetAddressesReply) Reset() {
 	*x = GetAddressesReply{}
-	mi := &file_v1_user_proto_msgTypes[11]
+	mi := &file_v1_user_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -716,7 +909,7 @@ func (x *GetAddressesReply) String() string {
 func (*GetAddressesReply) ProtoMessage() {}
 
 func (x *GetAddressesReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[11]
+	mi := &file_v1_user_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -729,7 +922,7 @@ func (x *GetAddressesReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAddressesReply.ProtoReflect.Descriptor instead.
 func (*GetAddressesReply) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{11}
+	return file_v1_user_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetAddressesReply) GetAddresses() []*Address {
@@ -751,7 +944,7 @@ type DeleteAddressesReply struct {
 
 func (x *DeleteAddressesReply) Reset() {
 	*x = DeleteAddressesReply{}
-	mi := &file_v1_user_proto_msgTypes[12]
+	mi := &file_v1_user_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -763,7 +956,7 @@ func (x *DeleteAddressesReply) String() string {
 func (*DeleteAddressesReply) ProtoMessage() {}
 
 func (x *DeleteAddressesReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[12]
+	mi := &file_v1_user_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -776,7 +969,7 @@ func (x *DeleteAddressesReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAddressesReply.ProtoReflect.Descriptor instead.
 func (*DeleteAddressesReply) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{12}
+	return file_v1_user_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteAddressesReply) GetMessage() string {
@@ -809,7 +1002,7 @@ type GetProfileRequest struct {
 
 func (x *GetProfileRequest) Reset() {
 	*x = GetProfileRequest{}
-	mi := &file_v1_user_proto_msgTypes[13]
+	mi := &file_v1_user_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -821,7 +1014,7 @@ func (x *GetProfileRequest) String() string {
 func (*GetProfileRequest) ProtoMessage() {}
 
 func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[13]
+	mi := &file_v1_user_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -834,7 +1027,7 @@ func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfileRequest.ProtoReflect.Descriptor instead.
 func (*GetProfileRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{13}
+	return file_v1_user_proto_rawDescGZIP(), []int{17}
 }
 
 // 定义获取用户个人资料响应的消息结构
@@ -857,7 +1050,7 @@ type GetProfileResponse struct {
 
 func (x *GetProfileResponse) Reset() {
 	*x = GetProfileResponse{}
-	mi := &file_v1_user_proto_msgTypes[14]
+	mi := &file_v1_user_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -869,7 +1062,7 @@ func (x *GetProfileResponse) String() string {
 func (*GetProfileResponse) ProtoMessage() {}
 
 func (x *GetProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[14]
+	mi := &file_v1_user_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -882,7 +1075,7 @@ func (x *GetProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfileResponse.ProtoReflect.Descriptor instead.
 func (*GetProfileResponse) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{14}
+	return file_v1_user_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetProfileResponse) GetOwner() string {
@@ -970,7 +1163,7 @@ type GetUsersRequest struct {
 
 func (x *GetUsersRequest) Reset() {
 	*x = GetUsersRequest{}
-	mi := &file_v1_user_proto_msgTypes[15]
+	mi := &file_v1_user_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -982,7 +1175,7 @@ func (x *GetUsersRequest) String() string {
 func (*GetUsersRequest) ProtoMessage() {}
 
 func (x *GetUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[15]
+	mi := &file_v1_user_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -995,7 +1188,7 @@ func (x *GetUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUsersRequest.ProtoReflect.Descriptor instead.
 func (*GetUsersRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{15}
+	return file_v1_user_proto_rawDescGZIP(), []int{19}
 }
 
 type GetUsersResponse struct {
@@ -1007,7 +1200,7 @@ type GetUsersResponse struct {
 
 func (x *GetUsersResponse) Reset() {
 	*x = GetUsersResponse{}
-	mi := &file_v1_user_proto_msgTypes[16]
+	mi := &file_v1_user_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1019,7 +1212,7 @@ func (x *GetUsersResponse) String() string {
 func (*GetUsersResponse) ProtoMessage() {}
 
 func (x *GetUsersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[16]
+	mi := &file_v1_user_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1032,7 +1225,7 @@ func (x *GetUsersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUsersResponse.ProtoReflect.Descriptor instead.
 func (*GetUsersResponse) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{16}
+	return file_v1_user_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetUsersResponse) GetUsers() []*GetProfileResponse {
@@ -1053,7 +1246,7 @@ type DeleteUserRequest struct {
 
 func (x *DeleteUserRequest) Reset() {
 	*x = DeleteUserRequest{}
-	mi := &file_v1_user_proto_msgTypes[17]
+	mi := &file_v1_user_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1258,7 @@ func (x *DeleteUserRequest) String() string {
 func (*DeleteUserRequest) ProtoMessage() {}
 
 func (x *DeleteUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[17]
+	mi := &file_v1_user_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1271,7 @@ func (x *DeleteUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteUserRequest.ProtoReflect.Descriptor instead.
 func (*DeleteUserRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{17}
+	return file_v1_user_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteUserRequest) GetUserId() string {
@@ -1112,7 +1305,7 @@ type DeleteUserResponse struct {
 
 func (x *DeleteUserResponse) Reset() {
 	*x = DeleteUserResponse{}
-	mi := &file_v1_user_proto_msgTypes[18]
+	mi := &file_v1_user_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1124,7 +1317,7 @@ func (x *DeleteUserResponse) String() string {
 func (*DeleteUserResponse) ProtoMessage() {}
 
 func (x *DeleteUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[18]
+	mi := &file_v1_user_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1137,7 +1330,7 @@ func (x *DeleteUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteUserResponse.ProtoReflect.Descriptor instead.
 func (*DeleteUserResponse) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{18}
+	return file_v1_user_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *DeleteUserResponse) GetStatus() string {
@@ -1169,7 +1362,7 @@ type UpdateUserRequest struct {
 
 func (x *UpdateUserRequest) Reset() {
 	*x = UpdateUserRequest{}
-	mi := &file_v1_user_proto_msgTypes[19]
+	mi := &file_v1_user_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1181,7 +1374,7 @@ func (x *UpdateUserRequest) String() string {
 func (*UpdateUserRequest) ProtoMessage() {}
 
 func (x *UpdateUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[19]
+	mi := &file_v1_user_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1194,7 +1387,7 @@ func (x *UpdateUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserRequest.ProtoReflect.Descriptor instead.
 func (*UpdateUserRequest) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{19}
+	return file_v1_user_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *UpdateUserRequest) GetUserId() string {
@@ -1256,7 +1449,7 @@ type UpdateUserResponse struct {
 
 func (x *UpdateUserResponse) Reset() {
 	*x = UpdateUserResponse{}
-	mi := &file_v1_user_proto_msgTypes[20]
+	mi := &file_v1_user_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1268,7 +1461,7 @@ func (x *UpdateUserResponse) String() string {
 func (*UpdateUserResponse) ProtoMessage() {}
 
 func (x *UpdateUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_user_proto_msgTypes[20]
+	mi := &file_v1_user_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1281,7 +1474,7 @@ func (x *UpdateUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserResponse.ProtoReflect.Descriptor instead.
 func (*UpdateUserResponse) Descriptor() ([]byte, []int) {
-	return file_v1_user_proto_rawDescGZIP(), []int{20}
+	return file_v1_user_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateUserResponse) GetStatus() string {
@@ -1312,7 +1505,26 @@ var file_v1_user_proto_rawDesc = string([]byte{
 	0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74,
 	0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xf5, 0x02, 0x0a, 0x0a, 0x43, 0x72, 0x65,
+	0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x24, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e,
+	0x64, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x2f, 0x76, 0x31,
+	0x2f, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x46,
+	0x0a, 0x13, 0x47, 0x65, 0x74, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x61, 0x67,
+	0x65, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x70, 0x61,
+	0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x22, 0x37, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x49, 0x64, 0x22,
+	0x40, 0x0a, 0x09, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x33, 0x0a, 0x05,
+	0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x65, 0x63,
+	0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d,
+	0x73, 0x22, 0x45, 0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x46, 0x61, 0x76, 0x6f, 0x72,
+	0x69, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6c, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0xf5, 0x02, 0x0a, 0x0a, 0x43, 0x72, 0x65,
 	0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x07, 0x20,
 	0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x12, 0x24, 0x0a, 0x08, 0x63, 0x75, 0x72, 0x72, 0x65,
 	0x6e, 0x63, 0x79, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x09, 0x42, 0x08, 0xfa, 0x42, 0x05, 0x72, 0x03,
@@ -1461,7 +1673,7 @@ var file_v1_user_proto_rawDesc = string([]byte{
 	0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x63,
 	0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x32,
-	0xdb, 0x0b, 0x0a, 0x0b, 0x55, 0x73, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
+	0xe7, 0x0e, 0x0a, 0x0b, 0x55, 0x73, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
 	0x78, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c,
 	0x65, 0x12, 0x24, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73,
 	0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65,
@@ -1531,33 +1743,57 @@ var file_v1_user_proto_rawDesc = string([]byte{
 	0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x64, 0x69,
 	0x74, 0x43, 0x61, 0x72, 0x64, 0x73, 0x22, 0x1e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x18, 0x12, 0x16,
 	0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x69, 0x74,
-	0x5f, 0x63, 0x61, 0x72, 0x64, 0x73, 0x12, 0x79, 0x0a, 0x0a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x55, 0x73, 0x65, 0x72, 0x12, 0x24, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65,
-	0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x55,
-	0x73, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x65, 0x63, 0x6f,
+	0x5f, 0x63, 0x61, 0x72, 0x64, 0x73, 0x12, 0x71, 0x0a, 0x0c, 0x47, 0x65, 0x74, 0x46, 0x61, 0x76,
+	0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x26, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72,
+	0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x46, 0x61,
+	0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c,
+	0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e,
+	0x76, 0x31, 0x2e, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x22, 0x1b, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x15, 0x12, 0x13, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f,
+	0x66, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x83, 0x01, 0x0a, 0x0c, 0x53, 0x65,
+	0x74, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x65, 0x63, 0x6f,
 	0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x1e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x18, 0x3a, 0x01, 0x2a, 0x22, 0x13, 0x2f, 0x76,
-	0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64,
-	0x7d, 0x12, 0x7c, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43, 0x61,
-	0x72, 0x64, 0x12, 0x27, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75,
-	0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74,
-	0x43, 0x61, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x65, 0x63,
-	0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e,
-	0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x63, 0x72,
-	0x65, 0x64, 0x69, 0x74, 0x5f, 0x63, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12,
-	0x7c, 0x0a, 0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43,
-	0x61, 0x72, 0x64, 0x12, 0x2b, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e,
-	0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72,
-	0x65, 0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d,
-	0x2a, 0x1b, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x63, 0x72, 0x65, 0x64,
-	0x69, 0x74, 0x5f, 0x63, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x42, 0x1c, 0x5a,
-	0x1a, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x75, 0x73, 0x65,
-	0x72, 0x2f, 0x76, 0x31, 0x3b, 0x75, 0x73, 0x65, 0x72, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63,
+	0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6c, 0x79, 0x22,
+	0x1e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x18, 0x3a, 0x01, 0x2a, 0x1a, 0x13, 0x2f, 0x76, 0x31, 0x2f,
+	0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x66, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12,
+	0x90, 0x01, 0x0a, 0x0f, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69,
+	0x74, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e,
+	0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x46, 0x61,
+	0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28,
+	0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e,
+	0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74,
+	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6c, 0x79, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22,
+	0x2a, 0x20, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x66, 0x61, 0x76, 0x6f,
+	0x72, 0x69, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x5f, 0x69,
+	0x64, 0x7d, 0x12, 0x79, 0x0a, 0x0a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72,
+	0x12, 0x24, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65,
+	0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72,
+	0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1e, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x18, 0x3a, 0x01, 0x2a, 0x22, 0x13, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73,
+	0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x7c, 0x0a,
+	0x0d, 0x47, 0x65, 0x74, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x12, 0x27,
+	0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e,
+	0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65,
+	0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x64,
+	0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
+	0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x69, 0x74,
+	0x5f, 0x63, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0x7c, 0x0a, 0x10, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74, 0x43, 0x61, 0x72, 0x64, 0x12,
+	0x2b, 0x2e, 0x65, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x72, 0x63, 0x65, 0x2e, 0x75, 0x73, 0x65, 0x72,
+	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x69, 0x74,
+	0x43, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x2a, 0x1b, 0x2f, 0x76,
+	0x31, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x69, 0x74, 0x5f, 0x63,
+	0x61, 0x72, 0x64, 0x73, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x42, 0x1c, 0x5a, 0x1a, 0x62, 0x61, 0x63,
+	0x6b, 0x65, 0x6e, 0x64, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x2f, 0x76, 0x31,
+	0x3b, 0x75, 0x73, 0x65, 0x72, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1572,71 +1808,83 @@ func file_v1_user_proto_rawDescGZIP() []byte {
 	return file_v1_user_proto_rawDescData
 }
 
-var file_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_v1_user_proto_goTypes = []any{
-	(*CreditCard)(nil),               // 0: ecommerce.user.v1.CreditCard
-	(*CreditCards)(nil),              // 1: ecommerce.user.v1.CreditCards
-	(*GetCreditCardRequest)(nil),     // 2: ecommerce.user.v1.GetCreditCardRequest
-	(*CardsReply)(nil),               // 3: ecommerce.user.v1.CardsReply
-	(*DeleteCreditCardsRequest)(nil), // 4: ecommerce.user.v1.DeleteCreditCardsRequest
-	(*ListCreditCardsReply)(nil),     // 5: ecommerce.user.v1.ListCreditCardsReply
-	(*Address)(nil),                  // 6: ecommerce.user.v1.Address
-	(*UpdateAddressesRequest)(nil),   // 7: ecommerce.user.v1.UpdateAddressesRequest
-	(*DeleteAddressesRequest)(nil),   // 8: ecommerce.user.v1.DeleteAddressesRequest
-	(*AddressReply)(nil),             // 9: ecommerce.user.v1.AddressReply
-	(*GetAddressRequest)(nil),        // 10: ecommerce.user.v1.GetAddressRequest
-	(*GetAddressesReply)(nil),        // 11: ecommerce.user.v1.GetAddressesReply
-	(*DeleteAddressesReply)(nil),     // 12: ecommerce.user.v1.DeleteAddressesReply
-	(*GetProfileRequest)(nil),        // 13: ecommerce.user.v1.GetProfileRequest
-	(*GetProfileResponse)(nil),       // 14: ecommerce.user.v1.GetProfileResponse
-	(*GetUsersRequest)(nil),          // 15: ecommerce.user.v1.GetUsersRequest
-	(*GetUsersResponse)(nil),         // 16: ecommerce.user.v1.GetUsersResponse
-	(*DeleteUserRequest)(nil),        // 17: ecommerce.user.v1.DeleteUserRequest
-	(*DeleteUserResponse)(nil),       // 18: ecommerce.user.v1.DeleteUserResponse
-	(*UpdateUserRequest)(nil),        // 19: ecommerce.user.v1.UpdateUserRequest
-	(*UpdateUserResponse)(nil),       // 20: ecommerce.user.v1.UpdateUserResponse
-	(*timestamppb.Timestamp)(nil),    // 21: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),            // 22: google.protobuf.Empty
+	(*GetFavoritesRequest)(nil),      // 0: ecommerce.user.v1.GetFavoritesRequest
+	(*UpdateFavoritesRequest)(nil),   // 1: ecommerce.user.v1.UpdateFavoritesRequest
+	(*Favorites)(nil),                // 2: ecommerce.user.v1.Favorites
+	(*UpdateFavoritesResply)(nil),    // 3: ecommerce.user.v1.UpdateFavoritesResply
+	(*CreditCard)(nil),               // 4: ecommerce.user.v1.CreditCard
+	(*CreditCards)(nil),              // 5: ecommerce.user.v1.CreditCards
+	(*GetCreditCardRequest)(nil),     // 6: ecommerce.user.v1.GetCreditCardRequest
+	(*CardsReply)(nil),               // 7: ecommerce.user.v1.CardsReply
+	(*DeleteCreditCardsRequest)(nil), // 8: ecommerce.user.v1.DeleteCreditCardsRequest
+	(*ListCreditCardsReply)(nil),     // 9: ecommerce.user.v1.ListCreditCardsReply
+	(*Address)(nil),                  // 10: ecommerce.user.v1.Address
+	(*UpdateAddressesRequest)(nil),   // 11: ecommerce.user.v1.UpdateAddressesRequest
+	(*DeleteAddressesRequest)(nil),   // 12: ecommerce.user.v1.DeleteAddressesRequest
+	(*AddressReply)(nil),             // 13: ecommerce.user.v1.AddressReply
+	(*GetAddressRequest)(nil),        // 14: ecommerce.user.v1.GetAddressRequest
+	(*GetAddressesReply)(nil),        // 15: ecommerce.user.v1.GetAddressesReply
+	(*DeleteAddressesReply)(nil),     // 16: ecommerce.user.v1.DeleteAddressesReply
+	(*GetProfileRequest)(nil),        // 17: ecommerce.user.v1.GetProfileRequest
+	(*GetProfileResponse)(nil),       // 18: ecommerce.user.v1.GetProfileResponse
+	(*GetUsersRequest)(nil),          // 19: ecommerce.user.v1.GetUsersRequest
+	(*GetUsersResponse)(nil),         // 20: ecommerce.user.v1.GetUsersResponse
+	(*DeleteUserRequest)(nil),        // 21: ecommerce.user.v1.DeleteUserRequest
+	(*DeleteUserResponse)(nil),       // 22: ecommerce.user.v1.DeleteUserResponse
+	(*UpdateUserRequest)(nil),        // 23: ecommerce.user.v1.UpdateUserRequest
+	(*UpdateUserResponse)(nil),       // 24: ecommerce.user.v1.UpdateUserResponse
+	(*v1.Product)(nil),               // 25: ecommerce.product.v1.Product
+	(*timestamppb.Timestamp)(nil),    // 26: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),            // 27: google.protobuf.Empty
 }
 var file_v1_user_proto_depIdxs = []int32{
-	21, // 0: ecommerce.user.v1.CreditCard.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 1: ecommerce.user.v1.CreditCards.credit_cards:type_name -> ecommerce.user.v1.CreditCard
-	1,  // 2: ecommerce.user.v1.ListCreditCardsReply.credit_cards:type_name -> ecommerce.user.v1.CreditCards
-	6,  // 3: ecommerce.user.v1.UpdateAddressesRequest.addresses:type_name -> ecommerce.user.v1.Address
-	6,  // 4: ecommerce.user.v1.AddressReply.address:type_name -> ecommerce.user.v1.Address
-	6,  // 5: ecommerce.user.v1.GetAddressesReply.addresses:type_name -> ecommerce.user.v1.Address
-	14, // 6: ecommerce.user.v1.GetUsersResponse.users:type_name -> ecommerce.user.v1.GetProfileResponse
-	13, // 7: ecommerce.user.v1.UserService.GetUserProfile:input_type -> ecommerce.user.v1.GetProfileRequest
-	15, // 8: ecommerce.user.v1.UserService.GetUsers:input_type -> ecommerce.user.v1.GetUsersRequest
-	17, // 9: ecommerce.user.v1.UserService.DeleteUser:input_type -> ecommerce.user.v1.DeleteUserRequest
-	6,  // 10: ecommerce.user.v1.UserService.CreateAddresses:input_type -> ecommerce.user.v1.Address
-	6,  // 11: ecommerce.user.v1.UserService.UpdateAddresses:input_type -> ecommerce.user.v1.Address
-	8,  // 12: ecommerce.user.v1.UserService.DeleteAddresses:input_type -> ecommerce.user.v1.DeleteAddressesRequest
-	10, // 13: ecommerce.user.v1.UserService.GetAddress:input_type -> ecommerce.user.v1.GetAddressRequest
-	0,  // 14: ecommerce.user.v1.UserService.CreateCreditCard:input_type -> ecommerce.user.v1.CreditCard
-	22, // 15: ecommerce.user.v1.UserService.GetAddresses:input_type -> google.protobuf.Empty
-	22, // 16: ecommerce.user.v1.UserService.ListCreditCards:input_type -> google.protobuf.Empty
-	19, // 17: ecommerce.user.v1.UserService.UpdateUser:input_type -> ecommerce.user.v1.UpdateUserRequest
-	2,  // 18: ecommerce.user.v1.UserService.GetCreditCard:input_type -> ecommerce.user.v1.GetCreditCardRequest
-	4,  // 19: ecommerce.user.v1.UserService.DeleteCreditCard:input_type -> ecommerce.user.v1.DeleteCreditCardsRequest
-	14, // 20: ecommerce.user.v1.UserService.GetUserProfile:output_type -> ecommerce.user.v1.GetProfileResponse
-	16, // 21: ecommerce.user.v1.UserService.GetUsers:output_type -> ecommerce.user.v1.GetUsersResponse
-	18, // 22: ecommerce.user.v1.UserService.DeleteUser:output_type -> ecommerce.user.v1.DeleteUserResponse
-	6,  // 23: ecommerce.user.v1.UserService.CreateAddresses:output_type -> ecommerce.user.v1.Address
-	6,  // 24: ecommerce.user.v1.UserService.UpdateAddresses:output_type -> ecommerce.user.v1.Address
-	12, // 25: ecommerce.user.v1.UserService.DeleteAddresses:output_type -> ecommerce.user.v1.DeleteAddressesReply
-	6,  // 26: ecommerce.user.v1.UserService.GetAddress:output_type -> ecommerce.user.v1.Address
-	22, // 27: ecommerce.user.v1.UserService.CreateCreditCard:output_type -> google.protobuf.Empty
-	11, // 28: ecommerce.user.v1.UserService.GetAddresses:output_type -> ecommerce.user.v1.GetAddressesReply
-	1,  // 29: ecommerce.user.v1.UserService.ListCreditCards:output_type -> ecommerce.user.v1.CreditCards
-	20, // 30: ecommerce.user.v1.UserService.UpdateUser:output_type -> ecommerce.user.v1.UpdateUserResponse
-	0,  // 31: ecommerce.user.v1.UserService.GetCreditCard:output_type -> ecommerce.user.v1.CreditCard
-	22, // 32: ecommerce.user.v1.UserService.DeleteCreditCard:output_type -> google.protobuf.Empty
-	20, // [20:33] is the sub-list for method output_type
-	7,  // [7:20] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	25, // 0: ecommerce.user.v1.Favorites.items:type_name -> ecommerce.product.v1.Product
+	26, // 1: ecommerce.user.v1.CreditCard.created_at:type_name -> google.protobuf.Timestamp
+	4,  // 2: ecommerce.user.v1.CreditCards.credit_cards:type_name -> ecommerce.user.v1.CreditCard
+	5,  // 3: ecommerce.user.v1.ListCreditCardsReply.credit_cards:type_name -> ecommerce.user.v1.CreditCards
+	10, // 4: ecommerce.user.v1.UpdateAddressesRequest.addresses:type_name -> ecommerce.user.v1.Address
+	10, // 5: ecommerce.user.v1.AddressReply.address:type_name -> ecommerce.user.v1.Address
+	10, // 6: ecommerce.user.v1.GetAddressesReply.addresses:type_name -> ecommerce.user.v1.Address
+	18, // 7: ecommerce.user.v1.GetUsersResponse.users:type_name -> ecommerce.user.v1.GetProfileResponse
+	17, // 8: ecommerce.user.v1.UserService.GetUserProfile:input_type -> ecommerce.user.v1.GetProfileRequest
+	19, // 9: ecommerce.user.v1.UserService.GetUsers:input_type -> ecommerce.user.v1.GetUsersRequest
+	21, // 10: ecommerce.user.v1.UserService.DeleteUser:input_type -> ecommerce.user.v1.DeleteUserRequest
+	10, // 11: ecommerce.user.v1.UserService.CreateAddresses:input_type -> ecommerce.user.v1.Address
+	10, // 12: ecommerce.user.v1.UserService.UpdateAddresses:input_type -> ecommerce.user.v1.Address
+	12, // 13: ecommerce.user.v1.UserService.DeleteAddresses:input_type -> ecommerce.user.v1.DeleteAddressesRequest
+	14, // 14: ecommerce.user.v1.UserService.GetAddress:input_type -> ecommerce.user.v1.GetAddressRequest
+	4,  // 15: ecommerce.user.v1.UserService.CreateCreditCard:input_type -> ecommerce.user.v1.CreditCard
+	27, // 16: ecommerce.user.v1.UserService.GetAddresses:input_type -> google.protobuf.Empty
+	27, // 17: ecommerce.user.v1.UserService.ListCreditCards:input_type -> google.protobuf.Empty
+	0,  // 18: ecommerce.user.v1.UserService.GetFavorites:input_type -> ecommerce.user.v1.GetFavoritesRequest
+	1,  // 19: ecommerce.user.v1.UserService.SetFavorites:input_type -> ecommerce.user.v1.UpdateFavoritesRequest
+	1,  // 20: ecommerce.user.v1.UserService.DeleteFavorites:input_type -> ecommerce.user.v1.UpdateFavoritesRequest
+	23, // 21: ecommerce.user.v1.UserService.UpdateUser:input_type -> ecommerce.user.v1.UpdateUserRequest
+	6,  // 22: ecommerce.user.v1.UserService.GetCreditCard:input_type -> ecommerce.user.v1.GetCreditCardRequest
+	8,  // 23: ecommerce.user.v1.UserService.DeleteCreditCard:input_type -> ecommerce.user.v1.DeleteCreditCardsRequest
+	18, // 24: ecommerce.user.v1.UserService.GetUserProfile:output_type -> ecommerce.user.v1.GetProfileResponse
+	20, // 25: ecommerce.user.v1.UserService.GetUsers:output_type -> ecommerce.user.v1.GetUsersResponse
+	22, // 26: ecommerce.user.v1.UserService.DeleteUser:output_type -> ecommerce.user.v1.DeleteUserResponse
+	10, // 27: ecommerce.user.v1.UserService.CreateAddresses:output_type -> ecommerce.user.v1.Address
+	10, // 28: ecommerce.user.v1.UserService.UpdateAddresses:output_type -> ecommerce.user.v1.Address
+	16, // 29: ecommerce.user.v1.UserService.DeleteAddresses:output_type -> ecommerce.user.v1.DeleteAddressesReply
+	10, // 30: ecommerce.user.v1.UserService.GetAddress:output_type -> ecommerce.user.v1.Address
+	27, // 31: ecommerce.user.v1.UserService.CreateCreditCard:output_type -> google.protobuf.Empty
+	15, // 32: ecommerce.user.v1.UserService.GetAddresses:output_type -> ecommerce.user.v1.GetAddressesReply
+	5,  // 33: ecommerce.user.v1.UserService.ListCreditCards:output_type -> ecommerce.user.v1.CreditCards
+	2,  // 34: ecommerce.user.v1.UserService.GetFavorites:output_type -> ecommerce.user.v1.Favorites
+	3,  // 35: ecommerce.user.v1.UserService.SetFavorites:output_type -> ecommerce.user.v1.UpdateFavoritesResply
+	3,  // 36: ecommerce.user.v1.UserService.DeleteFavorites:output_type -> ecommerce.user.v1.UpdateFavoritesResply
+	24, // 37: ecommerce.user.v1.UserService.UpdateUser:output_type -> ecommerce.user.v1.UpdateUserResponse
+	4,  // 38: ecommerce.user.v1.UserService.GetCreditCard:output_type -> ecommerce.user.v1.CreditCard
+	27, // 39: ecommerce.user.v1.UserService.DeleteCreditCard:output_type -> google.protobuf.Empty
+	24, // [24:40] is the sub-list for method output_type
+	8,  // [8:24] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_v1_user_proto_init() }
@@ -1650,7 +1898,7 @@ func file_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_user_proto_rawDesc), len(file_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

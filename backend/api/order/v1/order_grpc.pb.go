@@ -22,6 +22,7 @@ const (
 	OrderService_PlaceOrder_FullMethodName        = "/ecommerce.order.v1.OrderService/PlaceOrder"
 	OrderService_GetConsumerOrders_FullMethodName = "/ecommerce.order.v1.OrderService/GetConsumerOrders"
 	OrderService_GetAllOrders_FullMethodName      = "/ecommerce.order.v1.OrderService/GetAllOrders"
+	OrderService_GetOrder_FullMethodName          = "/ecommerce.order.v1.OrderService/GetOrder"
 	OrderService_MarkOrderPaid_FullMethodName     = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 )
 
@@ -37,6 +38,8 @@ type OrderServiceClient interface {
 	GetConsumerOrders(ctx context.Context, in *GetConsumerOrdersReq, opts ...grpc.CallOption) (*Orders, error)
 	// 查询全部订单列表(管理员侧)
 	GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error)
+	// 查询用户订单ID
+	GetOrder(ctx context.Context, in *GetOrderReq, opts ...grpc.CallOption) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
 }
@@ -79,6 +82,16 @@ func (c *orderServiceClient) GetAllOrders(ctx context.Context, in *GetAllOrdersR
 	return out, nil
 }
 
+func (c *orderServiceClient) GetOrder(ctx context.Context, in *GetOrderReq, opts ...grpc.CallOption) (*Order, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Order)
+	err := c.cc.Invoke(ctx, OrderService_GetOrder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *orderServiceClient) MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MarkOrderPaidResp)
@@ -101,6 +114,8 @@ type OrderServiceServer interface {
 	GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*Orders, error)
 	// 查询全部订单列表(管理员侧)
 	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
+	// 查询用户订单ID
+	GetOrder(context.Context, *GetOrderReq) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
@@ -121,6 +136,9 @@ func (UnimplementedOrderServiceServer) GetConsumerOrders(context.Context, *GetCo
 }
 func (UnimplementedOrderServiceServer) GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
+}
+func (UnimplementedOrderServiceServer) GetOrder(context.Context, *GetOrderReq) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
 }
 func (UnimplementedOrderServiceServer) MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderPaid not implemented")
@@ -200,6 +218,24 @@ func _OrderService_GetAllOrders_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_GetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetOrder(ctx, req.(*GetOrderReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OrderService_MarkOrderPaid_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MarkOrderPaidReq)
 	if err := dec(in); err != nil {
@@ -236,6 +272,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllOrders",
 			Handler:    _OrderService_GetAllOrders_Handler,
+		},
+		{
+			MethodName: "GetOrder",
+			Handler:    _OrderService_GetOrder_Handler,
 		},
 		{
 			MethodName: "MarkOrderPaid",

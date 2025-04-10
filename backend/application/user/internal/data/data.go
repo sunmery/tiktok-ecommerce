@@ -4,6 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+
+	categoryv1 "backend/api/category/v1"
+	"backend/constants"
+
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
+	consulAPI "github.com/hashicorp/consul/api"
+
 	"backend/application/user/internal/biz"
 
 	"backend/application/user/internal/conf"
@@ -20,14 +32,15 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewUserRepo, NewCasdoor)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewUserRepo, NewCasdoor, NewDiscovery, NewCategoryClient)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
-	cs     *casdoorsdk.Client
-	logger *log.Helper
+	db             *models.Queries
+	pgx            *pgxpool.Pool
+	rdb            *redis.Client
+	cs             *casdoorsdk.Client
+	categoryClient categoryv1.CategoryServiceClient
+	logger         *log.Helper
 }
 
 // NewData .
@@ -35,16 +48,18 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	cs *casdoorsdk.Client,
+	categoryClient categoryv1.CategoryServiceClient,
 	logger log.Logger,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:  models.New(db), // 数据库
-		pgx: db,             // 数据库事务
-		rdb: rdb,
-		cs:  cs,
+		db:             models.New(db), // 数据库
+		pgx:            db,             // 数据库事务
+		rdb:            rdb,
+		cs:             cs,
+		categoryClient: categoryClient, // 分类微服务
 	}, cleanup, nil
 }
 
@@ -74,6 +89,38 @@ func NewDB(c *conf.Data) *pgxpool.Pool {
 	}
 
 	return conn
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewCategoryClient 分类微服务
+func NewCategoryClient(d registry.Discovery, logger log.Logger) (categoryv1.CategoryServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.CategoryServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Server(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return categoryv1.NewCategoryServiceClient(conn), nil
 }
 
 func NewCasdoor(cc *conf.Auth) *casdoorsdk.Client {

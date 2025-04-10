@@ -30,6 +30,9 @@ const (
 	UserService_CreateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/CreateCreditCard"
 	UserService_GetAddresses_FullMethodName     = "/ecommerce.user.v1.UserService/GetAddresses"
 	UserService_ListCreditCards_FullMethodName  = "/ecommerce.user.v1.UserService/ListCreditCards"
+	UserService_GetFavorites_FullMethodName     = "/ecommerce.user.v1.UserService/GetFavorites"
+	UserService_SetFavorites_FullMethodName     = "/ecommerce.user.v1.UserService/SetFavorites"
+	UserService_DeleteFavorites_FullMethodName  = "/ecommerce.user.v1.UserService/DeleteFavorites"
 	UserService_UpdateUser_FullMethodName       = "/ecommerce.user.v1.UserService/UpdateUser"
 	UserService_GetCreditCard_FullMethodName    = "/ecommerce.user.v1.UserService/GetCreditCard"
 	UserService_DeleteCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/DeleteCreditCard"
@@ -61,6 +64,12 @@ type UserServiceClient interface {
 	GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CreditCards, error)
+	// 获取用户商品收藏
+	GetFavorites(ctx context.Context, in *GetFavoritesRequest, opts ...grpc.CallOption) (*Favorites, error)
+	// 添加商品收藏
+	SetFavorites(ctx context.Context, in *UpdateFavoritesRequest, opts ...grpc.CallOption) (*UpdateFavoritesResply, error)
+	// 删除商品收藏
+	DeleteFavorites(ctx context.Context, in *UpdateFavoritesRequest, opts ...grpc.CallOption) (*UpdateFavoritesResply, error)
 	// 更新用户信息
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	// 根据ID搜索用户的信用卡信息
@@ -177,6 +186,36 @@ func (c *userServiceClient) ListCreditCards(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
+func (c *userServiceClient) GetFavorites(ctx context.Context, in *GetFavoritesRequest, opts ...grpc.CallOption) (*Favorites, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Favorites)
+	err := c.cc.Invoke(ctx, UserService_GetFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) SetFavorites(ctx context.Context, in *UpdateFavoritesRequest, opts ...grpc.CallOption) (*UpdateFavoritesResply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateFavoritesResply)
+	err := c.cc.Invoke(ctx, UserService_SetFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteFavorites(ctx context.Context, in *UpdateFavoritesRequest, opts ...grpc.CallOption) (*UpdateFavoritesResply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateFavoritesResply)
+	err := c.cc.Invoke(ctx, UserService_DeleteFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateUserResponse)
@@ -233,6 +272,12 @@ type UserServiceServer interface {
 	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error)
+	// 获取用户商品收藏
+	GetFavorites(context.Context, *GetFavoritesRequest) (*Favorites, error)
+	// 添加商品收藏
+	SetFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error)
+	// 删除商品收藏
+	DeleteFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error)
 	// 更新用户信息
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	// 根据ID搜索用户的信用卡信息
@@ -278,6 +323,15 @@ func (UnimplementedUserServiceServer) GetAddresses(context.Context, *emptypb.Emp
 }
 func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCreditCards not implemented")
+}
+func (UnimplementedUserServiceServer) GetFavorites(context.Context, *GetFavoritesRequest) (*Favorites, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFavorites not implemented")
+}
+func (UnimplementedUserServiceServer) SetFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetFavorites not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFavorites not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
@@ -489,6 +543,60 @@ func _UserService_ListCreditCards_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetFavorites(ctx, req.(*GetFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_SetFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SetFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SetFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SetFavorites(ctx, req.(*UpdateFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteFavorites(ctx, req.(*UpdateFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateUserRequest)
 	if err := dec(in); err != nil {
@@ -589,6 +697,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListCreditCards",
 			Handler:    _UserService_ListCreditCards_Handler,
+		},
+		{
+			MethodName: "GetFavorites",
+			Handler:    _UserService_GetFavorites_Handler,
+		},
+		{
+			MethodName: "SetFavorites",
+			Handler:    _UserService_SetFavorites_Handler,
+		},
+		{
+			MethodName: "DeleteFavorites",
+			Handler:    _UserService_DeleteFavorites_Handler,
 		},
 		{
 			MethodName: "UpdateUser",

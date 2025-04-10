@@ -9,6 +9,7 @@ import "google/api/field_behavior.proto";
 import "validate/validate.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "backend/api/product/v1/product.proto";
 
 // 用户服务接口定义
 service UserService {
@@ -26,7 +27,7 @@ service UserService {
     };
   }
 
- // 删除用户
+  // 删除用户
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
     option (google.api.http) = {
       post: "/v1/users",
@@ -87,6 +88,28 @@ service UserService {
     };
   }
 
+  // 获取用户商品收藏
+  rpc GetFavorites(GetFavoritesRequest) returns (Favorites) {
+    option (google.api.http) = {
+      get: "/v1/users/favorites"
+    };
+  }
+
+  // 添加商品收藏
+  rpc SetFavorites(UpdateFavoritesRequest) returns (UpdateFavoritesResply) {
+    option (google.api.http) = {
+      put: "/v1/users/favorites",
+      body: "*"
+    };
+  }
+
+  // 删除商品收藏
+  rpc DeleteFavorites(UpdateFavoritesRequest) returns (UpdateFavoritesResply) {
+    option (google.api.http) = {
+      delete: "/v1/users/favorites/{product_id}"
+    };
+  }
+
   // 更新用户信息
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
@@ -108,6 +131,24 @@ service UserService {
       delete: "/v1/users/credit_cards/{id}"
     };
   }
+}
+
+message GetFavoritesRequest {
+  uint32 page = 1;
+  uint32 page_size = 2;
+}
+
+message UpdateFavoritesRequest {
+  string product_id = 1;
+}
+
+message Favorites {
+  repeated product.v1.Product items = 1;
+}
+
+message UpdateFavoritesResply {
+  string message = 1;
+  int32 code = 2;
 }
 
 // 定义信用卡信息的消息结构
@@ -136,7 +177,7 @@ message CreditCards {
 
 message GetCreditCardRequest {
   uint32 id = 1; // 要获取的信用卡 ID
-  string user_id =2[
+  string user_id = 2[
     (google.api.field_behavior) = REQUIRED, // 标记为必填字段
     (validate.rules).string.len = 36, // 验证字段长度为 36
     // 验证字段为 UUID 格式

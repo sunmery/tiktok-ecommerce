@@ -49,6 +49,8 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 				MerchantId: merchantId,
 				ProductId:  ProductId,
 				Quantity:   item.Item.Quantity,
+				Name:       item.Item.Name,
+				Picture:    item.Item.Picture,
 			},
 			Cost: item.Cost,
 		})
@@ -76,6 +78,29 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 			OrderId: order.Order.OrderId,
 		},
 		// Url: order.URL,
+	}, nil
+}
+
+// GetOrder 查询用户订单ID
+func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq) (*v1.Order, error) {
+	userId, err := pkg.GetMetadataUesrID(ctx)
+	order, err := s.uc.GetOrder(ctx, &biz.GetOrderReq{
+		UserId:  userId,
+		OrderId: req.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.Order{
+		Items:         order.Items,
+		OrderId:       order.OrderId,
+		UserId:        order.UserId,
+		Currency:      order.Currency,
+		Address:       order.Address,
+		Email:         order.Email,
+		CreatedAt:     order.CreatedAt,
+		PaymentStatus: order.PaymentStatus,
 	}, nil
 }
 

@@ -27,7 +27,15 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, cons
 	pool := data.NewDB(confData)
 	client := data.NewCache(confData)
 	casdoorsdkClient := data.NewCasdoor(auth)
-	dataData, cleanup, err := data.NewData(pool, client, casdoorsdkClient, logger)
+	discovery, err := data.NewDiscovery(consul)
+	if err != nil {
+		return nil, nil, err
+	}
+	categoryServiceClient, err := data.NewCategoryClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(pool, client, casdoorsdkClient, categoryServiceClient, logger)
 	if err != nil {
 		return nil, nil, err
 	}

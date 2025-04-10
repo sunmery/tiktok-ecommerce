@@ -132,7 +132,7 @@ SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country
                )
        ) AS sub_orders
 FROM orders.orders o
-LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 WHERE o.user_id = $1
 GROUP BY o.id
 LIMIT $3 OFFSET $2
@@ -176,7 +176,7 @@ type GetConsumerOrdersRow struct {
 //	               )
 //	       ) AS sub_orders
 //	FROM orders.orders o
-//	LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+//	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 //	WHERE o.user_id = $1
 //	GROUP BY o.id
 //	LIMIT $3 OFFSET $2
@@ -215,18 +215,101 @@ func (q *Queries) GetConsumerOrders(ctx context.Context, arg GetConsumerOrdersPa
 }
 
 const GetOrderByID = `-- name: GetOrderByID :one
-SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
-FROM orders.orders
-WHERE id = $1
+SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
+       json_agg(
+               json_build_object(
+                       'id', so.id,
+                       'merchant_id', so.merchant_id,
+                       'total_amount', so.total_amount,
+                       'currency', so.currency,
+                       'status', so.status,
+                       'items', so.items,
+                       'created_at', so.created_at,
+                       'updated_at', so.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders o
+         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+WHERE o.user_id = $1
+  AND o.id = $2
+GROUP BY o.id
 `
+
+type GetOrderByIDParams struct {
+	UserID  uuid.UUID `json:"userID"`
+	OrderID int64     `json:"orderID"`
+}
+
+type GetOrderByIDRow struct {
+	ID            int64     `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
+	Currency      string    `json:"currency"`
+	StreetAddress string    `json:"streetAddress"`
+	City          string    `json:"city"`
+	State         string    `json:"state"`
+	Country       string    `json:"country"`
+	ZipCode       string    `json:"zipCode"`
+	Email         string    `json:"email"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	PaymentStatus string    `json:"paymentStatus"`
+	SubOrders     []byte    `json:"subOrders"`
+}
 
 // GetOrderByID
 //
+//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at, o.updated_at, o.payment_status,
+//	       json_agg(
+//	               json_build_object(
+//	                       'id', so.id,
+//	                       'merchant_id', so.merchant_id,
+//	                       'total_amount', so.total_amount,
+//	                       'currency', so.currency,
+//	                       'status', so.status,
+//	                       'items', so.items,
+//	                       'created_at', so.created_at,
+//	                       'updated_at', so.updated_at
+//	               )
+//	       ) AS sub_orders
+//	FROM orders.orders o
+//	         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+//	WHERE o.user_id = $1
+//	  AND o.id = $2
+//	GROUP BY o.id
+func (q *Queries) GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (GetOrderByIDRow, error) {
+	row := q.db.QueryRow(ctx, GetOrderByID, arg.UserID, arg.OrderID)
+	var i GetOrderByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Currency,
+		&i.StreetAddress,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.ZipCode,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaymentStatus,
+		&i.SubOrders,
+	)
+	return i, err
+}
+
+const GetOrderByUserID = `-- name: GetOrderByUserID :one
+SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
+FROM orders.orders
+WHERE user_id = $1
+`
+
+// GetOrderByUserID
+//
 //	SELECT id, user_id, currency, street_address, city, state, country, zip_code, email, created_at, updated_at, payment_status
 //	FROM orders.orders
-//	WHERE id = $1
-func (q *Queries) GetOrderByID(ctx context.Context, id int64) (OrdersOrders, error) {
-	row := q.db.QueryRow(ctx, GetOrderByID, id)
+//	WHERE user_id = $1
+func (q *Queries) GetOrderByUserID(ctx context.Context, userID uuid.UUID) (OrdersOrders, error) {
+	row := q.db.QueryRow(ctx, GetOrderByUserID, userID)
 	var i OrdersOrders
 	err := row.Scan(
 		&i.ID,

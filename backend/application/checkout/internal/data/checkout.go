@@ -43,9 +43,13 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 
 	var productIds []string
 	var merchantIds []string
+	var Pictures []string
+	var Names []string
 	for _, c := range carts.Items {
 		productIds = append(productIds, c.ProductId)
 		merchantIds = append(merchantIds, c.MerchantId)
+		Pictures = append(Pictures, c.Picture)
+		Names = append(Names, c.Name)
 	}
 
 	// 从商品微服务获取商品信息, 例如价格
@@ -91,6 +95,8 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 						MerchantId: cart.MerchantId,
 						ProductId:  cart.ProductId,
 						Quantity:   cart.Quantity,
+						Name:       cart.Name,
+						Picture:    cart.Picture,
 					},
 					Cost: p.Price,
 				})

@@ -44,9 +44,9 @@ message ListCartsReq {}
 message CartItem {
   string merchant_id = 1 ; // 商家ID
   string product_id = 2 ; // 商品ID
-  uint32 quantity = 4;       // 商品数量
-  string name = 6;           // 商品名称
-  string picture = 7;          // 商品主图
+  uint32 quantity = 3;       // 商品数量
+  string name = 4;           // 商品名称
+  string picture = 5;          // 商品主图
 }
 
 // 新增购物车商品

@@ -356,6 +356,107 @@
         ]
       }
     },
+    "/v1/users/favorites": {
+      "get": {
+        "summary": "获取用户商品收藏",
+        "operationId": "UserService_GetFavorites",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Favorites"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "put": {
+        "summary": "添加商品收藏",
+        "operationId": "UserService_SetFavorites",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateFavoritesResply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateFavoritesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/favorites/{productId}": {
+      "delete": {
+        "summary": "删除商品收藏",
+        "operationId": "UserService_DeleteFavorites",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateFavoritesResply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/v1/users/profile": {
       "get": {
         "summary": "获取用户个人资料",
@@ -443,14 +544,24 @@
         }
       }
     },
-    "protobufAny": {
+    "googleprotobufAny": {
       "type": "object",
       "properties": {
         "@type": {
-          "type": "string"
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
         }
       },
-      "additionalProperties": {}
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "rpcStatus": {
       "type": "object",
@@ -466,7 +577,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/protobufAny"
+            "$ref": "#/definitions/googleprotobufAny"
           }
         }
       }
@@ -507,6 +618,42 @@
         "zipCode",
         "streetAddress"
       ]
+    },
+    "v1AuditInfo": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "title": "审核记录ID"
+        },
+        "reason": {
+          "type": "string",
+          "title": "审核意见/驳回原因"
+        },
+        "operatorId": {
+          "type": "string",
+          "title": "操作人ID"
+        },
+        "operatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "操作时间"
+        }
+      },
+      "title": "审核信息"
+    },
+    "v1CategoryInfo": {
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "categoryName": {
+          "type": "string"
+        }
+      },
+      "title": "新增分类验证相关定义"
     },
     "v1CreditCard": {
       "type": "object",
@@ -622,6 +769,18 @@
         }
       }
     },
+    "v1Favorites": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Product"
+          }
+        }
+      }
+    },
     "v1GetAddressesReply": {
       "type": "object",
       "properties": {
@@ -686,6 +845,123 @@
             "type": "object",
             "$ref": "#/definitions/v1GetProfileResponse"
           }
+        }
+      }
+    },
+    "v1Image": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "图片URL"
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "title": "是否主图"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32",
+          "title": "排序顺序"
+        }
+      },
+      "title": "图片信息"
+    },
+    "v1Inventory": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1Product": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "商品唯一ID（系统生成）"
+        },
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "商品描述"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "title": "商品价格（单位：元）"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "title": "当前状态"
+        },
+        "merchantId": {
+          "type": "string",
+          "title": "所属商家ID"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Image"
+          },
+          "title": "商品图片列表"
+        },
+        "attributes": {
+          "title": "商品属性（使用 JSON 格式存储）"
+        },
+        "auditInfo": {
+          "$ref": "#/definitions/v1AuditInfo",
+          "title": "审核信息（仅当处于审核状态时有效）"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "时间戳"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "category": {
+          "$ref": "#/definitions/v1CategoryInfo"
+        },
+        "inventory": {
+          "$ref": "#/definitions/v1Inventory",
+          "title": "库存信息"
+        }
+      },
+      "title": "商品核心数据结构"
+    },
+    "v1UpdateFavoritesRequest": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateFavoritesResply": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

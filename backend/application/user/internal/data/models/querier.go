@@ -31,6 +31,13 @@ type Querier interface {
 	//  FROM users.credit_cards
 	//  WHERE id = $1
 	DeleteCreditCard(ctx context.Context, id int32) error
+	//DeleteFavorites
+	//
+	//  DELETE
+	//  FROM users.favorites
+	//  WHERE user_id = $1
+	//    AND product_id = $2
+	DeleteFavorites(ctx context.Context, arg DeleteFavoritesParams) error
 	//GetAddress
 	//
 	//  SELECT id, user_id, street_address, city, state, country, zip_code
@@ -52,6 +59,39 @@ type Querier interface {
 	//  WHERE user_id = $1
 	//    AND id = $2
 	GetCreditCard(ctx context.Context, arg GetCreditCardParams) (UsersCreditCards, error)
+	//GetFavorites
+	//
+	//  SELECT p.id,
+	//         p.merchant_id,
+	//         p.name,
+	//         p.description,
+	//         p.price,
+	//         p.status,
+	//         p.category_id,
+	//         p.created_at,
+	//         p.updated_at,
+	//         i.stock,
+	//         -- 图片信息
+	//         (SELECT jsonb_agg(jsonb_build_object(
+	//                 'url', pi.url,
+	//                 'is_primary', pi.is_primary,
+	//                 'sort_order', pi.sort_order
+	//                           ))
+	//          FROM products.product_images pi
+	//          WHERE pi.product_id = p.id
+	//            AND pi.merchant_id = p.merchant_id) AS images,
+	//         -- 属性信息
+	//         pa.attributes
+	//  FROM products.products p
+	//           INNER JOIN products.inventory i
+	//                      ON p.id = i.product_id AND p.merchant_id = i.merchant_id
+	//           LEFT JOIN products.product_attributes pa
+	//                     ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
+	//           JOIN users.favorites uf ON p.id = uf.product_id
+	//  WHERE uf.user_id = $1::UUID
+	//  ORDER BY uf.created_at DESC
+	//  LIMIT $3::int OFFSET $2::int
+	GetFavorites(ctx context.Context, arg GetFavoritesParams) ([]GetFavoritesRow, error)
 	//InsertCreditCard
 	//
 	//  INSERT INTO users.credit_cards (user_id, currency, number, cvv, exp_year, exp_month, owner, name, type, brand, country)
@@ -63,6 +103,11 @@ type Querier interface {
 	//  FROM users.credit_cards
 	//  WHERE user_id = $1
 	ListCreditCards(ctx context.Context, userID uuid.UUID) ([]UsersCreditCards, error)
+	//SetFavorites
+	//
+	//  INSERT INTO users.favorites(user_id, product_id)
+	//  VALUES ($1, $2)
+	SetFavorites(ctx context.Context, arg SetFavoritesParams) error
 	//UpdateAddress
 	//
 	//  UPDATE users.addresses

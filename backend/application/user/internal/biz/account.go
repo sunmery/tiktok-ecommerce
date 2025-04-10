@@ -67,6 +67,46 @@ type (
 	}
 )
 
+// Product 商品领域模型
+type (
+	// ProductImage 商品图片信息
+	ProductImage struct {
+		URL       string
+		IsPrimary bool
+		SortOrder *int
+	}
+	// ProductStatus 商品状态
+	ProductStatus int32
+	// CategoryInfo 分类信息
+	CategoryInfo struct {
+		CategoryId   uint64
+		CategoryName string
+		SortOrder    int32
+	}
+
+	// Inventory 库存
+	Inventory struct {
+		ProductId  uuid.UUID
+		MerchantId uuid.UUID
+		Stock      uint32
+	}
+
+	Product struct {
+		ID          uuid.UUID
+		MerchantId  uuid.UUID
+		Name        string
+		Price       float64
+		Description string
+		Images      []*ProductImage
+		Status      ProductStatus
+		Category    CategoryInfo
+		CreatedAt   time.Time
+		UpdatedAt   time.Time
+		Attributes  map[string]any
+		Inventory   Inventory // 库存
+	}
+)
+
 func (cc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileRequest) (*GetProfileReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetProfile: %+v", req)
 	return cc.repo.GetProfile(ctx, req)
@@ -85,4 +125,19 @@ func (cc *UserUsecase) DeleteUser(ctx context.Context, req *DeleteUserRequest) (
 func (cc *UserUsecase) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserReply, error) {
 	cc.log.WithContext(ctx).Debugf("UpdateUser: %+v", req)
 	return cc.repo.UpdateUser(ctx, req)
+}
+
+func (cc *UserUsecase) GetFavorites(ctx context.Context, req *GetFavoritesRequest) (*Favorites, error) {
+	cc.log.WithContext(ctx).Debugf("GetFavorites req:%+v", req)
+	return cc.repo.GetFavorites(ctx, req)
+}
+
+func (cc *UserUsecase) DeleteFavorites(ctx context.Context, req *UpdateFavoritesRequest) (*UpdateFavoritesResply, error) {
+	cc.log.WithContext(ctx).Debugf("DeleteFavorites req:%+v", req)
+	return cc.repo.DeleteFavorites(ctx, req)
+}
+
+func (cc *UserUsecase) SetFavorites(ctx context.Context, req *UpdateFavoritesRequest) (*UpdateFavoritesResply, error) {
+	cc.log.WithContext(ctx).Debugf("SetFavorites req:%+v", req)
+	return cc.repo.SetFavorites(ctx, req)
 }

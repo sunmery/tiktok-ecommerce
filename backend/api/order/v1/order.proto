@@ -39,6 +39,13 @@ service OrderService {
     };
   }
 
+  // 根据订单ID查询
+  rpc GetOrder(GetOrderReq) returns (Order) {
+    option (google.api.http) = {
+      get: "/v1/orders/{id}"
+    };
+  }
+
   // 标记订单为已支付
   rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {
     option (google.api.http) = {
@@ -94,6 +101,10 @@ message Order {
   string email = 6; // 用户邮箱
   google.protobuf.Timestamp created_at = 7; // 订单创建时间
   PaymentStatus payment_status = 8; // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
+}
+
+message GetOrderReq {
+  int64 id = 1; // 用户 ID
 }
 
 message GetConsumerOrdersReq {

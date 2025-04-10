@@ -8,3 +8,5 @@ CREATE TABLE users.favorites
     created_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (user_id, product_id)
 );
+
+CREATE INDEX idx_users_favorites ON users.favorites(user_id, product_id);

@@ -27,6 +27,84 @@ type orderRepo struct {
 	log  *log.Helper
 }
 
+func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Order, error) {
+	order, err := o.data.db.GetOrderByID(ctx, models.GetOrderByIDParams{
+		UserID:  req.UserId,
+		OrderID: req.OrderId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 解析子订单JSON
+	var subOrdersData []byte
+	if order.SubOrders != nil {
+		subOrdersData = order.SubOrders
+	}
+
+	// 解析子订单并转换为OrderItem
+	subOrders, err := parseSubOrders(subOrdersData)
+	if err != nil {
+		o.log.WithContext(ctx).Warnf("解析订单 %d 的子订单失败: %v", order.ID, err)
+	}
+
+	// 将所有子订单的OrderItem合并到一个列表
+	var allItems []*v1.OrderItem
+	for _, subOrder := range subOrders {
+		for _, item := range subOrder.Items {
+			allItems = append(allItems, &v1.OrderItem{
+				Item: &cartv1.CartItem{
+					MerchantId: item.Item.MerchantId.String(),
+					ProductId:  item.Item.ProductId.String(),
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+				Cost: item.Cost,
+			})
+		}
+	}
+
+	// 构建主订单
+	orderProto := &v1.Order{
+		OrderId:  order.ID,
+		UserId:   order.UserID.String(),
+		Currency: order.Currency,
+		Address: &userv1.Address{
+			StreetAddress: order.StreetAddress,
+			City:          order.City,
+			State:         order.State,
+			Country:       order.Country,
+			ZipCode:       order.ZipCode,
+		},
+		Email:     order.Email,
+		CreatedAt: timestamppb.New(order.CreatedAt),
+		Items:     allItems,
+	}
+
+	// 设置支付状态（如果有）
+	if order.PaymentStatus != "" {
+		switch order.PaymentStatus {
+		case string(biz.PaymentPending):
+			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		case string(biz.PaymentProcessing):
+			orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
+		case string(biz.PaymentPaid):
+			orderProto.PaymentStatus = v1.PaymentStatus_PAID
+		case string(biz.PaymentFailed):
+			orderProto.PaymentStatus = v1.PaymentStatus_FAILED
+		case string(biz.PaymentCancelled):
+			orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
+		default:
+			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		}
+	} else {
+		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+	}
+
+	return orderProto, nil
+}
+
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 	return &orderRepo{
 		data: data,
@@ -82,6 +160,8 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 						MerchantId: item.Item.MerchantId.String(),
 						ProductId:  item.Item.ProductId.String(),
 						Quantity:   item.Item.Quantity,
+						Name:       item.Item.Name,
+						Picture:    item.Item.Picture,
 					},
 					Cost: item.Cost,
 				})
@@ -106,24 +186,24 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 		}
 
 		// 设置支付状态（如果有）
-		// if order.PaymentStatus {
-		// 	switch order.PaymentStatus {
-		// 	case string(biz.PaymentPending):
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-		// 	case string(biz.PaymentProcessing):
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
-		// 	case string(biz.PaymentPaid):
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_PAID
-		// 	case string(biz.PaymentFailed):
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_FAILED
-		// 	case string(biz.PaymentCancelled):
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
-		// 	default:
-		// 		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-		// 	}
-		// } else {
-		// 	orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-		// }
+		if order.PaymentStatus != "" {
+			switch order.PaymentStatus {
+			case string(biz.PaymentPending):
+				orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+			case string(biz.PaymentProcessing):
+				orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
+			case string(biz.PaymentPaid):
+				orderProto.PaymentStatus = v1.PaymentStatus_PAID
+			case string(biz.PaymentFailed):
+				orderProto.PaymentStatus = v1.PaymentStatus_FAILED
+			case string(biz.PaymentCancelled):
+				orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
+			default:
+				orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+			}
+		} else {
+			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		}
 
 		orders = append(orders, orderProto)
 	}

@@ -5,9 +5,29 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
 -- name: GetOrderByID :one
+SELECT o.*,
+       json_agg(
+               json_build_object(
+                       'id', so.id,
+                       'merchant_id', so.merchant_id,
+                       'total_amount', so.total_amount,
+                       'currency', so.currency,
+                       'status', so.status,
+                       'items', so.items,
+                       'created_at', so.created_at,
+                       'updated_at', so.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders o
+         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+WHERE o.user_id = @user_id
+  AND o.id = @order_id
+GROUP BY o.id;
+
+-- name: GetOrderByUserID :one
 SELECT *
 FROM orders.orders
-WHERE id = $1;
+WHERE user_id = @user_id;
 
 -- name: ListOrders :many
 SELECT *
@@ -30,7 +50,7 @@ SELECT o.*,
                )
        ) AS sub_orders
 FROM orders.orders o
-LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
 WHERE o.user_id = @user_id
 GROUP BY o.id
 LIMIT @page_size OFFSET @page;

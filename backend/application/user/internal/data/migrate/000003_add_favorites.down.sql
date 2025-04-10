@@ -1,0 +1,1 @@
+DROP TABLE users.favorites cascade;

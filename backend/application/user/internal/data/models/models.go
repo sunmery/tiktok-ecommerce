@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UsersAddresses struct {
@@ -34,4 +35,10 @@ type UsersCreditCards struct {
 	Brand       string    `json:"brand"`
 	Country     string    `json:"country"`
 	CreatedTime time.Time `json:"createdTime"`
+}
+
+type UsersFavorites struct {
+	UserID    uuid.UUID          `json:"userID"`
+	ProductID uuid.UUID          `json:"productID"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 }

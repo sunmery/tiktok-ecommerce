@@ -56,6 +56,8 @@ type CartItem struct {
 	MerchantId uuid.UUID `json:"merchantId"`
 	ProductId  uuid.UUID `json:"productId"`
 	Quantity   uint32    `json:"quantity"`
+	Name       string    `json:"name"`
+	Picture    string    `json:"picture"`
 }
 
 // OrderItem 订单商品, 是以 JSON 存储到数据库中, 需要添加tags
@@ -96,12 +98,19 @@ type MarkOrderPaidReq struct {
 	UserId  uuid.UUID
 	OrderId int64
 }
+
+type GetOrderReq struct {
+	UserId  uuid.UUID
+	OrderId int64
+}
+
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
 	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
 
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
+	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
 }
 
 type OrderUsecase struct {
@@ -132,6 +141,11 @@ func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) 
 }
 
 func (oc *OrderUsecase) MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order req:%+v", req)
+	oc.log.WithContext(ctx).Debugf("biz/order MarkOrderPaid req:%+v", req)
 	return oc.repo.MarkOrderPaid(ctx, req)
+}
+
+func (oc *OrderUsecase) GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order getorder req:%+v", req)
+	return oc.repo.GetOrder(ctx, req)
 }
