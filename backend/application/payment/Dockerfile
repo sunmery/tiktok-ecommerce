@@ -1,5 +1,3 @@
-
-
 ARG GO_IMAGE=golang:1.24.0-alpine3.21
 FROM --platform=$BUILDPLATFORM golang:alpine AS compile
 
@@ -34,6 +32,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGOENABLED=$CGOENABLED \
     go build -ldflags="-X main.Version=$VERSION" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}
 
+COPY ./alipayPublicCert.crt /app/alipayPublicCert.crt
+COPY ./alipayRootCert.crt /app/alipayRootCert.crt
+COPY ./appPublicCert.crt /app/appPublicCert.crt
+RUN ls /app/
+
 # 使用最小化运行时镜像
 FROM alpine:3.21 AS final
 
@@ -46,6 +49,11 @@ RUN apk add --no-cache tzdata ca-certificates && \
     echo "$TZ" > /etc/timezone
 
 COPY --from=compile /app/$SERVICE /app/service
+COPY --from=compile /app/alipayPublicCert.crt /app/alipayPublicCert.crt
+COPY --from=compile /app/alipayRootCert.crt /app/alipayRootCert.crt
+COPY --from=compile /app/appPublicCert.crt /app/appPublicCert.crt
+RUN ls /app/
+
 EXPOSE 30013 30014
 
 ENTRYPOINT ["/app/service"]
