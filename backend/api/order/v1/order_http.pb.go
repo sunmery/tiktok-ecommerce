@@ -30,7 +30,7 @@ type OrderServiceHTTPServer interface {
 	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
 	// GetConsumerOrders 查询用户订单列表
 	GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*Orders, error)
-	// GetOrder 查询用户订单ID
+	// GetOrder 根据订单ID查询
 	GetOrder(context.Context, *GetOrderReq) (*Order, error)
 	// MarkOrderPaid 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)

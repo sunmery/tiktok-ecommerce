@@ -491,25 +491,25 @@ func (m *HandlePaymentNotifyRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Charset
+
 	// no validation rules for AppId
 
+	// no validation rules for AuthAppId
+
 	// no validation rules for TradeNo
+
+	// no validation rules for Method
+
+	// no validation rules for Sign
+
+	// no validation rules for SignType
 
 	// no validation rules for OutTradeNo
 
 	// no validation rules for TotalAmount
 
-	// no validation rules for Subject
-
-	// no validation rules for TradeStatus
-
-	// no validation rules for GmtPayment
-
-	// no validation rules for GmtCreate
-
-	// no validation rules for Sign
-
-	// no validation rules for SignType
+	// no validation rules for SellerId
 
 	// no validation rules for Params
 
@@ -727,6 +727,28 @@ func (m *HandlePaymentCallbackRequest) validate(all bool) error {
 	// no validation rules for TradeNo
 
 	// no validation rules for TotalAmount
+
+	// no validation rules for Subject
+
+	// no validation rules for TradeStatus
+
+	// no validation rules for Charset
+
+	// no validation rules for Method
+
+	// no validation rules for Sign
+
+	// no validation rules for SignType
+
+	// no validation rules for AppId
+
+	// no validation rules for AuthAppId
+
+	// no validation rules for Version
+
+	// no validation rules for SellerId
+
+	// no validation rules for Timestamp
 
 	// no validation rules for Params
 

@@ -82,16 +82,16 @@ message GetPaymentStatusResponse {
 
 // 支付通知请求
 message HandlePaymentNotifyRequest {
+  string charset = 6; // 字符集
   string app_id = 1;
+  string auth_app_id = 12; // 授权应用ID
   string trade_no = 2;
+  string method = 7; // 支付方式
+  string sign = 8; // 签名
+  string sign_type = 9; // 签名类型 RSA2
   string out_trade_no = 3;
   string total_amount = 4;
-  string subject = 5;
-  string trade_status = 6;
-  string gmt_payment = 7;
-  string gmt_create = 8;
-  string sign = 9;
-  string sign_type = 10;
+  string seller_id = 14; // 卖家ID
   map<string, string> params = 11; // 存储所有回调参数
 }
 
@@ -106,7 +106,18 @@ message HandlePaymentCallbackRequest {
   string out_trade_no = 1;
   string trade_no = 2;
   string total_amount = 3;
-  map<string, string> params = 4; // 存储所有回调参数
+  string subject = 4;
+  string trade_status = 5;
+  string charset = 6; // 字符集
+  string method = 7; // 支付方式
+  string sign = 8; // 签名
+  string sign_type = 9; // 签名类型 RSA2
+  string app_id = 10; // 应用ID
+  string auth_app_id = 12; // 授权应用ID
+  string version = 13; // 版本号
+  string seller_id = 14; // 卖家ID
+  string timestamp = 16; // 时间戳
+  map<string, string> params = 11; // 存储所有回调参数
 }
 
 // 支付回调响应

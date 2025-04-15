@@ -14,7 +14,7 @@ import (
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
-	"backend/application/payment/pkg"
+	"backend/application/order/internal/pkg"
 	"backend/pkg/types"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -25,6 +25,72 @@ import (
 type orderRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
+func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
+	o.log.WithContext(ctx).Infof("Marking order %d as paid for user %s", req.OrderId, req.UserId)
+	tx := o.data.DB(ctx)
+
+	// 获取订单信息，确认订单存在且属于该用户，使用FOR UPDATE锁定行
+	updatePaymentStatusResult, err := tx.UpdatePaymentStatus(ctx, req.OrderId)
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+	fmt.Printf("updatePaymentStatusResult: %#v", updatePaymentStatusResult)
+
+	// 验证订单所有者
+	if updatePaymentStatusResult.UserID.String() != req.UserId.String() {
+		o.log.WithContext(ctx).Warnf("Order %d does not belong to user %s, order.UserID:%s", req.OrderId, req.UserId.String(), updatePaymentStatusResult.UserID.String())
+		return nil, fmt.Errorf("order does not belong to user")
+	}
+
+	// 检查订单当前支付状态
+	if updatePaymentStatusResult.PaymentStatus == string(biz.PaymentPaid) {
+		// 订单已经是已支付状态，直接返回成功
+		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
+		return &biz.MarkOrderPaidResp{}, nil
+	}
+
+	o.log.WithContext(ctx).Infof("Updating order %d payment status from %s to %s",
+		req.OrderId, updatePaymentStatusResult.PaymentStatus, string(biz.PaymentPaid))
+
+	// 更新订单支付状态为已支付
+	markOrderAsPaidResult, err := tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
+		PaymentStatus: string(biz.PaymentPaid),
+		ID:            req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order payment status: %v", err)
+		return nil, fmt.Errorf("failed to update order payment status: %w", err)
+	}
+
+	log.Debugf("markOrderAsPaidResult: %#v", markOrderAsPaidResult)
+
+	// 更新子订单状态
+	markSubOrderAsPaidResult, err := tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
+		PaymentStatus: string(biz.PaymentPaid),
+		OrderID:       req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
+		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
+	}
+	log.Debugf("markSubOrderAsPaidResult: %#v", markSubOrderAsPaidResult)
+
+	// 获取更新的子订单数量
+	// rowsAffected := markSubOrderAsPaidResult.
+	// 	o.log.WithContext(ctx).Infof("Updated %d sub orders for order %s", rowsAffected, req.OrderId)
+
+	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
+	return &biz.MarkOrderPaidResp{}, nil
 }
 
 func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Order, error) {
@@ -103,13 +169,6 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 	}
 
 	return orderProto, nil
-}
-
-func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
-	return &orderRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }
 
 func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.Orders, error) {
@@ -491,68 +550,4 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 	}
 
 	return subOrders, nil
-}
-
-func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
-	o.log.WithContext(ctx).Infof("Marking order %d as paid for user %s", req.OrderId, req.UserId)
-	tx := o.data.DB(ctx)
-
-	// 获取订单信息，确认订单存在且属于该用户，使用FOR UPDATE锁定行
-	var order struct {
-		ID            int64
-		UserID        uuid.UUID
-		PaymentStatus string
-	}
-	updatePaymentStatusResult, err := tx.UpdatePaymentStatus(ctx, req.OrderId)
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
-		return nil, fmt.Errorf("failed to get order: %w", err)
-	}
-	fmt.Printf("updatePaymentStatusResult: %#v", updatePaymentStatusResult)
-
-	// 验证订单所有者
-	if order.UserID != req.UserId {
-		o.log.WithContext(ctx).Warnf("Order %d does not belong to user %s", req.OrderId, req.UserId)
-		return nil, fmt.Errorf("order does not belong to user")
-	}
-
-	// 检查订单当前支付状态
-	if order.PaymentStatus == string(biz.PaymentPaid) {
-		// 订单已经是已支付状态，直接返回成功
-		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
-		return &biz.MarkOrderPaidResp{}, nil
-	}
-
-	o.log.WithContext(ctx).Infof("Updating order %d payment status from %s to %s",
-		req.OrderId, order.PaymentStatus, string(biz.PaymentPaid))
-
-	// 更新订单支付状态为已支付
-	markOrderAsPaidResult, err := tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
-		PaymentStatus: string(biz.PaymentPaid),
-		ID:            req.OrderId,
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order payment status: %v", err)
-		return nil, fmt.Errorf("failed to update order payment status: %w", err)
-	}
-
-	log.Debugf("markOrderAsPaidResult: %#v", markOrderAsPaidResult)
-
-	// 更新子订单状态
-	markSubOrderAsPaidResult, err := tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
-		PaymentStatus: string(biz.PaymentPaid),
-		OrderID:       req.OrderId,
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
-		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
-	}
-	log.Debugf("markSubOrderAsPaidResult: %#v", markSubOrderAsPaidResult)
-
-	// 获取更新的子订单数量
-	// rowsAffected := markSubOrderAsPaidResult.
-	// 	o.log.WithContext(ctx).Infof("Updated %d sub orders for order %s", rowsAffected, req.OrderId)
-
-	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
-	return &biz.MarkOrderPaidResp{}, nil
 }

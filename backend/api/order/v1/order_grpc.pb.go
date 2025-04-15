@@ -38,7 +38,7 @@ type OrderServiceClient interface {
 	GetConsumerOrders(ctx context.Context, in *GetConsumerOrdersReq, opts ...grpc.CallOption) (*Orders, error)
 	// 查询全部订单列表(管理员侧)
 	GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error)
-	// 查询用户订单ID
+	// 根据订单ID查询
 	GetOrder(ctx context.Context, in *GetOrderReq, opts ...grpc.CallOption) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
@@ -114,7 +114,7 @@ type OrderServiceServer interface {
 	GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*Orders, error)
 	// 查询全部订单列表(管理员侧)
 	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
-	// 查询用户订单ID
+	// 根据订单ID查询
 	GetOrder(context.Context, *GetOrderReq) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)

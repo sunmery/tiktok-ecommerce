@@ -599,8 +599,9 @@ func (x *Orders) GetOrders() []*Order {
 
 // 标记订单为已支付请求的消息结构
 type MarkOrderPaidReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// string user_id = 1; // 用户 ID
+	OrderId       int64 `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

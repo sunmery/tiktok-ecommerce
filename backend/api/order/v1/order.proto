@@ -127,6 +127,7 @@ message Orders {
 
 // 标记订单为已支付请求的消息结构
 message MarkOrderPaidReq {
+//  string user_id = 1; // 用户 ID
   int64 order_id = 2; // 订单 ID
 }
 

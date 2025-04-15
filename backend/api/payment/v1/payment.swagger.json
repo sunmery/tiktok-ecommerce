@@ -87,6 +87,81 @@
             "type": "string"
           },
           {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tradeStatus",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "charset",
+            "description": "字符集",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "method",
+            "description": "支付方式",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sign",
+            "description": "签名",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "signType",
+            "description": "签名类型 RSA2",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appId",
+            "description": "应用ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "authAppId",
+            "description": "授权应用ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "版本号",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sellerId",
+            "description": "卖家ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "description": "时间戳",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "params",
             "description": "存储所有回调参数\n\nThis is a request variable of the map type. The query format is \"map_name[key]=value\", e.g. If the map name is Age, the key type is string, and the value type is integer, the query parameter is expressed as Age[\"bob\"]=18",
             "in": "query",
@@ -268,11 +343,31 @@
     "v1HandlePaymentNotifyRequest": {
       "type": "object",
       "properties": {
+        "charset": {
+          "type": "string",
+          "title": "字符集"
+        },
         "appId": {
           "type": "string"
         },
+        "authAppId": {
+          "type": "string",
+          "title": "授权应用ID"
+        },
         "tradeNo": {
           "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "title": "支付方式"
+        },
+        "sign": {
+          "type": "string",
+          "title": "签名"
+        },
+        "signType": {
+          "type": "string",
+          "title": "签名类型 RSA2"
         },
         "outTradeNo": {
           "type": "string"
@@ -280,23 +375,9 @@
         "totalAmount": {
           "type": "string"
         },
-        "subject": {
-          "type": "string"
-        },
-        "tradeStatus": {
-          "type": "string"
-        },
-        "gmtPayment": {
-          "type": "string"
-        },
-        "gmtCreate": {
-          "type": "string"
-        },
-        "sign": {
-          "type": "string"
-        },
-        "signType": {
-          "type": "string"
+        "sellerId": {
+          "type": "string",
+          "title": "卖家ID"
         },
         "params": {
           "type": "object",

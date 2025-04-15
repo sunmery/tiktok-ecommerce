@@ -1,14 +1,14 @@
 -- name: CreatePaymentQuery :one
 INSERT INTO payments.payments (id, order_id, user_id, amount, currency, method, status,
-                               subject, trade_no, gateway_tx_id, pay_url, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                               subject, trade_no, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING *;
 
 -- name: UpdateStatusQuery :one
 UPDATE payments.payments
-SET status        = $2,
-    gateway_tx_id = $3,
-    updated_at    = now()
+SET status     = $2,
+    id         = $3,
+    updated_at = now()
 WHERE id = $1
 RETURNING *;
 
@@ -39,25 +39,8 @@ WHERE trade_no = $1;
 
 -- name: UpdatePaymentStatus :one
 UPDATE payments.payments
-SET 
-    status = $4,
-    gateway_tx_id = $3,
+SET status     = @status,
     updated_at = now()
-WHERE (id = $1 AND $1 != 0) OR (order_id = $2 AND $2 != 0)
-RETURNING *;
-
--- name: UpdatePaymentStatusByID :one
-UPDATE payments.payments
-SET status        = $2,
-    gateway_tx_id = $3,
-    updated_at    = now()
-WHERE id = $1
-RETURNING *;
-
--- name: UpdatePaymentStatusByOrderID :one
-UPDATE payments.payments
-SET status        = $2,
-    gateway_tx_id = $3,
-    updated_at    = now()
-WHERE order_id = $1
+WHERE (id = @id AND @id != 0)
+   OR (order_id = @order_id AND @order_id != 0)
 RETURNING *;

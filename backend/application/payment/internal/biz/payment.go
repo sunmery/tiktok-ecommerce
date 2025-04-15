@@ -12,12 +12,20 @@ import (
 // PaymentStatus 支付状态
 type PaymentStatus string
 
+// 通用支付状态
 const (
 	PaymentStatusPending    PaymentStatus = "PENDING"
 	PaymentStatusProcessing PaymentStatus = "PROCESSING"
 	PaymentStatusSuccess    PaymentStatus = "SUCCESS"
 	PaymentStatusFailed     PaymentStatus = "FAILED"
 	PaymentStatusClosed     PaymentStatus = "CLOSED"
+)
+
+// 支付宝支付状态
+const (
+	AliPayStatusPending PaymentStatus = "WAIT_BUYER_PAY"
+	AliPayStatusClosed  PaymentStatus = "TRADE_CLOSED"
+	AliPayStatusSuccess PaymentStatus = "TRADE_SUCCESS"
 )
 
 type (
@@ -70,16 +78,16 @@ type CreatePaymentResp struct {
 // PaymentNotifyReq 支付通知请求
 type PaymentNotifyReq struct {
 	AppID       string
+	AuthAppId   string
 	TradeNo     string
-	OutTradeNo  string
-	TotalAmount string
-	Subject     string
-	TradeStatus string
-	GmtPayment  string
-	GmtCreate   string
+	Charset     string
+	Method      string
 	Sign        string
 	SignType    string
-	Params      map[string]string
+	OutTradeNo  string
+	TotalAmount string
+	SellerId    string
+	Params      map[string][]string
 }
 
 // PaymentNotifyResp 支付通知响应
@@ -94,6 +102,8 @@ type PaymentCallbackReq struct {
 	OutTradeNo  string
 	TradeNo     string
 	TotalAmount string
+	Subject     string
+	TradeStatus string
 }
 
 // PaymentCallbackResp 支付回调响应
@@ -137,8 +147,6 @@ type PaymentRepo interface {
 	HandlePaymentNotify(ctx context.Context, req *PaymentNotifyReq) (*PaymentNotifyResp, error)
 	// HandlePaymentCallback 处理支付回调
 	HandlePaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error)
-	// UpdatePaymentStatus 更新支付状态
-	UpdatePaymentStatus(ctx context.Context, req *UpdatePaymentStatusRequest) (*UpdatePaymentStatusResponse, error)
 	// GetPaymentByOrderID 根据订单ID查询支付记录
 	GetPaymentByOrderID(ctx context.Context, req *GetPaymentByOrderIDRequest) (*Payment, error)
 }
@@ -221,12 +229,6 @@ func (uc *PaymentUsecase) HandlePaymentNotify(ctx context.Context, req *PaymentN
 func (uc *PaymentUsecase) HandlePaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error) {
 	uc.log.WithContext(ctx).Infof("Handling payment callback for order %s", req.OutTradeNo)
 	return uc.repo.HandlePaymentCallback(ctx, req)
-}
-
-// UpdatePaymentStatus 更新支付状态
-func (uc *PaymentUsecase) UpdatePaymentStatus(ctx context.Context, req *UpdatePaymentStatusRequest) (*UpdatePaymentStatusResponse, error) {
-	uc.log.WithContext(ctx).Infof("Updating payment status for payment %v", req)
-	return uc.repo.UpdatePaymentStatus(ctx, req)
 }
 
 // GetPaymentByOrderID 根据订单ID查询支付记录

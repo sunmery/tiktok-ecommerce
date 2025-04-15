@@ -2,9 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+
+	"github.com/go-kratos/kratos/v2/transport/http"
 
 	"backend/application/payment/internal/biz"
 	"backend/pkg"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -112,21 +117,44 @@ func (s *PaymentService) GetPaymentStatus(ctx context.Context, req *pb.GetPaymen
 
 // HandlePaymentNotify 处理支付通知
 func (s *PaymentService) HandlePaymentNotify(ctx context.Context, req *pb.HandlePaymentNotifyRequest) (*pb.HandlePaymentNotifyResponse, error) {
-	s.log.WithContext(ctx).Infof("HandlePaymentNotify: %v", req)
+	s.log.WithContext(ctx).Infof("service HandlePaymentNotify: %v", req)
+
+	values := make(url.Values)
+	// 安全地获取HTTP上下文
+	httpCtx, ok := ctx.(http.Context)
+	if !ok {
+		s.log.WithContext(ctx).Errorf("无法获取HTTP上下文，使用请求参数继续处理")
+		// 即使没有HTTP上下文，也继续处理，使用请求中的参数
+	} else {
+		// 确保解析表单数据
+		if err := httpCtx.Request().ParseForm(); err != nil {
+			s.log.WithContext(ctx).Errorf("解析表单数据失败: %v", err)
+		}
+
+		// 安全地获取表单数据
+		form := httpCtx.Form()
+		if form != nil {
+			for k, v := range form {
+				fmt.Printf("k: %v, v: %v\n", k, v)
+				values[k] = v
+			}
+		}
+	}
+	s.log.WithContext(ctx).Infof("service HandlePaymentNotify values: %v", values)
 
 	// 转换请求
 	notifyReq := &biz.PaymentNotifyReq{
 		AppID:       req.AppId,
+		AuthAppId:   req.AuthAppId,
 		TradeNo:     req.TradeNo,
-		OutTradeNo:  req.OutTradeNo,
-		TotalAmount: req.TotalAmount,
-		Subject:     req.Subject,
-		TradeStatus: req.TradeStatus,
-		GmtPayment:  req.GmtPayment,
-		GmtCreate:   req.GmtCreate,
+		Charset:     req.Charset,
+		Method:      req.Method,
 		Sign:        req.Sign,
 		SignType:    req.SignType,
-		Params:      req.Params,
+		OutTradeNo:  req.OutTradeNo,
+		TotalAmount: req.TotalAmount,
+		SellerId:    req.SellerId,
+		Params:      values,
 	}
 
 	// 调用业务逻辑
@@ -145,14 +173,41 @@ func (s *PaymentService) HandlePaymentNotify(ctx context.Context, req *pb.Handle
 
 // HandlePaymentCallback 处理支付回调
 func (s *PaymentService) HandlePaymentCallback(ctx context.Context, req *pb.HandlePaymentCallbackRequest) (*pb.HandlePaymentCallbackResponse, error) {
-	s.log.WithContext(ctx).Infof("HandlePaymentCallback: %v", req)
+	s.log.WithContext(ctx).Infof("service HandlePaymentCallback: %v", req)
+
+	// 将请求参数转换为url.Values格式
+	values := make(url.Values)
+
+	// 安全地获取HTTP上下文
+	httpCtx, ok := ctx.(http.Context)
+	if !ok {
+		s.log.WithContext(ctx).Errorf("无法获取HTTP上下文，使用请求参数继续处理")
+		// 即使没有HTTP上下文，也继续处理，使用请求中的参数
+	} else {
+		// 确保解析表单数据
+		if err := httpCtx.Request().ParseForm(); err != nil {
+			s.log.WithContext(ctx).Errorf("解析表单数据失败: %v", err)
+		}
+
+		// 安全地获取表单数据
+		form := httpCtx.Form()
+		if form != nil {
+			for k, v := range form {
+				fmt.Printf("k: %v, v: %v\n", k, v)
+				values[k] = v
+			}
+		}
+	}
+	s.log.WithContext(ctx).Infof("service values: %v", values)
 
 	// 转换请求
 	callbackReq := &biz.PaymentCallbackReq{
+		Params:      req.Params,
 		OutTradeNo:  req.OutTradeNo,
 		TradeNo:     req.TradeNo,
 		TotalAmount: req.TotalAmount,
-		Params:      req.Params,
+		Subject:     req.Subject,
+		TradeStatus: req.TradeStatus,
 	}
 
 	// 调用业务逻辑
@@ -168,20 +223,3 @@ func (s *PaymentService) HandlePaymentCallback(ctx context.Context, req *pb.Hand
 		Message: resp.Message,
 	}, nil
 }
-
-// func (s *PaymentService) GetPayment(ctx context.Context, req *pb.GetPaymentReq) (*pb.PaymentResp, error) {
-// 	paymentId, err := pkg.GetMetadataUesrID(ctx)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid payment ID")
-// 	}
-// 	payment, err := s.uc.GetPayment(ctx, paymentId)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &pb.PaymentResp{
-// 		PaymentId:  payment.PaymentId,
-// 		Status:     payment.Status,
-// 		PaymentUrl: payment.PaymentUrl,
-// 		CreatedAt:  timestamppb.New(payment.CreatedAt),
-// 	}, nil
-// }
