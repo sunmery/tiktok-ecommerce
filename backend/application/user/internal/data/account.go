@@ -146,39 +146,6 @@ func (u *userRepo) UpdateUser(ctx context.Context, req *biz.UpdateUserRequest) (
 	}, nil
 }
 
-func convertUserToProfile(user *casdoorsdk.User) (*biz.GetProfileReply, error) {
-	if user == nil {
-		return nil, fmt.Errorf("nil user provided to convertUserToProfile")
-	}
-	userId, err := uuid.Parse(user.Id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID format: %s", user.Id)
-	}
-
-	// 安全获取角色
-	var role string
-	if len(user.Roles) > 0 {
-		role = user.Roles[0].Name
-	} else {
-		role = "guest" // 访客角色
-		// return nil, errors.New("user has no role assigned")
-	}
-
-	return &biz.GetProfileReply{
-		Id:                userId,
-		Role:              role,
-		IsDeleted:         user.IsDeleted,
-		CreatedTime:       user.CreatedTime,
-		UpdatedTime:       user.UpdatedTime,
-		Owner:             user.Owner,
-		SignupApplication: user.SignupApplication,
-		Name:              user.Name,
-		Email:             user.Email,
-		Avatar:            user.Avatar,
-		DisplayName:       user.DisplayName,
-	}, nil
-}
-
 func (u *userRepo) GetFavorites(ctx context.Context, req *biz.GetFavoritesRequest) (*biz.Favorites, error) {
 	userID := types.ToPgUUID(req.UserId)
 	page := (req.Page - 1) * req.PageSize
@@ -285,8 +252,9 @@ func (u *userRepo) GetFavorites(ctx context.Context, req *biz.GetFavoritesReques
 func (u *userRepo) DeleteFavorites(ctx context.Context, req *biz.UpdateFavoritesRequest) (*biz.UpdateFavoritesResply, error) {
 	// 调用数据库删除收藏
 	err := u.data.db.DeleteFavorites(ctx, models.DeleteFavoritesParams{
-		UserID:    req.UserId,
-		ProductID: req.ProductId,
+		UserID:     req.UserId,
+		ProductID:  req.ProductId,
+		MerchantID: req.MerchantId,
 	})
 	if err != nil {
 		return nil, err
@@ -301,8 +269,9 @@ func (u *userRepo) DeleteFavorites(ctx context.Context, req *biz.UpdateFavorites
 func (u *userRepo) SetFavorites(ctx context.Context, req *biz.UpdateFavoritesRequest) (*biz.UpdateFavoritesResply, error) {
 	// 调用数据库添加收藏
 	err := u.data.db.SetFavorites(ctx, models.SetFavoritesParams{
-		UserID:    req.UserId,
-		ProductID: req.ProductId,
+		UserID:     req.UserId,
+		ProductID:  req.ProductId,
+		MerchantID: req.MerchantId,
 	})
 	if err != nil {
 		return nil, err
@@ -311,5 +280,38 @@ func (u *userRepo) SetFavorites(ctx context.Context, req *biz.UpdateFavoritesReq
 	return &biz.UpdateFavoritesResply{
 		Message: "收藏添加成功",
 		Code:    http.StatusOK,
+	}, nil
+}
+
+func convertUserToProfile(user *casdoorsdk.User) (*biz.GetProfileReply, error) {
+	if user == nil {
+		return nil, fmt.Errorf("nil user provided to convertUserToProfile")
+	}
+	userId, err := uuid.Parse(user.Id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID format: %s", user.Id)
+	}
+
+	// 安全获取角色
+	var role string
+	if len(user.Roles) > 0 {
+		role = user.Roles[0].Name
+	} else {
+		role = "guest" // 访客角色
+		// return nil, errors.New("user has no role assigned")
+	}
+
+	return &biz.GetProfileReply{
+		Id:                userId,
+		Role:              role,
+		IsDeleted:         user.IsDeleted,
+		CreatedTime:       user.CreatedTime,
+		UpdatedTime:       user.UpdatedTime,
+		Owner:             user.Owner,
+		SignupApplication: user.SignupApplication,
+		Name:              user.Name,
+		Email:             user.Email,
+		Avatar:            user.Avatar,
+		DisplayName:       user.DisplayName,
 	}, nil
 }

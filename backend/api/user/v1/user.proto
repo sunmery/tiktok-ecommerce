@@ -106,7 +106,7 @@ service UserService {
   // 删除商品收藏
   rpc DeleteFavorites(UpdateFavoritesRequest) returns (UpdateFavoritesResply) {
     option (google.api.http) = {
-      delete: "/v1/users/favorites/{product_id}"
+      delete: "/v1/users/favorites"
     };
   }
 
@@ -140,6 +140,7 @@ message GetFavoritesRequest {
 
 message UpdateFavoritesRequest {
   string product_id = 1;
+  string merchant_id = 2;
 }
 
 message Favorites {

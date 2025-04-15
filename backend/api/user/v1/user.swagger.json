@@ -394,6 +394,41 @@
           "UserService"
         ]
       },
+      "delete": {
+        "summary": "删除商品收藏",
+        "operationId": "UserService_DeleteFavorites",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateFavoritesResply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "merchantId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
       "put": {
         "summary": "添加商品收藏",
         "operationId": "UserService_SetFavorites",
@@ -419,37 +454,6 @@
             "schema": {
               "$ref": "#/definitions/v1UpdateFavoritesRequest"
             }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/v1/users/favorites/{productId}": {
-      "delete": {
-        "summary": "删除商品收藏",
-        "operationId": "UserService_DeleteFavorites",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateFavoritesResply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "productId",
-            "in": "path",
-            "required": true,
-            "type": "string"
           }
         ],
         "tags": [
@@ -949,6 +953,9 @@
       "type": "object",
       "properties": {
         "productId": {
+          "type": "string"
+        },
+        "merchantId": {
           "type": "string"
         }
       }

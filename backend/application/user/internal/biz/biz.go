@@ -30,8 +30,9 @@ type GetFavoritesRequest struct {
 
 type (
 	UpdateFavoritesRequest struct {
-		UserId    uuid.UUID
-		ProductId uuid.UUID
+		UserId     uuid.UUID
+		ProductId  uuid.UUID
+		MerchantId uuid.UUID
 	}
 	UpdateFavoritesResply struct {
 		Message string

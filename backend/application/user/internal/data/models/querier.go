@@ -37,6 +37,7 @@ type Querier interface {
 	//  FROM users.favorites
 	//  WHERE user_id = $1
 	//    AND product_id = $2
+	//    AND merchant_id = $3
 	DeleteFavorites(ctx context.Context, arg DeleteFavoritesParams) error
 	//GetAddress
 	//
@@ -105,8 +106,8 @@ type Querier interface {
 	ListCreditCards(ctx context.Context, userID uuid.UUID) ([]UsersCreditCards, error)
 	//SetFavorites
 	//
-	//  INSERT INTO users.favorites(user_id, product_id)
-	//  VALUES ($1, $2)
+	//  INSERT INTO users.favorites(user_id, product_id, merchant_id)
+	//  VALUES ($1, $2, $3)
 	SetFavorites(ctx context.Context, arg SetFavoritesParams) error
 	//UpdateAddress
 	//

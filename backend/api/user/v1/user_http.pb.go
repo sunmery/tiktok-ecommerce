@@ -86,7 +86,7 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.GET("/v1/users/credit_cards", _UserService_ListCreditCards0_HTTP_Handler(srv))
 	r.GET("/v1/users/favorites", _UserService_GetFavorites0_HTTP_Handler(srv))
 	r.PUT("/v1/users/favorites", _UserService_SetFavorites0_HTTP_Handler(srv))
-	r.DELETE("/v1/users/favorites/{product_id}", _UserService_DeleteFavorites0_HTTP_Handler(srv))
+	r.DELETE("/v1/users/favorites", _UserService_DeleteFavorites0_HTTP_Handler(srv))
 	r.POST("/v1/users/{user_id}", _UserService_UpdateUser0_HTTP_Handler(srv))
 	r.GET("/v1/users/credit_cards/{id}", _UserService_GetCreditCard0_HTTP_Handler(srv))
 	r.DELETE("/v1/users/credit_cards/{id}", _UserService_DeleteCreditCard0_HTTP_Handler(srv))
@@ -341,9 +341,6 @@ func _UserService_DeleteFavorites0_HTTP_Handler(srv UserServiceHTTPServer) func(
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
 		http.SetOperation(ctx, OperationUserServiceDeleteFavorites)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.DeleteFavorites(ctx, req.(*UpdateFavoritesRequest))
@@ -507,7 +504,7 @@ func (c *UserServiceHTTPClientImpl) DeleteCreditCard(ctx context.Context, in *De
 
 func (c *UserServiceHTTPClientImpl) DeleteFavorites(ctx context.Context, in *UpdateFavoritesRequest, opts ...http.CallOption) (*UpdateFavoritesResply, error) {
 	var out UpdateFavoritesResply
-	pattern := "/v1/users/favorites/{product_id}"
+	pattern := "/v1/users/favorites"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationUserServiceDeleteFavorites))
 	opts = append(opts, http.PathTemplate(pattern))

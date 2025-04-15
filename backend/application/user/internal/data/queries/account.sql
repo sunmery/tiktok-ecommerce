@@ -31,11 +31,12 @@ ORDER BY uf.created_at DESC
 LIMIT @page_size::int OFFSET @page::int;
 
 -- name: SetFavorites :exec
-INSERT INTO users.favorites(user_id, product_id)
-VALUES (@user_id, @product_id);
+INSERT INTO users.favorites(user_id, product_id, merchant_id)
+VALUES (@user_id, @product_id, @merchant_id);
 
 -- name: DeleteFavorites :exec
 DELETE
 FROM users.favorites
 WHERE user_id = @user_id
-  AND product_id = @product_id;
+  AND product_id = @product_id
+  AND merchant_id = @merchant_id;

@@ -38,7 +38,8 @@ type UsersCreditCards struct {
 }
 
 type UsersFavorites struct {
-	UserID    uuid.UUID          `json:"userID"`
-	ProductID uuid.UUID          `json:"productID"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UserID     uuid.UUID          `json:"userID"`
+	ProductID  uuid.UUID          `json:"productID"`
+	MerchantID uuid.UUID          `json:"merchantID"`
+	CreatedAt  pgtype.Timestamptz `json:"createdAt"`
 }

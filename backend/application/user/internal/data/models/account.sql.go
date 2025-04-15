@@ -17,11 +17,13 @@ DELETE
 FROM users.favorites
 WHERE user_id = $1
   AND product_id = $2
+  AND merchant_id = $3
 `
 
 type DeleteFavoritesParams struct {
-	UserID    uuid.UUID `json:"userID"`
-	ProductID uuid.UUID `json:"productID"`
+	UserID     uuid.UUID `json:"userID"`
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
 }
 
 // DeleteFavorites
@@ -30,8 +32,9 @@ type DeleteFavoritesParams struct {
 //	FROM users.favorites
 //	WHERE user_id = $1
 //	  AND product_id = $2
+//	  AND merchant_id = $3
 func (q *Queries) DeleteFavorites(ctx context.Context, arg DeleteFavoritesParams) error {
-	_, err := q.db.Exec(ctx, DeleteFavorites, arg.UserID, arg.ProductID)
+	_, err := q.db.Exec(ctx, DeleteFavorites, arg.UserID, arg.ProductID, arg.MerchantID)
 	return err
 }
 
@@ -155,20 +158,21 @@ func (q *Queries) GetFavorites(ctx context.Context, arg GetFavoritesParams) ([]G
 }
 
 const SetFavorites = `-- name: SetFavorites :exec
-INSERT INTO users.favorites(user_id, product_id)
-VALUES ($1, $2)
+INSERT INTO users.favorites(user_id, product_id, merchant_id)
+VALUES ($1, $2, $3)
 `
 
 type SetFavoritesParams struct {
-	UserID    uuid.UUID `json:"userID"`
-	ProductID uuid.UUID `json:"productID"`
+	UserID     uuid.UUID `json:"userID"`
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
 }
 
 // SetFavorites
 //
-//	INSERT INTO users.favorites(user_id, product_id)
-//	VALUES ($1, $2)
+//	INSERT INTO users.favorites(user_id, product_id, merchant_id)
+//	VALUES ($1, $2, $3)
 func (q *Queries) SetFavorites(ctx context.Context, arg SetFavoritesParams) error {
-	_, err := q.db.Exec(ctx, SetFavorites, arg.UserID, arg.ProductID)
+	_, err := q.db.Exec(ctx, SetFavorites, arg.UserID, arg.ProductID, arg.MerchantID)
 	return err
 }

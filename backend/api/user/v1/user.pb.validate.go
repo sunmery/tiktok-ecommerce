@@ -168,6 +168,8 @@ func (m *UpdateFavoritesRequest) validate(all bool) error {
 
 	// no validation rules for ProductId
 
+	// no validation rules for MerchantId
+
 	if len(errors) > 0 {
 		return UpdateFavoritesRequestMultiError(errors)
 	}

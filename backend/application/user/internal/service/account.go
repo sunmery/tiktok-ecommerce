@@ -182,9 +182,14 @@ func (s *UserService) DeleteFavorites(ctx context.Context, req *v1.UpdateFavorit
 	if err != nil {
 		return nil, err
 	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, err
+	}
 	resply, err := s.uc.DeleteFavorites(ctx, &biz.UpdateFavoritesRequest{
-		UserId:    userId,
-		ProductId: productId,
+		UserId:     userId,
+		ProductId:  productId,
+		MerchantId: merchantId,
 	})
 	if err != nil {
 		return nil, err
@@ -206,9 +211,14 @@ func (s *UserService) SetFavorites(ctx context.Context, req *v1.UpdateFavoritesR
 	if err != nil {
 		return nil, err
 	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, err
+	}
 	resply, err := s.uc.SetFavorites(ctx, &biz.UpdateFavoritesRequest{
-		UserId:    userId,
-		ProductId: productId,
+		UserId:     userId,
+		ProductId:  productId,
+		MerchantId: merchantId,
 	})
 	if err != nil {
 		return nil, err
