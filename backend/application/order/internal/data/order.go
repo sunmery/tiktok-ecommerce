@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	productv1 "backend/api/product/v1"
+
 	userv1 "backend/api/user/v1"
 
 	cartv1 "backend/api/cart/v1"
@@ -63,7 +65,7 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 		req.OrderId, updatePaymentStatusResult.PaymentStatus, string(biz.PaymentPaid))
 
 	// 更新订单支付状态为已支付
-	markOrderAsPaidResult, err := tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
+	_, err = tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
 		PaymentStatus: string(biz.PaymentPaid),
 		ID:            req.OrderId,
 	})
@@ -72,19 +74,15 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 		return nil, fmt.Errorf("failed to update order payment status: %w", err)
 	}
 
-	log.Debugf("markOrderAsPaidResult: %#v", markOrderAsPaidResult)
-
 	// 更新子订单状态
-	markSubOrderAsPaidResult, err := tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
-		PaymentStatus: string(biz.PaymentPaid),
-		OrderID:       req.OrderId,
+	_, err = tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
+		Status:  string(biz.PaymentPaid),
+		OrderID: req.OrderId,
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
 		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
 	}
-	log.Debugf("markSubOrderAsPaidResult: %#v", markSubOrderAsPaidResult)
-
 	// 获取更新的子订单数量
 	// rowsAffected := markSubOrderAsPaidResult.
 	// 	o.log.WithContext(ctx).Infof("Updated %d sub orders for order %s", rowsAffected, req.OrderId)
@@ -287,7 +285,6 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		ZipCode:       req.Address.ZipCode,
 		Email:         req.Email,
 	})
-	fmt.Printf("order: %v", order)
 	if err != nil {
 		return nil, fmt.Errorf("创建主订单失败: %w", err)
 	}
@@ -311,24 +308,35 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		if totalAmountErr != nil {
 			return nil, fmt.Errorf("invalid price format: %w", totalAmountErr)
 		}
-		fmt.Printf("totalAmount: %v", totalAmount)
 
 		// 创建子订单ID
 		subOrderID := pkg.SnowflakeID()
 
-		subOrder, subOrderErr := o.data.db.CreateSubOrder(ctx, models.CreateSubOrderParams{
+		_, subOrderErr := o.data.db.CreateSubOrder(ctx, models.CreateSubOrderParams{
 			ID:          subOrderID,
 			OrderID:     order.ID,
 			MerchantID:  item.Item.MerchantId,
 			TotalAmount: totalAmount,
 			Currency:    req.Currency,
-			Status:      "created",
+			Status:      "PENDING",
 			Items:       itemsJSON,
 		})
 		if subOrderErr != nil {
 			return nil, fmt.Errorf("创建子订单失败: %w", subOrderErr)
 		}
-		fmt.Printf("subOrder: %v", subOrder)
+
+		// 预扣库存
+		o.log.Debugf("id: %v mid:%v stock%v", item.Item.ProductId.String(), item.Item.MerchantId.String(), -item.Item.Quantity)
+		updateInventory, err := o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
+			ProductId:  item.Item.ProductId.String(),
+			MerchantId: item.Item.MerchantId.String(),
+			Stock:      -int32(item.Item.Quantity),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		o.log.Debugf("updateInventory: %v", updateInventory)
 
 	}
 
@@ -400,18 +408,18 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 		// 添加子订单到结果
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
-			paymentStatus := biz.PaymentPending
+			Status := biz.PaymentPending
 			for _, order := range orders {
 				if order.ID == subOrder.ID {
-					if order.PaymentStatus != "" {
-						paymentStatus = biz.PaymentStatus(order.PaymentStatus)
+					if order.Status != "" {
+						Status = biz.PaymentStatus(order.Status)
 					}
 					break
 				}
 			}
 
 			// 更新子订单的支付状态
-			subOrder.Status = string(paymentStatus)
+			subOrder.Status = string(Status)
 			respOrders = append(respOrders, subOrder)
 		}
 	}

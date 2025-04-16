@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	productv1 "backend/api/product/v1"
+
 	paymentv1 "backend/api/payment/v1"
 	"backend/application/order/internal/conf"
 	"backend/application/order/internal/data/models"
@@ -25,10 +27,11 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient, NewProductServiceClient)
 
 type Data struct {
 	paymentv1 paymentv1.PaymentServiceClient
+	productv1 productv1.ProductServiceClient
 	db        *models.Queries
 	pgx       *pgxpool.Pool
 	rdb       *redis.Client
@@ -44,6 +47,7 @@ func NewData(
 	rdb *redis.Client,
 	logger log.Logger,
 	paymentv1 paymentv1.PaymentServiceClient,
+	productv1 productv1.ProductServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -55,6 +59,7 @@ func NewData(
 		rdb:       rdb,                   // 缓存
 		logger:    log.NewHelper(logger), // 注入日志
 		paymentv1: paymentv1,             // 支付服务
+		productv1: productv1,             // 商品服务
 	}, cleanup, nil
 }
 
@@ -131,6 +136,24 @@ func NewPaymentServiceClient(d registry.Discovery, logger log.Logger) (paymentv1
 		return nil, err
 	}
 	return paymentv1.NewPaymentServiceClient(conn), nil
+}
+
+// NewProductServiceClient 商品微服务
+func NewProductServiceClient(d registry.Discovery, logger log.Logger) (productv1.ProductServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ProductServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return productv1.NewProductServiceClient(conn), nil
 }
 
 // DB 从上下文中获取事务或返回默认DB

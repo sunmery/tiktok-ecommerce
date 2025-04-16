@@ -126,26 +126,26 @@ func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 }
 
 func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order req:%+v", req)
+	// oc.log.WithContext(ctx).Debugf("biz/order req:%+v", req)
 	return oc.repo.PlaceOrder(ctx, req)
 }
 
 func (oc *OrderUsecase) GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order GetConsumerOrders:%+v", req)
+	// oc.log.WithContext(ctx).Debugf("biz/order GetConsumerOrders:%+v", req)
 	return oc.repo.GetConsumerOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order GetAllOrders:%+v", req)
+	// oc.log.WithContext(ctx).Debugf("biz/order GetAllOrders:%+v", req)
 	return oc.repo.GetAllOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order MarkOrderPaid req:%+v", req)
+	// oc.log.WithContext(ctx).Debugf("biz/order MarkOrderPaid req:%+v", req)
 	return oc.repo.MarkOrderPaid(ctx, req)
 }
 
 func (oc *OrderUsecase) GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order getorder req:%+v", req)
+	// oc.log.WithContext(ctx).Debugf("biz/order getorder req:%+v", req)
 	return oc.repo.GetOrder(ctx, req)
 }

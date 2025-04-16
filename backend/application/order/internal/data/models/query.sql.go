@@ -72,7 +72,7 @@ const CreateSubOrder = `-- name: CreateSubOrder :one
 INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
                                currency, status, items)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 `
 
 type CreateSubOrderParams struct {
@@ -90,7 +90,7 @@ type CreateSubOrderParams struct {
 //	INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 //	                               currency, status, items)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7)
-//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error) {
 	row := q.db.QueryRow(ctx, CreateSubOrder,
 		arg.ID,
@@ -112,7 +112,6 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 		&i.Items,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.PaymentStatus,
 	)
 	return i, err
 }
@@ -430,7 +429,7 @@ func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.
 }
 
 const ListOrders = `-- name: ListOrders :many
-SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 FROM orders.sub_orders
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $1
@@ -443,7 +442,7 @@ type ListOrdersParams struct {
 
 // ListOrders
 //
-//	SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+//	SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 //	FROM orders.sub_orders
 //	ORDER BY created_at DESC
 //	LIMIT $2 OFFSET $1
@@ -466,7 +465,6 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order
 			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -520,26 +518,26 @@ func (q *Queries) MarkOrderAsPaid(ctx context.Context, arg MarkOrderAsPaidParams
 
 const MarkSubOrderAsPaid = `-- name: MarkSubOrderAsPaid :one
 UPDATE orders.sub_orders
-SET payment_status = $1,
+SET status = $1,
     updated_at     = now()
 WHERE order_id = $2
-RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 `
 
 type MarkSubOrderAsPaidParams struct {
-	PaymentStatus string `json:"paymentStatus"`
-	OrderID       int64  `json:"orderID"`
+	Status  string `json:"status"`
+	OrderID int64  `json:"orderID"`
 }
 
 // MarkSubOrderAsPaid
 //
 //	UPDATE orders.sub_orders
-//	SET payment_status = $1,
+//	SET status = $1,
 //	    updated_at     = now()
 //	WHERE order_id = $2
-//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+//	RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 func (q *Queries) MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaidParams) (OrdersSubOrders, error) {
-	row := q.db.QueryRow(ctx, MarkSubOrderAsPaid, arg.PaymentStatus, arg.OrderID)
+	row := q.db.QueryRow(ctx, MarkSubOrderAsPaid, arg.Status, arg.OrderID)
 	var i OrdersSubOrders
 	err := row.Scan(
 		&i.ID,
@@ -551,7 +549,6 @@ func (q *Queries) MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaid
 		&i.Items,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.PaymentStatus,
 	)
 	return i, err
 }

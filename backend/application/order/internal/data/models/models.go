@@ -29,14 +29,13 @@ type OrdersOrders struct {
 
 // 子订单表，按商家分单存储
 type OrdersSubOrders struct {
-	ID            int64          `json:"id"`
-	OrderID       int64          `json:"orderID"`
-	MerchantID    uuid.UUID      `json:"merchantID"`
-	TotalAmount   pgtype.Numeric `json:"totalAmount"`
-	Currency      string         `json:"currency"`
-	Status        string         `json:"status"`
-	Items         []byte         `json:"items"`
-	CreatedAt     time.Time      `json:"createdAt"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	PaymentStatus string         `json:"paymentStatus"`
+	ID          int64          `json:"id"`
+	OrderID     int64          `json:"orderID"`
+	MerchantID  uuid.UUID      `json:"merchantID"`
+	TotalAmount pgtype.Numeric `json:"totalAmount"`
+	Currency    string         `json:"currency"`
+	Status      string         `json:"status"`
+	Items       []byte         `json:"items"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
 }

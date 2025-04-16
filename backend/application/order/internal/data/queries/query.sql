@@ -123,7 +123,7 @@ RETURNING *;
 
 -- name: MarkSubOrderAsPaid :one
 UPDATE orders.sub_orders
-SET payment_status = $1,
+SET status = $1,
     updated_at     = now()
 WHERE order_id = $2
 RETURNING *;

@@ -23,7 +23,7 @@ type Querier interface {
 	//  INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 	//                                 currency, status, items)
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
 	//GetConsumerOrders
 	//
@@ -104,7 +104,7 @@ type Querier interface {
 	GetUserOrdersWithSuborders(ctx context.Context, dollar_1 uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
 	//ListOrders
 	//
-	//  SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+	//  SELECT id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 	//  FROM orders.sub_orders
 	//  ORDER BY created_at DESC
 	//  LIMIT $2 OFFSET $1
@@ -120,10 +120,10 @@ type Querier interface {
 	//MarkSubOrderAsPaid
 	//
 	//  UPDATE orders.sub_orders
-	//  SET payment_status = $1,
+	//  SET status = $1,
 	//      updated_at     = now()
 	//  WHERE order_id = $2
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, payment_status
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at
 	MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaidParams) (OrdersSubOrders, error)
 	//QuerySubOrders
 	//
