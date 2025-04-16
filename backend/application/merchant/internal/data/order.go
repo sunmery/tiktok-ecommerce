@@ -81,11 +81,11 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 		// 添加子订单到结果
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
-			var paymentStatus biz.PaymentStatus = biz.PaymentPending
+			paymentStatus := biz.PaymentPending
 			for _, order := range orders {
 				if order.ID == subOrder.ID {
-					if order.PaymentStatus != "" {
-						paymentStatus = biz.PaymentStatus(order.PaymentStatus)
+					if order.Status != "" {
+						paymentStatus = biz.PaymentStatus(order.Status)
 					}
 					break
 				}
@@ -133,14 +133,14 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 			Item *biz.CartItem `json:"item"`
 			Cost float64       `json:"cost"`
 		}
-		
+
 		var subOrderItems []SubOrderItem
 		if err := json.Unmarshal(order.Items, &subOrderItems); err != nil {
 			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.ID)
-			
+
 			// 尝试记录原始数据用于调试
 			o.log.WithContext(ctx).Debugf("原始子订单数据: %s", string(order.Items))
-			
+
 			// 返回解析错误
 			return nil, fmt.Errorf("解析子订单项失败: %w", err)
 		}
@@ -153,7 +153,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 				o.log.WithContext(ctx).Warnf("子订单项缺少商品信息, 跳过此项, 订单ID: %d, 子订单ID: %d", orderID, order.ID)
 				continue
 			}
-			
+
 			// 确保CartItem中的MerchantId和ProductId正确映射
 			cartItem := &biz.CartItem{
 				MerchantId: item.Item.MerchantId,

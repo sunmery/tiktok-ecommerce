@@ -40,10 +40,30 @@ WHERE p.merchant_id = @merchant_id
 LIMIT @pageSize OFFSET @page;
 
 -- name: UpdateProduct :exec
-UPDATE products.products
-SET name        = coalesce(sqlc.narg(name), name),
-    description = coalesce(sqlc.narg(description), description),
-    price       = coalesce(sqlc.narg(price), price),
-    updated_at  = now()
-WHERE id = sqlc.arg(id)
-  AND merchant_id = sqlc.arg(merchant_id);
+WITH update_product AS (
+    UPDATE products.products
+        SET name = coalesce(sqlc.narg(name), name),
+            description = coalesce(sqlc.narg(description), description),
+            price = coalesce(sqlc.narg(price), price),
+            updated_at = now()
+        WHERE id = @product_id
+            AND merchant_id = @merchant_id
+        RETURNING merchant_id,id),
+     update_attr AS (
+         UPDATE products.product_attributes
+             SET attributes = @attributes,
+                 updated_at = NOW()
+             WHERE merchant_id = @merchant_id
+                 AND product_id = @product_id
+             RETURNING updated_at),
+     update_image AS (
+         UPDATE products.product_images
+             SET url = @url
+             WHERE merchant_id = @merchant_id
+                 AND product_id = @product_id)
+UPDATE products.inventory pi
+SET stock      = @stock,
+    updated_at = now()
+FROM update_product
+WHERE update_product.merchant_id = pi.merchant_id
+  AND update_product.id = pi.product_id;

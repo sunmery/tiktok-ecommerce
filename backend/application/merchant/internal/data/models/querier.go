@@ -172,8 +172,7 @@ type Querier interface {
 	//         status,
 	//         items,
 	//         created_at,
-	//         updated_at,
-	//         payment_status
+	//         updated_at
 	//  FROM orders.sub_orders
 	//  WHERE merchant_id = $1
 	//  ORDER BY created_at DESC
@@ -210,13 +209,33 @@ type Querier interface {
 	SetStockAlert(ctx context.Context, arg SetStockAlertParams) (MerchantStockAlerts, error)
 	//UpdateProduct
 	//
-	//  UPDATE products.products
-	//  SET name        = coalesce($1, name),
-	//      description = coalesce($2, description),
-	//      price       = coalesce($3, price),
-	//      updated_at  = now()
-	//  WHERE id = $4
-	//    AND merchant_id = $5
+	//  WITH update_product AS (
+	//      UPDATE products.products
+	//          SET name = coalesce($2, name),
+	//              description = coalesce($3, description),
+	//              price = coalesce($4, price),
+	//              updated_at = now()
+	//          WHERE id = $5
+	//              AND merchant_id = $6
+	//          RETURNING merchant_id,id),
+	//       update_attr AS (
+	//           UPDATE products.product_attributes
+	//               SET attributes = $7,
+	//                   updated_at = NOW()
+	//               WHERE merchant_id = $6
+	//                   AND product_id = $5
+	//               RETURNING updated_at),
+	//       update_image AS (
+	//           UPDATE products.product_images
+	//               SET url = $8
+	//               WHERE merchant_id = $6
+	//                   AND product_id = $5)
+	//  UPDATE products.inventory pi
+	//  SET stock      = $1,
+	//      updated_at = now()
+	//  FROM update_product
+	//  WHERE update_product.merchant_id = pi.merchant_id
+	//    AND update_product.id = pi.product_id
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	// 更新产品库存
 	//

@@ -9,8 +9,7 @@ SELECT id,
        status,
        items,
        created_at,
-       updated_at,
-       payment_status
+       updated_at
 FROM orders.sub_orders
 WHERE merchant_id = @merchant_id
 ORDER BY created_at DESC

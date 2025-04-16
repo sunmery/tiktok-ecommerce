@@ -22,8 +22,7 @@ SELECT id,
        status,
        items,
        created_at,
-       updated_at,
-       payment_status
+       updated_at
 FROM orders.sub_orders
 WHERE merchant_id = $1
 ORDER BY created_at DESC
@@ -37,16 +36,15 @@ type ListOrdersByUserParams struct {
 }
 
 type ListOrdersByUserRow struct {
-	ID            int64
-	OrderID       int64
-	MerchantID    uuid.UUID
-	TotalAmount   interface{}
-	Currency      string
-	Status        string
-	Items         []byte
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	PaymentStatus string
+	ID          int64
+	OrderID     int64
+	MerchantID  uuid.UUID
+	TotalAmount interface{}
+	Currency    string
+	Status      string
+	Items       []byte
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // ListOrdersByUser
@@ -59,8 +57,7 @@ type ListOrdersByUserRow struct {
 //	       status,
 //	       items,
 //	       created_at,
-//	       updated_at,
-//	       payment_status
+//	       updated_at
 //	FROM orders.sub_orders
 //	WHERE merchant_id = $1
 //	ORDER BY created_at DESC
@@ -84,7 +81,6 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}

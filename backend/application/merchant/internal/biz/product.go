@@ -66,6 +66,9 @@ type Products struct {
 // UpdateProductRequest 更新商品请求结构体
 type (
 	UpdateProductRequest struct {
+		Stock       int32
+		Url         string
+		Attributes  map[string]any
 		ID          uuid.UUID
 		MerchantID  uuid.UUID // 添加缺失字段
 		Name        *string

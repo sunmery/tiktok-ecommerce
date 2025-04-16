@@ -54,6 +54,9 @@ func (uc *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProdu
 	}
 
 	updateReq := biz.UpdateProductRequest{
+		Stock:       req.Stock,
+		Url:         req.Url,
+		Attributes:  parseProtoValue(req.Attributes),
 		ID:          id,
 		MerchantID:  merchantId,
 		Name:        &req.Name,
@@ -155,17 +158,12 @@ func convertBizProductToPB(p *biz.Product) *productv1.Product {
 	return result
 }
 
-func convertBizStatusToPB(s biz.ProductStatus) productv1.ProductStatus {
-	switch s {
-	case biz.ProductStatusDraft:
-		return productv1.ProductStatus_PRODUCT_STATUS_DRAFT
-	case biz.ProductStatusPending:
-		return productv1.ProductStatus_PRODUCT_STATUS_PENDING
-	case biz.ProductStatusApproved:
-		return productv1.ProductStatus_PRODUCT_STATUS_APPROVED
-	case biz.ProductStatusRejected:
-		return productv1.ProductStatus_PRODUCT_STATUS_REJECTED
-	default:
-		return productv1.ProductStatus_PRODUCT_STATUS_DRAFT
+func parseProtoValue(v *structpb.Value) map[string]any {
+	if v == nil {
+		return nil
 	}
+	if v.GetStructValue() == nil {
+		return nil
+	}
+	return v.GetStructValue().AsMap()
 }

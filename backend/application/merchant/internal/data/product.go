@@ -172,12 +172,19 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 	if err != nil {
 		return nil, fmt.Errorf("invalid price: %w", err)
 	}
+	attributes, err := json.Marshal(req.Attributes)
+	if err != nil {
+		return nil, fmt.Errorf("invalid attributes: %w", err)
+	}
 	params := models.UpdateProductParams{
+		Stock:       &req.Stock,
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       price,
-		ID:          productId,
+		ProductID:   productId,
 		MerchantID:  merchantId,
+		Attributes:  attributes,
+		Url:         &req.Url,
 	}
 
 	// 执行更新
