@@ -152,34 +152,31 @@ func (p *productRepo) UploadProductFile(ctx context.Context, req *biz.UploadProd
 }
 
 func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductRequest) (_ *biz.CreateProductReply, err error) {
-	var (
-		result            models.CreateProductRow
-		categoryID        uint64
-		createdCategoryID uint64 // 记录新创建的分类 ID（用于补偿）
-	)
+	var result models.CreateProductRow
+	// categoryID        uint64
+	// createdCategoryID uint64 // 记录新创建的分类 ID（用于补偿）
 	// 获取事务版 DB 操作
 	db := p.data.DB(ctx)
 
 	// Step 1: 获取或创建分类（跨服务操作）
-	getCategory, err := p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+	_, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
 		Id: req.Category.CategoryId,
 	})
 	if status.Code(err) == codes.NotFound {
 		// 创建新分类（跨服务操作）
-		newCategory, createErr := p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+		var createErr error
+		_, createErr = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
 			Name:      req.Category.CategoryName,
 			SortOrder: req.Category.SortOrder,
 		})
 		if createErr != nil {
 			return nil, fmt.Errorf("create category failed: %w", createErr)
 		}
-		categoryID = uint64(newCategory.Id)
-		createdCategoryID = categoryID // 记录新创建的分类 ID
+		// categoryID = uint64(newCategory.Id)
+		// createdCategoryID = categoryID // 记录新创建的分类 ID
 	} else if err != nil {
 		return nil, fmt.Errorf("get category failed: %w", err)
 	}
-	fmt.Println("getCategory", getCategory)
-	fmt.Println("createdCategoryID", createdCategoryID)
 
 	// else {
 	// 	categoryID = uint64(getCategory.Id)
@@ -307,7 +304,6 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 	db := p.data.DB(ctx)
 
 	// 获取当前产品状态
-	fmt.Printf("req%+v", req)
 	current, err := db.GetProduct(ctx, models.GetProductParams{
 		ID:         req.ProductID,
 		MerchantID: req.MerchantID,
@@ -332,7 +328,6 @@ func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductReq
 	}
 
 	// 创建审核记录
-	fmt.Printf("current%+v", current)
 	auditRecord, err := db.CreateAuditRecord(ctx, models.CreateAuditRecordParams{
 		MerchantID: req.MerchantID,
 		ProductID:  req.ProductID,
@@ -441,7 +436,6 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 			attributes = nil
 		}
 
-		log.Debugf("Status: %+v", product.Status)
 		items = append(items, &biz.Product{
 			ID:          product.ID,
 			MerchantId:  product.MerchantID,
@@ -694,7 +688,7 @@ func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsB
 
 func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductRequest) error {
 	db := p.data.DB(ctx)
-	result, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
+	_, err := db.SoftDeleteProduct(ctx, models.SoftDeleteProductParams{
 		ID:         req.ID,
 		MerchantID: req.MerchantID,
 		Status:     int16(req.Status), // 下架状态
@@ -705,7 +699,6 @@ func (p *productRepo) DeleteProduct(ctx context.Context, req *biz.DeleteProductR
 		}
 		return err
 	}
-	log.Debugf("result: %+v", result)
 	return nil
 }
 

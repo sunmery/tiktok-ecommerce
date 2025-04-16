@@ -111,7 +111,15 @@
         "price": {
           "type": "number",
           "format": "double"
-        }
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "url": {
+          "type": "string"
+        },
+        "attributes": {}
       },
       "title": "更新商品请求"
     },

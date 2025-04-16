@@ -73,6 +73,14 @@ service ProductService {
     };
   }
 
+  // 更新库存
+  rpc UpdateInventory(UpdateInventoryRequest) returns (UpdateInventoryReply) {
+    option (google.api.http) = {
+      patch: "/v1/products/inventory",
+      body: "*"
+    };
+  }
+
   // 获取单个商品详情
   rpc GetProduct(GetProductRequest) returns (Product) {
     option (google.api.http) = {
@@ -122,6 +130,18 @@ enum AuditAction {
 enum UploadMethod {
   Put = 0;
   Post = 1;
+}
+
+message UpdateInventoryRequest {
+  string product_id = 1;
+  string merchant_id = 2;
+  int32 stock = 3;
+}
+
+message UpdateInventoryReply {
+  string product_id = 1;
+  string merchant_id = 2;
+  uint32 stock = 3;
 }
 
 message GetCategoryProductsRequest {
@@ -328,7 +348,7 @@ message GetProductsBatchRequest {
 // 删除商品请求
 message DeleteProductRequest {
   string id = 1; // 商品 ID
-  string merchant_id =  2; // 商家 ID
+  string merchant_id = 2; // 商家 ID
   uint32 status = 3; // 商品状态, 默认删除状态为4, 即下架状态
 }
 

@@ -77,13 +77,6 @@ type (
 		SortOrder    int32
 	}
 
-	// Inventory 库存
-	Inventory struct {
-		ProductId  uuid.UUID
-		MerchantId uuid.UUID
-		Stock      uint32
-	}
-
 	Product struct {
 		ID          uuid.UUID
 		MerchantId  uuid.UUID
@@ -265,6 +258,9 @@ type ProductRepo interface {
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest) error
 	ListRandomProducts(ctx context.Context, req *ListRandomProductsRequest) (*Products, error)
 	SearchProductsByName(ctx context.Context, req *SearchProductsByNameRequest) (*Products, error)
+
+	// UpdateInventory 更新库存
+	UpdateInventory(ctx context.Context, req *UpdateInventoryRequest) (*UpdateInventoryReply, error)
 }
 
 // CanTransitionTo 添加状态转换方法
@@ -285,7 +281,7 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 }
 
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
-	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
+	// p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 
@@ -323,4 +319,10 @@ func (p *ProductUsecase) GetCategoryProducts(ctx context.Context, req *GetCatego
 
 func (p *ProductUsecase) GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryWithChildrenProducts) (*Products, error) {
 	return p.repo.GetCategoryWithChildrenProducts(ctx, req)
+}
+
+// UpdateInventory 更新库存
+func (p *ProductUsecase) UpdateInventory(ctx context.Context, req *UpdateInventoryRequest) (*UpdateInventoryReply, error) {
+	p.log.WithContext(ctx).Debugf("UpdateInventory: req:%+v", req)
+	return p.repo.UpdateInventory(ctx, req)
 }

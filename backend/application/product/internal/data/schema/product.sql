@@ -37,10 +37,12 @@ CREATE TABLE products.products
 -----------------------------
 CREATE TABLE products.inventory
 (
-    product_id  UUID NOT NULL,                    -- 商品ID（关联商品表）
-    merchant_id UUID NOT NULL,                    -- 商家ID
-    stock       INT  NOT NULL CHECK (stock >= 0), -- 当前库存（不允许负数）
-    PRIMARY KEY (product_id, merchant_id)         -- 联合主键（商品+商家唯一）
+    product_id  UUID        NOT NULL,                    -- 商品ID（关联商品表）
+    merchant_id UUID        NOT NULL,                    -- 商家ID
+    stock       INT         NOT NULL CHECK (stock >= 0), -- 当前库存（不允许负数）
+    created_at  timestamptz NOT NULL DEFAULT NOW(),
+    updated_at  timestamptz NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (product_id, merchant_id)                -- 联合主键（商品+商家唯一）
 );
 
 -- 配置分布式表

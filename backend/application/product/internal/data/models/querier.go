@@ -37,7 +37,7 @@ type Querier interface {
 	//
 	//  INSERT INTO products.inventory (product_id, merchant_id, stock)
 	//  VALUES ($1, $2, $3)
-	//  RETURNING product_id, merchant_id, stock
+	//  RETURNING product_id, merchant_id, stock, created_at, updated_at
 	CreateInventory(ctx context.Context, arg CreateInventoryParams) (ProductsInventory, error)
 	// 所有分片表必须：
 	// 1. 包含分片键列（merchant_id）
@@ -207,6 +207,13 @@ type Querier interface {
 	//  ORDER BY fp.created_at DESC
 	//  LIMIT $2 OFFSET $1
 	GetCategoryWithChildrenProducts(ctx context.Context, arg GetCategoryWithChildrenProductsParams) ([]GetCategoryWithChildrenProductsRow, error)
+	//GetInventory
+	//
+	//  SELECT stock
+	//  FROM products.inventory
+	//  WHERE product_id = $1
+	//    AND merchant_id = $2
+	GetInventory(ctx context.Context, arg GetInventoryParams) (int32, error)
 	// 获取最新审核记录
 	//
 	//  INSERT INTO products.product_audits (merchant_id, -- 新增分片键
@@ -456,6 +463,15 @@ type Querier interface {
 	//    AND id = $2
 	//  RETURNING id, merchant_id, name, description, price, status, current_audit_id, category_id, created_at, updated_at, deleted_at
 	SoftDeleteProduct(ctx context.Context, arg SoftDeleteProductParams) (ProductsProducts, error)
+	//UpdateInventory
+	//
+	//  UPDATE products.inventory
+	//  SET stock = stock + $1
+	//  WHERE product_id = $2
+	//    AND merchant_id = $3
+	//    AND stock + $1 >= 0 -- 防止负数库存
+	//  RETURNING product_id, merchant_id, stock, created_at, updated_at
+	UpdateInventory(ctx context.Context, arg UpdateInventoryParams) (ProductsInventory, error)
 	//UpdateProductAttribute
 	//
 	//  UPDATE products.product_attributes

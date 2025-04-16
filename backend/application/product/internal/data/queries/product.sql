@@ -16,11 +16,6 @@ INSERT INTO products.products (name,
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at, updated_at;
 
--- name: CreateInventory :one
-INSERT INTO products.inventory (product_id, merchant_id, stock)
-VALUES ($1, $2, $3)
-RETURNING *;
-
 -- 获取商品详情，包含软删除检查
 -- name: GetProduct :one
 SELECT p.id,

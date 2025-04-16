@@ -7,6 +7,7 @@ option go_package = "backend/api/merchant/product/v1;productv1";
 import "google/api/annotations.proto";
 import "validate/validate.proto";
 import "backend/api/product/v1/product.proto";
+import "google/protobuf/struct.proto";
 
 service Product {
   // 获取商家对应的商品
@@ -37,6 +38,9 @@ message UpdateProductRequest {
   string name = 3;
   string description = 4;
   double price = 5;
+  int32 stock = 6;
+  string url = 7;
+  google.protobuf.Value attributes = 8;
 }
 
 message UpdateProductReply {

@@ -1,4 +1,3 @@
--- 创建分片表前先创建 schema
 CREATE SCHEMA IF NOT EXISTS products;
 SET SEARCH_PATH TO products;
 
@@ -40,6 +39,8 @@ CREATE TABLE products.inventory
     product_id  UUID NOT NULL,                    -- 商品ID（关联商品表）
     merchant_id UUID NOT NULL,                    -- 商家ID
     stock       INT  NOT NULL CHECK (stock >= 0), -- 当前库存（不允许负数）
+    created_at  timestamptz DEFAULT now(),
+    updated_at  timestamptz DEFAULT now(),
     PRIMARY KEY (product_id, merchant_id)         -- 联合主键（商品+商家唯一）
 );
 

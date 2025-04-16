@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/go-kratos/kratos/v2/log"
 
@@ -50,6 +49,32 @@ func (s *ProductService) UploadProductFile(ctx context.Context, req *pb.UploadPr
 		BucketName:  result.BucketName,
 		ObjectName:  result.ObjectName,
 		FormData:    result.FormData,
+	}, nil
+}
+
+func (s *ProductService) UpdateInventory(ctx context.Context, req *pb.UpdateInventoryRequest) (*pb.UpdateInventoryReply, error) {
+	productId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
+	}
+
+	result, err := s.uc.UpdateInventory(ctx, &biz.UpdateInventoryRequest{
+		ProductId:  productId,
+		MerchantId: merchantId,
+		Stock:      req.Stock,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "更新库存失败")
+	}
+
+	return &pb.UpdateInventoryReply{
+		ProductId:  result.ProductId.String(),
+		MerchantId: result.MerchantId.String(),
+		Stock:      result.Stock,
 	}, nil
 }
 
@@ -185,7 +210,6 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 func (s *ProductService) GetProductsBatch(ctx context.Context, req *pb.GetProductsBatchRequest) (*pb.Products, error) {
 	var productIds []uuid.UUID
 	for _, id := range req.ProductIds {
-		fmt.Println(id)
 		productId, err := uuid.Parse(id)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid product id")
@@ -195,7 +219,6 @@ func (s *ProductService) GetProductsBatch(ctx context.Context, req *pb.GetProduc
 
 	var merchantIds []uuid.UUID
 	for _, id := range req.MerchantIds {
-		fmt.Println(id)
 		merchantId, err := uuid.Parse(id)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid merchant id")

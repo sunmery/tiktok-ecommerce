@@ -106,30 +106,6 @@ func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordPa
 	return i, err
 }
 
-const CreateInventory = `-- name: CreateInventory :one
-INSERT INTO products.inventory (product_id, merchant_id, stock)
-VALUES ($1, $2, $3)
-RETURNING product_id, merchant_id, stock
-`
-
-type CreateInventoryParams struct {
-	ProductID  uuid.UUID `json:"productID"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	Stock      int32     `json:"stock"`
-}
-
-// CreateInventory
-//
-//	INSERT INTO products.inventory (product_id, merchant_id, stock)
-//	VALUES ($1, $2, $3)
-//	RETURNING product_id, merchant_id, stock
-func (q *Queries) CreateInventory(ctx context.Context, arg CreateInventoryParams) (ProductsInventory, error) {
-	row := q.db.QueryRow(ctx, CreateInventory, arg.ProductID, arg.MerchantID, arg.Stock)
-	var i ProductsInventory
-	err := row.Scan(&i.ProductID, &i.MerchantID, &i.Stock)
-	return i, err
-}
-
 const CreateProduct = `-- name: CreateProduct :one
 
 INSERT INTO products.products (name,

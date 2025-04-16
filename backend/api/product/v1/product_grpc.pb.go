@@ -28,6 +28,7 @@ const (
 	ProductService_GetCategoryProducts_FullMethodName             = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
 	ProductService_GetCategoryWithChildrenProducts_FullMethodName = "/ecommerce.product.v1.ProductService/GetCategoryWithChildrenProducts"
 	ProductService_GetProductsBatch_FullMethodName                = "/ecommerce.product.v1.ProductService/GetProductsBatch"
+	ProductService_UpdateInventory_FullMethodName                 = "/ecommerce.product.v1.ProductService/UpdateInventory"
 	ProductService_GetProduct_FullMethodName                      = "/ecommerce.product.v1.ProductService/GetProduct"
 	ProductService_SearchProductsByName_FullMethodName            = "/ecommerce.product.v1.ProductService/SearchProductsByName"
 	ProductService_ListProductsByCategory_FullMethodName          = "/ecommerce.product.v1.ProductService/ListProductsByCategory"
@@ -56,6 +57,8 @@ type ProductServiceClient interface {
 	GetCategoryWithChildrenProducts(ctx context.Context, in *GetCategoryProductsRequest, opts ...grpc.CallOption) (*Products, error)
 	// 批量获取商品详情
 	GetProductsBatch(ctx context.Context, in *GetProductsBatchRequest, opts ...grpc.CallOption) (*Products, error)
+	// 更新库存
+	UpdateInventory(ctx context.Context, in *UpdateInventoryRequest, opts ...grpc.CallOption) (*UpdateInventoryReply, error)
 	// 获取单个商品详情
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// 根据商品名称模糊查询
@@ -154,6 +157,16 @@ func (c *productServiceClient) GetProductsBatch(ctx context.Context, in *GetProd
 	return out, nil
 }
 
+func (c *productServiceClient) UpdateInventory(ctx context.Context, in *UpdateInventoryRequest, opts ...grpc.CallOption) (*UpdateInventoryReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateInventoryReply)
+	err := c.cc.Invoke(ctx, ProductService_UpdateInventory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Product)
@@ -216,6 +229,8 @@ type ProductServiceServer interface {
 	GetCategoryWithChildrenProducts(context.Context, *GetCategoryProductsRequest) (*Products, error)
 	// 批量获取商品详情
 	GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error)
+	// 更新库存
+	UpdateInventory(context.Context, *UpdateInventoryRequest) (*UpdateInventoryReply, error)
 	// 获取单个商品详情
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	// 根据商品名称模糊查询
@@ -257,6 +272,9 @@ func (UnimplementedProductServiceServer) GetCategoryWithChildrenProducts(context
 }
 func (UnimplementedProductServiceServer) GetProductsBatch(context.Context, *GetProductsBatchRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductsBatch not implemented")
+}
+func (UnimplementedProductServiceServer) UpdateInventory(context.Context, *UpdateInventoryRequest) (*UpdateInventoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateInventory not implemented")
 }
 func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
@@ -435,6 +453,24 @@ func _ProductService_GetProductsBatch_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpdateInventory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateInventoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateInventory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_UpdateInventory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateInventory(ctx, req.(*UpdateInventoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetProductRequest)
 	if err := dec(in); err != nil {
@@ -545,6 +581,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProductsBatch",
 			Handler:    _ProductService_GetProductsBatch_Handler,
+		},
+		{
+			MethodName: "UpdateInventory",
+			Handler:    _ProductService_UpdateInventory_Handler,
 		},
 		{
 			MethodName: "GetProduct",

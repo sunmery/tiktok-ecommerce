@@ -38,6 +38,222 @@ var (
 // define the regex for a UUID once up-front
 var _product_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on UpdateInventoryRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateInventoryRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateInventoryRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateInventoryRequestMultiError, or nil if none found.
+func (m *UpdateInventoryRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateInventoryRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProductId
+
+	// no validation rules for MerchantId
+
+	// no validation rules for Stock
+
+	if len(errors) > 0 {
+		return UpdateInventoryRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateInventoryRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateInventoryRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateInventoryRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateInventoryRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateInventoryRequestMultiError) AllErrors() []error { return m }
+
+// UpdateInventoryRequestValidationError is the validation error returned by
+// UpdateInventoryRequest.Validate if the designated constraints aren't met.
+type UpdateInventoryRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateInventoryRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateInventoryRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateInventoryRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateInventoryRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateInventoryRequestValidationError) ErrorName() string {
+	return "UpdateInventoryRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateInventoryRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateInventoryRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateInventoryRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateInventoryRequestValidationError{}
+
+// Validate checks the field values on UpdateInventoryReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateInventoryReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateInventoryReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateInventoryReplyMultiError, or nil if none found.
+func (m *UpdateInventoryReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateInventoryReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProductId
+
+	// no validation rules for MerchantId
+
+	// no validation rules for Stock
+
+	if len(errors) > 0 {
+		return UpdateInventoryReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateInventoryReplyMultiError is an error wrapping multiple validation
+// errors returned by UpdateInventoryReply.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateInventoryReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateInventoryReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateInventoryReplyMultiError) AllErrors() []error { return m }
+
+// UpdateInventoryReplyValidationError is the validation error returned by
+// UpdateInventoryReply.Validate if the designated constraints aren't met.
+type UpdateInventoryReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateInventoryReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateInventoryReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateInventoryReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateInventoryReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateInventoryReplyValidationError) ErrorName() string {
+	return "UpdateInventoryReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateInventoryReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateInventoryReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateInventoryReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateInventoryReplyValidationError{}
+
 // Validate checks the field values on GetCategoryProductsRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

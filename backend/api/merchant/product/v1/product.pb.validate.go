@@ -173,6 +173,39 @@ func (m *UpdateProductRequest) validate(all bool) error {
 
 	// no validation rules for Price
 
+	// no validation rules for Stock
+
+	// no validation rules for Url
+
+	if all {
+		switch v := interface{}(m.GetAttributes()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProductRequestValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProductRequestValidationError{
+					field:  "Attributes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAttributes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProductRequestValidationError{
+				field:  "Attributes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UpdateProductRequestMultiError(errors)
 	}

@@ -12,9 +12,11 @@ import (
 )
 
 type ProductsInventory struct {
-	ProductID  uuid.UUID `json:"productID"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	Stock      int32     `json:"stock"`
+	ProductID  uuid.UUID          `json:"productID"`
+	MerchantID uuid.UUID          `json:"merchantID"`
+	Stock      int32              `json:"stock"`
+	CreatedAt  pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt  pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type ProductsProductAttributes struct {

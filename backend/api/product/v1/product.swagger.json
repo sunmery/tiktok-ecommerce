@@ -278,6 +278,39 @@
         ]
       }
     },
+    "/v1/products/inventory": {
+      "patch": {
+        "summary": "更新库存",
+        "operationId": "ProductService_UpdateInventory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateInventoryReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateInventoryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/v1/products/uploadfile": {
       "post": {
         "summary": "上传商品文件",
@@ -835,6 +868,36 @@
         }
       },
       "title": "商品数组"
+    },
+    "v1UpdateInventoryReply": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1UpdateInventoryRequest": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "v1UploadMethod": {
       "type": "string",
