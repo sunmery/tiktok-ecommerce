@@ -253,6 +253,108 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 	}, nil
 }
 
+func (p *productRepo) CreateProductBatch(ctx context.Context, req *biz.CreateProductBatchRequest) (*biz.CreateProductBatchReply, error) {
+	var result models.CreateProductRow
+	// categoryID        uint64
+	// createdCategoryID uint64 // 记录新创建的分类 ID（用于补偿）
+	// 获取事务版 DB 操作
+	db := p.data.DB(ctx)
+
+	// Step 1: 获取或创建分类（跨服务操作）
+	_, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
+		Id: req.Category.CategoryId,
+	})
+	if status.Code(err) == codes.NotFound {
+		// 创建新分类（跨服务操作）
+		var createErr error
+		_, createErr = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+			Name:      req.Category.CategoryName,
+			SortOrder: req.Category.SortOrder,
+		})
+		if createErr != nil {
+			return nil, fmt.Errorf("create category failed: %w", createErr)
+		}
+		// categoryID = uint64(newCategory.Id)
+		// createdCategoryID = categoryID // 记录新创建的分类 ID
+	} else if err != nil {
+		return nil, fmt.Errorf("get category failed: %w", err)
+	}
+
+	// else {
+	// 	categoryID = uint64(getCategory.Id)
+	// }
+
+	// Step 2: 执行本地事务（商品相关操作）
+
+	// // 执行本地数据库事务（包裹商品、图片、属性、库存）
+	// txErr := p.data.ExecTx(ctx, func(ctx context.Context) error {
+	// 注意：这里使用 ctx 作为上下文
+
+	// 1. 创建商品
+	price, err := types.Float64ToNumeric(req.Price)
+	if err != nil {
+		return nil, fmt.Errorf("invalid price format: %w", err)
+	}
+
+	result, err = db.CreateProduct(ctx, models.CreateProductParams{
+		Name:        req.Name,
+		Description: &req.Description,
+		Price:       price,
+		Status:      int16(req.Status),
+		MerchantID:  req.MerchantId,
+		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
+
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	// 2. 并行创建图片、属性、库存
+	var eg errgroup.Group
+
+	// 插入图片
+	eg.Go(func() error {
+		if len(req.Images) > 0 {
+			return p.createProductImages(ctx, result.ID, req.MerchantId, req.Images)
+		}
+		return nil
+	})
+
+	// 插入属性
+	eg.Go(func() error {
+		attributes, err := json.Marshal(req.Attributes)
+		if err != nil {
+			return fmt.Errorf("marshal attributes failed: %w", err)
+		}
+		return db.CreateProductAttribute(ctx, models.CreateProductAttributeParams{
+			MerchantID: req.MerchantId,
+			ProductID:  result.ID,
+			Attributes: attributes,
+		})
+	})
+
+	// 插入库存
+	eg.Go(func() error {
+		_, err = db.CreateInventory(ctx, models.CreateInventoryParams{
+			ProductID:  result.ID,
+			MerchantID: req.MerchantId,
+			Stock:      int32(req.Stock),
+		})
+		return err
+	})
+
+	err = eg.Wait()
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.CreateProductBatchReply{
+		SuccessCount:      0,
+		FailedCount:       0,
+		BatchProductError: biz.BatchProductError{},
+	}, nil
+}
+
 func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRequest) (*biz.AuditRecord, error) {
 	db := p.data.DB(ctx)
 

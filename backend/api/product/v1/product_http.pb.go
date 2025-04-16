@@ -22,6 +22,7 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationProductServiceAuditProduct = "/ecommerce.product.v1.ProductService/AuditProduct"
 const OperationProductServiceCreateProduct = "/ecommerce.product.v1.ProductService/CreateProduct"
+const OperationProductServiceCreateProductBatch = "/ecommerce.product.v1.ProductService/CreateProductBatch"
 const OperationProductServiceDeleteProduct = "/ecommerce.product.v1.ProductService/DeleteProduct"
 const OperationProductServiceGetCategoryProducts = "/ecommerce.product.v1.ProductService/GetCategoryProducts"
 const OperationProductServiceGetCategoryWithChildrenProducts = "/ecommerce.product.v1.ProductService/GetCategoryWithChildrenProducts"
@@ -39,6 +40,8 @@ type ProductServiceHTTPServer interface {
 	AuditProduct(context.Context, *AuditProductRequest) (*AuditRecord, error)
 	// CreateProduct 创建商品（草稿状态）
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
+	// CreateProductBatch 批量创建商品（草稿状态）
+	CreateProductBatch(context.Context, *CreateProductBatchRequest) (*CreateProductBatchReply, error)
 	// DeleteProduct 删除商品（软删除）
 	DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
 	// GetCategoryProducts 根据分类返回商品数据
@@ -67,6 +70,7 @@ func RegisterProductServiceHTTPServer(s *http.Server, srv ProductServiceHTTPServ
 	r := s.Route("/")
 	r.POST("/v1/products/uploadfile", _ProductService_UploadProductFile0_HTTP_Handler(srv))
 	r.POST("/v1/products", _ProductService_CreateProduct0_HTTP_Handler(srv))
+	r.PUT("/v1/products", _ProductService_CreateProductBatch0_HTTP_Handler(srv))
 	r.POST("/v1/products/{product_id}/submit-audit", _ProductService_SubmitForAudit0_HTTP_Handler(srv))
 	r.POST("/v1/products/{product_id}/audit", _ProductService_AuditProduct0_HTTP_Handler(srv))
 	r.GET("/v1/products", _ProductService_ListRandomProducts0_HTTP_Handler(srv))
@@ -120,6 +124,28 @@ func _ProductService_CreateProduct0_HTTP_Handler(srv ProductServiceHTTPServer) f
 			return err
 		}
 		reply := out.(*CreateProductReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _ProductService_CreateProductBatch0_HTTP_Handler(srv ProductServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateProductBatchRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductServiceCreateProductBatch)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateProductBatch(ctx, req.(*CreateProductBatchRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateProductBatchReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -369,6 +395,7 @@ func _ProductService_DeleteProduct0_HTTP_Handler(srv ProductServiceHTTPServer) f
 type ProductServiceHTTPClient interface {
 	AuditProduct(ctx context.Context, req *AuditProductRequest, opts ...http.CallOption) (rsp *AuditRecord, err error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest, opts ...http.CallOption) (rsp *CreateProductReply, err error)
+	CreateProductBatch(ctx context.Context, req *CreateProductBatchRequest, opts ...http.CallOption) (rsp *CreateProductBatchReply, err error)
 	DeleteProduct(ctx context.Context, req *DeleteProductRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProductsRequest, opts ...http.CallOption) (rsp *Products, err error)
 	GetCategoryWithChildrenProducts(ctx context.Context, req *GetCategoryProductsRequest, opts ...http.CallOption) (rsp *Products, err error)
@@ -410,6 +437,19 @@ func (c *ProductServiceHTTPClientImpl) CreateProduct(ctx context.Context, in *Cr
 	opts = append(opts, http.Operation(OperationProductServiceCreateProduct))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductServiceHTTPClientImpl) CreateProductBatch(ctx context.Context, in *CreateProductBatchRequest, opts ...http.CallOption) (*CreateProductBatchReply, error) {
+	var out CreateProductBatchReply
+	pattern := "/v1/products"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductServiceCreateProductBatch))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

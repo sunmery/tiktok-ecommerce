@@ -28,6 +28,13 @@ service ProductService {
       body: "*"
     };
   }
+  // 批量创建商品（草稿状态）
+  rpc CreateProductBatch(CreateProductBatchRequest) returns (CreateProductBatchReply) {
+    option (google.api.http) = {
+      put: "/v1/products"
+      body: "*"
+    };
+  }
 
   // 提交商品审核
   rpc SubmitForAudit(SubmitAuditRequest) returns (AuditRecord) {
@@ -318,6 +325,22 @@ message CreateProductRequest {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
   CategoryInfo category = 13;
+}
+
+message CreateProductBatchRequest {
+  repeated CreateProductRequest products = 1;
+}
+
+message BatchProductError {
+  int32 index = 1; // 原始请求列表中的索引
+  string error_message = 2; // 错误信息
+  Product original_product = 3; // 导致错误的原始商品数据
+}
+
+message CreateProductBatchReply {
+  int64 success_count = 1; // 成功处理的数量
+  int64 failed_count = 2;  // 失败处理的数量
+  repeated BatchProductError errors = 3; // 失败详情
 }
 
 // 提交审核请求

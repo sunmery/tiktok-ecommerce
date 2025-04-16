@@ -11,9 +11,23 @@ INSERT INTO products.products (name,
                                price,
                                status,
                                merchant_id,
-                               category_id
-)
+                               category_id)
 VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, created_at, updated_at;
+
+-- name: CreateProductBatch :one
+INSERT INTO products.products (name,
+                               description,
+                               price,
+                               status,
+                               merchant_id,
+                               category_id)
+SELECT unnest(@name),
+       unnest(@description),
+       unnest(@price),
+       unnest(@status),
+       unnest(@merchant_id),
+       unnest(@category_id)
 RETURNING id, created_at, updated_at;
 
 -- 获取商品详情，包含软删除检查
@@ -95,8 +109,8 @@ FROM products.products p
                     ON p.id = i.product_id AND p.merchant_id = i.merchant_id
          LEFT JOIN products.product_attributes pa
                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-WHERE p.id = ANY(@product_ids::UUID[])
-  AND p.merchant_id = ANY(@merchant_ids::UUID[])
+WHERE p.id = ANY (@product_ids::UUID[])
+  AND p.merchant_id = ANY (@merchant_ids::UUID[])
   AND p.deleted_at IS NULL;
 
 
@@ -319,60 +333,55 @@ LIMIT $3 OFFSET $4;
 
 -- 根据分类及其所有子分类获取商品列表
 -- name: GetCategoryWithChildrenProducts :many
-WITH RECURSIVE category_hierarchy AS (
-    -- 基础情况：指定的分类
-    SELECT id, parent_id
-    FROM categories.categories
-    WHERE id = @id
-    
-    UNION ALL
-    
-    -- 递归情况：所有子分类
-    SELECT c.id, c.parent_id
-    FROM categories.categories c
-    JOIN category_hierarchy ch ON c.parent_id = ch.id
-),
-filtered_products AS (
-    SELECT p.id,
-           p.merchant_id,
-           p.name,
-           p.description,
-           p.price,
-           p.status,
-           p.category_id,
-           p.created_at,
-           p.updated_at
-    FROM products.products p
-    JOIN category_hierarchy ch ON p.category_id = ch.id
-    WHERE p.status = @status      -- 商品状态机
-      AND p.deleted_at IS NULL
-),
-product_images_agg AS (
-    SELECT pi.product_id,
-           jsonb_agg(
-               jsonb_build_object(
-                   'id', pi.id,
-                   'url', pi.url,
-                   'is_primary', pi.is_primary,
-                   'sort_order', pi.sort_order
-               )
-           ) AS images
-    FROM products.product_images pi
-    INNER JOIN filtered_products fp ON pi.product_id = fp.id AND pi.merchant_id = fp.merchant_id
-    GROUP BY pi.product_id
-),
-product_attributes_agg AS (
-    SELECT pa.product_id,
-           pa.attributes
-    FROM products.product_attributes pa
-    INNER JOIN filtered_products fp ON pa.product_id = fp.id AND pa.merchant_id = fp.merchant_id
-),
-inventory_agg AS (
-    SELECT i.product_id,
-           i.stock
-    FROM products.inventory i
-    INNER JOIN filtered_products fp ON i.product_id = fp.id AND i.merchant_id = fp.merchant_id
-)
+WITH RECURSIVE
+    category_hierarchy AS (
+        -- 基础情况：指定的分类
+        SELECT id, parent_id
+        FROM categories.categories
+        WHERE id = @id
+
+        UNION ALL
+
+        -- 递归情况：所有子分类
+        SELECT c.id, c.parent_id
+        FROM categories.categories c
+                 JOIN category_hierarchy ch ON c.parent_id = ch.id),
+    filtered_products AS (SELECT p.id,
+                                 p.merchant_id,
+                                 p.name,
+                                 p.description,
+                                 p.price,
+                                 p.status,
+                                 p.category_id,
+                                 p.created_at,
+                                 p.updated_at
+                          FROM products.products p
+                                   JOIN category_hierarchy ch ON p.category_id = ch.id
+                          WHERE p.status = @status -- 商品状态机
+                            AND p.deleted_at IS NULL),
+    product_images_agg AS (SELECT pi.product_id,
+                                  jsonb_agg(
+                                          jsonb_build_object(
+                                                  'id', pi.id,
+                                                  'url', pi.url,
+                                                  'is_primary', pi.is_primary,
+                                                  'sort_order', pi.sort_order
+                                          )
+                                  ) AS images
+                           FROM products.product_images pi
+                                    INNER JOIN filtered_products fp
+                                               ON pi.product_id = fp.id AND pi.merchant_id = fp.merchant_id
+                           GROUP BY pi.product_id),
+    product_attributes_agg AS (SELECT pa.product_id,
+                                      pa.attributes
+                               FROM products.product_attributes pa
+                                        INNER JOIN filtered_products fp
+                                                   ON pa.product_id = fp.id AND pa.merchant_id = fp.merchant_id),
+    inventory_agg AS (SELECT i.product_id,
+                             i.stock
+                      FROM products.inventory i
+                               INNER JOIN filtered_products fp
+                                          ON i.product_id = fp.id AND i.merchant_id = fp.merchant_id)
 SELECT fp.id,
        fp.merchant_id,
        fp.name,
@@ -382,13 +391,13 @@ SELECT fp.id,
        fp.category_id,
        fp.created_at,
        fp.updated_at,
-       COALESCE(ia.stock, 0) AS stock,
-       COALESCE(pia.images, '[]'::jsonb) AS images,
+       COALESCE(ia.stock, 0)                 AS stock,
+       COALESCE(pia.images, '[]'::jsonb)     AS images,
        COALESCE(paa.attributes, '{}'::jsonb) AS attributes
 FROM filtered_products fp
-LEFT JOIN product_images_agg pia ON fp.id = pia.product_id
-LEFT JOIN product_attributes_agg paa ON fp.id = paa.product_id
-LEFT JOIN inventory_agg ia ON fp.id = ia.product_id
+         LEFT JOIN product_images_agg pia ON fp.id = pia.product_id
+         LEFT JOIN product_attributes_agg paa ON fp.id = paa.product_id
+         LEFT JOIN inventory_agg ia ON fp.id = ia.product_id
 ORDER BY fp.created_at DESC
 LIMIT @page_size OFFSET @page;
 

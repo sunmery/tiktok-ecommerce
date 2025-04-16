@@ -108,6 +108,24 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}, nil
 }
 
+// CreateProductBatch 批量创建商品（草稿状态）
+func (s *ProductService) CreateProductBatch(ctx context.Context, req *pb.CreateProductBatchRequest) (*pb.CreateProductBatchReply, error) {
+	merchantId, err := pkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
+	}
+
+	created, createdErr := s.uc.CreateProductBatch(ctx, &biz.CreateProductBatchRequest{})
+	if createdErr != nil {
+		return nil, createdErr
+	}
+	return &pb.CreateProductBatchReply{
+		SuccessCount: 0,
+		FailedCount:  0,
+		Errors:       nil,
+	}, nil
+}
+
 func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
 	productId, err := uuid.Parse(req.ProductId)
 	if err != nil {
