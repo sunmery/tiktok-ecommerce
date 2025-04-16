@@ -55,7 +55,7 @@ func NewGRPCServer(
 			metadata.Server(),    // 注入 metadata
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+				recovery.WithHandler(func(ctx context.Context, req, err any) error {
 					// do someting
 					return nil
 				})),

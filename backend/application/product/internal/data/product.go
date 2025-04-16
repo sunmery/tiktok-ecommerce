@@ -720,7 +720,7 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 	}
 
 	// 处理属性
-	var attributes map[string]interface{}
+	var attributes map[string]any
 	if len(product.Attributes) > 0 {
 		if err := json.Unmarshal(product.Attributes, &attributes); err != nil {
 			p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)

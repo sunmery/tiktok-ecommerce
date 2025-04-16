@@ -59,7 +59,7 @@ func NewHTTPServer(c *conf.Server,
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
 			recovery.Recovery(
 				// recovery.WithLogger(log.DefaultLogger),
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+				recovery.WithHandler(func(ctx context.Context, req, err any) error {
 					// do someting
 					return nil
 				}),
@@ -83,7 +83,7 @@ func NewHTTPServer(c *conf.Server,
 	return srv
 }
 
-func MultipartFormDataDecoder(r *http.Request, v interface{}) error {
+func MultipartFormDataDecoder(r *http.Request, v any) error {
 	// 从Request Header的Content-Type中提取出对应的解码器
 	_, ok := http.CodecForRequest(r, "Content-Type")
 	// 如果找不到对应的解码器此时会报错

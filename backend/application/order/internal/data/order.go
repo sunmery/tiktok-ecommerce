@@ -326,8 +326,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		}
 
 		// 预扣库存
-		o.log.Debugf("id: %v mid:%v stock%v", item.Item.ProductId.String(), item.Item.MerchantId.String(), -item.Item.Quantity)
-		updateInventory, err := o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
+		_, err = o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
 			ProductId:  item.Item.ProductId.String(),
 			MerchantId: item.Item.MerchantId.String(),
 			Stock:      -int32(item.Item.Quantity),
@@ -335,9 +334,6 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		if err != nil {
 			return nil, err
 		}
-
-		o.log.Debugf("updateInventory: %v", updateInventory)
-
 	}
 
 	return &biz.PlaceOrderResp{

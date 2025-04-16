@@ -62,7 +62,7 @@ func NewHTTPServer(
 			validate.Validator(), // 参数校验
 			tracing.Server(),
 			recovery.Recovery(
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+				recovery.WithHandler(func(ctx context.Context, req, err any) error {
 					// do someting
 					return nil
 				}),

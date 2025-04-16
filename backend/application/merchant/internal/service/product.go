@@ -103,14 +103,14 @@ func convertBizProductToPB(p *biz.Product) *productv1.Product {
 	var attributes *structpb.Value
 	if p.Attributes != nil && len(p.Attributes) > 0 {
 		// 将 biz.AttributeValue 转换为 map[string]interface{}
-		rawMap := make(map[string]interface{})
+		rawMap := make(map[string]any)
 		for key, value := range p.Attributes {
 			if value.StringValue != "" {
 				rawMap[key] = value.StringValue
 			} else if value.ArrayValue != nil {
 				rawMap[key] = value.ArrayValue.Items
 			} else if value.ObjectValue != nil {
-				objMap := make(map[string]interface{})
+				objMap := make(map[string]any)
 				for k, v := range value.ObjectValue.Fields {
 					objMap[k] = v.StringValue
 				}

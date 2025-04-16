@@ -86,7 +86,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 		// 处理属性
 		var attributes map[string]*biz.AttributeValue
 		if len(product.Attributes) > 0 {
-			var rawJSON map[string]interface{}
+			var rawJSON map[string]any
 			if err := json.Unmarshal(product.Attributes, &rawJSON); err != nil {
 				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
 			} else {
@@ -95,7 +95,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 					switch v := value.(type) {
 					case string:
 						attributes[key] = &biz.AttributeValue{StringValue: v}
-					case []interface{}:
+					case []any:
 						items := make([]string, len(v))
 						for i, item := range v {
 							items[i] = item.(string)
@@ -103,7 +103,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 						attributes[key] = &biz.AttributeValue{
 							ArrayValue: &biz.ArrayValue{Items: items},
 						}
-					case map[string]interface{}:
+					case map[string]any:
 						fields := make(map[string]*biz.AttributeValue)
 						for k, val := range v {
 							fields[k] = &biz.AttributeValue{StringValue: val.(string)}

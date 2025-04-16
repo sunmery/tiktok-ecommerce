@@ -54,7 +54,7 @@ func NewGRPCServer(c *conf.Server, user *service.UserService, oc *conf.Observabi
 			validate.Validator(), // 参数校验
 			recovery.Recovery(
 				// recovery.WithLogger(log.DefaultLogger),
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+				recovery.WithHandler(func(ctx context.Context, req, err any) error {
 					// do someting
 					return nil
 				})),

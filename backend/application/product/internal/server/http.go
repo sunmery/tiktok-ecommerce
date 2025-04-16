@@ -56,7 +56,7 @@ func NewHTTPServer(c *conf.Server,
 			// sentrykratos.Server(), // must after Recovery middleware, because of the exiting order will be reversed
 			recovery.Recovery(
 				// recovery.WithLogger(log.DefaultLogger),
-				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+				recovery.WithHandler(func(ctx context.Context, req, err any) error {
 					// do someting
 					return nil
 				}),
