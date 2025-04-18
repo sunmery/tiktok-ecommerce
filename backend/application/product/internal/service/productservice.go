@@ -115,14 +115,65 @@ func (s *ProductService) CreateProductBatch(ctx context.Context, req *pb.CreateP
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
 
-	created, createdErr := s.uc.CreateProductBatch(ctx, &biz.CreateProductBatchRequest{})
-	if createdErr != nil {
-		return nil, createdErr
+	logger := log.NewHelper(log.With(log.GetLogger(), "module", "service/product"))
+	logger.Infof("开始批量创建商品，商家ID: %v, 商品数量: %d", merchantId, len(req.Products))
+
+	// 参数验证
+	if len(req.Products) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "商品列表不能为空")
 	}
+
+	// 转换请求格式从proto到biz层
+	bizProducts := make([]*biz.ProductDraft, 0, len(req.Products))
+	for _, product := range req.Products {
+		// 基本参数验证
+		if product.Name == "" {
+			return nil, status.Error(codes.InvalidArgument, "商品名称不能为空")
+		}
+		if product.Price <= 0 {
+			return nil, status.Error(codes.InvalidArgument, "商品价格必须大于0")
+		}
+
+		bizProducts = append(bizProducts, &biz.ProductDraft{
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       product.Price,
+			Stock:       product.Stock,
+			MerchantId:  merchantId,
+			Status:      biz.ProductStatusPending,
+			Category: biz.CategoryInfo{
+				CategoryId:   uint64(product.Category.CategoryId),
+				CategoryName: product.Category.CategoryName,
+				// SortOrder:    product.Category.SortOrder,
+			},
+			Attributes: parseProtoValue(product.Attributes),
+			Images:     convertPBImagesToBiz(product.Images),
+		})
+	}
+
+	logger.Infof("调用业务层批量创建商品，商品数量: %d", len(bizProducts))
+	created, createdErr := s.uc.CreateProductBatch(ctx, &biz.CreateProductBatchRequest{
+		Products: bizProducts,
+	})
+	if createdErr != nil {
+		logger.Errorf("批量创建商品失败: %v", createdErr)
+		return nil, status.Errorf(codes.Internal, "批量创建商品失败: %v", createdErr)
+	}
+
+	// 处理错误结果
+	errResults := make([]*pb.CreateProductBatchReply_BatchProductError, 0, len(created.Errors))
+	for _, result := range created.Errors {
+		errResults = append(errResults, &pb.CreateProductBatchReply_BatchProductError{
+			Index:   uint32(result.Index),
+			Message: result.Message,
+		})
+	}
+
+	logger.Infof("批量创建商品完成，成功: %d, 失败: %d", created.SuccessCount, created.FailedCount)
 	return &pb.CreateProductBatchReply{
-		SuccessCount: 0,
-		FailedCount:  0,
-		Errors:       nil,
+		SuccessCount: created.SuccessCount,
+		FailedCount:  created.FailedCount,
+		Errors:       errResults,
 	}, nil
 }
 

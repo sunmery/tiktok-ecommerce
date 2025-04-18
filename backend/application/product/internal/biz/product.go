@@ -246,29 +246,34 @@ type GetCategoryWithChildrenProducts struct {
 }
 
 type (
-	ProductBatch struct {
-		Name        []string
-		Price       []float64
-		Description []string
-		MerchantId  []uuid.UUID
-		url         []*string
-		Status      []ProductStatus
-		Category    []CategoryInfo
-		Attributes  []map[string]any
-		Stock       []uint32
+	ProductDraft struct {
+		Name           string
+		Description    string
+		Price          float64
+		CurrentAuditID *string // 使用指针处理空值
+		Stock          uint32
+		MerchantId     uuid.UUID
+		Status         ProductStatus
+		Attributes     map[string]interface{}
+		Category       CategoryInfo
+		Images         []*ProductImage
 	}
+
 	BatchProductError struct {
-		Index           int     // 原始请求列表中的索引
-		Message         string  // 错误信息
-		OriginalProduct Product // 导致错误的原始商品数据
+		Index           int
+		Message         string
+		OriginalProduct *ProductDraft
 	}
+
 	CreateProductBatchRequest struct {
-		Products []*ProductBatch
+		Products []*ProductDraft
 	}
+
 	CreateProductBatchReply struct {
-		SuccessCount      uint32            // 成功创建的商品数量
-		FailedCount       uint32            // 失败创建的商品数量
-		BatchProductError BatchProductError // 错误信息
+		SuccessCount uint32
+		FailedCount  uint32
+		Errors       []*BatchProductError
+		ProductIds   []uuid.UUID
 	}
 )
 

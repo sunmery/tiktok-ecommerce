@@ -2214,64 +2214,6 @@ func (m *CreateProductRequest) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetCreatedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateProductRequestValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateProductRequestValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateProductRequestValidationError{
-				field:  "CreatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetUpdatedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateProductRequestValidationError{
-					field:  "UpdatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateProductRequestValidationError{
-					field:  "UpdatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateProductRequestValidationError{
-				field:  "UpdatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
 		switch v := interface{}(m.GetCategory()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -3462,3 +3404,142 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AuditRecordValidationError{}
+
+// Validate checks the field values on
+// CreateProductBatchReply_BatchProductError with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CreateProductBatchReply_BatchProductError) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// CreateProductBatchReply_BatchProductError with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in
+// CreateProductBatchReply_BatchProductErrorMultiError, or nil if none found.
+func (m *CreateProductBatchReply_BatchProductError) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateProductBatchReply_BatchProductError) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Index
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetOriginalProduct()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateProductBatchReply_BatchProductErrorValidationError{
+					field:  "OriginalProduct",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateProductBatchReply_BatchProductErrorValidationError{
+					field:  "OriginalProduct",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetOriginalProduct()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateProductBatchReply_BatchProductErrorValidationError{
+				field:  "OriginalProduct",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateProductBatchReply_BatchProductErrorMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateProductBatchReply_BatchProductErrorMultiError is an error wrapping
+// multiple validation errors returned by
+// CreateProductBatchReply_BatchProductError.ValidateAll() if the designated
+// constraints aren't met.
+type CreateProductBatchReply_BatchProductErrorMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateProductBatchReply_BatchProductErrorMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateProductBatchReply_BatchProductErrorMultiError) AllErrors() []error { return m }
+
+// CreateProductBatchReply_BatchProductErrorValidationError is the validation
+// error returned by CreateProductBatchReply_BatchProductError.Validate if the
+// designated constraints aren't met.
+type CreateProductBatchReply_BatchProductErrorValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateProductBatchReply_BatchProductErrorValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateProductBatchReply_BatchProductErrorValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateProductBatchReply_BatchProductErrorValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateProductBatchReply_BatchProductErrorValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateProductBatchReply_BatchProductErrorValidationError) ErrorName() string {
+	return "CreateProductBatchReply_BatchProductErrorValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateProductBatchReply_BatchProductErrorValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateProductBatchReply_BatchProductError.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateProductBatchReply_BatchProductErrorValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateProductBatchReply_BatchProductErrorValidationError{}

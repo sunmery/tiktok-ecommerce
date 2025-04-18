@@ -714,24 +714,6 @@
       },
       "title": "审核记录返回结构"
     },
-    "v1BatchProductError": {
-      "type": "object",
-      "properties": {
-        "index": {
-          "type": "integer",
-          "format": "int32",
-          "title": "原始请求列表中的索引"
-        },
-        "errorMessage": {
-          "type": "string",
-          "title": "错误信息"
-        },
-        "originalProduct": {
-          "$ref": "#/definitions/v1Product",
-          "title": "导致错误的原始商品数据 (可选)"
-        }
-      }
-    },
     "v1CategoryInfo": {
       "type": "object",
       "properties": {
@@ -749,22 +731,35 @@
       "type": "object",
       "properties": {
         "successCount": {
-          "type": "string",
-          "format": "int64",
-          "title": "成功处理的数量"
+          "type": "integer",
+          "format": "int64"
         },
         "failedCount": {
-          "type": "string",
-          "format": "int64",
-          "title": "失败处理的数量"
+          "type": "integer",
+          "format": "int64"
         },
         "errors": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1BatchProductError"
-          },
-          "title": "失败详情"
+            "$ref": "#/definitions/v1CreateProductBatchReplyBatchProductError"
+          }
+        }
+      }
+    },
+    "v1CreateProductBatchReplyBatchProductError": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "originalProduct": {
+          "$ref": "#/definitions/v1CreateProductRequest",
+          "title": "原始商品信息"
         }
       }
     },
@@ -828,15 +823,6 @@
           "title": "商品图片列表"
         },
         "attributes": {},
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "时间戳"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
         "category": {
           "$ref": "#/definitions/v1CategoryInfo"
         }

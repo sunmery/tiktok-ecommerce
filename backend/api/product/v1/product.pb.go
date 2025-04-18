@@ -1198,17 +1198,14 @@ func (x *AuditInfo) GetOperatedAt() *timestamppb.Timestamp {
 
 // 创建商品请求
 type CreateProductRequest struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`               // 商品名称
-	Price       float64                `protobuf:"fixed64,2,opt,name=price,proto3" json:"price,omitempty"`           // 商品价格（单位：元
-	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"` // 商品描述
-	Stock       uint32                 `protobuf:"varint,4,opt,name=stock,proto3" json:"stock,omitempty"`            // 商品库存
-	Images      []*Image               `protobuf:"bytes,8,rep,name=images,proto3" json:"images,omitempty"`           // 商品图片列表
-	Attributes  *structpb.Value        `protobuf:"bytes,7,opt,name=attributes,proto3" json:"attributes,omitempty"`
-	// 时间戳
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Category      *CategoryInfo          `protobuf:"bytes,13,opt,name=category,proto3" json:"category,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`               // 商品名称
+	Price         float64                `protobuf:"fixed64,2,opt,name=price,proto3" json:"price,omitempty"`           // 商品价格（单位：元
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"` // 商品描述
+	Stock         uint32                 `protobuf:"varint,4,opt,name=stock,proto3" json:"stock,omitempty"`            // 商品库存
+	Images        []*Image               `protobuf:"bytes,5,rep,name=images,proto3" json:"images,omitempty"`           // 商品图片列表
+	Attributes    *structpb.Value        `protobuf:"bytes,6,opt,name=attributes,proto3" json:"attributes,omitempty"`
+	Category      *CategoryInfo          `protobuf:"bytes,7,opt,name=category,proto3" json:"category,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1285,20 +1282,6 @@ func (x *CreateProductRequest) GetAttributes() *structpb.Value {
 	return nil
 }
 
-func (x *CreateProductRequest) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-func (x *CreateProductRequest) GetUpdatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return nil
-}
-
 func (x *CreateProductRequest) GetCategory() *CategoryInfo {
 	if x != nil {
 		return x.Category
@@ -1354,7 +1337,7 @@ type BatchProductError struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Index           int32                  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`                                           // 原始请求列表中的索引
 	ErrorMessage    string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`          // 错误信息
-	OriginalProduct *Product               `protobuf:"bytes,3,opt,name=original_product,json=originalProduct,proto3" json:"original_product,omitempty"` // 导致错误的原始商品数据 (可选)
+	OriginalProduct *Product               `protobuf:"bytes,3,opt,name=original_product,json=originalProduct,proto3" json:"original_product,omitempty"` // 导致错误的原始商品数据
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1411,10 +1394,10 @@ func (x *BatchProductError) GetOriginalProduct() *Product {
 }
 
 type CreateProductBatchReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SuccessCount  int64                  `protobuf:"varint,1,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"` // 成功处理的数量
-	FailedCount   int64                  `protobuf:"varint,2,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty"`    // 失败处理的数量
-	Errors        []*BatchProductError   `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`                                  // 失败详情
+	state         protoimpl.MessageState                       `protogen:"open.v1"`
+	SuccessCount  uint32                                       `protobuf:"varint,1,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"`
+	FailedCount   uint32                                       `protobuf:"varint,2,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty"`
+	Errors        []*CreateProductBatchReply_BatchProductError `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1449,21 +1432,21 @@ func (*CreateProductBatchReply) Descriptor() ([]byte, []int) {
 	return file_v1_product_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *CreateProductBatchReply) GetSuccessCount() int64 {
+func (x *CreateProductBatchReply) GetSuccessCount() uint32 {
 	if x != nil {
 		return x.SuccessCount
 	}
 	return 0
 }
 
-func (x *CreateProductBatchReply) GetFailedCount() int64 {
+func (x *CreateProductBatchReply) GetFailedCount() uint32 {
 	if x != nil {
 		return x.FailedCount
 	}
 	return 0
 }
 
-func (x *CreateProductBatchReply) GetErrors() []*BatchProductError {
+func (x *CreateProductBatchReply) GetErrors() []*CreateProductBatchReply_BatchProductError {
 	if x != nil {
 		return x.Errors
 	}
@@ -1851,6 +1834,66 @@ func (x *AuditRecord) GetOperatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type CreateProductBatchReply_BatchProductError struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Index           uint32                 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Message         string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	OriginalProduct *CreateProductRequest  `protobuf:"bytes,3,opt,name=original_product,json=originalProduct,proto3" json:"original_product,omitempty"` // 原始商品信息
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *CreateProductBatchReply_BatchProductError) Reset() {
+	*x = CreateProductBatchReply_BatchProductError{}
+	mi := &file_v1_product_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProductBatchReply_BatchProductError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProductBatchReply_BatchProductError) ProtoMessage() {}
+
+func (x *CreateProductBatchReply_BatchProductError) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_product_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProductBatchReply_BatchProductError.ProtoReflect.Descriptor instead.
+func (*CreateProductBatchReply_BatchProductError) Descriptor() ([]byte, []int) {
+	return file_v1_product_proto_rawDescGZIP(), []int{18, 0}
+}
+
+func (x *CreateProductBatchReply_BatchProductError) GetIndex() uint32 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+func (x *CreateProductBatchReply_BatchProductError) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *CreateProductBatchReply_BatchProductError) GetOriginalProduct() *CreateProductRequest {
+	if x != nil {
+		return x.OriginalProduct
+	}
+	return nil
+}
+
 var File_v1_product_proto protoreflect.FileDescriptor
 
 const file_v1_product_proto_rawDesc = "" +
@@ -1968,31 +2011,31 @@ const file_v1_product_proto_rawDesc = "" +
 	"\voperator_id\x18\x03 \x01(\tR\n" +
 	"operatorId\x12;\n" +
 	"\voperated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"operatedAt\"\xa5\x03\n" +
+	"operatedAt\"\xaf\x02\n" +
 	"\x14CreateProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05price\x18\x02 \x01(\x01R\x05price\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xfaB\x05r\x03\x18\xd0\x0fR\vdescription\x12\x14\n" +
 	"\x05stock\x18\x04 \x01(\rR\x05stock\x123\n" +
-	"\x06images\x18\b \x03(\v2\x1b.ecommerce.product.v1.ImageR\x06images\x126\n" +
+	"\x06images\x18\x05 \x03(\v2\x1b.ecommerce.product.v1.ImageR\x06images\x126\n" +
 	"\n" +
-	"attributes\x18\a \x01(\v2\x16.google.protobuf.ValueR\n" +
-	"attributes\x129\n" +
-	"\n" +
-	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
-	"\n" +
-	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12>\n" +
-	"\bcategory\x18\r \x01(\v2\".ecommerce.product.v1.CategoryInfoR\bcategory\"c\n" +
+	"attributes\x18\x06 \x01(\v2\x16.google.protobuf.ValueR\n" +
+	"attributes\x12>\n" +
+	"\bcategory\x18\a \x01(\v2\".ecommerce.product.v1.CategoryInfoR\bcategory\"c\n" +
 	"\x19CreateProductBatchRequest\x12F\n" +
 	"\bproducts\x18\x01 \x03(\v2*.ecommerce.product.v1.CreateProductRequestR\bproducts\"\x98\x01\n" +
 	"\x11BatchProductError\x12\x14\n" +
 	"\x05index\x18\x01 \x01(\x05R\x05index\x12#\n" +
 	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12H\n" +
-	"\x10original_product\x18\x03 \x01(\v2\x1d.ecommerce.product.v1.ProductR\x0foriginalProduct\"\xa2\x01\n" +
+	"\x10original_product\x18\x03 \x01(\v2\x1d.ecommerce.product.v1.ProductR\x0foriginalProduct\"\xd7\x02\n" +
 	"\x17CreateProductBatchReply\x12#\n" +
-	"\rsuccess_count\x18\x01 \x01(\x03R\fsuccessCount\x12!\n" +
-	"\ffailed_count\x18\x02 \x01(\x03R\vfailedCount\x12?\n" +
-	"\x06errors\x18\x03 \x03(\v2'.ecommerce.product.v1.BatchProductErrorR\x06errors\"3\n" +
+	"\rsuccess_count\x18\x01 \x01(\rR\fsuccessCount\x12!\n" +
+	"\ffailed_count\x18\x02 \x01(\rR\vfailedCount\x12W\n" +
+	"\x06errors\x18\x03 \x03(\v2?.ecommerce.product.v1.CreateProductBatchReply.BatchProductErrorR\x06errors\x1a\x9a\x01\n" +
+	"\x11BatchProductError\x12\x14\n" +
+	"\x05index\x18\x01 \x01(\rR\x05index\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12U\n" +
+	"\x10original_product\x18\x03 \x01(\v2*.ecommerce.product.v1.CreateProductRequestR\x0foriginalProduct\"3\n" +
 	"\x12SubmitAuditRequest\x12\x1d\n" +
 	"\n" +
 	"product_id\x18\x01 \x01(\tR\tproductId\"\xc9\x01\n" +
@@ -2073,98 +2116,98 @@ func file_v1_product_proto_rawDescGZIP() []byte {
 }
 
 var file_v1_product_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_v1_product_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_v1_product_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_v1_product_proto_goTypes = []any{
-	(ProductStatus)(0),                    // 0: ecommerce.product.v1.ProductStatus
-	(AuditAction)(0),                      // 1: ecommerce.product.v1.AuditAction
-	(UploadMethod)(0),                     // 2: ecommerce.product.v1.UploadMethod
-	(*UpdateInventoryRequest)(nil),        // 3: ecommerce.product.v1.UpdateInventoryRequest
-	(*UpdateInventoryReply)(nil),          // 4: ecommerce.product.v1.UpdateInventoryReply
-	(*GetCategoryProductsRequest)(nil),    // 5: ecommerce.product.v1.GetCategoryProductsRequest
-	(*UploadProductFileRequest)(nil),      // 6: ecommerce.product.v1.UploadProductFileRequest
-	(*UploadProductFileReply)(nil),        // 7: ecommerce.product.v1.UploadProductFileReply
-	(*ListRandomProductsRequest)(nil),     // 8: ecommerce.product.v1.ListRandomProductsRequest
-	(*SearchProductRequest)(nil),          // 9: ecommerce.product.v1.SearchProductRequest
-	(*Products)(nil),                      // 10: ecommerce.product.v1.Products
-	(*ListProductsByCategoryRequest)(nil), // 11: ecommerce.product.v1.ListProductsByCategoryRequest
-	(*CategoryInfo)(nil),                  // 12: ecommerce.product.v1.CategoryInfo
-	(*Image)(nil),                         // 13: ecommerce.product.v1.Image
-	(*Inventory)(nil),                     // 14: ecommerce.product.v1.Inventory
-	(*Product)(nil),                       // 15: ecommerce.product.v1.Product
-	(*CreateProductReply)(nil),            // 16: ecommerce.product.v1.CreateProductReply
-	(*AuditInfo)(nil),                     // 17: ecommerce.product.v1.AuditInfo
-	(*CreateProductRequest)(nil),          // 18: ecommerce.product.v1.CreateProductRequest
-	(*CreateProductBatchRequest)(nil),     // 19: ecommerce.product.v1.CreateProductBatchRequest
-	(*BatchProductError)(nil),             // 20: ecommerce.product.v1.BatchProductError
-	(*CreateProductBatchReply)(nil),       // 21: ecommerce.product.v1.CreateProductBatchReply
-	(*SubmitAuditRequest)(nil),            // 22: ecommerce.product.v1.SubmitAuditRequest
-	(*AuditProductRequest)(nil),           // 23: ecommerce.product.v1.AuditProductRequest
-	(*GetProductRequest)(nil),             // 24: ecommerce.product.v1.GetProductRequest
-	(*GetProductsBatchRequest)(nil),       // 25: ecommerce.product.v1.GetProductsBatchRequest
-	(*DeleteProductRequest)(nil),          // 26: ecommerce.product.v1.DeleteProductRequest
-	(*AuditRecord)(nil),                   // 27: ecommerce.product.v1.AuditRecord
-	nil,                                   // 28: ecommerce.product.v1.UploadProductFileReply.FormDataEntry
-	(*structpb.Value)(nil),                // 29: google.protobuf.Value
-	(*timestamppb.Timestamp)(nil),         // 30: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 31: google.protobuf.Empty
+	(ProductStatus)(0),                                // 0: ecommerce.product.v1.ProductStatus
+	(AuditAction)(0),                                  // 1: ecommerce.product.v1.AuditAction
+	(UploadMethod)(0),                                 // 2: ecommerce.product.v1.UploadMethod
+	(*UpdateInventoryRequest)(nil),                    // 3: ecommerce.product.v1.UpdateInventoryRequest
+	(*UpdateInventoryReply)(nil),                      // 4: ecommerce.product.v1.UpdateInventoryReply
+	(*GetCategoryProductsRequest)(nil),                // 5: ecommerce.product.v1.GetCategoryProductsRequest
+	(*UploadProductFileRequest)(nil),                  // 6: ecommerce.product.v1.UploadProductFileRequest
+	(*UploadProductFileReply)(nil),                    // 7: ecommerce.product.v1.UploadProductFileReply
+	(*ListRandomProductsRequest)(nil),                 // 8: ecommerce.product.v1.ListRandomProductsRequest
+	(*SearchProductRequest)(nil),                      // 9: ecommerce.product.v1.SearchProductRequest
+	(*Products)(nil),                                  // 10: ecommerce.product.v1.Products
+	(*ListProductsByCategoryRequest)(nil),             // 11: ecommerce.product.v1.ListProductsByCategoryRequest
+	(*CategoryInfo)(nil),                              // 12: ecommerce.product.v1.CategoryInfo
+	(*Image)(nil),                                     // 13: ecommerce.product.v1.Image
+	(*Inventory)(nil),                                 // 14: ecommerce.product.v1.Inventory
+	(*Product)(nil),                                   // 15: ecommerce.product.v1.Product
+	(*CreateProductReply)(nil),                        // 16: ecommerce.product.v1.CreateProductReply
+	(*AuditInfo)(nil),                                 // 17: ecommerce.product.v1.AuditInfo
+	(*CreateProductRequest)(nil),                      // 18: ecommerce.product.v1.CreateProductRequest
+	(*CreateProductBatchRequest)(nil),                 // 19: ecommerce.product.v1.CreateProductBatchRequest
+	(*BatchProductError)(nil),                         // 20: ecommerce.product.v1.BatchProductError
+	(*CreateProductBatchReply)(nil),                   // 21: ecommerce.product.v1.CreateProductBatchReply
+	(*SubmitAuditRequest)(nil),                        // 22: ecommerce.product.v1.SubmitAuditRequest
+	(*AuditProductRequest)(nil),                       // 23: ecommerce.product.v1.AuditProductRequest
+	(*GetProductRequest)(nil),                         // 24: ecommerce.product.v1.GetProductRequest
+	(*GetProductsBatchRequest)(nil),                   // 25: ecommerce.product.v1.GetProductsBatchRequest
+	(*DeleteProductRequest)(nil),                      // 26: ecommerce.product.v1.DeleteProductRequest
+	(*AuditRecord)(nil),                               // 27: ecommerce.product.v1.AuditRecord
+	nil,                                               // 28: ecommerce.product.v1.UploadProductFileReply.FormDataEntry
+	(*CreateProductBatchReply_BatchProductError)(nil), // 29: ecommerce.product.v1.CreateProductBatchReply.BatchProductError
+	(*structpb.Value)(nil),                            // 30: google.protobuf.Value
+	(*timestamppb.Timestamp)(nil),                     // 31: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                             // 32: google.protobuf.Empty
 }
 var file_v1_product_proto_depIdxs = []int32{
 	2,  // 0: ecommerce.product.v1.UploadProductFileRequest.method:type_name -> ecommerce.product.v1.UploadMethod
 	28, // 1: ecommerce.product.v1.UploadProductFileReply.form_data:type_name -> ecommerce.product.v1.UploadProductFileReply.FormDataEntry
 	15, // 2: ecommerce.product.v1.Products.items:type_name -> ecommerce.product.v1.Product
 	13, // 3: ecommerce.product.v1.Product.images:type_name -> ecommerce.product.v1.Image
-	29, // 4: ecommerce.product.v1.Product.attributes:type_name -> google.protobuf.Value
+	30, // 4: ecommerce.product.v1.Product.attributes:type_name -> google.protobuf.Value
 	17, // 5: ecommerce.product.v1.Product.audit_info:type_name -> ecommerce.product.v1.AuditInfo
-	30, // 6: ecommerce.product.v1.Product.created_at:type_name -> google.protobuf.Timestamp
-	30, // 7: ecommerce.product.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
+	31, // 6: ecommerce.product.v1.Product.created_at:type_name -> google.protobuf.Timestamp
+	31, // 7: ecommerce.product.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
 	12, // 8: ecommerce.product.v1.Product.category:type_name -> ecommerce.product.v1.CategoryInfo
 	14, // 9: ecommerce.product.v1.Product.inventory:type_name -> ecommerce.product.v1.Inventory
-	30, // 10: ecommerce.product.v1.CreateProductReply.created_at:type_name -> google.protobuf.Timestamp
-	30, // 11: ecommerce.product.v1.CreateProductReply.updated_at:type_name -> google.protobuf.Timestamp
-	30, // 12: ecommerce.product.v1.AuditInfo.operated_at:type_name -> google.protobuf.Timestamp
+	31, // 10: ecommerce.product.v1.CreateProductReply.created_at:type_name -> google.protobuf.Timestamp
+	31, // 11: ecommerce.product.v1.CreateProductReply.updated_at:type_name -> google.protobuf.Timestamp
+	31, // 12: ecommerce.product.v1.AuditInfo.operated_at:type_name -> google.protobuf.Timestamp
 	13, // 13: ecommerce.product.v1.CreateProductRequest.images:type_name -> ecommerce.product.v1.Image
-	29, // 14: ecommerce.product.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Value
-	30, // 15: ecommerce.product.v1.CreateProductRequest.created_at:type_name -> google.protobuf.Timestamp
-	30, // 16: ecommerce.product.v1.CreateProductRequest.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 17: ecommerce.product.v1.CreateProductRequest.category:type_name -> ecommerce.product.v1.CategoryInfo
-	18, // 18: ecommerce.product.v1.CreateProductBatchRequest.products:type_name -> ecommerce.product.v1.CreateProductRequest
-	15, // 19: ecommerce.product.v1.BatchProductError.original_product:type_name -> ecommerce.product.v1.Product
-	20, // 20: ecommerce.product.v1.CreateProductBatchReply.errors:type_name -> ecommerce.product.v1.BatchProductError
-	1,  // 21: ecommerce.product.v1.AuditProductRequest.action:type_name -> ecommerce.product.v1.AuditAction
-	30, // 22: ecommerce.product.v1.AuditRecord.operated_at:type_name -> google.protobuf.Timestamp
-	6,  // 23: ecommerce.product.v1.ProductService.UploadProductFile:input_type -> ecommerce.product.v1.UploadProductFileRequest
-	18, // 24: ecommerce.product.v1.ProductService.CreateProduct:input_type -> ecommerce.product.v1.CreateProductRequest
-	19, // 25: ecommerce.product.v1.ProductService.CreateProductBatch:input_type -> ecommerce.product.v1.CreateProductBatchRequest
-	22, // 26: ecommerce.product.v1.ProductService.SubmitForAudit:input_type -> ecommerce.product.v1.SubmitAuditRequest
-	23, // 27: ecommerce.product.v1.ProductService.AuditProduct:input_type -> ecommerce.product.v1.AuditProductRequest
-	8,  // 28: ecommerce.product.v1.ProductService.ListRandomProducts:input_type -> ecommerce.product.v1.ListRandomProductsRequest
-	5,  // 29: ecommerce.product.v1.ProductService.GetCategoryProducts:input_type -> ecommerce.product.v1.GetCategoryProductsRequest
-	5,  // 30: ecommerce.product.v1.ProductService.GetCategoryWithChildrenProducts:input_type -> ecommerce.product.v1.GetCategoryProductsRequest
-	25, // 31: ecommerce.product.v1.ProductService.GetProductsBatch:input_type -> ecommerce.product.v1.GetProductsBatchRequest
-	3,  // 32: ecommerce.product.v1.ProductService.UpdateInventory:input_type -> ecommerce.product.v1.UpdateInventoryRequest
-	24, // 33: ecommerce.product.v1.ProductService.GetProduct:input_type -> ecommerce.product.v1.GetProductRequest
-	9,  // 34: ecommerce.product.v1.ProductService.SearchProductsByName:input_type -> ecommerce.product.v1.SearchProductRequest
-	11, // 35: ecommerce.product.v1.ProductService.ListProductsByCategory:input_type -> ecommerce.product.v1.ListProductsByCategoryRequest
-	26, // 36: ecommerce.product.v1.ProductService.DeleteProduct:input_type -> ecommerce.product.v1.DeleteProductRequest
-	7,  // 37: ecommerce.product.v1.ProductService.UploadProductFile:output_type -> ecommerce.product.v1.UploadProductFileReply
-	16, // 38: ecommerce.product.v1.ProductService.CreateProduct:output_type -> ecommerce.product.v1.CreateProductReply
-	21, // 39: ecommerce.product.v1.ProductService.CreateProductBatch:output_type -> ecommerce.product.v1.CreateProductBatchReply
-	27, // 40: ecommerce.product.v1.ProductService.SubmitForAudit:output_type -> ecommerce.product.v1.AuditRecord
-	27, // 41: ecommerce.product.v1.ProductService.AuditProduct:output_type -> ecommerce.product.v1.AuditRecord
-	10, // 42: ecommerce.product.v1.ProductService.ListRandomProducts:output_type -> ecommerce.product.v1.Products
-	10, // 43: ecommerce.product.v1.ProductService.GetCategoryProducts:output_type -> ecommerce.product.v1.Products
-	10, // 44: ecommerce.product.v1.ProductService.GetCategoryWithChildrenProducts:output_type -> ecommerce.product.v1.Products
-	10, // 45: ecommerce.product.v1.ProductService.GetProductsBatch:output_type -> ecommerce.product.v1.Products
-	4,  // 46: ecommerce.product.v1.ProductService.UpdateInventory:output_type -> ecommerce.product.v1.UpdateInventoryReply
-	15, // 47: ecommerce.product.v1.ProductService.GetProduct:output_type -> ecommerce.product.v1.Product
-	10, // 48: ecommerce.product.v1.ProductService.SearchProductsByName:output_type -> ecommerce.product.v1.Products
-	10, // 49: ecommerce.product.v1.ProductService.ListProductsByCategory:output_type -> ecommerce.product.v1.Products
-	31, // 50: ecommerce.product.v1.ProductService.DeleteProduct:output_type -> google.protobuf.Empty
-	37, // [37:51] is the sub-list for method output_type
-	23, // [23:37] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	30, // 14: ecommerce.product.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Value
+	12, // 15: ecommerce.product.v1.CreateProductRequest.category:type_name -> ecommerce.product.v1.CategoryInfo
+	18, // 16: ecommerce.product.v1.CreateProductBatchRequest.products:type_name -> ecommerce.product.v1.CreateProductRequest
+	15, // 17: ecommerce.product.v1.BatchProductError.original_product:type_name -> ecommerce.product.v1.Product
+	29, // 18: ecommerce.product.v1.CreateProductBatchReply.errors:type_name -> ecommerce.product.v1.CreateProductBatchReply.BatchProductError
+	1,  // 19: ecommerce.product.v1.AuditProductRequest.action:type_name -> ecommerce.product.v1.AuditAction
+	31, // 20: ecommerce.product.v1.AuditRecord.operated_at:type_name -> google.protobuf.Timestamp
+	18, // 21: ecommerce.product.v1.CreateProductBatchReply.BatchProductError.original_product:type_name -> ecommerce.product.v1.CreateProductRequest
+	6,  // 22: ecommerce.product.v1.ProductService.UploadProductFile:input_type -> ecommerce.product.v1.UploadProductFileRequest
+	18, // 23: ecommerce.product.v1.ProductService.CreateProduct:input_type -> ecommerce.product.v1.CreateProductRequest
+	19, // 24: ecommerce.product.v1.ProductService.CreateProductBatch:input_type -> ecommerce.product.v1.CreateProductBatchRequest
+	22, // 25: ecommerce.product.v1.ProductService.SubmitForAudit:input_type -> ecommerce.product.v1.SubmitAuditRequest
+	23, // 26: ecommerce.product.v1.ProductService.AuditProduct:input_type -> ecommerce.product.v1.AuditProductRequest
+	8,  // 27: ecommerce.product.v1.ProductService.ListRandomProducts:input_type -> ecommerce.product.v1.ListRandomProductsRequest
+	5,  // 28: ecommerce.product.v1.ProductService.GetCategoryProducts:input_type -> ecommerce.product.v1.GetCategoryProductsRequest
+	5,  // 29: ecommerce.product.v1.ProductService.GetCategoryWithChildrenProducts:input_type -> ecommerce.product.v1.GetCategoryProductsRequest
+	25, // 30: ecommerce.product.v1.ProductService.GetProductsBatch:input_type -> ecommerce.product.v1.GetProductsBatchRequest
+	3,  // 31: ecommerce.product.v1.ProductService.UpdateInventory:input_type -> ecommerce.product.v1.UpdateInventoryRequest
+	24, // 32: ecommerce.product.v1.ProductService.GetProduct:input_type -> ecommerce.product.v1.GetProductRequest
+	9,  // 33: ecommerce.product.v1.ProductService.SearchProductsByName:input_type -> ecommerce.product.v1.SearchProductRequest
+	11, // 34: ecommerce.product.v1.ProductService.ListProductsByCategory:input_type -> ecommerce.product.v1.ListProductsByCategoryRequest
+	26, // 35: ecommerce.product.v1.ProductService.DeleteProduct:input_type -> ecommerce.product.v1.DeleteProductRequest
+	7,  // 36: ecommerce.product.v1.ProductService.UploadProductFile:output_type -> ecommerce.product.v1.UploadProductFileReply
+	16, // 37: ecommerce.product.v1.ProductService.CreateProduct:output_type -> ecommerce.product.v1.CreateProductReply
+	21, // 38: ecommerce.product.v1.ProductService.CreateProductBatch:output_type -> ecommerce.product.v1.CreateProductBatchReply
+	27, // 39: ecommerce.product.v1.ProductService.SubmitForAudit:output_type -> ecommerce.product.v1.AuditRecord
+	27, // 40: ecommerce.product.v1.ProductService.AuditProduct:output_type -> ecommerce.product.v1.AuditRecord
+	10, // 41: ecommerce.product.v1.ProductService.ListRandomProducts:output_type -> ecommerce.product.v1.Products
+	10, // 42: ecommerce.product.v1.ProductService.GetCategoryProducts:output_type -> ecommerce.product.v1.Products
+	10, // 43: ecommerce.product.v1.ProductService.GetCategoryWithChildrenProducts:output_type -> ecommerce.product.v1.Products
+	10, // 44: ecommerce.product.v1.ProductService.GetProductsBatch:output_type -> ecommerce.product.v1.Products
+	4,  // 45: ecommerce.product.v1.ProductService.UpdateInventory:output_type -> ecommerce.product.v1.UpdateInventoryReply
+	15, // 46: ecommerce.product.v1.ProductService.GetProduct:output_type -> ecommerce.product.v1.Product
+	10, // 47: ecommerce.product.v1.ProductService.SearchProductsByName:output_type -> ecommerce.product.v1.Products
+	10, // 48: ecommerce.product.v1.ProductService.ListProductsByCategory:output_type -> ecommerce.product.v1.Products
+	32, // 49: ecommerce.product.v1.ProductService.DeleteProduct:output_type -> google.protobuf.Empty
+	36, // [36:50] is the sub-list for method output_type
+	22, // [22:36] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_v1_product_proto_init() }
@@ -2180,7 +2223,7 @@ func file_v1_product_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_product_proto_rawDesc), len(file_v1_product_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   26,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

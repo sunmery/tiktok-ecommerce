@@ -201,7 +201,6 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 		Status:      int16(req.Status),
 		MerchantID:  req.MerchantId,
 		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
-
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
@@ -254,59 +253,152 @@ func (p *productRepo) CreateProduct(ctx context.Context, req *biz.CreateProductR
 }
 
 func (p *productRepo) CreateProductBatch(ctx context.Context, req *biz.CreateProductBatchRequest) (*biz.CreateProductBatchReply, error) {
-	var result models.CreateProductRow
-	// categoryID        uint64
-	// createdCategoryID uint64 // 记录新创建的分类 ID（用于补偿）
-	// 获取事务版 DB 操作
+	var (
+		successCount  uint32
+		failedCount   uint32
+		productErrors []*biz.BatchProductError
+		productIds    []uuid.UUID
+		mutex         sync.Mutex // 保护共享变量
+	)
+
+	// 预先获取所有分类ID，减少跨服务调用
+	categoryIds := make(map[uint64]bool)
+	for _, pr := range req.Products {
+		if pr.Category.CategoryId > 0 {
+			categoryIds[pr.Category.CategoryId] = true
+		}
+	}
+
+	// 批量获取分类信息
+	var categoryMap map[uint64]bool
+	if len(categoryIds) > 0 {
+		ids := make([]int64, 0, len(categoryIds))
+		for id := range categoryIds {
+			ids = append(ids, int64(id))
+		}
+
+		categoriesResp, err := p.data.categoryClient.BatchGetCategories(ctx, &category.BatchGetCategoriesRequest{
+			Ids: ids,
+		})
+		if err != nil {
+			p.log.WithContext(ctx).Warnf("批量获取分类信息失败: %v", err)
+		} else {
+			categoryMap = make(map[uint64]bool)
+			for _, cat := range categoriesResp.Categories {
+				categoryMap[uint64(cat.Id)] = true
+			}
+		}
+	}
+
 	db := p.data.DB(ctx)
 
-	// Step 1: 获取或创建分类（跨服务操作）
-	_, err = p.data.categoryClient.GetCategory(ctx, &category.GetCategoryRequest{
-		Id: req.Category.CategoryId,
-	})
-	if status.Code(err) == codes.NotFound {
+	// 设置并发处理的goroutine数量上限
+	workerCount := 5
+	if len(req.Products) < workerCount {
+		workerCount = len(req.Products)
+	}
+
+	// 创建工作池
+	var wg sync.WaitGroup
+	productCh := make(chan *biz.ProductDraft, len(req.Products))
+
+	// 错误处理通道
+	errorCh := make(chan error, len(req.Products))
+
+	// 启动工作协程
+	for i := 0; i < workerCount; i++ {
+		wg.Add(1)
+		go func(workerId int) {
+			defer wg.Done()
+			for pr := range productCh {
+				// 处理单个商品
+				productId, err := p.processProduct(ctx, pr, categoryMap, db)
+				if err != nil {
+					p.log.WithContext(ctx).Errorf("工作协程 %d 处理商品失败: %v", workerId, err)
+					errorCh <- err
+					continue
+				}
+
+				// 更新成功计数和ID列表
+				mutex.Lock()
+				successCount++
+				productIds = append(productIds, productId)
+				mutex.Unlock()
+			}
+		}(i)
+	}
+
+	// 发送商品到通道
+	for i, pr := range req.Products {
+		select {
+		case productCh <- pr:
+			// 成功发送到通道
+		case err := <-errorCh:
+			// 处理错误
+			mutex.Lock()
+			failedCount++
+			productErrors = append(productErrors, &biz.BatchProductError{
+				Index:           i,
+				Message:         err.Error(),
+				OriginalProduct: pr,
+			})
+			mutex.Unlock()
+		}
+	}
+
+	// 关闭通道
+	close(productCh)
+
+	// 等待所有工作协程完成
+	wg.Wait()
+
+	// 处理剩余的错误
+	close(errorCh)
+	for err := range errorCh {
+		p.log.WithContext(ctx).Errorf("批量创建商品错误: %v", err)
+		failedCount++
+	}
+
+	return &biz.CreateProductBatchReply{
+		SuccessCount: successCount,
+		FailedCount:  failedCount,
+		Errors:       productErrors,
+		ProductIds:   productIds,
+	}, nil
+}
+
+// processProduct 处理单个商品创建
+func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, categoryMap map[uint64]bool, db *models.Queries) (uuid.UUID, error) {
+	// 检查分类是否存在
+	if pr.Category.CategoryId > 0 && !categoryMap[pr.Category.CategoryId] {
 		// 创建新分类（跨服务操作）
-		var createErr error
-		_, createErr = p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
-			Name:      req.Category.CategoryName,
-			SortOrder: req.Category.SortOrder,
+		newCategory, createErr := p.data.categoryClient.CreateCategory(ctx, &category.CreateCategoryRequest{
+			Name:      pr.Category.CategoryName,
+			SortOrder: pr.Category.SortOrder,
 		})
 		if createErr != nil {
-			return nil, fmt.Errorf("create category failed: %w", createErr)
+			return uuid.Nil, fmt.Errorf("创建分类失败: %w", createErr)
 		}
-		// categoryID = uint64(newCategory.Id)
-		// createdCategoryID = categoryID // 记录新创建的分类 ID
-	} else if err != nil {
-		return nil, fmt.Errorf("get category failed: %w", err)
+		// 更新分类ID
+		pr.Category.CategoryId = uint64(newCategory.Id)
 	}
-
-	// else {
-	// 	categoryID = uint64(getCategory.Id)
-	// }
-
-	// Step 2: 执行本地事务（商品相关操作）
-
-	// // 执行本地数据库事务（包裹商品、图片、属性、库存）
-	// txErr := p.data.ExecTx(ctx, func(ctx context.Context) error {
-	// 注意：这里使用 ctx 作为上下文
 
 	// 1. 创建商品
-	price, err := types.Float64ToNumeric(req.Price)
+	price, err := types.Float64ToNumeric(pr.Price)
 	if err != nil {
-		return nil, fmt.Errorf("invalid price format: %w", err)
+		return uuid.Nil, fmt.Errorf("价格格式无效: %w", err)
 	}
 
-	result, err = db.CreateProduct(ctx, models.CreateProductParams{
-		Name:        req.Name,
-		Description: &req.Description,
+	result, err := db.CreateProduct(ctx, models.CreateProductParams{
+		Name:        pr.Name,
+		Description: &pr.Description,
 		Price:       price,
-		Status:      int16(req.Status),
-		MerchantID:  req.MerchantId,
-		CategoryID:  int64(req.Category.CategoryId), // 假设分类 ID 已存在
-
+		Status:      int16(pr.Status),
+		MerchantID:  pr.MerchantId,
+		CategoryID:  int64(pr.Category.CategoryId),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create product: %w", err)
+		return uuid.Nil, fmt.Errorf("创建商品失败: %w", err)
 	}
 
 	// 2. 并行创建图片、属性、库存
@@ -314,20 +406,20 @@ func (p *productRepo) CreateProductBatch(ctx context.Context, req *biz.CreatePro
 
 	// 插入图片
 	eg.Go(func() error {
-		if len(req.Images) > 0 {
-			return p.createProductImages(ctx, result.ID, req.MerchantId, req.Images)
+		if len(pr.Images) > 0 {
+			return p.createProductImages(ctx, result.ID, pr.MerchantId, pr.Images)
 		}
 		return nil
 	})
 
 	// 插入属性
 	eg.Go(func() error {
-		attributes, err := json.Marshal(req.Attributes)
+		attributes, err := json.Marshal(pr.Attributes)
 		if err != nil {
-			return fmt.Errorf("marshal attributes failed: %w", err)
+			return fmt.Errorf("序列化属性失败: %w", err)
 		}
 		return db.CreateProductAttribute(ctx, models.CreateProductAttributeParams{
-			MerchantID: req.MerchantId,
+			MerchantID: pr.MerchantId,
 			ProductID:  result.ID,
 			Attributes: attributes,
 		})
@@ -337,22 +429,18 @@ func (p *productRepo) CreateProductBatch(ctx context.Context, req *biz.CreatePro
 	eg.Go(func() error {
 		_, err = db.CreateInventory(ctx, models.CreateInventoryParams{
 			ProductID:  result.ID,
-			MerchantID: req.MerchantId,
-			Stock:      int32(req.Stock),
+			MerchantID: pr.MerchantId,
+			Stock:      int32(pr.Stock),
 		})
 		return err
 	})
 
 	err = eg.Wait()
 	if err != nil {
-		return nil, err
+		return uuid.Nil, err
 	}
 
-	return &biz.CreateProductBatchReply{
-		SuccessCount:      0,
-		FailedCount:       0,
-		BatchProductError: biz.BatchProductError{},
-	}, nil
+	return result.ID, nil
 }
 
 func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRequest) (*biz.AuditRecord, error) {
