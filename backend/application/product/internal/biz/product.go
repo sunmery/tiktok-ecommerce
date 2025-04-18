@@ -245,10 +245,43 @@ type GetCategoryWithChildrenProducts struct {
 	PageSize   int64
 }
 
+type (
+	ProductDraft struct {
+		Name           string
+		Description    string
+		Price          float64
+		CurrentAuditID *string // 使用指针处理空值
+		Stock          uint32
+		MerchantId     uuid.UUID
+		Status         ProductStatus
+		Attributes     map[string]interface{}
+		Category       CategoryInfo
+		Images         []*ProductImage
+	}
+
+	BatchProductError struct {
+		Index           int
+		Message         string
+		OriginalProduct *ProductDraft
+	}
+
+	CreateProductBatchRequest struct {
+		Products []*ProductDraft
+	}
+
+	CreateProductBatchReply struct {
+		SuccessCount uint32
+		FailedCount  uint32
+		Errors       []*BatchProductError
+		ProductIds   []uuid.UUID
+	}
+)
+
 // ProductRepo is a Greater repo.
 type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
+	CreateProductBatch(ctx context.Context, req *CreateProductBatchRequest) (*CreateProductBatchReply, error)
 	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
 	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
@@ -283,6 +316,11 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
 	// p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
+}
+
+func (p *ProductUsecase) CreateProductBatch(ctx context.Context, req *CreateProductBatchRequest) (*CreateProductBatchReply, error) {
+	p.log.WithContext(ctx).Debugf("CreateProductBatch: %v", req)
+	return p.repo.CreateProductBatch(ctx, req)
 }
 
 func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error) {

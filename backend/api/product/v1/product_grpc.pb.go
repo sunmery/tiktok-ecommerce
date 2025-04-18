@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	ProductService_UploadProductFile_FullMethodName               = "/ecommerce.product.v1.ProductService/UploadProductFile"
 	ProductService_CreateProduct_FullMethodName                   = "/ecommerce.product.v1.ProductService/CreateProduct"
+	ProductService_CreateProductBatch_FullMethodName              = "/ecommerce.product.v1.ProductService/CreateProductBatch"
 	ProductService_SubmitForAudit_FullMethodName                  = "/ecommerce.product.v1.ProductService/SubmitForAudit"
 	ProductService_AuditProduct_FullMethodName                    = "/ecommerce.product.v1.ProductService/AuditProduct"
 	ProductService_ListRandomProducts_FullMethodName              = "/ecommerce.product.v1.ProductService/ListRandomProducts"
@@ -45,6 +46,8 @@ type ProductServiceClient interface {
 	UploadProductFile(ctx context.Context, in *UploadProductFileRequest, opts ...grpc.CallOption) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductReply, error)
+	// 批量创建商品（草稿状态）
+	CreateProductBatch(ctx context.Context, in *CreateProductBatchRequest, opts ...grpc.CallOption) (*CreateProductBatchReply, error)
 	// 提交商品审核
 	SubmitForAudit(ctx context.Context, in *SubmitAuditRequest, opts ...grpc.CallOption) (*AuditRecord, error)
 	// 审核商品
@@ -91,6 +94,16 @@ func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProd
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateProductReply)
 	err := c.cc.Invoke(ctx, ProductService_CreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) CreateProductBatch(ctx context.Context, in *CreateProductBatchRequest, opts ...grpc.CallOption) (*CreateProductBatchReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateProductBatchReply)
+	err := c.cc.Invoke(ctx, ProductService_CreateProductBatch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +230,8 @@ type ProductServiceServer interface {
 	UploadProductFile(context.Context, *UploadProductFileRequest) (*UploadProductFileReply, error)
 	// 创建商品（草稿状态）
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error)
+	// 批量创建商品（草稿状态）
+	CreateProductBatch(context.Context, *CreateProductBatchRequest) (*CreateProductBatchReply, error)
 	// 提交商品审核
 	SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error)
 	// 审核商品
@@ -254,6 +269,9 @@ func (UnimplementedProductServiceServer) UploadProductFile(context.Context, *Upl
 }
 func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
+}
+func (UnimplementedProductServiceServer) CreateProductBatch(context.Context, *CreateProductBatchRequest) (*CreateProductBatchReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProductBatch not implemented")
 }
 func (UnimplementedProductServiceServer) SubmitForAudit(context.Context, *SubmitAuditRequest) (*AuditRecord, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitForAudit not implemented")
@@ -341,6 +359,24 @@ func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).CreateProduct(ctx, req.(*CreateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_CreateProductBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).CreateProductBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_CreateProductBatch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).CreateProductBatch(ctx, req.(*CreateProductBatchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -557,6 +593,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateProduct",
 			Handler:    _ProductService_CreateProduct_Handler,
+		},
+		{
+			MethodName: "CreateProductBatch",
+			Handler:    _ProductService_CreateProductBatch_Handler,
 		},
 		{
 			MethodName: "SubmitForAudit",

@@ -92,6 +92,37 @@
         "tags": [
           "ProductService"
         ]
+      },
+      "put": {
+        "summary": "批量创建商品（草稿状态）",
+        "operationId": "ProductService_CreateProductBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateProductBatchReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateProductBatchRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
       }
     },
     "/v1/products/batch": {
@@ -696,6 +727,54 @@
       },
       "title": "新增分类验证相关定义"
     },
+    "v1CreateProductBatchReply": {
+      "type": "object",
+      "properties": {
+        "successCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "failedCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CreateProductBatchReplyBatchProductError"
+          }
+        }
+      }
+    },
+    "v1CreateProductBatchReplyBatchProductError": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "originalProduct": {
+          "$ref": "#/definitions/v1CreateProductRequest",
+          "title": "原始商品信息"
+        }
+      }
+    },
+    "v1CreateProductBatchRequest": {
+      "type": "object",
+      "properties": {
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CreateProductRequest"
+          }
+        }
+      }
+    },
     "v1CreateProductReply": {
       "type": "object",
       "properties": {
@@ -744,15 +823,6 @@
           "title": "商品图片列表"
         },
         "attributes": {},
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "时间戳"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
         "category": {
           "$ref": "#/definitions/v1CategoryInfo"
         }
