@@ -11,8 +11,8 @@ import (
 type Querier interface {
 	//CreateComment
 	//
-	//  INSERT INTO comments.comments (product_id, merchant_id, user_id, score, content)
-	//  VALUES ($1, $2, $3, $4, $5)
+	//  INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
+	//  VALUES ($1, $2, $3, $4, $5, $6)
 	//  RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
 	CreateComment(ctx context.Context, arg CreateCommentParams) (CommentsComments, error)
 	//DeleteComment
@@ -34,17 +34,17 @@ type Querier interface {
 	//  SELECT id, product_id, merchant_id, user_id, score, content, created_at, updated_at
 	//  FROM comments.comments
 	//  WHERE product_id = $1
-	//    AND merchant_id = $4
+	//    AND merchant_id = $2
 	//  ORDER BY created_at DESC
-	//  LIMIT $2 OFFSET $3
+	//  LIMIT $4 OFFSET $3
 	GetCommentsByProduct(ctx context.Context, arg GetCommentsByProductParams) ([]CommentsComments, error)
 	//UpdateComment
 	//
 	//  UPDATE comments.comments
-	//  SET score      = COALESCE($2, score),
-	//      content    = COALESCE($3, content),
-	//      updated_at = CURRENT_TIMESTAMP
-	//  WHERE id = $1
+	//  SET score      = COALESCE($1, score),
+	//      content    = COALESCE($2, content),
+	//      updated_at = NOW()
+	//  WHERE id = $3
 	//    AND user_id = $4
 	//  RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
 	UpdateComment(ctx context.Context, arg UpdateCommentParams) (CommentsComments, error)

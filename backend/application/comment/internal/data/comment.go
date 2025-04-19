@@ -3,6 +3,8 @@ package data
 import (
 	"context"
 
+	"backend/application/comment/internal/pkg"
+
 	"backend/application/comment/internal/data/models"
 
 	"backend/application/comment/internal/biz"
@@ -18,6 +20,7 @@ type commentRepo struct {
 
 func (c commentRepo) CreateComment(ctx context.Context, req *biz.CreateCommentRequest) (*biz.Comment, error) {
 	comment, err := c.data.db.CreateComment(ctx, models.CreateCommentParams{
+		ID:         pkg.SnowflakeID(),
 		ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
 		UserID:     req.UserId,
@@ -42,17 +45,17 @@ func (c commentRepo) CreateComment(ctx context.Context, req *biz.CreateCommentRe
 
 func (c commentRepo) GetComments(ctx context.Context, req *biz.GetCommentsRequest) (*biz.GetCommentsResponse, error) {
 	// 计算分页参数
-	offset := (req.Page - 1) * req.PageSize
-	if offset < 0 {
-		offset = 0
+	page := (req.Page - 1) * req.PageSize
+	if page < 0 {
+		page = 0
 	}
 
 	// 获取评论列表
 	comments, err := c.data.db.GetCommentsByProduct(ctx, models.GetCommentsByProductParams{
 		ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
-		Limit:      req.PageSize,
-		Offset:     offset,
+		PageSize:   req.PageSize,
+		Page:       page,
 	})
 	if err != nil {
 		return nil, err

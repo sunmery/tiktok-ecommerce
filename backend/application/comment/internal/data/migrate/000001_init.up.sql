@@ -3,7 +3,7 @@ SET search_path TO comments;
 
 CREATE TABLE comments.comments
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          BIGINT PRIMARY KEY,
     product_id  UUID      NOT NULL,                               -- 商品 ID
     merchant_id UUID      NOT NULL,                               -- 商家 ID
     user_id     UUID      NOT NULL,                               -- 用户 ID
