@@ -4,4 +4,5 @@ const (
 	ProductServiceNode = 1
 	OrderServiceNode   = 2
 	PaymentServiceNode = 3
+	CommentServiceNode = 4
 )

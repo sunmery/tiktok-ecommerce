@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package ecommerce.comment.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "backend/api/comment/v1;commentv1";
+
+service Comment {
+  // 创建评论
+  rpc CreateComment(CreateCommentRequest) returns (CommentType) {
+    option (google.api.http) = {
+      post: "/v1/comments"
+      body: "*"
+    };
+  };
+
+  // 获取评论
+  rpc GetComments(GetCommentsRequest) returns (GetCommentsResponse){
+    option (google.api.http) = {
+      get: "/v1/comments"
+    };
+  };
+
+  // 更新评论
+  rpc UpdateComment(UpdateCommentRequest) returns (CommentType){
+    option (google.api.http) = {
+      put: "/v1/comments/{comment_id}"
+      body: "*"
+    };
+  };
+
+  // 删除评论
+  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse){
+    option (google.api.http) = {
+      delete: "/v1/comments/{comment_id}"
+    };
+  };
+}
+
+message CommentType {
+  int64 id = 1;
+  string product_id = 2;
+  string merchant_id = 3;
+  string user_id = 4;
+  uint32 score = 5;
+  string content = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message CreateCommentRequest {
+  string product_id = 1;
+  string merchant_id = 5;
+  string user_id = 2;
+  uint32 score = 3;
+  string content = 4;
+}
+
+message GetCommentsRequest {
+  string product_id = 1;
+  string merchant_id = 4;
+  uint32 page = 2;
+  uint32 page_size = 3;
+}
+
+message GetCommentsResponse {
+  repeated CommentType comments = 1;
+  uint32 total = 2;
+}
+
+message UpdateCommentRequest {
+  int64 comment_id = 1;
+  string user_id = 2;
+  int32 score = 3;
+  string content = 4;
+}
+
+message DeleteCommentRequest {
+  int64 comment_id = 1;
+  string user_id = 2;
+}
+
+message DeleteCommentResponse {
+  bool success = 1;
+}

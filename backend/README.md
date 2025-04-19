@@ -14,6 +14,8 @@ https://i0jecrneytu.feishu.cn/docx/WoStdOA3zo7KF1xnOM5caU8cnUg?from=from_copylin
 - assistant: 30017,30018
 - merchants: 30019,30020
 - admin: 30021, 30022
+- comment: 30023, 30024
+
 ## 启动基础设施
 ```bash
 make infra
