@@ -8,7 +8,6 @@ package commentv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -113,15 +112,12 @@ type UnimplementedCommentServer struct{}
 func (UnimplementedCommentServer) CreateComment(context.Context, *CreateCommentRequest) (*CommentType, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateComment not implemented")
 }
-
 func (UnimplementedCommentServer) GetComments(context.Context, *GetCommentsRequest) (*GetCommentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetComments not implemented")
 }
-
 func (UnimplementedCommentServer) UpdateComment(context.Context, *UpdateCommentRequest) (*CommentType, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateComment not implemented")
 }
-
 func (UnimplementedCommentServer) DeleteComment(context.Context, *DeleteCommentRequest) (*DeleteCommentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteComment not implemented")
 }

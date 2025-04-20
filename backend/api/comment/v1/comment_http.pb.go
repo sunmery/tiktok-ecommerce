@@ -8,26 +8,21 @@ package commentv1
 
 import (
 	context "context"
-
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
 )
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the kratos package it is being compiled against.
-var (
-	_ = new(context.Context)
-	_ = binding.EncodeURL
-)
+var _ = new(context.Context)
+var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const (
-	OperationCommentCreateComment = "/ecommerce.comment.v1.Comment/CreateComment"
-	OperationCommentDeleteComment = "/ecommerce.comment.v1.Comment/DeleteComment"
-	OperationCommentGetComments   = "/ecommerce.comment.v1.Comment/GetComments"
-	OperationCommentUpdateComment = "/ecommerce.comment.v1.Comment/UpdateComment"
-)
+const OperationCommentCreateComment = "/ecommerce.comment.v1.Comment/CreateComment"
+const OperationCommentDeleteComment = "/ecommerce.comment.v1.Comment/DeleteComment"
+const OperationCommentGetComments = "/ecommerce.comment.v1.Comment/GetComments"
+const OperationCommentUpdateComment = "/ecommerce.comment.v1.Comment/UpdateComment"
 
 type CommentHTTPServer interface {
 	// CreateComment 创建评论
