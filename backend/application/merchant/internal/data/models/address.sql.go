@@ -277,45 +277,6 @@ func (q *Queries) GetAddress(ctx context.Context, arg GetAddressParams) (Merchan
 	return i, err
 }
 
-const GetShippingAddress = `-- name: GetShippingAddress :one
-SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
-FROM merchant.addresses
-WHERE merchant_id = $1
-  AND address_type = 'WAREHOUSE'
-ORDER BY is_default DESC, created_at DESC
-LIMIT 1
-`
-
-// 智能获取发货地址
-//
-//	SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
-//	FROM merchant.addresses
-//	WHERE merchant_id = $1
-//	  AND address_type = 'WAREHOUSE'
-//	ORDER BY is_default DESC, created_at DESC
-//	LIMIT 1
-func (q *Queries) GetShippingAddress(ctx context.Context, merchantID uuid.UUID) (MerchantAddresses, error) {
-	row := q.db.QueryRow(ctx, GetShippingAddress, merchantID)
-	var i MerchantAddresses
-	err := row.Scan(
-		&i.ID,
-		&i.MerchantID,
-		&i.AddressType,
-		&i.ContactPerson,
-		&i.ContactPhone,
-		&i.StreetAddress,
-		&i.City,
-		&i.State,
-		&i.Country,
-		&i.ZipCode,
-		&i.IsDefault,
-		&i.Remarks,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const ListAddresses = `-- name: ListAddresses :many
 SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 FROM merchant.addresses

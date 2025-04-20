@@ -221,15 +221,9 @@ func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListAddresse
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
 	}
 
-	var addressType *biz.AddressType
-	if req.AddressType != pb.Address_WAREHOUSE {
-		at := biz.AddressType(convertAddressType(int32(req.AddressType)))
-		addressType = &at
-	}
-
 	result, err := s.ac.ListMerchantAddresses(ctx, &biz.ListMerchantAddressesRequestn{
 		MerchantId:  merchantId,
-		AddressType: addressType,
+		AddressType: biz.AddressType(convertAddressType(int32(req.AddressType))),
 		OnlyDefault: req.OnlyDefault,
 		Page:        req.Page,
 		PageSize:    req.PageSize,
@@ -292,10 +286,6 @@ func (s *AddressService) SetDefaultAddress(ctx context.Context, req *pb.SetDefau
 		CreatedAt:     timestamppb.New(address.CreatedAt),
 		UpdatedAt:     timestamppb.New(address.UpdatedAt),
 	}, nil
-}
-
-func (s *AddressService) GetShippingAddress(ctx context.Context, req *pb.GetShippingAddressRequest) (*pb.Address, error) {
-	return &pb.Address{}, nil
 }
 
 func convertAddressType(AddressType int32) string {

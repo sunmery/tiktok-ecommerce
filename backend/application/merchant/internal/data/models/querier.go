@@ -186,15 +186,6 @@ type Querier interface {
 	//  WHERE p.id = $1::uuid
 	//    AND p.merchant_id = $2::uuid
 	GetProductStock(ctx context.Context, arg GetProductStockParams) (GetProductStockRow, error)
-	// 智能获取发货地址
-	//
-	//  SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
-	//  FROM merchant.addresses
-	//  WHERE merchant_id = $1
-	//    AND address_type = 'WAREHOUSE'
-	//  ORDER BY is_default DESC, created_at DESC
-	//  LIMIT 1
-	GetShippingAddress(ctx context.Context, merchantID uuid.UUID) (MerchantAddresses, error)
 	// 获取库存调整历史
 	// WHERE sa.product_id = @product_id::uuid
 	//

@@ -84,7 +84,7 @@ type (
 
 	ListMerchantAddressesRequestn struct {
 		MerchantId  uuid.UUID
-		AddressType *AddressType
+		AddressType AddressType
 		OnlyDefault bool
 		Page        uint32
 		PageSize    uint32
@@ -133,46 +133,39 @@ type AddressRepo interface {
 	ListMerchantAddresses(ctx context.Context, req *ListMerchantAddressesRequestn) (*ListMerchantAddressesResponse, error)
 	// SetDefaultAddress 设置默认地址（按地址类型）
 	SetDefaultAddress(ctx context.Context, req *SetDefaultAddressRequestn) (*MerchantAddress, error)
-	// GetShippingAddress 获取发货地址（智能选择逻辑）
-	GetShippingAddress(ctx context.Context, req *GetShippingAddressRequestn) (*MerchantAddress, error)
 }
 
 func (uc *AddressUsecase) CreateMerchantAddress(ctx context.Context, req *MerchantAddressn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("CreateMerchantAddress: %+v", req)
 	return uc.repo.CreateMerchantAddress(ctx, req)
 }
 
 func (uc *AddressUsecase) BatchCreateAddresses(ctx context.Context, req *BatchCreateAddressesRequestn) (*BatchCreateAddressesResponse, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("BatchCreateAddresses: %+v", req)
 	return uc.repo.BatchCreateAddresses(ctx, req)
 }
 
 func (uc *AddressUsecase) UpdateMerchantAddress(ctx context.Context, req *MerchantAddressn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("UpdateMerchantAddress: %+v", req)
 	return uc.repo.UpdateMerchantAddress(ctx, req)
 }
 
 func (uc *AddressUsecase) DeleteMerchantAddress(ctx context.Context, req *DeleteMerchantAddressRequestn) (*emptypb.Empty, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("DeleteMerchantAddress: %+v", req)
 	return uc.repo.DeleteMerchantAddress(ctx, req)
 }
 
 func (uc *AddressUsecase) GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequestn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("GetMerchantAddress: %+v", req)
 	return uc.repo.GetMerchantAddress(ctx, req)
 }
 
 func (uc *AddressUsecase) ListMerchantAddresses(ctx context.Context, req *ListMerchantAddressesRequestn) (*ListMerchantAddressesResponse, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("ListMerchantAddresses: %+v", req)
 	return uc.repo.ListMerchantAddresses(ctx, req)
 }
 
 func (uc *AddressUsecase) SetDefaultAddress(ctx context.Context, req *SetDefaultAddressRequestn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
+	uc.log.WithContext(ctx).Debugf("SetDefaultAddress: %+v", req)
 	return uc.repo.SetDefaultAddress(ctx, req)
-}
-
-func (uc *AddressUsecase) GetShippingAddress(ctx context.Context, req *GetShippingAddressRequestn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Infof("CreateMerchantAddress: %+v", req)
-	return uc.repo.GetShippingAddress(ctx, req)
 }

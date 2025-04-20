@@ -52,7 +52,7 @@
           },
           {
             "name": "onlyDefault",
-            "description": "只获取默认地址",
+            "description": "是否只获取默认地址",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -135,45 +135,6 @@
             "schema": {
               "$ref": "#/definitions/v1BatchCreateAddressesRequest"
             }
-          }
-        ],
-        "tags": [
-          "MerchantAddress"
-        ]
-      }
-    },
-    "/v1/merchants/addresses/shipping": {
-      "get": {
-        "summary": "获取发货地址（智能选择逻辑）",
-        "operationId": "MerchantAddress_GetShippingAddress",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "orderType",
-            "description": "订单类型（NORMAL/EXPRESS等）",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "productCategory",
-            "description": "商品类别（影响仓库选择）",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [

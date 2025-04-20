@@ -64,13 +64,6 @@ service MerchantAddress {
       body: "*"
     };
   }
-
-  // 获取发货地址（智能选择逻辑）
-  rpc GetShippingAddress(GetShippingAddressRequest) returns (Address) {
-    option (google.api.http) = {
-      get: "/v1/merchants/addresses/shipping"
-    };
-  }
 }
 
 // 商家地址数据结构
@@ -154,7 +147,7 @@ message GetAddressRequest {
 // 地址列表请求（支持分页和过滤）
 message ListAddressesRequest {
   Address.AddressType address_type = 2; // 按类型过滤
-  bool only_default = 3; // 只获取默认地址
+  bool only_default = 3; // 是否只获取默认地址
 
   // 分页参数
   uint32 page = 4 [
@@ -178,10 +171,4 @@ message ListAddressesResponse {
 // 设置默认地址请求
 message SetDefaultAddressRequest {
   int64 id = 1;
-}
-
-// 智能获取发货地址请求
-message GetShippingAddressRequest {
-  string order_type = 2; // 订单类型（NORMAL/EXPRESS等）
-  string product_category = 3; // 商品类别（影响仓库选择）
 }

@@ -98,12 +98,3 @@ UPDATE merchant.addresses
 SET is_default = true
 WHERE id = @id
 RETURNING *;
-
--- 智能获取发货地址
--- name: GetShippingAddress :one
-SELECT *
-FROM merchant.addresses
-WHERE merchant_id = $1
-  AND address_type = 'WAREHOUSE'
-ORDER BY is_default DESC, created_at DESC
-LIMIT 1;

@@ -177,14 +177,9 @@ func (a addressRepo) GetMerchantAddress(ctx context.Context, req *biz.GetMerchan
 }
 
 func (a addressRepo) ListMerchantAddresses(ctx context.Context, req *biz.ListMerchantAddressesRequestn) (*biz.ListMerchantAddressesResponse, error) {
-	addressType := ""
-	if req.AddressType != nil {
-		addressType = string(*req.AddressType)
-	}
-
 	addresses, err := a.data.db.ListAddresses(ctx, models.ListAddressesParams{
 		MerchantID:  req.MerchantId,
-		AddressType: addressType,
+		AddressType: string(req.AddressType),
 		IsDefault:   req.OnlyDefault,
 		Limit:       int64(req.PageSize),
 		Offset:      int64((req.Page - 1) * req.PageSize),
@@ -221,29 +216,6 @@ func (a addressRepo) SetDefaultAddress(ctx context.Context, req *biz.SetDefaultA
 		MerchantID: merchantId,
 		ID:         &req.Id,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &biz.MerchantAddress{
-		Id:            address.ID,
-		MerchantId:    address.MerchantID.String(),
-		AddressType:   biz.AddressType(address.AddressType),
-		ContactPerson: address.ContactPerson,
-		ContactPhone:  address.ContactPhone,
-		StreetAddress: address.StreetAddress,
-		City:          address.City,
-		State:         address.State,
-		Country:       address.Country,
-		ZipCode:       address.ZipCode,
-		IsDefault:     address.IsDefault,
-		CreatedAt:     address.CreatedAt.Time,
-		UpdatedAt:     address.UpdatedAt.Time,
-	}, nil
-}
-
-func (a addressRepo) GetShippingAddress(ctx context.Context, req *biz.GetShippingAddressRequestn) (*biz.MerchantAddress, error) {
-	address, err := a.data.db.GetShippingAddress(ctx, req.MerchantId)
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,6 @@ const OperationMerchantAddressBatchCreateAddresses = "/ecommerce.merchant.v1.Mer
 const OperationMerchantAddressCreateAddress = "/ecommerce.merchant.v1.MerchantAddress/CreateAddress"
 const OperationMerchantAddressDeleteAddress = "/ecommerce.merchant.v1.MerchantAddress/DeleteAddress"
 const OperationMerchantAddressGetAddress = "/ecommerce.merchant.v1.MerchantAddress/GetAddress"
-const OperationMerchantAddressGetShippingAddress = "/ecommerce.merchant.v1.MerchantAddress/GetShippingAddress"
 const OperationMerchantAddressListAddresses = "/ecommerce.merchant.v1.MerchantAddress/ListAddresses"
 const OperationMerchantAddressSetDefaultAddress = "/ecommerce.merchant.v1.MerchantAddress/SetDefaultAddress"
 const OperationMerchantAddressUpdateAddress = "/ecommerce.merchant.v1.MerchantAddress/UpdateAddress"
@@ -38,8 +37,6 @@ type MerchantAddressHTTPServer interface {
 	DeleteAddress(context.Context, *DeleteAddressRequest) (*emptypb.Empty, error)
 	// GetAddress 获取单个地址详情
 	GetAddress(context.Context, *GetAddressRequest) (*Address, error)
-	// GetShippingAddress 获取发货地址（智能选择逻辑）
-	GetShippingAddress(context.Context, *GetShippingAddressRequest) (*Address, error)
 	// ListAddresses 列出商家所有地址（支持按类型过滤）
 	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesResponse, error)
 	// SetDefaultAddress 设置默认地址（按地址类型）
@@ -57,7 +54,6 @@ func RegisterMerchantAddressHTTPServer(s *http.Server, srv MerchantAddressHTTPSe
 	r.GET("/v1/merchants/addresses/{id}", _MerchantAddress_GetAddress0_HTTP_Handler(srv))
 	r.GET("/v1/merchants/addresses", _MerchantAddress_ListAddresses0_HTTP_Handler(srv))
 	r.PUT("/v1/merchants/addresses/{id}/default", _MerchantAddress_SetDefaultAddress0_HTTP_Handler(srv))
-	r.GET("/v1/merchants/addresses/shipping", _MerchantAddress_GetShippingAddress0_HTTP_Handler(srv))
 }
 
 func _MerchantAddress_CreateAddress0_HTTP_Handler(srv MerchantAddressHTTPServer) func(ctx http.Context) error {
@@ -217,31 +213,11 @@ func _MerchantAddress_SetDefaultAddress0_HTTP_Handler(srv MerchantAddressHTTPSer
 	}
 }
 
-func _MerchantAddress_GetShippingAddress0_HTTP_Handler(srv MerchantAddressHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetShippingAddressRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationMerchantAddressGetShippingAddress)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetShippingAddress(ctx, req.(*GetShippingAddressRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*Address)
-		return ctx.Result(200, reply)
-	}
-}
-
 type MerchantAddressHTTPClient interface {
 	BatchCreateAddresses(ctx context.Context, req *BatchCreateAddressesRequest, opts ...http.CallOption) (rsp *BatchCreateAddressesResponse, err error)
 	CreateAddress(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
 	DeleteAddress(ctx context.Context, req *DeleteAddressRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetAddress(ctx context.Context, req *GetAddressRequest, opts ...http.CallOption) (rsp *Address, err error)
-	GetShippingAddress(ctx context.Context, req *GetShippingAddressRequest, opts ...http.CallOption) (rsp *Address, err error)
 	ListAddresses(ctx context.Context, req *ListAddressesRequest, opts ...http.CallOption) (rsp *ListAddressesResponse, err error)
 	SetDefaultAddress(ctx context.Context, req *SetDefaultAddressRequest, opts ...http.CallOption) (rsp *Address, err error)
 	UpdateAddress(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
@@ -299,19 +275,6 @@ func (c *MerchantAddressHTTPClientImpl) GetAddress(ctx context.Context, in *GetA
 	pattern := "/v1/merchants/addresses/{id}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationMerchantAddressGetAddress))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *MerchantAddressHTTPClientImpl) GetShippingAddress(ctx context.Context, in *GetShippingAddressRequest, opts ...http.CallOption) (*Address, error) {
-	var out Address
-	pattern := "/v1/merchants/addresses/shipping"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationMerchantAddressGetShippingAddress))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

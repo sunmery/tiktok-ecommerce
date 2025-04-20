@@ -27,7 +27,6 @@ const (
 	MerchantAddress_GetAddress_FullMethodName           = "/ecommerce.merchant.v1.MerchantAddress/GetAddress"
 	MerchantAddress_ListAddresses_FullMethodName        = "/ecommerce.merchant.v1.MerchantAddress/ListAddresses"
 	MerchantAddress_SetDefaultAddress_FullMethodName    = "/ecommerce.merchant.v1.MerchantAddress/SetDefaultAddress"
-	MerchantAddress_GetShippingAddress_FullMethodName   = "/ecommerce.merchant.v1.MerchantAddress/GetShippingAddress"
 )
 
 // MerchantAddressClient is the client API for MerchantAddress service.
@@ -50,8 +49,6 @@ type MerchantAddressClient interface {
 	ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesResponse, error)
 	// 设置默认地址（按地址类型）
 	SetDefaultAddress(ctx context.Context, in *SetDefaultAddressRequest, opts ...grpc.CallOption) (*Address, error)
-	// 获取发货地址（智能选择逻辑）
-	GetShippingAddress(ctx context.Context, in *GetShippingAddressRequest, opts ...grpc.CallOption) (*Address, error)
 }
 
 type merchantAddressClient struct {
@@ -132,16 +129,6 @@ func (c *merchantAddressClient) SetDefaultAddress(ctx context.Context, in *SetDe
 	return out, nil
 }
 
-func (c *merchantAddressClient) GetShippingAddress(ctx context.Context, in *GetShippingAddressRequest, opts ...grpc.CallOption) (*Address, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Address)
-	err := c.cc.Invoke(ctx, MerchantAddress_GetShippingAddress_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MerchantAddressServer is the server API for MerchantAddress service.
 // All implementations must embed UnimplementedMerchantAddressServer
 // for forward compatibility.
@@ -162,8 +149,6 @@ type MerchantAddressServer interface {
 	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesResponse, error)
 	// 设置默认地址（按地址类型）
 	SetDefaultAddress(context.Context, *SetDefaultAddressRequest) (*Address, error)
-	// 获取发货地址（智能选择逻辑）
-	GetShippingAddress(context.Context, *GetShippingAddressRequest) (*Address, error)
 	mustEmbedUnimplementedMerchantAddressServer()
 }
 
@@ -194,9 +179,6 @@ func (UnimplementedMerchantAddressServer) ListAddresses(context.Context, *ListAd
 }
 func (UnimplementedMerchantAddressServer) SetDefaultAddress(context.Context, *SetDefaultAddressRequest) (*Address, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDefaultAddress not implemented")
-}
-func (UnimplementedMerchantAddressServer) GetShippingAddress(context.Context, *GetShippingAddressRequest) (*Address, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetShippingAddress not implemented")
 }
 func (UnimplementedMerchantAddressServer) mustEmbedUnimplementedMerchantAddressServer() {}
 func (UnimplementedMerchantAddressServer) testEmbeddedByValue()                         {}
@@ -345,24 +327,6 @@ func _MerchantAddress_SetDefaultAddress_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MerchantAddress_GetShippingAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetShippingAddressRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MerchantAddressServer).GetShippingAddress(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MerchantAddress_GetShippingAddress_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MerchantAddressServer).GetShippingAddress(ctx, req.(*GetShippingAddressRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // MerchantAddress_ServiceDesc is the grpc.ServiceDesc for MerchantAddress service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -397,10 +361,6 @@ var MerchantAddress_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetDefaultAddress",
 			Handler:    _MerchantAddress_SetDefaultAddress_Handler,
-		},
-		{
-			MethodName: "GetShippingAddress",
-			Handler:    _MerchantAddress_GetShippingAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -431,7 +431,7 @@ func (x *GetAddressRequest) GetId() int64 {
 type ListAddressesRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	AddressType Address_AddressType    `protobuf:"varint,2,opt,name=address_type,json=addressType,proto3,enum=ecommerce.merchant.v1.Address_AddressType" json:"address_type,omitempty"` // 按类型过滤
-	OnlyDefault bool                   `protobuf:"varint,3,opt,name=only_default,json=onlyDefault,proto3" json:"only_default,omitempty"`                                                // 只获取默认地址
+	OnlyDefault bool                   `protobuf:"varint,3,opt,name=only_default,json=onlyDefault,proto3" json:"only_default,omitempty"`                                                // 是否只获取默认地址
 	// 分页参数
 	Page          uint32 `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      uint32 `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
@@ -594,59 +594,6 @@ func (x *SetDefaultAddressRequest) GetId() int64 {
 	return 0
 }
 
-// 智能获取发货地址请求
-type GetShippingAddressRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	OrderType       string                 `protobuf:"bytes,2,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`                   // 订单类型（NORMAL/EXPRESS等）
-	ProductCategory string                 `protobuf:"bytes,3,opt,name=product_category,json=productCategory,proto3" json:"product_category,omitempty"` // 商品类别（影响仓库选择）
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *GetShippingAddressRequest) Reset() {
-	*x = GetShippingAddressRequest{}
-	mi := &file_address_v1_address_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetShippingAddressRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetShippingAddressRequest) ProtoMessage() {}
-
-func (x *GetShippingAddressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_address_v1_address_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetShippingAddressRequest.ProtoReflect.Descriptor instead.
-func (*GetShippingAddressRequest) Descriptor() ([]byte, []int) {
-	return file_address_v1_address_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *GetShippingAddressRequest) GetOrderType() string {
-	if x != nil {
-		return x.OrderType
-	}
-	return ""
-}
-
-func (x *GetShippingAddressRequest) GetProductCategory() string {
-	if x != nil {
-		return x.ProductCategory
-	}
-	return ""
-}
-
 var File_address_v1_address_proto protoreflect.FileDescriptor
 
 const file_address_v1_address_proto_rawDesc = "" +
@@ -699,11 +646,7 @@ const file_address_v1_address_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
 	"totalCount\"*\n" +
 	"\x18SetDefaultAddressRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"e\n" +
-	"\x19GetShippingAddressRequest\x12\x1d\n" +
-	"\n" +
-	"order_type\x18\x02 \x01(\tR\torderType\x12)\n" +
-	"\x10product_category\x18\x03 \x01(\tR\x0fproductCategory2\xdf\b\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id2\xcc\a\n" +
 	"\x0fMerchantAddress\x12s\n" +
 	"\rCreateAddress\x12\x1e.ecommerce.merchant.v1.Address\x1a\x1e.ecommerce.merchant.v1.Address\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/merchants/addresses\x12\xa9\x01\n" +
 	"\x14BatchCreateAddresses\x122.ecommerce.merchant.v1.BatchCreateAddressesRequest\x1a3.ecommerce.merchant.v1.BatchCreateAddressesResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/merchants/addresses/batch\x12x\n" +
@@ -712,8 +655,7 @@ const file_address_v1_address_proto_rawDesc = "" +
 	"\n" +
 	"GetAddress\x12(.ecommerce.merchant.v1.GetAddressRequest\x1a\x1e.ecommerce.merchant.v1.Address\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/merchants/addresses/{id}\x12\x8b\x01\n" +
 	"\rListAddresses\x12+.ecommerce.merchant.v1.ListAddressesRequest\x1a,.ecommerce.merchant.v1.ListAddressesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/merchants/addresses\x12\x95\x01\n" +
-	"\x11SetDefaultAddress\x12/.ecommerce.merchant.v1.SetDefaultAddressRequest\x1a\x1e.ecommerce.merchant.v1.Address\"/\x82\xd3\xe4\x93\x02):\x01*\x1a$/v1/merchants/addresses/{id}/default\x12\x90\x01\n" +
-	"\x12GetShippingAddress\x120.ecommerce.merchant.v1.GetShippingAddressRequest\x1a\x1e.ecommerce.merchant.v1.Address\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/merchants/addresses/shippingB+Z)backend/api/merchant/address/v1;addressv1b\x06proto3"
+	"\x11SetDefaultAddress\x12/.ecommerce.merchant.v1.SetDefaultAddressRequest\x1a\x1e.ecommerce.merchant.v1.Address\"/\x82\xd3\xe4\x93\x02):\x01*\x1a$/v1/merchants/addresses/{id}/defaultB+Z)backend/api/merchant/address/v1;addressv1b\x06proto3"
 
 var (
 	file_address_v1_address_proto_rawDescOnce sync.Once
@@ -729,7 +671,7 @@ func file_address_v1_address_proto_rawDescGZIP() []byte {
 
 var (
 	file_address_v1_address_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-	file_address_v1_address_proto_msgTypes  = make([]protoimpl.MessageInfo, 9)
+	file_address_v1_address_proto_msgTypes  = make([]protoimpl.MessageInfo, 8)
 	file_address_v1_address_proto_goTypes   = []any{
 		(Address_AddressType)(0),             // 0: ecommerce.merchant.v1.Address.AddressType
 		(*Address)(nil),                      // 1: ecommerce.merchant.v1.Address
@@ -740,15 +682,14 @@ var (
 		(*ListAddressesRequest)(nil),         // 6: ecommerce.merchant.v1.ListAddressesRequest
 		(*ListAddressesResponse)(nil),        // 7: ecommerce.merchant.v1.ListAddressesResponse
 		(*SetDefaultAddressRequest)(nil),     // 8: ecommerce.merchant.v1.SetDefaultAddressRequest
-		(*GetShippingAddressRequest)(nil),    // 9: ecommerce.merchant.v1.GetShippingAddressRequest
-		(*timestamppb.Timestamp)(nil),        // 10: google.protobuf.Timestamp
-		(*emptypb.Empty)(nil),                // 11: google.protobuf.Empty
+		(*timestamppb.Timestamp)(nil),        // 9: google.protobuf.Timestamp
+		(*emptypb.Empty)(nil),                // 10: google.protobuf.Empty
 	}
 )
 var file_address_v1_address_proto_depIdxs = []int32{
 	0,  // 0: ecommerce.merchant.v1.Address.address_type:type_name -> ecommerce.merchant.v1.Address.AddressType
-	10, // 1: ecommerce.merchant.v1.Address.created_at:type_name -> google.protobuf.Timestamp
-	10, // 2: ecommerce.merchant.v1.Address.updated_at:type_name -> google.protobuf.Timestamp
+	9,  // 1: ecommerce.merchant.v1.Address.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 2: ecommerce.merchant.v1.Address.updated_at:type_name -> google.protobuf.Timestamp
 	1,  // 3: ecommerce.merchant.v1.BatchCreateAddressesRequest.addresses:type_name -> ecommerce.merchant.v1.Address
 	1,  // 4: ecommerce.merchant.v1.BatchCreateAddressesResponse.failed_items:type_name -> ecommerce.merchant.v1.Address
 	0,  // 5: ecommerce.merchant.v1.ListAddressesRequest.address_type:type_name -> ecommerce.merchant.v1.Address.AddressType
@@ -760,17 +701,15 @@ var file_address_v1_address_proto_depIdxs = []int32{
 	5,  // 11: ecommerce.merchant.v1.MerchantAddress.GetAddress:input_type -> ecommerce.merchant.v1.GetAddressRequest
 	6,  // 12: ecommerce.merchant.v1.MerchantAddress.ListAddresses:input_type -> ecommerce.merchant.v1.ListAddressesRequest
 	8,  // 13: ecommerce.merchant.v1.MerchantAddress.SetDefaultAddress:input_type -> ecommerce.merchant.v1.SetDefaultAddressRequest
-	9,  // 14: ecommerce.merchant.v1.MerchantAddress.GetShippingAddress:input_type -> ecommerce.merchant.v1.GetShippingAddressRequest
-	1,  // 15: ecommerce.merchant.v1.MerchantAddress.CreateAddress:output_type -> ecommerce.merchant.v1.Address
-	3,  // 16: ecommerce.merchant.v1.MerchantAddress.BatchCreateAddresses:output_type -> ecommerce.merchant.v1.BatchCreateAddressesResponse
-	1,  // 17: ecommerce.merchant.v1.MerchantAddress.UpdateAddress:output_type -> ecommerce.merchant.v1.Address
-	11, // 18: ecommerce.merchant.v1.MerchantAddress.DeleteAddress:output_type -> google.protobuf.Empty
-	1,  // 19: ecommerce.merchant.v1.MerchantAddress.GetAddress:output_type -> ecommerce.merchant.v1.Address
-	7,  // 20: ecommerce.merchant.v1.MerchantAddress.ListAddresses:output_type -> ecommerce.merchant.v1.ListAddressesResponse
-	1,  // 21: ecommerce.merchant.v1.MerchantAddress.SetDefaultAddress:output_type -> ecommerce.merchant.v1.Address
-	1,  // 22: ecommerce.merchant.v1.MerchantAddress.GetShippingAddress:output_type -> ecommerce.merchant.v1.Address
-	15, // [15:23] is the sub-list for method output_type
-	7,  // [7:15] is the sub-list for method input_type
+	1,  // 14: ecommerce.merchant.v1.MerchantAddress.CreateAddress:output_type -> ecommerce.merchant.v1.Address
+	3,  // 15: ecommerce.merchant.v1.MerchantAddress.BatchCreateAddresses:output_type -> ecommerce.merchant.v1.BatchCreateAddressesResponse
+	1,  // 16: ecommerce.merchant.v1.MerchantAddress.UpdateAddress:output_type -> ecommerce.merchant.v1.Address
+	10, // 17: ecommerce.merchant.v1.MerchantAddress.DeleteAddress:output_type -> google.protobuf.Empty
+	1,  // 18: ecommerce.merchant.v1.MerchantAddress.GetAddress:output_type -> ecommerce.merchant.v1.Address
+	7,  // 19: ecommerce.merchant.v1.MerchantAddress.ListAddresses:output_type -> ecommerce.merchant.v1.ListAddressesResponse
+	1,  // 20: ecommerce.merchant.v1.MerchantAddress.SetDefaultAddress:output_type -> ecommerce.merchant.v1.Address
+	14, // [14:21] is the sub-list for method output_type
+	7,  // [7:14] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name
@@ -787,7 +726,7 @@ func file_address_v1_address_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_address_v1_address_proto_rawDesc), len(file_address_v1_address_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
