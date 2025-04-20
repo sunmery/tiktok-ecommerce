@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	"backend/application/comment/internal/pkg"
+	"backend/application/comment/internal/pkg/id"
 
 	"backend/application/comment/internal/data/models"
 
@@ -20,7 +20,7 @@ type commentRepo struct {
 
 func (c commentRepo) CreateComment(ctx context.Context, req *biz.CreateCommentRequest) (*biz.Comment, error) {
 	comment, err := c.data.db.CreateComment(ctx, models.CreateCommentParams{
-		ID:         pkg.SnowflakeID(),
+		ID:         id.SnowflakeID(),
 		ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
 		UserID:     req.UserId,

@@ -79,7 +79,7 @@
       },
       "post": {
         "summary": "创建商家地址（支持多类型地址）",
-        "operationId": "MerchantAddress_CreateAddress",
+        "operationId": "MerchantAddress_CreateMerchantAddress",
         "responses": {
           "200": {
             "description": "A successful response.",

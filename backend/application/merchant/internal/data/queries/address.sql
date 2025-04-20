@@ -88,13 +88,21 @@ LIMIT $4 OFFSET $5;
 
 -- 设置默认地址（带事务处理）
 -- name: SetDefaultAddress :one
-WITH update_all AS (
+WITH get_address_type AS (
+    SELECT address_type
+    FROM merchant.addresses
+    WHERE id = @id
+    AND merchant_id = @merchant_id
+),
+update_old_default AS (
     UPDATE merchant.addresses
-        SET is_default = false
-        WHERE merchant_id = @merchant_id
-            AND address_type = (SELECT address_type FROM merchant.addresses WHERE id = $2)
-            AND id != @id)
+    SET is_default = false
+    WHERE merchant_id = @merchant_id
+    AND address_type = (SELECT address_type FROM get_address_type)
+    AND is_default = true
+)
 UPDATE merchant.addresses
 SET is_default = true
 WHERE id = @id
+AND merchant_id = @merchant_id
 RETURNING *;

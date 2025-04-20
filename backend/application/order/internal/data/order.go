@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"backend/application/order/internal/pkg/id"
+
 	productv1 "backend/api/product/v1"
 
 	userv1 "backend/api/user/v1"
@@ -16,7 +18,6 @@ import (
 
 	"backend/application/order/internal/biz"
 	"backend/application/order/internal/data/models"
-	"backend/application/order/internal/pkg"
 	"backend/pkg/types"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -272,7 +273,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
 	// 生成雪花ID
-	orderID := pkg.SnowflakeID()
+	orderID := id.SnowflakeID()
 
 	order, err := o.data.db.CreateOrder(ctx, models.CreateOrderParams{
 		ID:            orderID,
@@ -310,7 +311,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		}
 
 		// 创建子订单ID
-		subOrderID := pkg.SnowflakeID()
+		subOrderID := id.SnowflakeID()
 
 		_, subOrderErr := o.data.db.CreateSubOrder(ctx, models.CreateSubOrderParams{
 			ID:          subOrderID,

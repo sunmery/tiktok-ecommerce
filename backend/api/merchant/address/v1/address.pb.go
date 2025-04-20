@@ -7,16 +7,15 @@
 package addressv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -646,9 +645,9 @@ const file_address_v1_address_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
 	"totalCount\"*\n" +
 	"\x18SetDefaultAddressRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id2\xcc\a\n" +
-	"\x0fMerchantAddress\x12s\n" +
-	"\rCreateAddress\x12\x1e.ecommerce.merchant.v1.Address\x1a\x1e.ecommerce.merchant.v1.Address\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/merchants/addresses\x12\xa9\x01\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id2\xd4\a\n" +
+	"\x0fMerchantAddress\x12{\n" +
+	"\x15CreateMerchantAddress\x12\x1e.ecommerce.merchant.v1.Address\x1a\x1e.ecommerce.merchant.v1.Address\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/merchants/addresses\x12\xa9\x01\n" +
 	"\x14BatchCreateAddresses\x122.ecommerce.merchant.v1.BatchCreateAddressesRequest\x1a3.ecommerce.merchant.v1.BatchCreateAddressesResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/merchants/addresses/batch\x12x\n" +
 	"\rUpdateAddress\x12\x1e.ecommerce.merchant.v1.Address\x1a\x1e.ecommerce.merchant.v1.Address\"'\x82\xd3\xe4\x93\x02!:\x01*2\x1c/v1/merchants/addresses/{id}\x12z\n" +
 	"\rDeleteAddress\x12+.ecommerce.merchant.v1.DeleteAddressRequest\x1a\x16.google.protobuf.Empty\"$\x82\xd3\xe4\x93\x02\x1e*\x1c/v1/merchants/addresses/{id}\x12|\n" +
@@ -669,23 +668,21 @@ func file_address_v1_address_proto_rawDescGZIP() []byte {
 	return file_address_v1_address_proto_rawDescData
 }
 
-var (
-	file_address_v1_address_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-	file_address_v1_address_proto_msgTypes  = make([]protoimpl.MessageInfo, 8)
-	file_address_v1_address_proto_goTypes   = []any{
-		(Address_AddressType)(0),             // 0: ecommerce.merchant.v1.Address.AddressType
-		(*Address)(nil),                      // 1: ecommerce.merchant.v1.Address
-		(*BatchCreateAddressesRequest)(nil),  // 2: ecommerce.merchant.v1.BatchCreateAddressesRequest
-		(*BatchCreateAddressesResponse)(nil), // 3: ecommerce.merchant.v1.BatchCreateAddressesResponse
-		(*DeleteAddressRequest)(nil),         // 4: ecommerce.merchant.v1.DeleteAddressRequest
-		(*GetAddressRequest)(nil),            // 5: ecommerce.merchant.v1.GetAddressRequest
-		(*ListAddressesRequest)(nil),         // 6: ecommerce.merchant.v1.ListAddressesRequest
-		(*ListAddressesResponse)(nil),        // 7: ecommerce.merchant.v1.ListAddressesResponse
-		(*SetDefaultAddressRequest)(nil),     // 8: ecommerce.merchant.v1.SetDefaultAddressRequest
-		(*timestamppb.Timestamp)(nil),        // 9: google.protobuf.Timestamp
-		(*emptypb.Empty)(nil),                // 10: google.protobuf.Empty
-	}
-)
+var file_address_v1_address_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_address_v1_address_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_address_v1_address_proto_goTypes = []any{
+	(Address_AddressType)(0),             // 0: ecommerce.merchant.v1.Address.AddressType
+	(*Address)(nil),                      // 1: ecommerce.merchant.v1.Address
+	(*BatchCreateAddressesRequest)(nil),  // 2: ecommerce.merchant.v1.BatchCreateAddressesRequest
+	(*BatchCreateAddressesResponse)(nil), // 3: ecommerce.merchant.v1.BatchCreateAddressesResponse
+	(*DeleteAddressRequest)(nil),         // 4: ecommerce.merchant.v1.DeleteAddressRequest
+	(*GetAddressRequest)(nil),            // 5: ecommerce.merchant.v1.GetAddressRequest
+	(*ListAddressesRequest)(nil),         // 6: ecommerce.merchant.v1.ListAddressesRequest
+	(*ListAddressesResponse)(nil),        // 7: ecommerce.merchant.v1.ListAddressesResponse
+	(*SetDefaultAddressRequest)(nil),     // 8: ecommerce.merchant.v1.SetDefaultAddressRequest
+	(*timestamppb.Timestamp)(nil),        // 9: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                // 10: google.protobuf.Empty
+}
 var file_address_v1_address_proto_depIdxs = []int32{
 	0,  // 0: ecommerce.merchant.v1.Address.address_type:type_name -> ecommerce.merchant.v1.Address.AddressType
 	9,  // 1: ecommerce.merchant.v1.Address.created_at:type_name -> google.protobuf.Timestamp
@@ -694,14 +691,14 @@ var file_address_v1_address_proto_depIdxs = []int32{
 	1,  // 4: ecommerce.merchant.v1.BatchCreateAddressesResponse.failed_items:type_name -> ecommerce.merchant.v1.Address
 	0,  // 5: ecommerce.merchant.v1.ListAddressesRequest.address_type:type_name -> ecommerce.merchant.v1.Address.AddressType
 	1,  // 6: ecommerce.merchant.v1.ListAddressesResponse.addresses:type_name -> ecommerce.merchant.v1.Address
-	1,  // 7: ecommerce.merchant.v1.MerchantAddress.CreateAddress:input_type -> ecommerce.merchant.v1.Address
+	1,  // 7: ecommerce.merchant.v1.MerchantAddress.CreateMerchantAddress:input_type -> ecommerce.merchant.v1.Address
 	2,  // 8: ecommerce.merchant.v1.MerchantAddress.BatchCreateAddresses:input_type -> ecommerce.merchant.v1.BatchCreateAddressesRequest
 	1,  // 9: ecommerce.merchant.v1.MerchantAddress.UpdateAddress:input_type -> ecommerce.merchant.v1.Address
 	4,  // 10: ecommerce.merchant.v1.MerchantAddress.DeleteAddress:input_type -> ecommerce.merchant.v1.DeleteAddressRequest
 	5,  // 11: ecommerce.merchant.v1.MerchantAddress.GetAddress:input_type -> ecommerce.merchant.v1.GetAddressRequest
 	6,  // 12: ecommerce.merchant.v1.MerchantAddress.ListAddresses:input_type -> ecommerce.merchant.v1.ListAddressesRequest
 	8,  // 13: ecommerce.merchant.v1.MerchantAddress.SetDefaultAddress:input_type -> ecommerce.merchant.v1.SetDefaultAddressRequest
-	1,  // 14: ecommerce.merchant.v1.MerchantAddress.CreateAddress:output_type -> ecommerce.merchant.v1.Address
+	1,  // 14: ecommerce.merchant.v1.MerchantAddress.CreateMerchantAddress:output_type -> ecommerce.merchant.v1.Address
 	3,  // 15: ecommerce.merchant.v1.MerchantAddress.BatchCreateAddresses:output_type -> ecommerce.merchant.v1.BatchCreateAddressesResponse
 	1,  // 16: ecommerce.merchant.v1.MerchantAddress.UpdateAddress:output_type -> ecommerce.merchant.v1.Address
 	10, // 17: ecommerce.merchant.v1.MerchantAddress.DeleteAddress:output_type -> google.protobuf.Empty

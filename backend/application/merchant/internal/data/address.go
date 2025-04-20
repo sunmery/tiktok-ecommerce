@@ -27,10 +27,6 @@ type addressRepo struct {
 	log  *log.Helper
 }
 
-func (a addressRepo) CreateMerchantAddress(ctx context.Context, req *biz.MerchantAddressn) (*biz.MerchantAddress, error) {
-	return a.CreateAddress(ctx, req)
-}
-
 func (a addressRepo) BatchCreateAddresses(ctx context.Context, req *biz.BatchCreateAddressesRequestn) (*biz.BatchCreateAddressesResponse, error) {
 	ids := make([]int64, len(req.Addresses))
 	merchantIds := make([]uuid.UUID, len(req.Addresses))
@@ -237,7 +233,7 @@ func (a addressRepo) SetDefaultAddress(ctx context.Context, req *biz.SetDefaultA
 	}, nil
 }
 
-func (a addressRepo) CreateAddress(ctx context.Context, req *biz.MerchantAddressn) (*biz.MerchantAddress, error) {
+func (a addressRepo) CreateMerchantAddress(ctx context.Context, req *biz.MerchantAddressn) (*biz.MerchantAddress, error) {
 	log.Debugf("req: %+v", req)
 	address, err := a.data.db.CreateAddress(ctx, models.CreateAddressParams{
 		ID:            req.Id,
@@ -251,7 +247,7 @@ func (a addressRepo) CreateAddress(ctx context.Context, req *biz.MerchantAddress
 		Country:       req.Country,
 		ZipCode:       req.ZipCode,
 		IsDefault:     req.IsDefault,
-		// Remarks:      req.Remarks,
+		Remarks:       req.Remarks,
 		// Latitude:      req.Latitude,
 		// Longitude:     req.Longitude,
 	})
@@ -273,7 +269,7 @@ func (a addressRepo) CreateAddress(ctx context.Context, req *biz.MerchantAddress
 		IsDefault:     address.IsDefault,
 		CreatedAt:     address.CreatedAt.Time,
 		UpdatedAt:     address.UpdatedAt.Time,
-		// Remarks:       address.Remarks,
+		Remarks:       address.Remarks,
 		// Latitude:      address.Latitude,
 		// Longitude:     address.Longitude,
 	}, nil

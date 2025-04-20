@@ -270,15 +270,23 @@ type Querier interface {
 	RecordStockAdjustment(ctx context.Context, arg RecordStockAdjustmentParams) (MerchantStockAdjustments, error)
 	// 设置默认地址（带事务处理）
 	//
-	//  WITH update_all AS (
+	//  WITH get_address_type AS (
+	//      SELECT address_type
+	//      FROM merchant.addresses
+	//      WHERE id = $1
+	//      AND merchant_id = $2
+	//  ),
+	//  update_old_default AS (
 	//      UPDATE merchant.addresses
-	//          SET is_default = false
-	//          WHERE merchant_id = $3
-	//              AND address_type = (SELECT address_type FROM merchant.addresses WHERE id = $2)
-	//              AND id != $1)
+	//      SET is_default = false
+	//      WHERE merchant_id = $2
+	//      AND address_type = (SELECT address_type FROM get_address_type)
+	//      AND is_default = true
+	//  )
 	//  UPDATE merchant.addresses
 	//  SET is_default = true
 	//  WHERE id = $1
+	//  AND merchant_id = $2
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	SetDefaultAddress(ctx context.Context, arg SetDefaultAddressParams) (MerchantAddresses, error)
 	// 设置库存警报阈值

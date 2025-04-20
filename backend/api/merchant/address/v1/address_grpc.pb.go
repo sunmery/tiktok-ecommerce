@@ -20,13 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MerchantAddress_CreateAddress_FullMethodName        = "/ecommerce.merchant.v1.MerchantAddress/CreateAddress"
-	MerchantAddress_BatchCreateAddresses_FullMethodName = "/ecommerce.merchant.v1.MerchantAddress/BatchCreateAddresses"
-	MerchantAddress_UpdateAddress_FullMethodName        = "/ecommerce.merchant.v1.MerchantAddress/UpdateAddress"
-	MerchantAddress_DeleteAddress_FullMethodName        = "/ecommerce.merchant.v1.MerchantAddress/DeleteAddress"
-	MerchantAddress_GetAddress_FullMethodName           = "/ecommerce.merchant.v1.MerchantAddress/GetAddress"
-	MerchantAddress_ListAddresses_FullMethodName        = "/ecommerce.merchant.v1.MerchantAddress/ListAddresses"
-	MerchantAddress_SetDefaultAddress_FullMethodName    = "/ecommerce.merchant.v1.MerchantAddress/SetDefaultAddress"
+	MerchantAddress_CreateMerchantAddress_FullMethodName = "/ecommerce.merchant.v1.MerchantAddress/CreateMerchantAddress"
+	MerchantAddress_BatchCreateAddresses_FullMethodName  = "/ecommerce.merchant.v1.MerchantAddress/BatchCreateAddresses"
+	MerchantAddress_UpdateAddress_FullMethodName         = "/ecommerce.merchant.v1.MerchantAddress/UpdateAddress"
+	MerchantAddress_DeleteAddress_FullMethodName         = "/ecommerce.merchant.v1.MerchantAddress/DeleteAddress"
+	MerchantAddress_GetAddress_FullMethodName            = "/ecommerce.merchant.v1.MerchantAddress/GetAddress"
+	MerchantAddress_ListAddresses_FullMethodName         = "/ecommerce.merchant.v1.MerchantAddress/ListAddresses"
+	MerchantAddress_SetDefaultAddress_FullMethodName     = "/ecommerce.merchant.v1.MerchantAddress/SetDefaultAddress"
 )
 
 // MerchantAddressClient is the client API for MerchantAddress service.
@@ -36,7 +36,7 @@ const (
 // 商家地址服务接口定义
 type MerchantAddressClient interface {
 	// 创建商家地址（支持多类型地址）
-	CreateAddress(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
+	CreateMerchantAddress(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
 	// 批量导入商家地址（CSV/JSON格式）
 	BatchCreateAddresses(ctx context.Context, in *BatchCreateAddressesRequest, opts ...grpc.CallOption) (*BatchCreateAddressesResponse, error)
 	// 更新商家地址（支持部分更新）
@@ -59,10 +59,10 @@ func NewMerchantAddressClient(cc grpc.ClientConnInterface) MerchantAddressClient
 	return &merchantAddressClient{cc}
 }
 
-func (c *merchantAddressClient) CreateAddress(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error) {
+func (c *merchantAddressClient) CreateMerchantAddress(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Address)
-	err := c.cc.Invoke(ctx, MerchantAddress_CreateAddress_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, MerchantAddress_CreateMerchantAddress_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (c *merchantAddressClient) SetDefaultAddress(ctx context.Context, in *SetDe
 // 商家地址服务接口定义
 type MerchantAddressServer interface {
 	// 创建商家地址（支持多类型地址）
-	CreateAddress(context.Context, *Address) (*Address, error)
+	CreateMerchantAddress(context.Context, *Address) (*Address, error)
 	// 批量导入商家地址（CSV/JSON格式）
 	BatchCreateAddresses(context.Context, *BatchCreateAddressesRequest) (*BatchCreateAddressesResponse, error)
 	// 更新商家地址（支持部分更新）
@@ -159,8 +159,8 @@ type MerchantAddressServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMerchantAddressServer struct{}
 
-func (UnimplementedMerchantAddressServer) CreateAddress(context.Context, *Address) (*Address, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAddress not implemented")
+func (UnimplementedMerchantAddressServer) CreateMerchantAddress(context.Context, *Address) (*Address, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMerchantAddress not implemented")
 }
 func (UnimplementedMerchantAddressServer) BatchCreateAddresses(context.Context, *BatchCreateAddressesRequest) (*BatchCreateAddressesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchCreateAddresses not implemented")
@@ -201,20 +201,20 @@ func RegisterMerchantAddressServer(s grpc.ServiceRegistrar, srv MerchantAddressS
 	s.RegisterService(&MerchantAddress_ServiceDesc, srv)
 }
 
-func _MerchantAddress_CreateAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MerchantAddress_CreateMerchantAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Address)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MerchantAddressServer).CreateAddress(ctx, in)
+		return srv.(MerchantAddressServer).CreateMerchantAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MerchantAddress_CreateAddress_FullMethodName,
+		FullMethod: MerchantAddress_CreateMerchantAddress_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MerchantAddressServer).CreateAddress(ctx, req.(*Address))
+		return srv.(MerchantAddressServer).CreateMerchantAddress(ctx, req.(*Address))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -335,8 +335,8 @@ var MerchantAddress_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MerchantAddressServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateAddress",
-			Handler:    _MerchantAddress_CreateAddress_Handler,
+			MethodName: "CreateMerchantAddress",
+			Handler:    _MerchantAddress_CreateMerchantAddress_Handler,
 		},
 		{
 			MethodName: "BatchCreateAddresses",

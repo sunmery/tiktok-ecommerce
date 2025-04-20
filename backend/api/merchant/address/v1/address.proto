@@ -13,7 +13,7 @@ import "google/protobuf/timestamp.proto";
 // 商家地址服务接口定义
 service MerchantAddress {
   // 创建商家地址（支持多类型地址）
-  rpc CreateAddress(Address) returns (Address) {
+  rpc CreateMerchantAddress(Address) returns (Address) {
     option (google.api.http) = {
       post: "/v1/merchants/addresses"
       body: "*"

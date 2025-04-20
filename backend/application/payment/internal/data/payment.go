@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"backend/application/payment/internal/pkg/id"
+
 	"backend/constants"
 
 	"github.com/go-kratos/kratos/v2/metadata"
@@ -26,8 +28,6 @@ import (
 	"backend/application/payment/internal/data/models"
 
 	"backend/application/payment/internal/biz"
-	pkg2 "backend/application/payment/internal/pkg"
-
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -80,7 +80,7 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	}
 
 	// 使用雪花ID
-	paymentID := pkg2.SnowflakeID()
+	paymentID := id.SnowflakeID()
 
 	// 创建支付记录
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{

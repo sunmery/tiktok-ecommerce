@@ -27,7 +27,7 @@ type AddressService struct {
 	ac *biz.AddressUsecase
 }
 
-func (s *AddressService) CreateAddress(ctx context.Context, req *pb.Address) (*pb.Address, error) {
+func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.Address) (*pb.Address, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -47,7 +47,7 @@ func (s *AddressService) CreateAddress(ctx context.Context, req *pb.Address) (*p
 		Country:       req.Country,
 		ZipCode:       req.ZipCode,
 		IsDefault:     req.IsDefault,
-		// Remarks:       req.Remarks,
+		Remarks:       req.Remarks,
 		// Latitude:      req.Latitude,
 		// Longitude:     req.Longitude,
 	})
@@ -69,7 +69,7 @@ func (s *AddressService) CreateAddress(ctx context.Context, req *pb.Address) (*p
 		IsDefault:     address.IsDefault,
 		CreatedAt:     timestamppb.New(address.CreatedAt),
 		UpdatedAt:     timestamppb.New(address.UpdatedAt),
-		// Remarks:       address.Remarks,
+		Remarks:       address.Remarks,
 		// Latitude:      address.Latitude,
 		// Longitude:     address.Longitude,
 	}, nil
