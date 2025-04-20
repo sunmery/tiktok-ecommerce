@@ -15,6 +15,15 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type InventoryService struct {
+	v1.UnimplementedInventoryServer
+	ic *biz.InventoryUsecase
+}
+
+func NewInventoryService(ic *biz.InventoryUsecase) *InventoryService {
+	return &InventoryService{ic: ic}
+}
+
 func (uc *InventoryService) GetProductStock(ctx context.Context, req *v1.GetProductStockRequest) (*v1.GetProductStockResponse, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {

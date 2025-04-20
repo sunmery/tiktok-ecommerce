@@ -17,6 +17,18 @@ import (
 	"backend/application/merchant/internal/biz"
 )
 
+type inventoryRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
+func NewInventoryRepo(data *Data, logger log.Logger) biz.InventoryRepo {
+	return &inventoryRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
 // GetProductStock 获取产品库存
 func (i *inventoryRepo) GetProductStock(ctx context.Context, req *biz.GetProductStockRequest) (*biz.GetProductStockResponse, error) {
 	productId := types.ToPgUUID(req.ProductId)

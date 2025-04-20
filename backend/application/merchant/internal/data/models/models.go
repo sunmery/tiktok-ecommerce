@@ -9,6 +9,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type MerchantAddresses struct {
+	ID            int64
+	MerchantID    uuid.UUID
+	AddressType   string
+	ContactPerson string
+	ContactPhone  string
+	StreetAddress string
+	City          string
+	State         string
+	Country       string
+	ZipCode       string
+	IsDefault     bool
+	Remarks       string
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
 type MerchantStockAdjustments struct {
 	ID         uuid.UUID
 	ProductID  uuid.UUID

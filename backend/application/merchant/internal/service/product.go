@@ -19,6 +19,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type ProductService struct {
+	v1.UnimplementedProductServer
+	pc *biz.ProductUsecase
+}
+
+func NewProductService(pc *biz.ProductUsecase) *ProductService {
+	return &ProductService{pc: pc}
+}
+
 func (uc *ProductService) GetMerchantProducts(ctx context.Context, req *v1.GetMerchantProductRequest) (*productv1.Products, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"backend/pkg/types"
@@ -14,6 +16,18 @@ import (
 
 	"backend/application/merchant/internal/biz"
 )
+
+type orderRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
 
 func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantOrdersReq) (*biz.GetMerchantOrdersReply, error) {
 	// 设置默认分页参数

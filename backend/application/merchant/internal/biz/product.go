@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"github.com/google/uuid"
 )
 
@@ -80,6 +82,25 @@ type (
 		Message string
 	}
 )
+
+type ProductUsecase struct {
+	repo ProductRepo
+	log  *log.Helper
+}
+
+func NewProductUsecase(repo ProductRepo, logger log.Logger) *ProductUsecase {
+	return &ProductUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
+}
+
+// ProductRepo 商品域方法
+type ProductRepo interface {
+	// GetMerchantProducts 获取商家自身商品列表
+	GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error)
+	UpdateProduct(ctx context.Context, req *UpdateProductRequest) (*UpdateProductReply, error)
+}
 
 func (uc *ProductUsecase) GetMerchantProducts(ctx context.Context, req *GetMerchantProducts) (*Products, error) {
 	return uc.repo.GetMerchantProducts(ctx, req)

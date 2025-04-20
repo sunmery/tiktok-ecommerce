@@ -3,27 +3,36 @@ package service
 import (
 	"context"
 
+	orderv1 "backend/api/merchant/order/v1"
+
 	"github.com/google/uuid"
 
 	"github.com/go-kratos/kratos/v2/log"
 
 	"backend/pkg"
 
-	v1 "backend/api/order/v1"
-
 	cartv1 "backend/api/cart/v1"
+	v1 "backend/api/order/v1"
 	userv1 "backend/api/user/v1"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	orderv1 "backend/api/merchant/order/v1"
 	"backend/application/merchant/internal/biz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+type OrderService struct {
+	orderv1.UnimplementedOrderServer
+	oc *biz.OrderUsecase
+}
+
+func NewOrderService(oc *biz.OrderUsecase) *OrderService {
+	return &OrderService{oc: oc}
+}
+
 // GetMerchantOrders 获取商家订单列表
-func (s *OrderServiceService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*v1.Orders, error) {
+func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {

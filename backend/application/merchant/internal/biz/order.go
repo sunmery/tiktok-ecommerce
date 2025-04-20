@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"github.com/google/uuid"
 )
 
@@ -59,6 +61,23 @@ type (
 		Orders []*SubOrder
 	}
 )
+
+type OrderUsecase struct {
+	repo OrderRepo
+	log  *log.Helper
+}
+
+func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
+	return &OrderUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
+}
+
+// OrderRepo 订单域方法
+type OrderRepo interface {
+	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
+}
 
 func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error) {
 	oc.log.WithContext(ctx).Debugf("biz/order GetMerchantOrders:%+v", req)

@@ -11,6 +11,34 @@ import (
 )
 
 type Querier interface {
+	// 批量创建地址（需要服务层处理）
+	//
+	//  INSERT INTO merchant.addresses (id,
+	//                                   merchant_id,
+	//                                   address_type,
+	//                                   contact_person,
+	//                                   contact_phone,
+	//                                   street_address,
+	//                                   city,
+	//                                   state,
+	//                                   country,
+	//                                   zip_code,
+	//                                   is_default,
+	//                                   remarks)
+	//  VALUES (UNNEST($1::bigint[]),
+	//          UNNEST($2::uuid[]),
+	//          UNNEST($3::varchar[]),
+	//          UNNEST($4::varchar[]),
+	//          UNNEST($5::varchar[]),
+	//          UNNEST($6::text[]),
+	//          UNNEST($7::varchar[]),
+	//          UNNEST($8::varchar[]),
+	//          UNNEST($9::varchar[]),
+	//          UNNEST($10::varchar[]),
+	//          UNNEST($11::boolean[]),
+	//          UNNEST($12::text[]))
+	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	BatchCreateAddresses(ctx context.Context, arg BatchCreateAddressesParams) ([]MerchantAddresses, error)
 	// 获取低库存产品总数
 	//
 	//  SELECT COUNT(*)
@@ -37,6 +65,38 @@ type Querier interface {
 	//  FROM merchant.stock_alerts sa
 	//  WHERE sa.merchant_id = $1::uuid
 	CountStockAlerts(ctx context.Context, merchantID uuid.UUID) (int64, error)
+	// addresses.sql
+	// 创建商家地址
+	//
+	//  INSERT INTO merchant.addresses (id,
+	//                                   merchant_id,
+	//                                   address_type,
+	//                                   contact_person,
+	//                                   contact_phone,
+	//                                   street_address,
+	//                                   city,
+	//                                   state,
+	//                                   country,
+	//                                   zip_code,
+	//                                   is_default,
+	//                                   remarks)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	CreateAddress(ctx context.Context, arg CreateAddressParams) (MerchantAddresses, error)
+	// 删除地址
+	//
+	//  DELETE
+	//  FROM merchant.addresses
+	//  WHERE id = $1
+	//    AND merchant_id = $2
+	DeleteAddress(ctx context.Context, arg DeleteAddressParams) error
+	// 获取地址详情
+	//
+	//  SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	//  FROM merchant.addresses
+	//  WHERE id = $1
+	//    AND merchant_id = $2
+	GetAddress(ctx context.Context, arg GetAddressParams) (MerchantAddresses, error)
 	// 获取低库存产品列表
 	//
 	//  SELECT p.id                       as product_id,
@@ -126,6 +186,15 @@ type Querier interface {
 	//  WHERE p.id = $1::uuid
 	//    AND p.merchant_id = $2::uuid
 	GetProductStock(ctx context.Context, arg GetProductStockParams) (GetProductStockRow, error)
+	// 智能获取发货地址
+	//
+	//  SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	//  FROM merchant.addresses
+	//  WHERE merchant_id = $1
+	//    AND address_type = 'WAREHOUSE'
+	//  ORDER BY is_default DESC, created_at DESC
+	//  LIMIT 1
+	GetShippingAddress(ctx context.Context, merchantID uuid.UUID) (MerchantAddresses, error)
 	// 获取库存调整历史
 	// WHERE sa.product_id = @product_id::uuid
 	//
@@ -162,6 +231,16 @@ type Querier interface {
 	//  ORDER BY sa.updated_at DESC
 	//  LIMIT $3 OFFSET $2
 	GetStockAlerts(ctx context.Context, arg GetStockAlertsParams) ([]GetStockAlertsRow, error)
+	// 地址列表（带分页和过滤）
+	//
+	//  SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	//  FROM merchant.addresses
+	//  WHERE merchant_id = $1
+	//    AND (address_type = $2 OR $2 IS NULL)
+	//    AND (is_default = $3 OR $3 IS NULL)
+	//  ORDER BY id
+	//  LIMIT $4 OFFSET $5
+	ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error)
 	//ListOrdersByUser
 	//
 	//  SELECT id,
@@ -198,6 +277,19 @@ type Querier interface {
 	//  VALUES ($1::uuid, $2::uuid, $3, $4, $5::uuid)
 	//  RETURNING id, product_id, merchant_id, quantity, reason, operator_id, created_at
 	RecordStockAdjustment(ctx context.Context, arg RecordStockAdjustmentParams) (MerchantStockAdjustments, error)
+	// 设置默认地址（带事务处理）
+	//
+	//  WITH update_all AS (
+	//      UPDATE merchant.addresses
+	//          SET is_default = false
+	//          WHERE merchant_id = $3
+	//              AND address_type = (SELECT address_type FROM merchant.addresses WHERE id = $2)
+	//              AND id != $1)
+	//  UPDATE merchant.addresses
+	//  SET is_default = true
+	//  WHERE id = $1
+	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	SetDefaultAddress(ctx context.Context, arg SetDefaultAddressParams) (MerchantAddresses, error)
 	// 设置库存警报阈值
 	//
 	//  INSERT INTO merchant.stock_alerts (product_id, merchant_id, threshold)
@@ -207,6 +299,24 @@ type Querier interface {
 	//          updated_at = NOW()
 	//  RETURNING id, merchant.stock_alerts.product_id, merchant_id, threshold, created_at, updated_at
 	SetStockAlert(ctx context.Context, arg SetStockAlertParams) (MerchantStockAlerts, error)
+	// 更新地址（带动态字段更新）
+	//
+	//  UPDATE merchant.addresses
+	//  SET address_type   = COALESCE($1, address_type),
+	//      contact_person = COALESCE($2, contact_person),
+	//      contact_phone  = COALESCE($3, contact_phone),
+	//      street_address = COALESCE($4, street_address),
+	//      city           = COALESCE($5, city),
+	//      state          = COALESCE($6, state),
+	//      country        = COALESCE($7, country),
+	//      zip_code       = COALESCE($8, zip_code),
+	//      is_default     = COALESCE($9, is_default),
+	//      remarks        = COALESCE($10, remarks),
+	//      updated_at     = NOW()
+	//  WHERE id = $11
+	//    AND merchant_id = $12
+	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (MerchantAddresses, error)
 	//UpdateProduct
 	//
 	//  WITH update_product AS (

@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"backend/application/merchant/internal/data/models"
 
 	"backend/constants"
@@ -23,6 +25,18 @@ import (
 	v1 "backend/api/product/v1"
 	"backend/application/merchant/internal/biz"
 )
+
+type productRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
+func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {
+	return &productRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
 
 func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerchantProducts) (*biz.Products, error) {
 	db := p.data.DB(ctx)

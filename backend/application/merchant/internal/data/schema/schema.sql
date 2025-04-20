@@ -95,3 +95,23 @@ ALTER TABLE orders.orders
 -- 子订单表
 ALTER TABLE orders.sub_orders
     ADD COLUMN payment_status VARCHAR(20) NOT NULL DEFAULT 'pending';
+
+-- 商家地址表设计
+CREATE TABLE merchants.addresses
+(
+    id             BIGINT PRIMARY KEY,
+    merchant_id    UUID         NOT NULL,
+    address_type   VARCHAR(20)  NOT NULL DEFAULT 'WAREHOUSE' CHECK (
+        address_type IN ('WAREHOUSE', 'RETURN', 'STORE', 'BILLING')
+        ),                                -- 地址类型扩展
+    contact_person VARCHAR(255) NOT NULL, -- 联系人姓名
+    contact_phone  VARCHAR(20)  NOT NULL, -- 联系电话
+    street_address TEXT         NOT NULL,
+    city           VARCHAR(255) NOT NULL,
+    state          VARCHAR(20)  NOT NULL,
+    country        VARCHAR(100) NOT NULL,
+    zip_code       VARCHAR(20)  NOT NULL,
+    is_default     BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
