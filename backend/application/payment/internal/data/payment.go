@@ -79,12 +79,9 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 		return nil, errors.New("转换数值为数据库类型失败")
 	}
 
-	// 使用雪花ID
-	paymentID := id.SnowflakeID()
-
 	// 创建支付记录
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
-		ID:       paymentID,
+		ID:       id.SnowflakeID(),
 		OrderID:  req.OrderID,
 		UserID:   req.UserID,
 		Amount:   amount,

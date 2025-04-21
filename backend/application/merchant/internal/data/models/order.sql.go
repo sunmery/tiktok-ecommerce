@@ -14,16 +14,18 @@ import (
 )
 
 const ListOrdersByUser = `-- name: ListOrdersByUser :many
-SELECT id,
+SELECT s.id,
        order_id,
        merchant_id,
        total_amount,
-       currency,
-       status,
+       s.currency,
+       o.payment_status,
+       s.shipping_status,
        items,
-       created_at,
-       updated_at
-FROM orders.sub_orders
+       s.created_at,
+       s.updated_at
+FROM orders.sub_orders s
+         JOIN orders.orders o on s.order_id = o.id
 WHERE merchant_id = $1
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $2
@@ -36,29 +38,32 @@ type ListOrdersByUserParams struct {
 }
 
 type ListOrdersByUserRow struct {
-	ID          int64
-	OrderID     int64
-	MerchantID  uuid.UUID
-	TotalAmount interface{}
-	Currency    string
-	Status      string
-	Items       []byte
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID             int64
+	OrderID        int64
+	MerchantID     uuid.UUID
+	TotalAmount    interface{}
+	Currency       string
+	PaymentStatus  string
+	ShippingStatus string
+	Items          []byte
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 // ListOrdersByUser
 //
-//	SELECT id,
+//	SELECT s.id,
 //	       order_id,
 //	       merchant_id,
 //	       total_amount,
-//	       currency,
-//	       status,
+//	       s.currency,
+//	       o.payment_status,
+//	       s.shipping_status,
 //	       items,
-//	       created_at,
-//	       updated_at
-//	FROM orders.sub_orders
+//	       s.created_at,
+//	       s.updated_at
+//	FROM orders.sub_orders s
+//	         JOIN orders.orders o on s.order_id = o.id
 //	WHERE merchant_id = $1
 //	ORDER BY created_at DESC
 //	LIMIT $3 OFFSET $2
@@ -77,7 +82,8 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 			&i.MerchantID,
 			&i.TotalAmount,
 			&i.Currency,
-			&i.Status,
+			&i.PaymentStatus,
+			&i.ShippingStatus,
 			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -93,41 +99,46 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 }
 
 const QuerySubOrders = `-- name: QuerySubOrders :many
-SELECT id,
-       merchant_id,
-       total_amount,
-       currency,
-       status,
-       items,
-       created_at,
-       updated_at
-FROM orders.sub_orders
+SELECT s.order_id sub_orders_id,
+       s.merchant_id,
+       s.total_amount,
+       s.currency,
+       o.payment_status,
+       s.shipping_status,
+       s.items,
+       s.created_at,
+       s.updated_at
+FROM orders.sub_orders s
+         Join orders.orders o on s.order_id = o.id
 WHERE order_id = $1
 ORDER BY created_at
 `
 
 type QuerySubOrdersRow struct {
-	ID          int64
-	MerchantID  uuid.UUID
-	TotalAmount interface{}
-	Currency    string
-	Status      string
-	Items       []byte
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	SubOrdersID    int64
+	MerchantID     uuid.UUID
+	TotalAmount    interface{}
+	Currency       string
+	PaymentStatus  string
+	ShippingStatus string
+	Items          []byte
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 // QuerySubOrders
 //
-//	SELECT id,
-//	       merchant_id,
-//	       total_amount,
-//	       currency,
-//	       status,
-//	       items,
-//	       created_at,
-//	       updated_at
-//	FROM orders.sub_orders
+//	SELECT s.order_id sub_orders_id,
+//	       s.merchant_id,
+//	       s.total_amount,
+//	       s.currency,
+//	       o.payment_status,
+//	       s.shipping_status,
+//	       s.items,
+//	       s.created_at,
+//	       s.updated_at
+//	FROM orders.sub_orders s
+//	         Join orders.orders o on s.order_id = o.id
 //	WHERE order_id = $1
 //	ORDER BY created_at
 func (q *Queries) QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySubOrdersRow, error) {
@@ -140,11 +151,12 @@ func (q *Queries) QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySu
 	for rows.Next() {
 		var i QuerySubOrdersRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.SubOrdersID,
 			&i.MerchantID,
 			&i.TotalAmount,
 			&i.Currency,
-			&i.Status,
+			&i.PaymentStatus,
+			&i.ShippingStatus,
 			&i.Items,
 			&i.CreatedAt,
 			&i.UpdatedAt,

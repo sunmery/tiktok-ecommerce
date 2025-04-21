@@ -209,12 +209,198 @@
           "OrderService"
         ]
       }
+    },
+    "/v1/orders/{orderId}/receive": {
+      "put": {
+        "summary": "用户确认收货",
+        "operationId": "OrderService_ConfirmReceived",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConfirmReceivedResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceConfirmReceivedBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
+    "/v1/orders/{orderId}/ship": {
+      "put": {
+        "summary": "商家发货",
+        "operationId": "OrderService_ShipOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ShipOrderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceShipOrderBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
+    "/v1/orders/{orderId}/status": {
+      "get": {
+        "summary": "查询订单状态(支付状态和货运状态)",
+        "operationId": "OrderService_GetOrderStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetOrderStatusResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      },
+      "put": {
+        "summary": "更新订单状态",
+        "operationId": "OrderService_UpdateOrderStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateOrderStatusResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceUpdateOrderStatusBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
     }
   },
   "definitions": {
+    "OrderServiceConfirmReceivedBody": {
+      "type": "object",
+      "title": "用户确认收货请求的消息结构"
+    },
     "OrderServiceMarkOrderPaidBody": {
       "type": "object",
       "title": "标记订单为已支付请求的消息结构"
+    },
+    "OrderServiceShipOrderBody": {
+      "type": "object",
+      "properties": {
+        "trackingNumber": {
+          "type": "string",
+          "title": "物流单号"
+        },
+        "carrier": {
+          "type": "string",
+          "title": "承运商"
+        },
+        "estimatedDelivery": {
+          "type": "string",
+          "title": "预计送达时间"
+        }
+      },
+      "title": "商家发货请求的消息结构"
+    },
+    "OrderServiceUpdateOrderStatusBody": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "title": "新的订单状态"
+        }
+      },
+      "title": "更新订单状态请求的消息结构"
     },
     "googleprotobufAny": {
       "type": "object",
@@ -310,6 +496,34 @@
       },
       "title": "购物车商品"
     },
+    "v1ConfirmReceivedResp": {
+      "type": "object",
+      "title": "用户确认收货响应的消息结构"
+    },
+    "v1GetOrderStatusResp": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "主订单 ID"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态"
+        }
+      },
+      "title": "查询订单状态响应的消息结构"
+    },
     "v1MarkOrderPaidResp": {
       "type": "object",
       "title": "标记订单为已支付响应的消息结构"
@@ -353,6 +567,10 @@
         "paymentStatus": {
           "$ref": "#/definitions/v1PaymentStatus",
           "title": "支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态"
         }
       },
       "title": "订单的消息结构"
@@ -404,10 +622,10 @@
         "PROCESSING",
         "PAID",
         "FAILED",
-        "CANCELLED"
+        "CANCELLED_PAID"
       ],
       "default": "NOT_PAID",
-      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
+      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED_PAID: 取消支付",
       "title": "支付状态的枚举类型"
     },
     "v1PlaceOrderReq": {
@@ -445,6 +663,28 @@
         }
       },
       "title": "创建订单响应的消息结构"
+    },
+    "v1ShipOrderResp": {
+      "type": "object",
+      "title": "商家发货响应的消息结构"
+    },
+    "v1ShippingStatus": {
+      "type": "string",
+      "enum": [
+        "PENDING_SHIPMENT",
+        "SHIPPED",
+        "IN_TRANSIT",
+        "DELIVERED",
+        "CONFIRMED",
+        "CANCELLED_SHIPMENT"
+      ],
+      "default": "PENDING_SHIPMENT",
+      "description": "- PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
+      "title": "货运状态的枚举类型"
+    },
+    "v1UpdateOrderStatusResp": {
+      "type": "object",
+      "title": "更新订单状态响应的消息结构"
     }
   }
 }

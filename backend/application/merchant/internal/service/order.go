@@ -3,13 +3,17 @@ package service
 import (
 	"context"
 
+	"backend/constants"
+
+	"backend/application/merchant/internal/pkg"
+
+	globalPkg "backend/pkg"
+
 	orderv1 "backend/api/merchant/order/v1"
 
 	"github.com/google/uuid"
 
 	"github.com/go-kratos/kratos/v2/log"
-
-	"backend/pkg"
 
 	cartv1 "backend/api/cart/v1"
 	v1 "backend/api/order/v1"
@@ -18,6 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"backend/application/merchant/internal/biz"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,7 +39,7 @@ func NewOrderService(oc *biz.OrderUsecase) *OrderService {
 // GetMerchantOrders 获取商家订单列表
 func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		log.Errorf("获取用户ID失败: %v", err)
 		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
@@ -52,15 +57,12 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		userId = parsedId
 	}
 
-	// 构建业务层请求
-	listReq := &biz.GetMerchantOrdersReq{
+	// 调用业务层获取订单列表
+	resp, err := s.oc.GetMerchantOrders(ctx, &biz.GetMerchantOrdersReq{
 		UserID:   userId,
 		Page:     req.Page,
 		PageSize: req.PageSize,
-	}
-
-	// 调用业务层获取订单列表
-	resp, err := s.oc.GetMerchantOrders(ctx, listReq)
+	})
 	if err != nil {
 		log.Errorf("获取商家订单失败: %v", err)
 		return nil, status.Errorf(codes.Internal, "获取商家订单失败: %v", err)
@@ -90,6 +92,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 订单项集合 - 汇总所有子订单的订单项
 		var orderItems []*v1.OrderItem
+		var shippingStatus constants.ShippingStatus
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
 				// 确保CartItem中的数据是有效的
@@ -107,17 +110,18 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 					Cost: item.Cost,
 				})
 			}
+			shippingStatus = subOrder.ShippingStatus
 		}
 
 		// 转换时间戳
 		createdAt := timestamppb.New(firstSubOrder.CreatedAt)
 
-		// 解析支付状态
-		paymentStatus := mapStringStatusToProto(firstSubOrder.Status)
-
+		// 解析支付状态和运输状态
+		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.PaymentStatus))
+		ShippingStatus := pkg.MapShippingStatusToProto(shippingStatus)
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
 		address := &userv1.Address{
-			StreetAddress: "未提供地址信息", // 这里应该从订单数据中获取实际地址
+			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
 			City:          "",
 			State:         "",
 			Country:       "",
@@ -126,53 +130,16 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 添加订单到响应列表
 		orders = append(orders, &v1.Order{
-			Items:         orderItems,
-			OrderId:       firstSubOrder.ID, // 注意: 确保ID类型转换正确
-			UserId:        firstSubOrder.MerchantID.String(),
-			Currency:      firstSubOrder.Currency,
-			Address:       address,
-			Email:         "未提供邮箱", // 这里应该从订单数据中获取实际邮箱
-			CreatedAt:     createdAt,
-			PaymentStatus: paymentStatus,
+			Items:          orderItems,
+			OrderId:        firstSubOrder.ID, // 注意: 确保ID类型转换正确
+			UserId:         firstSubOrder.MerchantID.String(),
+			Currency:       firstSubOrder.Currency,
+			Address:        address,
+			Email:          "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
+			CreatedAt:      createdAt,
+			PaymentStatus:  paymentStatus,
+			ShippingStatus: ShippingStatus,
 		})
 	}
-
-	log.Debugf("返回 %d 个商家订单", len(orders))
 	return &v1.Orders{Orders: orders}, nil
-}
-
-// 将字符串状态转换为Proto枚举
-func mapStringStatusToProto(status string) v1.PaymentStatus {
-	switch status {
-	case string(biz.PaymentPending):
-		return v1.PaymentStatus_NOT_PAID
-	case string(biz.PaymentProcessing):
-		return v1.PaymentStatus_PROCESSING
-	case string(biz.PaymentPaid):
-		return v1.PaymentStatus_PAID
-	case string(biz.PaymentFailed):
-		return v1.PaymentStatus_FAILED
-	case string(biz.PaymentCancelled):
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
-	}
-}
-
-// 转换业务层枚举到Proto枚举
-func mapBizStatusToProto(status biz.PaymentStatus) v1.PaymentStatus {
-	switch status {
-	case biz.PaymentPending:
-		return v1.PaymentStatus_NOT_PAID
-	case biz.PaymentProcessing:
-		return v1.PaymentStatus_PROCESSING
-	case biz.PaymentPaid:
-		return v1.PaymentStatus_PAID
-	case biz.PaymentFailed:
-		return v1.PaymentStatus_FAILED
-	case biz.PaymentCancelled:
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
-	}
 }

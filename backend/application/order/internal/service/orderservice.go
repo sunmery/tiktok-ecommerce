@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"backend/application/order/internal/pkg"
+
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	cartv1 "backend/api/cart/v1"
@@ -12,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"backend/application/order/internal/biz"
-	"backend/pkg"
+	globalpkg "backend/pkg"
 
 	v1 "backend/api/order/v1"
 
@@ -32,7 +36,7 @@ func NewOrderServiceService(uc *biz.OrderUsecase) *OrderServiceService {
 }
 
 func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (*v1.PlaceOrderResp, error) {
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
@@ -83,7 +87,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 
 // GetOrder 查询用户订单ID
 func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq) (*v1.Order, error) {
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	order, err := s.uc.GetOrder(ctx, &biz.GetOrderReq{
 		UserId:  userId,
 		OrderId: req.Id,
@@ -106,7 +110,7 @@ func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq)
 
 func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.GetConsumerOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		log.Errorf("获取用户ID失败: %v", err)
 		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
@@ -137,7 +141,7 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 
 func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		log.Errorf("获取用户ID失败: %v", err)
 		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
@@ -205,11 +209,11 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 		createdAt := timestamppb.New(firstSubOrder.CreatedAt)
 
 		// 解析支付状态
-		paymentStatus := mapStringStatusToProto(firstSubOrder.Status)
+		paymentStatus := pkg.MapPaymentStatusToProto(firstSubOrder.PaymentStatus)
 
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
 		address := &userv1.Address{
-			StreetAddress: "未提供地址信息", // 这里应该从订单数据中获取实际地址
+			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
 			City:          "",
 			State:         "",
 			Country:       "",
@@ -223,9 +227,9 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 			UserId:        firstSubOrder.MerchantID.String(),
 			Currency:      firstSubOrder.Currency,
 			Address:       address,
-			Email:         "未提供邮箱", // 这里应该从订单数据中获取实际邮箱
+			Email:         "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
 			CreatedAt:     createdAt,
-			PaymentStatus: paymentStatus,
+			PaymentStatus: paymentStatus, // TODO
 		})
 	}
 
@@ -235,7 +239,7 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 
 func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrderPaidReq) (*v1.MarkOrderPaidResp, error) {
 	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
@@ -268,38 +272,107 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	return &v1.MarkOrderPaidResp{}, nil
 }
 
-// 转换业务层枚举到 Proto int
-func mapBizStatusToProto(status biz.PaymentStatus) v1.PaymentStatus {
-	switch status {
-	case biz.PaymentPending:
-		return v1.PaymentStatus_NOT_PAID
-	case biz.PaymentProcessing:
-		return v1.PaymentStatus_PROCESSING
-	case biz.PaymentPaid:
-		return v1.PaymentStatus_PAID
-	case biz.PaymentFailed:
-		return v1.PaymentStatus_FAILED
-	case biz.PaymentCancelled:
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
+func (s *OrderServiceService) GetOrderStatus(ctx context.Context, req *v1.GetOrderStatusReq) (*v1.GetOrderStatusResp, error) {
+	// 从网关获取用户ID
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
+	// 验证订单ID
+	if req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层获取订单状态
+	orderStatus, err := s.uc.GetOrderStatus(ctx, &biz.GetOrderStatusReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+	}
+	log.Debugf("orderStatus: %v", orderStatus)
+	return &v1.GetOrderStatusResp{
+		OrderId:        orderStatus.OrderId,
+		SubOrderId:     orderStatus.SubOrderId,
+		PaymentStatus:  pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus),
+		ShippingStatus: pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
+	}, nil
 }
 
-// 将字符串状态转换为Proto枚举
-func mapStringStatusToProto(status string) v1.PaymentStatus {
-	switch status {
-	case string(biz.PaymentPending):
-		return v1.PaymentStatus_NOT_PAID
-	case string(biz.PaymentProcessing):
-		return v1.PaymentStatus_PROCESSING
-	case string(biz.PaymentPaid):
-		return v1.PaymentStatus_PAID
-	case string(biz.PaymentFailed):
-		return v1.PaymentStatus_FAILED
-	case string(biz.PaymentCancelled):
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
+func (s *OrderServiceService) UpdateOrderStatus(ctx context.Context, req *v1.UpdateOrderStatusReq) (*v1.UpdateOrderStatusResp, error) {
+	// 从网关获取用户ID
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
+	// 验证订单ID
+	if req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层获取订单状态
+	orderStatus, err := s.uc.UpdateOrderStatus(ctx, &biz.UpdateOrderStatusReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+		Status:  constants.PaymentStatus(req.Status),
+	})
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+	}
+	log.Debugf("orderStatus: %v", orderStatus)
+	return &v1.UpdateOrderStatusResp{}, nil
+}
+
+// ShipOrder 发货(商家角色)
+func (s *OrderServiceService) ShipOrder(ctx context.Context, req *v1.ShipOrderReq) (*v1.ShipOrderResp, error) {
+	// 从网关获取用户ID
+	// userId, err := globalpkg.GetMetadataUesrID(ctx)
+	// if err != nil {
+	// 	return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
+	// }
+	// 验证订单ID
+	if req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层标记订单为已支付
+	orderPaid, err := s.uc.ShipOrder(ctx, &biz.ShipOrderReq{
+		// UserId:            userId,
+		OrderId:           req.OrderId,
+		TrackingNumber:    req.TrackingNumber,
+		Carrier:           req.Carrier,
+		EstimatedDelivery: req.EstimatedDelivery,
+	})
+	if err != nil {
+		// 根据错误类型返回不同的状态码
+		if err.Error() == "order does not belong to user" {
+			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+		}
+	}
+	log.Debugf("orderPaid: %v", orderPaid)
+	return &v1.ShipOrderResp{}, nil
+}
+
+// ConfirmReceived 确认收货(用户角色)
+func (s *OrderServiceService) ConfirmReceived(ctx context.Context, req *v1.ConfirmReceivedReq) (*v1.ConfirmReceivedResp, error) {
+	// 从网关获取用户ID
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
+	}
+	// 验证订单ID
+	if req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层标记订单为已支付
+	orderPaid, err := s.uc.ConfirmReceived(ctx, &biz.ConfirmReceivedReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+	})
+	if err != nil {
+		// 根据错误类型返回不同的状态码
+		if err.Error() == "order does not belong to user" {
+			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+		}
+	}
+	log.Debugf("orderPaid: %v", orderPaid)
+	return &v1.ConfirmReceivedResp{}, nil
 }

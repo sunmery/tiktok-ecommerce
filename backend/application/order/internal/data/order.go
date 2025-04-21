@@ -3,8 +3,19 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+
+	"backend/application/order/internal/pkg"
+
+	"backend/constants"
+
+	kerrors "github.com/go-kratos/kratos/v2/errors"
+
+	"github.com/jackc/pgx/v5"
 
 	"backend/application/order/internal/pkg/id"
 
@@ -28,6 +39,36 @@ import (
 type orderRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (o *orderRepo) UpdateOrderStatus(ctx context.Context, req *biz.UpdateOrderStatusReq) (*biz.UpdateOrderStatusResp, error) {
+	err := o.data.db.UpdateOrderPaymentStatus(ctx, models.UpdateOrderPaymentStatusParams{
+		ID:            req.OrderId,
+		PaymentStatus: string(req.Status),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
+		}
+		return nil, err
+	}
+	return &biz.UpdateOrderStatusResp{}, nil
+}
+
+func (o *orderRepo) GetOrderStatus(ctx context.Context, req *biz.GetOrderStatusReq) (*biz.GetOrderStatusReply, error) {
+	orderStatus, err := o.data.db.GetOrderStatus(ctx, req.OrderId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
+		}
+		return nil, err
+	}
+	return &biz.GetOrderStatusReply{
+		OrderId:        orderStatus.OrderID,
+		SubOrderId:     orderStatus.SubOrderID,
+		PaymentStatus:  constants.PaymentStatus(orderStatus.PaymentStatus),
+		ShippingStatus: constants.ShippingStatus(orderStatus.ShippingStatus),
+	}, nil
 }
 
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
@@ -56,18 +97,18 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	}
 
 	// 检查订单当前支付状态
-	if updatePaymentStatusResult.PaymentStatus == string(biz.PaymentPaid) {
+	if updatePaymentStatusResult.PaymentStatus == string(constants.PaymentPaid) {
 		// 订单已经是已支付状态，直接返回成功
 		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
 		return &biz.MarkOrderPaidResp{}, nil
 	}
 
 	o.log.WithContext(ctx).Infof("Updating order %d payment status from %s to %s",
-		req.OrderId, updatePaymentStatusResult.PaymentStatus, string(biz.PaymentPaid))
+		req.OrderId, updatePaymentStatusResult.PaymentStatus, string(constants.PaymentPaid))
 
 	// 更新订单支付状态为已支付
 	_, err = tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
-		PaymentStatus: string(biz.PaymentPaid),
+		PaymentStatus: string(constants.PaymentPaid),
 		ID:            req.OrderId,
 	})
 	if err != nil {
@@ -77,19 +118,86 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 
 	// 更新子订单状态
 	_, err = tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
-		Status:  string(biz.PaymentPaid),
+		Status:  string(constants.PaymentPaid),
 		OrderID: req.OrderId,
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
 		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
 	}
-	// 获取更新的子订单数量
-	// rowsAffected := markSubOrderAsPaidResult.
-	// 	o.log.WithContext(ctx).Infof("Updated %d sub orders for order %s", rowsAffected, req.OrderId)
+
+	// 更新订单物流状态为待发货
+	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+		ShippingStatus: "PENDING_SHIPMENT",
+		ID:             req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
+		return nil, fmt.Errorf("failed to update order shipping status: %w", err)
+	}
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
+}
+
+func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.ShipOrderResp, error) {
+	tx := o.data.DB(ctx)
+
+	// 更新订单物流状态为已发货
+	err := tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+		ShippingStatus: string(constants.ShippingShipped),
+		ID:             req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
+		return nil, fmt.Errorf("failed to update order shipping status: %w", err)
+	}
+
+	// 更新订单物流信息
+	_, err = tx.UpdateOrderShippingInfo(ctx, models.UpdateOrderShippingInfoParams{
+		TrackingNumber: &req.TrackingNumber,
+		Carrier:        &req.Carrier,
+		// EstimatedDelivery: &req.EstimatedDelivery,
+		ID: req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order shipping info: %v", err)
+		return nil, fmt.Errorf("failed to update order shipping info: %w", err)
+	}
+
+	return &biz.ShipOrderResp{}, nil
+}
+
+func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceivedReq) (*biz.ConfirmReceivedResp, error) {
+	tx := o.data.DB(ctx)
+
+	// 获取订单信息，确认订单存在且属于该用户
+	order, err := tx.GetOrderByID(ctx, models.GetOrderByIDParams{
+		UserID:  req.UserId,
+		OrderID: req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// 验证订单所有者
+	if order.UserID.String() != req.UserId.String() {
+		o.log.WithContext(ctx).Warnf("Order %d does not belong to user %s", req.OrderId, req.UserId)
+		return nil, fmt.Errorf("order does not belong to user")
+	}
+
+	// 更新订单物流状态为已确认收货
+	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+		ShippingStatus: string(constants.ShippingConfirmed),
+		ID:             req.OrderId,
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
+		return nil, fmt.Errorf("failed to update order shipping status: %w", err)
+	}
+
+	return &biz.ConfirmReceivedResp{}, nil
 }
 
 func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Order, error) {
@@ -132,6 +240,7 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 
 	// 构建主订单
 	orderProto := &v1.Order{
+		Items:    allItems,
 		OrderId:  order.ID,
 		UserId:   order.UserID.String(),
 		Currency: order.Currency,
@@ -142,29 +251,10 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 			Country:       order.Country,
 			ZipCode:       order.ZipCode,
 		},
-		Email:     order.Email,
-		CreatedAt: timestamppb.New(order.CreatedAt),
-		Items:     allItems,
-	}
-
-	// 设置支付状态（如果有）
-	if order.PaymentStatus != "" {
-		switch order.PaymentStatus {
-		case string(biz.PaymentPending):
-			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-		case string(biz.PaymentProcessing):
-			orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
-		case string(biz.PaymentPaid):
-			orderProto.PaymentStatus = v1.PaymentStatus_PAID
-		case string(biz.PaymentFailed):
-			orderProto.PaymentStatus = v1.PaymentStatus_FAILED
-		case string(biz.PaymentCancelled):
-			orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
-		default:
-			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-		}
-	} else {
-		orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+		Email:         order.Email,
+		CreatedAt:     timestamppb.New(order.CreatedAt),
+		PaymentStatus: pkg.MapPaymentStatusToProto(constants.PaymentStatus(order.PaymentStatus)),
+		// ShippingStatus: 0,
 	}
 
 	return orderProto, nil
@@ -211,6 +301,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 
 		// 将所有子订单的OrderItem合并到一个列表
 		var allItems []*v1.OrderItem
+		var shippingStatus v1.ShippingStatus
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
 				allItems = append(allItems, &v1.OrderItem{
@@ -224,10 +315,12 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 					Cost: item.Cost,
 				})
 			}
+			shippingStatus = v1.ShippingStatus(pkg.MapPaymentStatusToProto(constants.PaymentStatus(subOrder.ShippingStatus)))
 		}
 
 		// 构建主订单
 		orderProto := &v1.Order{
+			Items:    allItems,
 			OrderId:  order.ID,
 			UserId:   order.UserID.String(),
 			Currency: order.Currency,
@@ -238,29 +331,10 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 				Country:       order.Country,
 				ZipCode:       order.ZipCode,
 			},
-			Email:     order.Email,
-			CreatedAt: timestamppb.New(order.CreatedAt),
-			Items:     allItems,
-		}
-
-		// 设置支付状态（如果有）
-		if order.PaymentStatus != "" {
-			switch order.PaymentStatus {
-			case string(biz.PaymentPending):
-				orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-			case string(biz.PaymentProcessing):
-				orderProto.PaymentStatus = v1.PaymentStatus_PROCESSING
-			case string(biz.PaymentPaid):
-				orderProto.PaymentStatus = v1.PaymentStatus_PAID
-			case string(biz.PaymentFailed):
-				orderProto.PaymentStatus = v1.PaymentStatus_FAILED
-			case string(biz.PaymentCancelled):
-				orderProto.PaymentStatus = v1.PaymentStatus_CANCELLED
-			default:
-				orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
-			}
-		} else {
-			orderProto.PaymentStatus = v1.PaymentStatus_NOT_PAID
+			Email:          order.Email,
+			CreatedAt:      timestamppb.New(order.CreatedAt),
+			PaymentStatus:  pkg.MapPaymentStatusToProto(constants.PaymentStatus(order.PaymentStatus)),
+			ShippingStatus: shippingStatus,
 		}
 
 		orders = append(orders, orderProto)
@@ -385,10 +459,10 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 	// 去重订单ID
 	uniqueOrderIDs := make(map[int64]bool)
 	var uniqueIDs []int64
-	for _, id := range orderIDs {
-		if !uniqueOrderIDs[id] {
-			uniqueOrderIDs[id] = true
-			uniqueIDs = append(uniqueIDs, id)
+	for _, orderId := range orderIDs {
+		if !uniqueOrderIDs[orderId] {
+			uniqueOrderIDs[orderId] = true
+			uniqueIDs = append(uniqueIDs, orderId)
 		}
 	}
 
@@ -405,18 +479,13 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 		// 添加子订单到结果
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
-			Status := biz.PaymentPending
 			for _, order := range orders {
 				if order.ID == subOrder.ID {
-					if order.Status != "" {
-						Status = biz.PaymentStatus(order.Status)
-					}
+					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
+					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
 				}
 			}
-
-			// 更新子订单的支付状态
-			subOrder.Status = string(Status)
 			respOrders = append(respOrders, subOrder)
 		}
 	}
@@ -431,14 +500,15 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	}
 
 	type dbSubOrder struct {
-		ID          int64           `json:"id"`
-		MerchantID  string          `json:"merchant_id"`
-		TotalAmount json.Number     `json:"total_amount"`
-		Currency    string          `json:"currency"`
-		Status      string          `json:"status"`
-		Items       json.RawMessage `json:"items"`
-		CreatedAt   time.Time       `json:"created_at"`
-		UpdatedAt   time.Time       `json:"updated_at"`
+		ID             int64           `json:"ID,omitempty"`
+		MerchantID     string          `json:"merchantID,omitempty"`
+		TotalAmount    json.Number     `json:"totalAmount,omitempty"`
+		Currency       string          `json:"currency,omitempty"`
+		PaymentStatus  string          `json:"paymentStatus,omitempty"`
+		ShippingStatus string          `json:"shippingStatus,omitempty"`
+		Items          json.RawMessage `json:"items,omitempty"`
+		CreatedAt      time.Time       `json:"createdAt"`
+		UpdatedAt      time.Time       `json:"updatedAt"`
 	}
 
 	var dbSubs []dbSubOrder
@@ -477,14 +547,15 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:          d.ID,
-			MerchantID:  merchantID,
-			TotalAmount: totalAmount,
-			Currency:    d.Currency,
-			Status:      d.Status,
-			Items:       orderItems,
-			CreatedAt:   d.CreatedAt,
-			UpdatedAt:   d.UpdatedAt,
+			ID:             d.ID,
+			MerchantID:     merchantID,
+			TotalAmount:    totalAmount,
+			Currency:       d.Currency,
+			PaymentStatus:  constants.PaymentStatus(d.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(d.ShippingStatus),
+			Items:          orderItems,
+			CreatedAt:      d.CreatedAt,
+			UpdatedAt:      d.UpdatedAt,
 		})
 	}
 
@@ -537,20 +608,21 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		}
 
 		// 转换金额
-		amount, err := types.NumericToFloat(order.TotalAmount)
+		amount, err := types.NumericToFloat(order.TotalAmount.(pgtype.Numeric))
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert amount: %w", err)
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:          order.ID,
-			MerchantID:  order.MerchantID,
-			TotalAmount: amount,
-			Currency:    order.Currency,
-			Status:      order.Status,
-			Items:       orderItems,
-			CreatedAt:   order.CreatedAt,
-			UpdatedAt:   order.UpdatedAt,
+			ID:             order.ID,
+			MerchantID:     order.MerchantID,
+			TotalAmount:    amount,
+			Currency:       order.Currency,
+			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
+			Items:          orderItems,
+			CreatedAt:      order.CreatedAt.Time,
+			UpdatedAt:      order.UpdatedAt.Time,
 		})
 	}
 

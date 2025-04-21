@@ -53,12 +53,43 @@ service OrderService {
       body: "*"                          // 表示请求体包含所有字段
     };
   }
+
+  // 查询订单状态(支付状态和货运状态)
+  rpc GetOrderStatus(GetOrderStatusReq) returns (GetOrderStatusResp) {
+    option (google.api.http) = {
+      get: "/v1/orders/{order_id}/status" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+    };
+  }
+
+  // 更新订单状态
+  rpc UpdateOrderStatus(UpdateOrderStatusReq) returns (UpdateOrderStatusResp) {
+    option (google.api.http) = {
+      put: "/v1/orders/{order_id}/status" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      body: "*"                         // 表示请求体包含所有字段
+    };
+  }
+
+  // 商家发货
+  rpc ShipOrder(ShipOrderReq) returns (ShipOrderResp) {
+    option (google.api.http) = {
+      put: "/v1/orders/{order_id}/ship" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      body: "*"                         // 表示请求体包含所有字段
+    };
+  }
+
+  // 用户确认收货
+  rpc ConfirmReceived(ConfirmReceivedReq) returns (ConfirmReceivedResp) {
+    option (google.api.http) = {
+      put: "/v1/orders/{order_id}/receive" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      body: "*"                            // 表示请求体包含所有字段
+    };
+  }
 }
 
 // 创建订单请求的消息结构
 message PlaceOrderReq {
   string currency = 2 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
-  user.v1.Address address = 3; // 用户地址信息
+  user.v1.Address address = 3; // 用户地址信息 
   string email = 4; // 用户邮箱
   repeated OrderItem order_items = 5; // 订单项列表
 }
@@ -85,7 +116,17 @@ enum PaymentStatus {
   PROCESSING = 1; // 处理中
   PAID = 2; // 已支付
   FAILED = 3; // 支付失败
-  CANCELLED = 4; // 取消支付
+  CANCELLED_PAID = 4; // 取消支付
+}
+
+// 货运状态的枚举类型
+enum ShippingStatus {
+  PENDING_SHIPMENT = 0; //  待发货
+  SHIPPED = 1; // 已发货
+  IN_TRANSIT = 2; // 运输中
+  DELIVERED = 3; // 已送达
+  CONFIRMED = 4; // 已收货
+  CANCELLED_SHIPMENT = 5; // 已取消发货
 }
 
 // 订单的消息结构
@@ -101,6 +142,7 @@ message Order {
   string email = 6; // 用户邮箱
   google.protobuf.Timestamp created_at = 7; // 订单创建时间
   PaymentStatus payment_status = 8; // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
+  ShippingStatus shipping_status = 9; // 货运状态
 }
 
 message GetOrderReq {
@@ -127,9 +169,51 @@ message Orders {
 
 // 标记订单为已支付请求的消息结构
 message MarkOrderPaidReq {
-//  string user_id = 1; // 用户 ID
+  //  string user_id = 1; // 用户 ID
   int64 order_id = 2; // 订单 ID
 }
 
 // 标记订单为已支付响应的消息结构
 message MarkOrderPaidResp {}
+
+// 查询订单状态请求的消息结构
+message GetOrderStatusReq {
+  int64 order_id = 1; // 订单 ID
+}
+
+
+// 更新订单状态请求的消息结构
+message UpdateOrderStatusReq {
+  int64 order_id = 1; // 订单 ID
+  string status = 2; // 新的订单状态
+}
+
+// 更新订单状态响应的消息结构
+message UpdateOrderStatusResp {}
+
+// 查询订单状态响应的消息结构
+message GetOrderStatusResp {
+  int64 order_id = 1; // 主订单 ID
+  int64 sub_order_id = 2; // 子订单 ID
+  PaymentStatus payment_status = 3; // 支付状态
+  ShippingStatus shipping_status = 4; // 货运状态
+}
+
+// 商家发货请求的消息结构
+message ShipOrderReq {
+  int64 order_id = 1; // 订单 ID
+  string tracking_number = 2; // 物流单号
+  string carrier = 3; // 承运商
+  string estimated_delivery = 4; // 预计送达时间
+}
+
+// 商家发货响应的消息结构
+message ShipOrderResp {}
+
+// 用户确认收货请求的消息结构
+message ConfirmReceivedReq {
+  int64 order_id = 1; // 订单 ID
+}
+
+// 用户确认收货响应的消息结构
+message ConfirmReceivedResp {}

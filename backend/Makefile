@@ -158,15 +158,6 @@ docker-deploy:
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
 
-.PHONY: docker-deploy-all
-# 遍历所有微服务并执行部署
-docker-deploy-all:
-	@for service in $(SERVICES); do \
-		service_name=$$(basename $$service); \
-		echo "正在部署微服务: $$service_name"; \
-		make docker-deploy SERVICE=$$service_name; \
-	done
-
 .PHONY: generate
 # generate client code
 generate:

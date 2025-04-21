@@ -1,11 +1,11 @@
 package main
 
 import (
+	"backend/application/admin/internal/conf"
+	"backend/application/admin/pkg"
 	"flag"
 	"fmt"
 	"github.com/go-kratos/kratos/v2/registry"
-	"backend/application/admin/internal/conf"
-	"backend/application/admin/pkg"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"

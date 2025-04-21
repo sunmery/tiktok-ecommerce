@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -95,18 +97,13 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 		// 添加子订单到结果
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
-			paymentStatus := biz.PaymentPending
 			for _, order := range orders {
-				if order.ID == subOrder.ID {
-					if order.Status != "" {
-						paymentStatus = biz.PaymentStatus(order.Status)
-					}
+				if order.OrderID == subOrder.ID {
+					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
+					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
 				}
 			}
-
-			// 更新子订单的支付状态
-			subOrder.Status = string(paymentStatus)
 			respOrders = append(respOrders, subOrder)
 		}
 	}
@@ -115,7 +112,6 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 	return &biz.GetMerchantOrdersReply{Orders: respOrders}, nil
 }
 
-// 获取订单的子订单信息
 func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.SubOrder, error) {
 	// 使用父上下文创建子上下文，保留链路追踪信息
 	subCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -150,7 +146,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 
 		var subOrderItems []SubOrderItem
 		if err := json.Unmarshal(order.Items, &subOrderItems); err != nil {
-			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.ID)
+			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrdersID)
 
 			// 尝试记录原始数据用于调试
 			o.log.WithContext(ctx).Debugf("原始子订单数据: %s", string(order.Items))
@@ -164,7 +160,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		for _, item := range subOrderItems {
 			// 验证商品ID和商家ID的有效性
 			if item.Item == nil {
-				o.log.WithContext(ctx).Warnf("子订单项缺少商品信息, 跳过此项, 订单ID: %d, 子订单ID: %d", orderID, order.ID)
+				o.log.WithContext(ctx).Warnf("子订单项缺少商品信息, 跳过此项, 订单ID: %d, 子订单ID: %d", orderID, order.SubOrdersID)
 				continue
 			}
 
@@ -187,27 +183,28 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		case pgtype.Numeric:
 			convertedAmount, err := types.NumericToFloat(v)
 			if err != nil {
-				o.log.WithContext(ctx).Errorf("转换金额失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.ID)
+				o.log.WithContext(ctx).Errorf("转换金额失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrdersID)
 				return nil, fmt.Errorf("转换金额失败: %w", err)
 			}
 			amount = convertedAmount
 		case float64:
 			amount = v
 		default:
-			o.log.WithContext(ctx).Errorf("未知的金额类型: %T, 订单ID: %d, 子订单ID: %d", order.TotalAmount, orderID, order.ID)
+			o.log.WithContext(ctx).Errorf("未知的金额类型: %T, 订单ID: %d, 子订单ID: %d", order.TotalAmount, orderID, order.SubOrdersID)
 			return nil, fmt.Errorf("未知的金额类型: %T", order.TotalAmount)
 		}
 
 		// 添加子订单到结果集
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:          order.ID,
-			MerchantID:  order.MerchantID,
-			TotalAmount: amount,
-			Currency:    order.Currency,
-			Status:      order.Status,
-			Items:       orderItems,
-			CreatedAt:   order.CreatedAt,
-			UpdatedAt:   order.UpdatedAt,
+			ID:             order.SubOrdersID,
+			MerchantID:     order.MerchantID,
+			TotalAmount:    amount,
+			Currency:       order.Currency,
+			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
+			Items:          orderItems,
+			CreatedAt:      order.CreatedAt,
+			UpdatedAt:      order.UpdatedAt,
 		})
 	}
 

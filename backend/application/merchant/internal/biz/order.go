@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	"github.com/google/uuid"
@@ -40,14 +42,15 @@ type Address struct {
 }
 
 type SubOrder struct {
-	ID          int64
-	MerchantID  uuid.UUID
-	TotalAmount float64
-	Currency    string
-	Status      string
-	Items       []*OrderItem
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID             int64
+	MerchantID     uuid.UUID
+	TotalAmount    float64
+	Currency       string
+	PaymentStatus  constants.PaymentStatus
+	ShippingStatus constants.ShippingStatus
+	Items          []*OrderItem
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type (

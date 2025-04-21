@@ -4,20 +4,12 @@ import (
 	"context"
 	"time"
 
+	"backend/constants"
+
 	v1 "backend/api/order/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
-)
-
-type PaymentStatus string
-
-const (
-	PaymentPending    PaymentStatus = "PENDING"
-	PaymentProcessing PaymentStatus = "PROCESSING"
-	PaymentPaid       PaymentStatus = "PAID"
-	PaymentFailed     PaymentStatus = "FAILED"
-	PaymentCancelled  PaymentStatus = "CANCELLED"
 )
 
 type Address struct {
@@ -29,14 +21,15 @@ type Address struct {
 }
 
 type SubOrder struct {
-	ID          int64
-	MerchantID  uuid.UUID
-	TotalAmount float64
-	Currency    string
-	Status      string
-	Items       []*OrderItem
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID             int64
+	MerchantID     uuid.UUID
+	TotalAmount    float64
+	Currency       string
+	PaymentStatus  constants.PaymentStatus
+	ShippingStatus constants.ShippingStatus
+	Items          []*OrderItem
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type (
@@ -104,14 +97,49 @@ type GetOrderReq struct {
 	OrderId int64
 }
 
-type OrderRepo interface {
-	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
-	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error)
-	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
+// 发货
+type (
+	ShipOrderReq struct {
+		OrderId           int64
+		TrackingNumber    string
+		Carrier           string
+		EstimatedDelivery string
+	}
+	ShipOrderResp struct{}
+)
 
-	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
-	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
-}
+// 查询订单状态
+type (
+	GetOrderStatusReq struct {
+		UserId  uuid.UUID
+		OrderId int64
+	}
+	GetOrderStatusReply struct {
+		OrderId        int64 // 主订单 ID
+		SubOrderId     int64 // 子订单 ID
+		PaymentStatus  constants.PaymentStatus
+		ShippingStatus constants.ShippingStatus
+	}
+)
+
+// 更新订单状态
+type (
+	UpdateOrderStatusReq struct {
+		UserId  uuid.UUID
+		OrderId int64
+		Status  constants.PaymentStatus
+	}
+	UpdateOrderStatusResp struct{}
+)
+
+// 确认收货
+type (
+	ConfirmReceivedReq struct {
+		UserId  uuid.UUID
+		OrderId int64
+	}
+	ConfirmReceivedResp struct{}
+)
 
 type OrderUsecase struct {
 	repo OrderRepo
@@ -123,6 +151,19 @@ func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
+}
+
+type OrderRepo interface {
+	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
+	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error)
+	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
+
+	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
+	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
+	ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error)
+	GetOrderStatus(ctx context.Context, req *GetOrderStatusReq) (*GetOrderStatusReply, error)
+	UpdateOrderStatus(ctx context.Context, req *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error)
+	ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
 }
 
 func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error) {
@@ -148,4 +189,24 @@ func (oc *OrderUsecase) MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq
 func (oc *OrderUsecase) GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error) {
 	// oc.log.WithContext(ctx).Debugf("biz/order getorder req:%+v", req)
 	return oc.repo.GetOrder(ctx, req)
+}
+
+func (oc *OrderUsecase) GetOrderStatus(ctx context.Context, req *GetOrderStatusReq) (*GetOrderStatusReply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetOrderStatus req:%+v", req)
+	return oc.repo.GetOrderStatus(ctx, req)
+}
+
+func (oc *OrderUsecase) UpdateOrderStatus(ctx context.Context, req *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order UpdateOrderStatus req:%+v", req)
+	return oc.repo.UpdateOrderStatus(ctx, req)
+}
+
+func (oc *OrderUsecase) ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error) {
+	// oc.log.WithContext(ctx).Debugf("biz/order ShipOrder req:%+v", req)
+	return oc.repo.ShipOrder(ctx, req)
+}
+
+func (oc *OrderUsecase) ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq) (*ConfirmReceivedResp, error) {
+	// oc.log.WithContext(ctx).Debugf("biz/order ConfirmReceived req:%+v", req)
+	return oc.repo.ConfirmReceived(ctx, req)
 }
