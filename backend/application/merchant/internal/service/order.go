@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 
-	"backend/constants"
+	kerrors "github.com/go-kratos/kratos/v2/errors"
 
 	"backend/application/merchant/internal/pkg"
+
+	"backend/constants"
 
 	globalPkg "backend/pkg"
 
@@ -77,7 +80,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 	// 按照商家订单分组
 	merchantOrders := make(map[int64][]*biz.SubOrder)
 	for _, subOrder := range resp.Orders {
-		merchantOrders[subOrder.ID] = append(merchantOrders[subOrder.ID], subOrder)
+		merchantOrders[subOrder.OrderID] = append(merchantOrders[subOrder.OrderID], subOrder)
 	}
 
 	// 转换订单列表为API响应格式
@@ -97,7 +100,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 			for _, item := range subOrder.Items {
 				// 确保CartItem中的数据是有效的
 				if item.Item == nil {
-					log.Warnf("跳过缺少商品信息的订单项, 订单ID: %d", subOrder.ID)
+					log.Warnf("跳过缺少商品信息的订单项, 订单ID: %d", subOrder.OrderID)
 					continue
 				}
 
@@ -120,7 +123,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.PaymentStatus))
 		ShippingStatus := pkg.MapShippingStatusToProto(shippingStatus)
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
-		address := &userv1.Address{
+		address := &userv1.ConsumerAddress{
 			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
 			City:          "",
 			State:         "",
@@ -131,7 +134,8 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		// 添加订单到响应列表
 		orders = append(orders, &v1.Order{
 			Items:          orderItems,
-			OrderId:        firstSubOrder.ID, // 注意: 确保ID类型转换正确
+			OrderId:        firstSubOrder.OrderID,
+			SubOrderId:     &firstSubOrder.SubOrderID,
 			UserId:         firstSubOrder.MerchantID.String(),
 			Currency:       firstSubOrder.Currency,
 			Address:        address,
@@ -142,4 +146,47 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		})
 	}
 	return &v1.Orders{Orders: orders}, nil
+}
+
+// ShipOrder 发货
+func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq) (*orderv1.ShipOrderResp, error) {
+	// 从网关获取用户ID
+	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
+	}
+	// 验证订单ID
+	if req.SubOrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+
+	receiverAddressJSON, err := json.Marshal(req.ReceiverAddress)
+	if err != nil {
+		return nil, kerrors.New(500, "receiver_address", err.Error())
+	}
+
+	shippingAddress, err := json.Marshal(req.ShippingAddress)
+	if err != nil {
+		return nil, kerrors.New(500, "shipping_address", err.Error())
+	}
+
+	log.Debugf("shippingAddress%+v", shippingAddress)
+	shipOrder, err := s.oc.ShipOrder(ctx, &biz.ShipOrderReq{
+		MerchantID:      userId,
+		SubOrderId:      req.SubOrderId,
+		TrackingNumber:  req.TrackingNumber,
+		Carrier:         req.Carrier,
+		ShippingStatus:  constants.ShippingShipped,
+		ShippingAddress: shippingAddress,
+		ReceiverAddress: receiverAddressJSON,
+		ShippingFee:     req.ShippingFee,
+	})
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+	}
+	log.Debugf("shipOrder: %v", shipOrder)
+	return &orderv1.ShipOrderResp{
+		Id:        shipOrder.Id,
+		CreatedAt: timestamppb.New(shipOrder.CreatedAt),
+	}, nil
 }

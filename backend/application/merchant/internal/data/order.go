@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	kerrors "github.com/go-kratos/kratos/v2/errors"
+
+	"backend/application/merchant/internal/pkg/id"
+
 	"backend/constants"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -98,7 +102,8 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
 			for _, order := range orders {
-				if order.OrderID == subOrder.ID {
+				if order.OrderID == subOrder.OrderID {
+					subOrder.SubOrderID = order.SubOrderID
 					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
 					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
@@ -110,6 +115,47 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 
 	o.log.WithContext(ctx).Debugf("获取到 %d 个商户订单", len(respOrders))
 	return &biz.GetMerchantOrdersReply{Orders: respOrders}, nil
+}
+
+func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.ShipOrderResp, error) {
+	tx := o.data.DB(ctx)
+
+	merchantID := types.ToPgUUID(req.MerchantID)
+	snowflakeID := id.SnowflakeID()
+	shippingFee, err := types.Float64ToNumeric(req.ShippingFee)
+	if err != nil {
+		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
+	}
+
+	shippingAddressJSON, err := json.Marshal(req.ShippingAddress)
+	if err != nil {
+		return nil, kerrors.New(500, "shipping_address_json", "failed to marshal receiver address")
+	}
+
+	receiverAddressJSON, err := json.Marshal(req.ReceiverAddress)
+	if err != nil {
+		return nil, kerrors.New(500, "receiver_address", "failed to marshal receiver address")
+	}
+
+	ship, err := tx.CreateShip(ctx, models.CreateShipParams{
+		ID:             &snowflakeID,
+		MerchantID:     merchantID,
+		SubOrderID:     &req.SubOrderId,
+		TrackingNumber: &req.TrackingNumber,
+		Carrier:        &req.Carrier,
+		// Delivery:        req.Delivery,
+		ShippingAddress: shippingAddressJSON, // 使用JSON格式的地址
+		ReceiverAddress: receiverAddressJSON, // 使用JSON格式的地址
+		ShippingFee:     shippingFee,
+	})
+	if err != nil {
+		return nil, kerrors.New(500, "shipId", "create shipping error")
+	}
+
+	return &biz.ShipOrderResp{
+		Id:        ship.ID,
+		CreatedAt: ship.CreatedAt.Local(),
+	}, nil
 }
 
 func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.SubOrder, error) {
@@ -196,7 +242,8 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 
 		// 添加子订单到结果集
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:             order.SubOrdersID,
+			OrderID:        orderID,
+			SubOrderID:     order.SubOrdersID,
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,

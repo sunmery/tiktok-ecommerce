@@ -180,7 +180,6 @@ evans:
 
 # 生成sql代码
 sqlc:
-	rm -rf internal/data/models/*
 	sqlc generate
 
 # show help

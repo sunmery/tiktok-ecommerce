@@ -26,7 +26,6 @@ const OperationOrderServiceGetOrder = "/ecommerce.order.v1.OrderService/GetOrder
 const OperationOrderServiceGetOrderStatus = "/ecommerce.order.v1.OrderService/GetOrderStatus"
 const OperationOrderServiceMarkOrderPaid = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 const OperationOrderServicePlaceOrder = "/ecommerce.order.v1.OrderService/PlaceOrder"
-const OperationOrderServiceShipOrder = "/ecommerce.order.v1.OrderService/ShipOrder"
 const OperationOrderServiceUpdateOrderStatus = "/ecommerce.order.v1.OrderService/UpdateOrderStatus"
 
 type OrderServiceHTTPServer interface {
@@ -44,8 +43,6 @@ type OrderServiceHTTPServer interface {
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	// PlaceOrder 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
-	// ShipOrder 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error)
 	// UpdateOrderStatus 更新订单状态
 	UpdateOrderStatus(context.Context, *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error)
 }
@@ -59,7 +56,6 @@ func RegisterOrderServiceHTTPServer(s *http.Server, srv OrderServiceHTTPServer) 
 	r.POST("/v1/orders/{order_id}/paid", _OrderService_MarkOrderPaid0_HTTP_Handler(srv))
 	r.GET("/v1/orders/{order_id}/status", _OrderService_GetOrderStatus0_HTTP_Handler(srv))
 	r.PUT("/v1/orders/{order_id}/status", _OrderService_UpdateOrderStatus0_HTTP_Handler(srv))
-	r.PUT("/v1/orders/{order_id}/ship", _OrderService_ShipOrder0_HTTP_Handler(srv))
 	r.PUT("/v1/orders/{order_id}/receive", _OrderService_ConfirmReceived0_HTTP_Handler(srv))
 }
 
@@ -217,31 +213,6 @@ func _OrderService_UpdateOrderStatus0_HTTP_Handler(srv OrderServiceHTTPServer) f
 	}
 }
 
-func _OrderService_ShipOrder0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ShipOrderReq
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationOrderServiceShipOrder)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ShipOrder(ctx, req.(*ShipOrderReq))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ShipOrderResp)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _OrderService_ConfirmReceived0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ConfirmReceivedReq
@@ -275,7 +246,6 @@ type OrderServiceHTTPClient interface {
 	GetOrderStatus(ctx context.Context, req *GetOrderStatusReq, opts ...http.CallOption) (rsp *GetOrderStatusResp, err error)
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq, opts ...http.CallOption) (rsp *MarkOrderPaidResp, err error)
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq, opts ...http.CallOption) (rsp *PlaceOrderResp, err error)
-	ShipOrder(ctx context.Context, req *ShipOrderReq, opts ...http.CallOption) (rsp *ShipOrderResp, err error)
 	UpdateOrderStatus(ctx context.Context, req *UpdateOrderStatusReq, opts ...http.CallOption) (rsp *UpdateOrderStatusResp, err error)
 }
 
@@ -372,19 +342,6 @@ func (c *OrderServiceHTTPClientImpl) PlaceOrder(ctx context.Context, in *PlaceOr
 	opts = append(opts, http.Operation(OperationOrderServicePlaceOrder))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *OrderServiceHTTPClientImpl) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...http.CallOption) (*ShipOrderResp, error) {
-	var out ShipOrderResp
-	pattern := "/v1/orders/{order_id}/ship"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationOrderServiceShipOrder))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

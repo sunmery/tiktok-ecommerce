@@ -23,14 +23,14 @@ type Querier interface {
 	//  INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 	//                                 currency, status, items)
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, shipping_status, tracking_number, carrier
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, shipping_status, tracking_number, carrier, merchant_address
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
 	//GetConsumerOrders
 	//
 	//  SELECT oo.id, oo.user_id, oo.currency, oo.street_address, oo.city, oo.state, oo.country, oo.zip_code, oo.email, oo.created_at, oo.updated_at, oo.payment_status,
 	//         json_agg(
 	//                 json_build_object(
-	//                         'id', os.id,
+	//                         'sub_order_id', os.id,
 	//                         'merchant_id', os.merchant_id,
 	//                         'total_amount', os.total_amount,
 	//                         'currency', os.currency,
@@ -70,7 +70,7 @@ type Querier interface {
 	GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (GetOrderByIDRow, error)
 	//GetOrderByUserID
 	//
-	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier,
+	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier, os.merchant_address,
 	//         oo.payment_status
 	//  FROM orders.sub_orders os
 	//           JOIN orders.orders oo
@@ -121,7 +121,7 @@ type Querier interface {
 	GetUserOrdersWithSuborders(ctx context.Context, userID uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
 	//ListOrders
 	//
-	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier,
+	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier, os.merchant_address,
 	//         oo.payment_status
 	//  FROM orders.sub_orders os
 	//           JOIN orders.orders oo
@@ -143,11 +143,11 @@ type Querier interface {
 	//  SET status     = $1,
 	//      updated_at = now()
 	//  WHERE order_id = $2
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, shipping_status, tracking_number, carrier
+	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, shipping_status, tracking_number, carrier, merchant_address
 	MarkSubOrderAsPaid(ctx context.Context, arg MarkSubOrderAsPaidParams) (OrdersSubOrders, error)
 	//QuerySubOrders
 	//
-	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier,
+	//  SELECT os.id, os.order_id, os.merchant_id, os.total_amount, os.currency, os.status, os.items, os.created_at, os.updated_at, os.shipping_status, os.tracking_number, os.carrier, os.merchant_address,
 	//         oo.payment_status
 	//  FROM orders.sub_orders os
 	//           Join orders.orders oo on os.order_id = oo.id
@@ -161,22 +161,12 @@ type Querier interface {
 	//      updated_at     = now()
 	//  WHERE id = $1
 	UpdateOrderPaymentStatus(ctx context.Context, arg UpdateOrderPaymentStatusParams) error
-	//UpdateOrderShippingInfo
-	//
-	//  UPDATE orders.sub_orders
-	//  SET shipping_status = $1,
-	//      tracking_number = $2,
-	//      carrier         = $3,
-	//      updated_at      = NOW()
-	//  WHERE id = $4
-	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, created_at, updated_at, shipping_status, tracking_number, carrier
-	UpdateOrderShippingInfo(ctx context.Context, arg UpdateOrderShippingInfoParams) (OrdersSubOrders, error)
 	//UpdateOrderShippingStatus
 	//
 	//  UPDATE orders.sub_orders
-	//  SET shipping_status = $2,
+	//  SET shipping_status = $1,
 	//      updated_at      = now()
-	//  WHERE id = $1
+	//  WHERE id = $2
 	UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error
 	//UpdatePaymentStatus
 	//

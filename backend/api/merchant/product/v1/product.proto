@@ -5,7 +5,6 @@ package ecommerce.merchant.v1;
 option go_package = "backend/api/merchant/product/v1;productv1";
 
 import "google/api/annotations.proto";
-import "validate/validate.proto";
 import "backend/api/product/v1/product.proto";
 import "google/protobuf/struct.proto";
 

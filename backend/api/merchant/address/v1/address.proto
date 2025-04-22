@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package ecommerce.merchant.v1;
+package ecommerce.merchantaddress.v1;
 
-option go_package = "backend/api/merchant/address/v1;addressv1";
+option go_package = "backend/api/merchant/address/v1;merchantaddressv1";
 
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
@@ -11,9 +11,9 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 // 商家地址服务接口定义
-service MerchantAddress {
+service MerchantAddresses {
   // 创建商家地址（支持多类型地址）
-  rpc CreateMerchantAddress(Address) returns (Address) {
+  rpc CreateMerchantAddress(MerchantAddress) returns (MerchantAddress) {
     option (google.api.http) = {
       post: "/v1/merchants/addresses"
       body: "*"
@@ -21,7 +21,7 @@ service MerchantAddress {
   }
 
   // 批量导入商家地址（CSV/JSON格式）
-  rpc BatchCreateAddresses(BatchCreateAddressesRequest) returns (BatchCreateAddressesResponse) {
+  rpc BatchCreateMerchantAddresses(BatchCreateMerchantAddressesRequest) returns (BatchCreateMerchantAddressesReply) {
     option (google.api.http) = {
       post: "/v1/merchants/addresses/batch"
       body: "*"
@@ -29,7 +29,7 @@ service MerchantAddress {
   }
 
   // 更新商家地址（支持部分更新）
-  rpc UpdateAddress(Address) returns (Address) {
+  rpc UpdateMerchantAddress(MerchantAddress) returns (MerchantAddress) {
     option (google.api.http) = {
       patch: "/v1/merchants/addresses/{id}"
       body: "*"
@@ -37,28 +37,28 @@ service MerchantAddress {
   }
 
   // 删除商家地址
-  rpc DeleteAddress(DeleteAddressRequest) returns (google.protobuf.Empty) {
+  rpc DeletMerchanteAddress(DeletMerchanteAddressRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/merchants/addresses/{id}"
     };
   }
 
   // 获取单个地址详情
-  rpc GetAddress(GetAddressRequest) returns (Address) {
+  rpc GetMerchantAddress(GetMerchantAddressRequest) returns (MerchantAddress) {
     option (google.api.http) = {
       get: "/v1/merchants/addresses/{id}"
     };
   }
 
   // 列出商家所有地址（支持按类型过滤）
-  rpc ListAddresses(ListAddressesRequest) returns (ListAddressesResponse) {
+  rpc ListMerchantAddresses(ListMerchantAddressesRequest) returns (ListMerchantAddressesReply) {
     option (google.api.http) = {
       get: "/v1/merchants/addresses"
     };
   }
 
   // 设置默认地址（按地址类型）
-  rpc SetDefaultAddress(SetDefaultAddressRequest) returns (Address) {
+  rpc SetDefaultMerchantAddress(SetDefaultMerchantAddressRequest) returns (MerchantAddress) {
     option (google.api.http) = {
       put: "/v1/merchants/addresses/{id}/default"
       body: "*"
@@ -67,12 +67,12 @@ service MerchantAddress {
 }
 
 // 商家地址数据结构
-message Address {
+message MerchantAddress {
   int64 id = 1;
   string merchant_id = 2;
 
   // 地址类型枚举
-  enum AddressType {
+  enum MerchantAddressType {
     WAREHOUSE = 0;  // 仓库地址Id
     RETURN = 1;      // 退货地址
     STORE = 2;       // 门店地址
@@ -80,7 +80,7 @@ message Address {
     HEADQUARTERS = 4; // 总部地址
   }
 
-  AddressType address_type = 3 [
+  MerchantAddressType address_type = 3 [
     (google.api.field_behavior) = REQUIRED,
     (validate.rules).enum = {
       defined_only: true
@@ -124,29 +124,29 @@ message Address {
 }
 
 // 批量创建请求
-message BatchCreateAddressesRequest {
-  repeated Address addresses = 1;
+message BatchCreateMerchantAddressesRequest {
+  repeated MerchantAddress addresses = 1;
   bool skip_duplicates = 2; // 是否跳过重复地址
 }
 
-message BatchCreateAddressesResponse {
+message BatchCreateMerchantAddressesReply {
   int32 success_count = 1;
-  repeated Address failed_items = 2;
+  repeated MerchantAddress failed_items = 2;
 }
 
 // 地址删除请求
-message DeleteAddressRequest {
+message DeletMerchanteAddressRequest {
   int64 id = 1;
 }
 
 // 地址查询请求
-message GetAddressRequest {
+message GetMerchantAddressRequest {
   int64 id = 1;
 }
 
 // 地址列表请求（支持分页和过滤）
-message ListAddressesRequest {
-  Address.AddressType address_type = 2; // 按类型过滤
+message ListMerchantAddressesRequest {
+  MerchantAddress.MerchantAddressType address_type = 2; // 按类型过滤
   bool only_default = 3; // 是否只获取默认地址
 
   // 分页参数
@@ -163,12 +163,12 @@ message ListAddressesRequest {
   ];
 }
 
-message ListAddressesResponse {
-  repeated Address addresses = 1;
+message ListMerchantAddressesReply {
+  repeated MerchantAddress addresses = 1;
   uint32 total_count = 2;
 }
 
 // 设置默认地址请求
-message SetDefaultAddressRequest {
+message SetDefaultMerchantAddressRequest {
   int64 id = 1;
 }

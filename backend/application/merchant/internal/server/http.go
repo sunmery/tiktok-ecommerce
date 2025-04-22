@@ -86,6 +86,6 @@ func NewHTTPServer(
 	inventoryv1.RegisterInventoryHTTPServer(srv, inventoryService)
 	productv1.RegisterProductHTTPServer(srv, productService)
 	orderv1.RegisterOrderHTTPServer(srv, orderService)
-	addresv1.RegisterMerchantAddressHTTPServer(srv, addresService)
+	addresv1.RegisterMerchantAddressesHTTPServer(srv, addresService)
 	return srv
 }

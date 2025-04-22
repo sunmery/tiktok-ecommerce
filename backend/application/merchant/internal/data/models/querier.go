@@ -83,6 +83,14 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (MerchantAddresses, error)
+	//CreateShip
+	//
+	//  INSERT INTO orders.shipping_info(id, merchant_id,sub_order_id, tracking_number, carrier, delivery,
+	//                                   shipping_address, receiver_address, shipping_fee)
+	//  VALUES ($1, $2,$3, $4, $5, $6,
+	//          $7, $8, $9)
+	//  RETURNING id, created_at
+	CreateShip(ctx context.Context, arg CreateShipParams) (CreateShipRow, error)
 	// 删除地址
 	//
 	//  DELETE
@@ -234,18 +242,18 @@ type Querier interface {
 	ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error)
 	//ListOrdersByUser
 	//
-	//  SELECT s.id,
-	//         order_id,
+	//  SELECT os.id AS sub_order_id,
+	//         oo.id AS order_id,
 	//         merchant_id,
 	//         total_amount,
-	//         s.currency,
-	//         o.payment_status,
-	//         s.shipping_status,
+	//         os.currency,
+	//         oo.payment_status,
+	//         os.shipping_status,
 	//         items,
-	//         s.created_at,
-	//         s.updated_at
-	//  FROM orders.sub_orders s
-	//           JOIN orders.orders o on s.order_id = o.id
+	//         os.created_at,
+	//         os.updated_at
+	//  FROM orders.sub_orders os
+	//           JOIN orders.orders oo on os.order_id = oo.id
 	//  WHERE merchant_id = $1
 	//  ORDER BY created_at DESC
 	//  LIMIT $3 OFFSET $2
@@ -320,6 +328,23 @@ type Querier interface {
 	//    AND merchant_id = $12
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (MerchantAddresses, error)
+	//UpdateOrderShippingInfo
+	//
+	//  UPDATE orders.sub_orders
+	//  SET shipping_status  = COALESCE($1, shipping_status),
+	//      tracking_number  = COALESCE($2, tracking_number),
+	//      carrier          = COALESCE($3, carrier),
+	//      merchant_address = COALESCE($4, merchant_address),
+	//      updated_at       = NOW()
+	//  WHERE id = $5
+	UpdateOrderShippingInfo(ctx context.Context, arg UpdateOrderShippingInfoParams) error
+	//UpdateOrderShippingStatus
+	//
+	//  UPDATE orders.shipping_info
+	//  SET shipping_status = $1,
+	//      updated_at      = now()
+	//  WHERE id = $2
+	UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error
 	//UpdateProduct
 	//
 	//  WITH update_product AS (

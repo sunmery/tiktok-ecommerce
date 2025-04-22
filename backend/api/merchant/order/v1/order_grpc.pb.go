@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: order/v1/order.proto
 
-package orderv1
+package merchantorderv1
 
 import (
 	v1 "backend/api/order/v1"
@@ -20,7 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Order_GetMerchantOrders_FullMethodName = "/ecommerce.merchant.v1.Order/GetMerchantOrders"
+	Order_GetMerchantOrders_FullMethodName = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
+	Order_ShipOrder_FullMethodName         = "/ecommerce.merchantorder.v1.Order/ShipOrder"
 )
 
 // OrderClient is the client API for Order service.
@@ -29,6 +30,8 @@ const (
 type OrderClient interface {
 	// 查询商家订单列表(商家侧)
 	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*v1.Orders, error)
+	// 商家发货
+	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error)
 }
 
 type orderClient struct {
@@ -49,12 +52,24 @@ func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrde
 	return out, nil
 }
 
+func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ShipOrderResp)
+	err := c.cc.Invoke(ctx, Order_ShipOrder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServer is the server API for Order service.
 // All implementations must embed UnimplementedOrderServer
 // for forward compatibility.
 type OrderServer interface {
 	// 查询商家订单列表(商家侧)
 	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error)
+	// 商家发货
+	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error)
 	mustEmbedUnimplementedOrderServer()
 }
 
@@ -67,6 +82,9 @@ type UnimplementedOrderServer struct{}
 
 func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantOrders not implemented")
+}
+func (UnimplementedOrderServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShipOrder not implemented")
 }
 func (UnimplementedOrderServer) mustEmbedUnimplementedOrderServer() {}
 func (UnimplementedOrderServer) testEmbeddedByValue()               {}
@@ -107,16 +125,38 @@ func _Order_GetMerchantOrders_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Order_ShipOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShipOrderReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServer).ShipOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Order_ShipOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServer).ShipOrder(ctx, req.(*ShipOrderReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Order_ServiceDesc is the grpc.ServiceDesc for Order service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Order_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ecommerce.merchant.v1.Order",
+	ServiceName: "ecommerce.merchantorder.v1.Order",
 	HandlerType: (*OrderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetMerchantOrders",
 			Handler:    _Order_GetMerchantOrders_Handler,
+		},
+		{
+			MethodName: "ShipOrder",
+			Handler:    _Order_ShipOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

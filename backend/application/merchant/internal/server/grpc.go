@@ -84,6 +84,6 @@ func NewGRPCServer(
 	inventoryv1.RegisterInventoryServer(srv, inventoryService)
 	productv1.RegisterProductServer(srv, productService)
 	orderv1.RegisterOrderServer(srv, orderService)
-	addresv1.RegisterMerchantAddressServer(srv, addresService)
+	addresv1.RegisterMerchantAddressesServer(srv, addresService)
 	return srv
 }

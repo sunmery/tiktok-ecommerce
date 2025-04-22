@@ -1,7 +1,6 @@
 package data
 
 import (
-	"backend/application/admin/internal/conf"
 	"context"
 	"fmt"
 	"github.com/exaring/otelpgx"
@@ -10,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"backend/application/admin/internal/conf"
 )
 
 // ProviderSet is data providers.

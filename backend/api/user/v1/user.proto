@@ -37,7 +37,7 @@ service UserService {
 
 
   // 创建用户地址
-  rpc CreateAddresses(Address) returns (Address) {
+  rpc CreateConsumerAddresses(ConsumerAddress) returns (ConsumerAddress) {
     option (google.api.http) = {
       post: "/v1/users/address"
       body: "*"
@@ -45,7 +45,7 @@ service UserService {
   }
 
   // 更新用户地址
-  rpc UpdateAddresses(Address) returns (Address) {
+  rpc UpdateConsumerAddresses(ConsumerAddress) returns (ConsumerAddress) {
     option (google.api.http) = {
       patch: "/v1/users/address"
       body: "*"
@@ -53,14 +53,14 @@ service UserService {
   }
 
   // 删除用户地址
-  rpc DeleteAddresses(DeleteAddressesRequest) returns (DeleteAddressesReply) {
+  rpc DeleteConsumerAddresses(DeleteConsumerAddressesRequest) returns (DeleteConsumerAddressesReply) {
     option (google.api.http) = {
       delete: "/v1/users/address"
     };
   }
 
   // 根据 ID获取用户地址
-  rpc GetAddress(GetAddressRequest) returns (Address) {
+  rpc GetConsumerAddress(GetConsumerAddressRequest) returns (ConsumerAddress) {
     option (google.api.http) = {
       get: "/v1/users/address"
     };
@@ -75,7 +75,7 @@ service UserService {
   }
 
   // 获取用户地址列表
-  rpc GetAddresses(google.protobuf.Empty) returns (GetAddressesReply) {
+  rpc GetConsumerAddresses(google.protobuf.Empty) returns (GetConsumerAddressesReply) {
     option (google.api.http) = {
       get: "/v1/users/addresses"
     };
@@ -203,14 +203,9 @@ message ListCreditCardsReply {
 }
 
 // 定义地址信息的消息结构
-message Address {
+message ConsumerAddress {
   uint32 id = 1; // 地址 ID
-  string user_id = 2 [
-    (google.api.field_behavior) = REQUIRED, // 标记为必填字段
-    (validate.rules).string.len = 36, // 验证字段长度为 36
-    // 验证字段为 UUID 格式
-    (validate.rules).string.uuid = true
-  ];
+  string user_id = 2;
   string city = 4 ; // 城市，必填字段
   string state = 5 ; // 州/省，必填字段
   string country = 6 ; // 国家，必填字段
@@ -225,13 +220,13 @@ message Address {
 }
 
 // 定义更新地址请求的消息结构
-message UpdateAddressesRequest {
+message UpdateConsumerAddressesRequest {
   // 地址信息，必填字段
-  Address addresses = 1 ;
+  ConsumerAddress addresses = 1 ;
 }
 
 // 定义删除地址请求的消息结构
-message DeleteAddressesRequest {
+message DeleteConsumerAddressesRequest {
   int32 addresses_id = 1 [
     // 地址 ID，必填字段
     (google.api.field_behavior) = REQUIRED
@@ -245,12 +240,12 @@ message DeleteAddressesRequest {
 }
 
 // 定义地址响应的消息结构
-message AddressReply {
+message ConsumerAddressReply {
   uint32 id = 1 ; // 地址 ID，必填字段
-  Address address = 2 ; // 地址信息，必填字段
+  ConsumerAddress address = 2 ; // 地址信息，必填字段
 }
 
-message GetAddressRequest {
+message GetConsumerAddressRequest {
   uint32 address_id = 1; // 地址 ID，必填字段
   string user_id = 2[
     (google.api.field_behavior) = REQUIRED, // 标记为必填字段
@@ -261,12 +256,12 @@ message GetAddressRequest {
 }
 
 // 定义获取地址列表响应的消息结构
-message GetAddressesReply {
-  repeated Address addresses = 1 ; // 地址列表，必填字段
+message GetConsumerAddressesReply {
+  repeated ConsumerAddress addresses = 1 ; // 地址列表，必填字段
 }
 
 // 定义删除地址响应的消息结构
-message DeleteAddressesReply {
+message DeleteConsumerAddressesReply {
   string message = 1 ; // 响应消息，必填字段
   uint32 id = 2 ; // 地址 ID，必填字段
   uint32 code = 3 ; // 响应状态码，必填字段

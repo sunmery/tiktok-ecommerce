@@ -5,14 +5,14 @@ import (
 
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
-	"backend/application/admin/constants"
-	"backend/application/admin/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"backend/application/admin/constants"
+	"backend/application/admin/internal/conf"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
@@ -41,7 +41,7 @@ func NewHTTPServer(
 		log.Warnf("There was a problem creating the resource: %v", err)
 	}
 
-	_, err2 := initHttpTracerProvider(ctx, res, obs.Trace.Grpc.Endpoint)
+	_, err2 := initHttpTracerProvider(ctx, res, obs.Trace.Http.Endpoint)
 	if err2 != nil {
 		log.Errorf("There was a problem initializing the tracer: %v", err)
 	}

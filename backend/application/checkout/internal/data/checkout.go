@@ -108,7 +108,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	}
 
 	// 获取用户地址
-	address, err := c.data.userv1.GetAddress(ctx, &userv1.GetAddressRequest{
+	address, err := c.data.userv1.GetConsumerAddress(ctx, &userv1.GetConsumerAddressRequest{
 		AddressId: req.AddressId,
 		UserId:    req.UserId.String(),
 	})
@@ -130,7 +130,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	// 调用订单微服务创建订单
 	order, orderErr := c.data.orderv1.PlaceOrder(ctx, &v1.PlaceOrderReq{
 		Currency: creditCard.Currency,
-		Address: &userv1.Address{
+		Address: &userv1.ConsumerAddress{
 			Id:            address.Id,
 			UserId:        address.UserId,
 			City:          address.City,

@@ -22,15 +22,15 @@ COMMENT
 -- 创建子订单表（按商家分单）
 CREATE TABLE orders.sub_orders
 (
-    id           BIGINT PRIMARY KEY,                             -- 子订单
-    order_id     BIGINT                    NOT NULL, -- 关联主订单ID（程序级外键）
-    merchant_id  UUID                      NOT NULL, -- 商家ID（来自商家服务）
-    total_amount NUMERIC(12, 2)            NOT NULL, -- 精确金额计算（整数部分10位，小数2位）
-    currency     VARCHAR(3)                NOT NULL, -- 实际结算货币
-    status       VARCHAR(20)               NOT NULL, -- 订单状态：
-    items        JSONB                     NOT NULL, -- 订单项快照（包含商品详情和当时价格）
-    created_at   timestamptz DEFAULT now() NOT NULL,
-    updated_at   timestamptz DEFAULT now() NOT NULL
+    id                BIGINT PRIMARY KEY,                             -- 子订单
+    order_id          BIGINT                    NOT NULL, -- 关联主订单ID（程序级外键）
+    merchant_id       UUID                      NOT NULL, -- 商家ID（来自商家服务）
+    total_amount      NUMERIC(12, 2)            NOT NULL, -- 精确金额计算（整数部分10位，小数2位）
+    currency          VARCHAR(3)                NOT NULL, -- 实际结算货币
+    status            VARCHAR(20)               NOT NULL, -- 订单状态：
+    items             JSONB                     NOT NULL, -- 订单项快照（包含商品详情和当时价格）
+    created_at        timestamptz DEFAULT now() NOT NULL,
+    updated_at        timestamptz DEFAULT now() NOT NULL
 );
 COMMENT
     ON TABLE orders.sub_orders IS '子订单表，按商家分单存储';

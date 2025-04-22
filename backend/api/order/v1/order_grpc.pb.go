@@ -26,15 +26,12 @@ const (
 	OrderService_MarkOrderPaid_FullMethodName     = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 	OrderService_GetOrderStatus_FullMethodName    = "/ecommerce.order.v1.OrderService/GetOrderStatus"
 	OrderService_UpdateOrderStatus_FullMethodName = "/ecommerce.order.v1.OrderService/UpdateOrderStatus"
-	OrderService_ShipOrder_FullMethodName         = "/ecommerce.order.v1.OrderService/ShipOrder"
 	OrderService_ConfirmReceived_FullMethodName   = "/ecommerce.order.v1.OrderService/ConfirmReceived"
 )
 
 // OrderServiceClient is the client API for OrderService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// 订单服务接口定义
 type OrderServiceClient interface {
 	// 创建订单
 	PlaceOrder(ctx context.Context, in *PlaceOrderReq, opts ...grpc.CallOption) (*PlaceOrderResp, error)
@@ -50,8 +47,6 @@ type OrderServiceClient interface {
 	GetOrderStatus(ctx context.Context, in *GetOrderStatusReq, opts ...grpc.CallOption) (*GetOrderStatusResp, error)
 	// 更新订单状态
 	UpdateOrderStatus(ctx context.Context, in *UpdateOrderStatusReq, opts ...grpc.CallOption) (*UpdateOrderStatusResp, error)
-	// 商家发货
-	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error)
 	// 用户确认收货
 	ConfirmReceived(ctx context.Context, in *ConfirmReceivedReq, opts ...grpc.CallOption) (*ConfirmReceivedResp, error)
 }
@@ -134,16 +129,6 @@ func (c *orderServiceClient) UpdateOrderStatus(ctx context.Context, in *UpdateOr
 	return out, nil
 }
 
-func (c *orderServiceClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ShipOrderResp)
-	err := c.cc.Invoke(ctx, OrderService_ShipOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *orderServiceClient) ConfirmReceived(ctx context.Context, in *ConfirmReceivedReq, opts ...grpc.CallOption) (*ConfirmReceivedResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ConfirmReceivedResp)
@@ -157,8 +142,6 @@ func (c *orderServiceClient) ConfirmReceived(ctx context.Context, in *ConfirmRec
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
-//
-// 订单服务接口定义
 type OrderServiceServer interface {
 	// 创建订单
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
@@ -174,8 +157,6 @@ type OrderServiceServer interface {
 	GetOrderStatus(context.Context, *GetOrderStatusReq) (*GetOrderStatusResp, error)
 	// 更新订单状态
 	UpdateOrderStatus(context.Context, *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error)
-	// 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error)
 	// 用户确认收货
 	ConfirmReceived(context.Context, *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
@@ -208,9 +189,6 @@ func (UnimplementedOrderServiceServer) GetOrderStatus(context.Context, *GetOrder
 }
 func (UnimplementedOrderServiceServer) UpdateOrderStatus(context.Context, *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrderStatus not implemented")
-}
-func (UnimplementedOrderServiceServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ShipOrder not implemented")
 }
 func (UnimplementedOrderServiceServer) ConfirmReceived(context.Context, *ConfirmReceivedReq) (*ConfirmReceivedResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmReceived not implemented")
@@ -362,24 +340,6 @@ func _OrderService_UpdateOrderStatus_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_ShipOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ShipOrderReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrderServiceServer).ShipOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OrderService_ShipOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).ShipOrder(ctx, req.(*ShipOrderReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrderService_ConfirmReceived_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConfirmReceivedReq)
 	if err := dec(in); err != nil {
@@ -432,10 +392,6 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOrderStatus",
 			Handler:    _OrderService_UpdateOrderStatus_Handler,
-		},
-		{
-			MethodName: "ShipOrder",
-			Handler:    _OrderService_ShipOrder_Handler,
 		},
 		{
 			MethodName: "ConfirmReceived",

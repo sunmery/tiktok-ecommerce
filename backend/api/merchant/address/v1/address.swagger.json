@@ -6,7 +6,7 @@
   },
   "tags": [
     {
-      "name": "MerchantAddress"
+      "name": "MerchantAddresses"
     }
   ],
   "consumes": [
@@ -19,12 +19,12 @@
     "/v1/merchants/addresses": {
       "get": {
         "summary": "列出商家所有地址（支持按类型过滤）",
-        "operationId": "MerchantAddress_ListAddresses",
+        "operationId": "MerchantAddresses_ListMerchantAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListAddressesResponse"
+              "$ref": "#/definitions/v1ListMerchantAddressesReply"
             }
           },
           "default": {
@@ -74,17 +74,17 @@
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       },
       "post": {
         "summary": "创建商家地址（支持多类型地址）",
-        "operationId": "MerchantAddress_CreateMerchantAddress",
+        "operationId": "MerchantAddresses_CreateMerchantAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
+              "$ref": "#/definitions/v1MerchantAddress"
             }
           },
           "default": {
@@ -100,24 +100,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
+              "$ref": "#/definitions/v1MerchantAddress"
             }
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       }
     },
     "/v1/merchants/addresses/batch": {
       "post": {
         "summary": "批量导入商家地址（CSV/JSON格式）",
-        "operationId": "MerchantAddress_BatchCreateAddresses",
+        "operationId": "MerchantAddresses_BatchCreateMerchantAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1BatchCreateAddressesResponse"
+              "$ref": "#/definitions/v1BatchCreateMerchantAddressesReply"
             }
           },
           "default": {
@@ -133,24 +133,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1BatchCreateAddressesRequest"
+              "$ref": "#/definitions/v1BatchCreateMerchantAddressesRequest"
             }
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       }
     },
     "/v1/merchants/addresses/{id}": {
       "get": {
         "summary": "获取单个地址详情",
-        "operationId": "MerchantAddress_GetAddress",
+        "operationId": "MerchantAddresses_GetMerchantAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
+              "$ref": "#/definitions/v1MerchantAddress"
             }
           },
           "default": {
@@ -170,12 +170,12 @@
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       },
       "delete": {
         "summary": "删除商家地址",
-        "operationId": "MerchantAddress_DeleteAddress",
+        "operationId": "MerchantAddresses_DeletMerchanteAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -201,17 +201,17 @@
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       },
       "patch": {
         "summary": "更新商家地址（支持部分更新）",
-        "operationId": "MerchantAddress_UpdateAddress",
+        "operationId": "MerchantAddresses_UpdateMerchantAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
+              "$ref": "#/definitions/v1MerchantAddress"
             }
           },
           "default": {
@@ -234,24 +234,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/MerchantAddressUpdateAddressBody"
+              "$ref": "#/definitions/MerchantAddressesUpdateMerchantAddressBody"
             }
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       }
     },
     "/v1/merchants/addresses/{id}/default": {
       "put": {
         "summary": "设置默认地址（按地址类型）",
-        "operationId": "MerchantAddress_SetDefaultAddress",
+        "operationId": "MerchantAddresses_SetDefaultMerchantAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/ecommercemerchantv1Address"
+              "$ref": "#/definitions/v1MerchantAddress"
             }
           },
           "default": {
@@ -274,18 +274,18 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/MerchantAddressSetDefaultAddressBody"
+              "$ref": "#/definitions/MerchantAddressesSetDefaultMerchantAddressBody"
             }
           }
         ],
         "tags": [
-          "MerchantAddress"
+          "MerchantAddresses"
         ]
       }
     }
   },
   "definitions": {
-    "AddressAddressType": {
+    "MerchantAddressMerchantAddressType": {
       "type": "string",
       "enum": [
         "WAREHOUSE",
@@ -298,76 +298,18 @@
       "description": "- WAREHOUSE: 仓库地址Id\n - RETURN: 退货地址\n - STORE: 门店地址\n - BILLING: 财务地址\n - HEADQUARTERS: 总部地址",
       "title": "地址类型枚举"
     },
-    "MerchantAddressSetDefaultAddressBody": {
+    "MerchantAddressesSetDefaultMerchantAddressBody": {
       "type": "object",
       "title": "设置默认地址请求"
     },
-    "MerchantAddressUpdateAddressBody": {
+    "MerchantAddressesUpdateMerchantAddressBody": {
       "type": "object",
       "properties": {
         "merchantId": {
           "type": "string"
         },
         "addressType": {
-          "$ref": "#/definitions/AddressAddressType"
-        },
-        "contactPerson": {
-          "type": "string"
-        },
-        "contactPhone": {
-          "type": "string"
-        },
-        "streetAddress": {
-          "type": "string",
-          "title": "继承用户地址基础字段（保持字段名一致）"
-        },
-        "city": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
-        },
-        "country": {
-          "type": "string"
-        },
-        "zipCode": {
-          "type": "string"
-        },
-        "isDefault": {
-          "type": "boolean",
-          "title": "是否该类型默认地址"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "remarks": {
-          "type": "string",
-          "title": "地址备注"
-        }
-      },
-      "title": "商家地址数据结构",
-      "required": [
-        "addressType",
-        "streetAddress"
-      ]
-    },
-    "ecommercemerchantv1Address": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64"
-        },
-        "merchantId": {
-          "type": "string"
-        },
-        "addressType": {
-          "$ref": "#/definitions/AddressAddressType"
+          "$ref": "#/definitions/MerchantAddressMerchantAddressType"
         },
         "contactPerson": {
           "type": "string"
@@ -444,24 +386,7 @@
         }
       }
     },
-    "v1BatchCreateAddressesRequest": {
-      "type": "object",
-      "properties": {
-        "addresses": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/ecommercemerchantv1Address"
-          }
-        },
-        "skipDuplicates": {
-          "type": "boolean",
-          "title": "是否跳过重复地址"
-        }
-      },
-      "title": "批量创建请求"
-    },
-    "v1BatchCreateAddressesResponse": {
+    "v1BatchCreateMerchantAddressesReply": {
       "type": "object",
       "properties": {
         "successCount": {
@@ -472,19 +397,36 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/ecommercemerchantv1Address"
+            "$ref": "#/definitions/v1MerchantAddress"
           }
         }
       }
     },
-    "v1ListAddressesResponse": {
+    "v1BatchCreateMerchantAddressesRequest": {
       "type": "object",
       "properties": {
         "addresses": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/ecommercemerchantv1Address"
+            "$ref": "#/definitions/v1MerchantAddress"
+          }
+        },
+        "skipDuplicates": {
+          "type": "boolean",
+          "title": "是否跳过重复地址"
+        }
+      },
+      "title": "批量创建请求"
+    },
+    "v1ListMerchantAddressesReply": {
+      "type": "object",
+      "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1MerchantAddress"
           }
         },
         "totalCount": {
@@ -492,6 +434,64 @@
           "format": "int64"
         }
       }
+    },
+    "v1MerchantAddress": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "addressType": {
+          "$ref": "#/definitions/MerchantAddressMerchantAddressType"
+        },
+        "contactPerson": {
+          "type": "string"
+        },
+        "contactPhone": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string",
+          "title": "继承用户地址基础字段（保持字段名一致）"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "title": "是否该类型默认地址"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "remarks": {
+          "type": "string",
+          "title": "地址备注"
+        }
+      },
+      "title": "商家地址数据结构",
+      "required": [
+        "addressType",
+        "streetAddress"
+      ]
     }
   }
 }

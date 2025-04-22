@@ -63,6 +63,7 @@ func (o *orderRepo) GetOrderStatus(ctx context.Context, req *biz.GetOrderStatusR
 		}
 		return nil, err
 	}
+
 	return &biz.GetOrderStatusReply{
 		OrderId:        orderStatus.OrderID,
 		SubOrderId:     orderStatus.SubOrderID,
@@ -138,34 +139,6 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
-}
-
-func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.ShipOrderResp, error) {
-	tx := o.data.DB(ctx)
-
-	// 更新订单物流状态为已发货
-	err := tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
-		ShippingStatus: string(constants.ShippingShipped),
-		ID:             req.OrderId,
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
-		return nil, fmt.Errorf("failed to update order shipping status: %w", err)
-	}
-
-	// 更新订单物流信息
-	_, err = tx.UpdateOrderShippingInfo(ctx, models.UpdateOrderShippingInfoParams{
-		TrackingNumber: &req.TrackingNumber,
-		Carrier:        &req.Carrier,
-		// EstimatedDelivery: &req.EstimatedDelivery,
-		ID: req.OrderId,
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order shipping info: %v", err)
-		return nil, fmt.Errorf("failed to update order shipping info: %w", err)
-	}
-
-	return &biz.ShipOrderResp{}, nil
 }
 
 func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceivedReq) (*biz.ConfirmReceivedResp, error) {
@@ -244,7 +217,7 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 		OrderId:  order.ID,
 		UserId:   order.UserID.String(),
 		Currency: order.Currency,
-		Address: &userv1.Address{
+		Address: &userv1.ConsumerAddress{
 			StreetAddress: order.StreetAddress,
 			City:          order.City,
 			State:         order.State,
@@ -302,6 +275,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 		// 将所有子订单的OrderItem合并到一个列表
 		var allItems []*v1.OrderItem
 		var shippingStatus v1.ShippingStatus
+		var subOrderId int64
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
 				allItems = append(allItems, &v1.OrderItem{
@@ -315,7 +289,9 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 					Cost: item.Cost,
 				})
 			}
-			shippingStatus = v1.ShippingStatus(pkg.MapPaymentStatusToProto(constants.PaymentStatus(subOrder.ShippingStatus)))
+
+			shippingStatus = pkg.MapShippingStatusToProto(subOrder.ShippingStatus)
+			subOrderId = subOrder.ID // 设置子订单ID
 		}
 
 		// 构建主订单
@@ -324,7 +300,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 			OrderId:  order.ID,
 			UserId:   order.UserID.String(),
 			Currency: order.Currency,
-			Address: &userv1.Address{
+			Address: &userv1.ConsumerAddress{
 				StreetAddress: order.StreetAddress,
 				City:          order.City,
 				State:         order.State,
@@ -335,6 +311,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 			CreatedAt:      timestamppb.New(order.CreatedAt),
 			PaymentStatus:  pkg.MapPaymentStatusToProto(constants.PaymentStatus(order.PaymentStatus)),
 			ShippingStatus: shippingStatus,
+			SubOrderId:     &subOrderId,
 		}
 
 		orders = append(orders, orderProto)
@@ -500,15 +477,15 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	}
 
 	type dbSubOrder struct {
-		ID             int64           `json:"ID,omitempty"`
-		MerchantID     string          `json:"merchantID,omitempty"`
-		TotalAmount    json.Number     `json:"totalAmount,omitempty"`
+		ID             int64           `json:"sub_order_id,omitempty"`
+		MerchantID     string          `json:"merchant_id,omitempty"`
+		TotalAmount    json.Number     `json:"total_amount,omitempty"`
 		Currency       string          `json:"currency,omitempty"`
-		PaymentStatus  string          `json:"paymentStatus,omitempty"`
-		ShippingStatus string          `json:"shippingStatus,omitempty"`
+		PaymentStatus  string          `json:"status,omitempty"`
+		ShippingStatus string          `json:"shipping_status,omitempty"`
 		Items          json.RawMessage `json:"items,omitempty"`
-		CreatedAt      time.Time       `json:"createdAt"`
-		UpdatedAt      time.Time       `json:"updatedAt"`
+		CreatedAt      time.Time       `json:"created_at"`
+		UpdatedAt      time.Time       `json:"updated_at"`
 	}
 
 	var dbSubs []dbSubOrder
@@ -533,17 +510,45 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 			return nil, fmt.Errorf("invalid total amount: %w", err)
 		}
 
+		// 解析订单项
+		type OrderItemData struct {
+			Cost float64 `json:"cost"`
+			Item struct {
+				Name       string `json:"name"`
+				Picture    string `json:"picture"`
+				Quantity   int32  `json:"quantity"`
+				ProductId  string `json:"productId"`
+				MerchantId string `json:"merchantId"`
+			} `json:"item"`
+		}
+
+		var itemsData []OrderItemData
+		if err := json.Unmarshal(d.Items, &itemsData); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal items: %w", err)
+		}
+
 		var orderItems []*biz.OrderItem
-		if err := json.Unmarshal(d.Items, &orderItems); err != nil {
-			// 尝试另一种格式
-			type OrderItemWrapper struct {
-				Items []*biz.OrderItem `json:"items"`
+		for _, itemData := range itemsData {
+			productId, err := uuid.Parse(itemData.Item.ProductId)
+			if err != nil {
+				return nil, fmt.Errorf("invalid product id: %w", err)
 			}
-			var wrapper OrderItemWrapper
-			if wrapErr := json.Unmarshal(d.Items, &wrapper); wrapErr != nil {
-				return nil, fmt.Errorf("failed to unmarshal items: %w (original error: %v)", wrapErr, err)
+
+			merchantId, err := uuid.Parse(itemData.Item.MerchantId)
+			if err != nil {
+				return nil, fmt.Errorf("invalid merchant id: %w", err)
 			}
-			orderItems = wrapper.Items
+
+			orderItems = append(orderItems, &biz.OrderItem{
+				Item: &biz.CartItem{
+					MerchantId: merchantId,
+					ProductId:  productId,
+					Quantity:   uint32(itemData.Item.Quantity),
+					Name:       itemData.Item.Name,
+					Picture:    itemData.Item.Picture,
+				},
+				Cost: itemData.Cost,
+			})
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{

@@ -13,19 +13,68 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const CreateShip = `-- name: CreateShip :one
+INSERT INTO orders.shipping_info(id, merchant_id,sub_order_id, tracking_number, carrier, delivery,
+                                 shipping_address, receiver_address, shipping_fee)
+VALUES ($1, $2,$3, $4, $5, $6,
+        $7, $8, $9)
+RETURNING id, created_at
+`
+
+type CreateShipParams struct {
+	ID              *int64
+	MerchantID      pgtype.UUID
+	SubOrderID      *int64
+	TrackingNumber  *string
+	Carrier         *string
+	Delivery        pgtype.Timestamptz
+	ShippingAddress []byte
+	ReceiverAddress []byte
+	ShippingFee     pgtype.Numeric
+}
+
+type CreateShipRow struct {
+	ID        int64
+	CreatedAt time.Time
+}
+
+// CreateShip
+//
+//	INSERT INTO orders.shipping_info(id, merchant_id,sub_order_id, tracking_number, carrier, delivery,
+//	                                 shipping_address, receiver_address, shipping_fee)
+//	VALUES ($1, $2,$3, $4, $5, $6,
+//	        $7, $8, $9)
+//	RETURNING id, created_at
+func (q *Queries) CreateShip(ctx context.Context, arg CreateShipParams) (CreateShipRow, error) {
+	row := q.db.QueryRow(ctx, CreateShip,
+		arg.ID,
+		arg.MerchantID,
+		arg.SubOrderID,
+		arg.TrackingNumber,
+		arg.Carrier,
+		arg.Delivery,
+		arg.ShippingAddress,
+		arg.ReceiverAddress,
+		arg.ShippingFee,
+	)
+	var i CreateShipRow
+	err := row.Scan(&i.ID, &i.CreatedAt)
+	return i, err
+}
+
 const ListOrdersByUser = `-- name: ListOrdersByUser :many
-SELECT s.id,
-       order_id,
+SELECT os.id AS sub_order_id,
+       oo.id AS order_id,
        merchant_id,
        total_amount,
-       s.currency,
-       o.payment_status,
-       s.shipping_status,
+       os.currency,
+       oo.payment_status,
+       os.shipping_status,
        items,
-       s.created_at,
-       s.updated_at
-FROM orders.sub_orders s
-         JOIN orders.orders o on s.order_id = o.id
+       os.created_at,
+       os.updated_at
+FROM orders.sub_orders os
+         JOIN orders.orders oo on os.order_id = oo.id
 WHERE merchant_id = $1
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $2
@@ -38,7 +87,7 @@ type ListOrdersByUserParams struct {
 }
 
 type ListOrdersByUserRow struct {
-	ID             int64
+	SubOrderID     int64
 	OrderID        int64
 	MerchantID     uuid.UUID
 	TotalAmount    interface{}
@@ -52,18 +101,18 @@ type ListOrdersByUserRow struct {
 
 // ListOrdersByUser
 //
-//	SELECT s.id,
-//	       order_id,
+//	SELECT os.id AS sub_order_id,
+//	       oo.id AS order_id,
 //	       merchant_id,
 //	       total_amount,
-//	       s.currency,
-//	       o.payment_status,
-//	       s.shipping_status,
+//	       os.currency,
+//	       oo.payment_status,
+//	       os.shipping_status,
 //	       items,
-//	       s.created_at,
-//	       s.updated_at
-//	FROM orders.sub_orders s
-//	         JOIN orders.orders o on s.order_id = o.id
+//	       os.created_at,
+//	       os.updated_at
+//	FROM orders.sub_orders os
+//	         JOIN orders.orders oo on os.order_id = oo.id
 //	WHERE merchant_id = $1
 //	ORDER BY created_at DESC
 //	LIMIT $3 OFFSET $2
@@ -77,7 +126,7 @@ func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserPara
 	for rows.Next() {
 		var i ListOrdersByUserRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.SubOrderID,
 			&i.OrderID,
 			&i.MerchantID,
 			&i.TotalAmount,
@@ -169,4 +218,65 @@ func (q *Queries) QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySu
 		return nil, err
 	}
 	return items, nil
+}
+
+const UpdateOrderShippingInfo = `-- name: UpdateOrderShippingInfo :exec
+UPDATE orders.sub_orders
+SET shipping_status  = COALESCE($1, shipping_status),
+    tracking_number  = COALESCE($2, tracking_number),
+    carrier          = COALESCE($3, carrier),
+    merchant_address = COALESCE($4, merchant_address),
+    updated_at       = NOW()
+WHERE id = $5
+`
+
+type UpdateOrderShippingInfoParams struct {
+	ShippingStatus  *string
+	TrackingNumber  *string
+	Carrier         *string
+	MerchantAddress []byte
+	ID              *int64
+}
+
+// UpdateOrderShippingInfo
+//
+//	UPDATE orders.sub_orders
+//	SET shipping_status  = COALESCE($1, shipping_status),
+//	    tracking_number  = COALESCE($2, tracking_number),
+//	    carrier          = COALESCE($3, carrier),
+//	    merchant_address = COALESCE($4, merchant_address),
+//	    updated_at       = NOW()
+//	WHERE id = $5
+func (q *Queries) UpdateOrderShippingInfo(ctx context.Context, arg UpdateOrderShippingInfoParams) error {
+	_, err := q.db.Exec(ctx, UpdateOrderShippingInfo,
+		arg.ShippingStatus,
+		arg.TrackingNumber,
+		arg.Carrier,
+		arg.MerchantAddress,
+		arg.ID,
+	)
+	return err
+}
+
+const UpdateOrderShippingStatus = `-- name: UpdateOrderShippingStatus :exec
+UPDATE orders.shipping_info
+SET shipping_status = $1,
+    updated_at      = now()
+WHERE id = $2
+`
+
+type UpdateOrderShippingStatusParams struct {
+	ShippingStatus *string
+	ID             *int64
+}
+
+// UpdateOrderShippingStatus
+//
+//	UPDATE orders.shipping_info
+//	SET shipping_status = $1,
+//	    updated_at      = now()
+//	WHERE id = $2
+func (q *Queries) UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error {
+	_, err := q.db.Exec(ctx, UpdateOrderShippingStatus, arg.ShippingStatus, arg.ID)
+	return err
 }

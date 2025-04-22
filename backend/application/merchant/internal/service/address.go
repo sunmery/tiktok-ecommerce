@@ -23,11 +23,11 @@ func NewAddressService(ac *biz.AddressUsecase) *AddressService {
 }
 
 type AddressService struct {
-	addressv1.UnimplementedMerchantAddressServer
+	addressv1.UnimplementedMerchantAddressesServer
 	ac *biz.AddressUsecase
 }
 
-func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.Address) (*pb.Address, error) {
+func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.MerchantAddress) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -55,7 +55,7 @@ func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.Addr
 		return nil, err
 	}
 
-	return &pb.Address{
+	return &pb.MerchantAddress{
 		Id:            address.Id,
 		MerchantId:    address.MerchantId,
 		AddressType:   convertToPBAddressType(address.AddressType),
@@ -75,7 +75,7 @@ func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.Addr
 	}, nil
 }
 
-func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.BatchCreateAddressesRequest) (*pb.BatchCreateAddressesResponse, error) {
+func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.BatchCreateMerchantAddressesRequest) (*pb.BatchCreateMerchantAddressesReply, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -107,9 +107,9 @@ func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.Batch
 		return nil, err
 	}
 
-	pbAddresses := make([]*pb.Address, len(result.Addresses))
+	pbAddresses := make([]*pb.MerchantAddress, len(result.Addresses))
 	for i, addr := range result.Addresses {
-		pbAddresses[i] = &pb.Address{
+		pbAddresses[i] = &pb.MerchantAddress{
 			Id:            addr.Id,
 			MerchantId:    addr.MerchantId,
 			AddressType:   convertToPBAddressType(addr.AddressType),
@@ -126,13 +126,13 @@ func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.Batch
 		}
 	}
 
-	return &pb.BatchCreateAddressesResponse{
+	return &pb.BatchCreateMerchantAddressesReply{
 		SuccessCount: int32(len(result.Addresses)),
 		FailedItems:  nil,
 	}, nil
 }
 
-func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.Address) (*pb.Address, error) {
+func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.MerchantAddress) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -155,7 +155,7 @@ func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.Address) (*p
 		return nil, err
 	}
 
-	return &pb.Address{
+	return &pb.MerchantAddress{
 		Id:            address.Id,
 		MerchantId:    address.MerchantId,
 		AddressType:   convertToPBAddressType(address.AddressType),
@@ -172,7 +172,7 @@ func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.Address) (*p
 	}, nil
 }
 
-func (s *AddressService) DeleteAddress(ctx context.Context, req *pb.DeleteAddressRequest) (*empty.Empty, error) {
+func (s *AddressService) DeleteAddress(ctx context.Context, req *pb.DeletMerchanteAddressRequest) (*empty.Empty, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -184,7 +184,7 @@ func (s *AddressService) DeleteAddress(ctx context.Context, req *pb.DeleteAddres
 	})
 }
 
-func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (*pb.Address, error) {
+func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetMerchantAddressRequest) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -198,7 +198,7 @@ func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetAddressReque
 		return nil, err
 	}
 
-	return &pb.Address{
+	return &pb.MerchantAddress{
 		Id:            address.Id,
 		MerchantId:    address.MerchantId,
 		AddressType:   convertToPBAddressType(address.AddressType),
@@ -215,7 +215,7 @@ func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetAddressReque
 	}, nil
 }
 
-func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListAddressesRequest) (*pb.ListAddressesResponse, error) {
+func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListMerchantAddressesRequest) (*pb.ListMerchantAddressesReply, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -232,9 +232,9 @@ func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListAddresse
 		return nil, err
 	}
 
-	addresses := make([]*pb.Address, len(result.Addresses))
+	addresses := make([]*pb.MerchantAddress, len(result.Addresses))
 	for i, addr := range result.Addresses {
-		addresses[i] = &pb.Address{
+		addresses[i] = &pb.MerchantAddress{
 			Id:            addr.Id,
 			MerchantId:    addr.MerchantId,
 			AddressType:   convertToPBAddressType(addr.AddressType),
@@ -251,13 +251,13 @@ func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListAddresse
 		}
 	}
 
-	return &pb.ListAddressesResponse{
+	return &pb.ListMerchantAddressesReply{
 		Addresses:  addresses,
 		TotalCount: uint32(result.Total),
 	}, nil
 }
 
-func (s *AddressService) SetDefaultAddress(ctx context.Context, req *pb.SetDefaultAddressRequest) (*pb.Address, error) {
+func (s *AddressService) SetDefaultAddress(ctx context.Context, req *pb.SetDefaultMerchantAddressRequest) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -271,7 +271,7 @@ func (s *AddressService) SetDefaultAddress(ctx context.Context, req *pb.SetDefau
 		return nil, err
 	}
 
-	return &pb.Address{
+	return &pb.MerchantAddress{
 		Id:            address.Id,
 		MerchantId:    address.MerchantId,
 		AddressType:   convertToPBAddressType(address.AddressType),
@@ -305,19 +305,19 @@ func convertAddressType(AddressType int32) string {
 	}
 }
 
-func convertToPBAddressType(AddressType biz.AddressType) pb.Address_AddressType {
+func convertToPBAddressType(AddressType biz.AddressType) pb.MerchantAddress_MerchantAddressType {
 	switch AddressType {
 	case biz.WAREHOUSE:
-		return pb.Address_WAREHOUSE
+		return pb.MerchantAddress_WAREHOUSE
 	case biz.RETURN:
-		return pb.Address_RETURN
+		return pb.MerchantAddress_RETURN
 	case biz.STORE:
-		return pb.Address_STORE
+		return pb.MerchantAddress_STORE
 	case biz.BILLING:
-		return pb.Address_BILLING
+		return pb.MerchantAddress_BILLING
 	case biz.HEADQUARTERS:
-		return pb.Address_HEADQUARTERS
+		return pb.MerchantAddress_HEADQUARTERS
 	default:
-		return pb.Address_WAREHOUSE
+		return pb.MerchantAddress_WAREHOUSE
 	}
 }

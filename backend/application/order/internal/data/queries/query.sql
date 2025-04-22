@@ -45,7 +45,7 @@ LIMIT @page_size OFFSET @page;
 SELECT oo.*,
        json_agg(
                json_build_object(
-                       'id', os.id,
+                       'sub_order_id', os.id,
                        'merchant_id', os.merchant_id,
                        'total_amount', os.total_amount,
                        'currency', os.currency,
@@ -146,19 +146,10 @@ WHERE s.id = @id;
 UPDATE orders.orders
 SET payment_status = $2,
     updated_at     = now()
-WHERE id = $1;
+WHERE id = @id;
 
 -- name: UpdateOrderShippingStatus :exec
 UPDATE orders.sub_orders
-SET shipping_status = $2,
-    updated_at      = now()
-WHERE id = $1;
-
--- name: UpdateOrderShippingInfo :one
-UPDATE orders.sub_orders
 SET shipping_status = @shipping_status,
-    tracking_number = @tracking_number,
-    carrier         = @carrier,
-    updated_at      = NOW()
-WHERE id = @id
-RETURNING *;
+    updated_at      = now()
+WHERE id = @id;

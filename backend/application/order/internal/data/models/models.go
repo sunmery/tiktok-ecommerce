@@ -27,18 +27,34 @@ type OrdersOrders struct {
 	PaymentStatus string    `json:"paymentStatus"`
 }
 
+type OrdersShippingInfo struct {
+	ID              int64              `json:"id"`
+	SubOrderID      int64              `json:"subOrderID"`
+	MerchantID      uuid.UUID          `json:"merchantID"`
+	TrackingNumber  string             `json:"trackingNumber"`
+	Carrier         string             `json:"carrier"`
+	ShippingStatus  string             `json:"shippingStatus"`
+	Delivery        pgtype.Timestamptz `json:"delivery"`
+	ShippingAddress []byte             `json:"shippingAddress"`
+	ReceiverAddress []byte             `json:"receiverAddress"`
+	ShippingFee     pgtype.Numeric     `json:"shippingFee"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	UpdatedAt       time.Time          `json:"updatedAt"`
+}
+
 // 子订单表，按商家分单存储
 type OrdersSubOrders struct {
-	ID             int64          `json:"id"`
-	OrderID        int64          `json:"orderID"`
-	MerchantID     uuid.UUID      `json:"merchantID"`
-	TotalAmount    pgtype.Numeric `json:"totalAmount"`
-	Currency       string         `json:"currency"`
-	Status         string         `json:"status"`
-	Items          []byte         `json:"items"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
-	ShippingStatus string         `json:"shippingStatus"`
-	TrackingNumber *string        `json:"trackingNumber"`
-	Carrier        *string        `json:"carrier"`
+	ID              int64          `json:"id"`
+	OrderID         int64          `json:"orderID"`
+	MerchantID      uuid.UUID      `json:"merchantID"`
+	TotalAmount     pgtype.Numeric `json:"totalAmount"`
+	Currency        string         `json:"currency"`
+	Status          string         `json:"status"`
+	Items           []byte         `json:"items"`
+	CreatedAt       time.Time      `json:"createdAt"`
+	UpdatedAt       time.Time      `json:"updatedAt"`
+	ShippingStatus  string         `json:"shippingStatus"`
+	TrackingNumber  *string        `json:"trackingNumber"`
+	Carrier         *string        `json:"carrier"`
+	MerchantAddress []byte         `json:"merchantAddress"`
 }

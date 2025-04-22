@@ -20,7 +20,11 @@ func initHttpTracerProvider(ctx context.Context, res *resource.Resource, conn st
 	// traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(conn))
 
 	// 服务端的Jaeger不支持HTTPS时使用otlptracehttp.WithInsecure()显式声明只使用HTTP不安全的连接
-	traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithInsecure(), otlptracehttp.WithEndpoint(conn))
+	traceExporter, err := otlptracehttp.New(
+		ctx,
+		otlptracehttp.WithInsecure(),
+		otlptracehttp.WithEndpoint(conn),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http trace exporter: %w", err)
 	}
@@ -49,7 +53,12 @@ func initHttpTracerProvider(ctx context.Context, res *resource.Resource, conn st
 
 // gRPC 服务初始化 TraceProvider
 func initGrpcTracerProvider(ctx context.Context, res *resource.Resource, conn string) (func(context.Context) error, error) {
-	traceExporter, err := otlptracegrpc.New(ctx,
+	// 服务端的Jaeger使用HTTPS时不需要指定WithInsecure()
+	// traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(conn))
+
+	// 服务端的Jaeger只支持HTTP时需要指定WithInsecure() 来显式声明只使用HTTP不安全的连接
+	traceExporter, err := otlptracegrpc.New(
+		ctx,
 		otlptracegrpc.WithInsecure(),
 		otlptracegrpc.WithEndpoint(conn),
 	)

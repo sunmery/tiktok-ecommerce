@@ -13,7 +13,7 @@ import (
 )
 
 // CreateAddresses 创建地址
-func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1.Address, error) {
+func (s *UserService) CreateConsumerAddresses(ctx context.Context, req *v1.ConsumerAddress) (*v1.ConsumerAddress, error) {
 	userId, uErr := pkg.GetMetadataUesrID(ctx)
 	if uErr != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -30,7 +30,7 @@ func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1
 		return nil, err
 	}
 
-	return &v1.Address{
+	return &v1.ConsumerAddress{
 		Id:            address.Id,
 		UserId:        userId.String(),
 		City:          address.City,
@@ -42,7 +42,7 @@ func (s *UserService) CreateAddresses(ctx context.Context, req *v1.Address) (*v1
 }
 
 // UpdateAddresses 更新地址
-func (s *UserService) UpdateAddresses(ctx context.Context, req *v1.Address) (*v1.Address, error) {
+func (s *UserService) UpdateConsumerAddresses(ctx context.Context, req *v1.ConsumerAddress) (*v1.ConsumerAddress, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -59,7 +59,7 @@ func (s *UserService) UpdateAddresses(ctx context.Context, req *v1.Address) (*v1
 	if err != nil {
 		return nil, err
 	}
-	return &v1.Address{
+	return &v1.ConsumerAddress{
 		Id:            address.Id,
 		UserId:        userId.String(),
 		StreetAddress: address.StreetAddress,
@@ -71,7 +71,7 @@ func (s *UserService) UpdateAddresses(ctx context.Context, req *v1.Address) (*v1
 }
 
 // DeleteAddresses 删除地址
-func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddressesRequest) (*v1.DeleteAddressesReply, error) {
+func (s *UserService) DeleteConsumerAddresses(ctx context.Context, req *v1.DeleteConsumerAddressesRequest) (*v1.DeleteConsumerAddressesReply, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -84,15 +84,15 @@ func (s *UserService) DeleteAddresses(ctx context.Context, req *v1.DeleteAddress
 	if err != nil {
 		return nil, err
 	}
-	return &v1.DeleteAddressesReply{
+	return &v1.DeleteConsumerAddressesReply{
 		Message: reply.Message,
 		Id:      reply.Id,
 		Code:    reply.Code,
 	}, nil
 }
 
-// GetAddress 根据ID获取地址
-func (s *UserService) GetAddress(ctx context.Context, req *v1.GetAddressRequest) (*v1.Address, error) {
+// GetConsumerAddress 根据ID获取地址
+func (s *UserService) GetConsumerAddress(ctx context.Context, req *v1.GetConsumerAddressRequest) (*v1.ConsumerAddress, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -105,7 +105,7 @@ func (s *UserService) GetAddress(ctx context.Context, req *v1.GetAddressRequest)
 		return nil, err
 	}
 
-	return &v1.Address{
+	return &v1.ConsumerAddress{
 		Id:            addresses.Id,
 		UserId:        addresses.UserId.String(),
 		City:          addresses.City,
@@ -116,8 +116,8 @@ func (s *UserService) GetAddress(ctx context.Context, req *v1.GetAddressRequest)
 	}, nil
 }
 
-// GetAddresses 获取地址列表
-func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.GetAddressesReply, error) {
+// GetConsumerAddresses 获取地址列表
+func (s *UserService) GetConsumerAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.GetConsumerAddressesReply, error) {
 	userId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("错误的UserID")
@@ -128,9 +128,9 @@ func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.G
 	if err != nil {
 		return nil, err
 	}
-	addressList := make([]*v1.Address, len(addresses.Addresses))
+	addressList := make([]*v1.ConsumerAddress, len(addresses.Addresses))
 	for i, address := range addresses.Addresses {
-		addressList[i] = &v1.Address{
+		addressList[i] = &v1.ConsumerAddress{
 			Id:            address.Id,
 			UserId:        userId.String(),
 			City:          address.City,
@@ -141,7 +141,7 @@ func (s *UserService) GetAddresses(ctx context.Context, _ *emptypb.Empty) (*v1.G
 		}
 	}
 
-	return &v1.GetAddressesReply{
+	return &v1.GetConsumerAddressesReply{
 		Addresses: addressList,
 	}, nil
 }

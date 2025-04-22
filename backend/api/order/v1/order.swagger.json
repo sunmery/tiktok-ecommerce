@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "定义包名，用于命名空间隔离",
+    "title": "v1/order.proto",
     "version": "version not set"
   },
   "tags": [
@@ -251,47 +251,6 @@
         ]
       }
     },
-    "/v1/orders/{orderId}/ship": {
-      "put": {
-        "summary": "商家发货",
-        "operationId": "OrderService_ShipOrder",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ShipOrderResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "orderId",
-            "description": "订单 ID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/OrderServiceShipOrderBody"
-            }
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      }
-    },
     "/v1/orders/{orderId}/status": {
       "get": {
         "summary": "查询订单状态(支付状态和货运状态)",
@@ -374,24 +333,6 @@
       "type": "object",
       "title": "标记订单为已支付请求的消息结构"
     },
-    "OrderServiceShipOrderBody": {
-      "type": "object",
-      "properties": {
-        "trackingNumber": {
-          "type": "string",
-          "title": "物流单号"
-        },
-        "carrier": {
-          "type": "string",
-          "title": "承运商"
-        },
-        "estimatedDelivery": {
-          "type": "string",
-          "title": "预计送达时间"
-        }
-      },
-      "title": "商家发货请求的消息结构"
-    },
     "OrderServiceUpdateOrderStatusBody": {
       "type": "object",
       "properties": {
@@ -432,43 +373,6 @@
         }
       }
     },
-    "v1Address": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "地址 ID"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string",
-          "title": "城市，必填字段"
-        },
-        "state": {
-          "type": "string",
-          "title": "州/省，必填字段"
-        },
-        "country": {
-          "type": "string",
-          "title": "国家，必填字段"
-        },
-        "zipCode": {
-          "type": "string"
-        },
-        "streetAddress": {
-          "type": "string"
-        }
-      },
-      "title": "定义地址信息的消息结构",
-      "required": [
-        "userId",
-        "zipCode",
-        "streetAddress"
-      ]
-    },
     "v1CartItem": {
       "type": "object",
       "properties": {
@@ -500,6 +404,42 @@
       "type": "object",
       "title": "用户确认收货响应的消息结构"
     },
+    "v1ConsumerAddress": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "地址 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string",
+          "title": "城市，必填字段"
+        },
+        "state": {
+          "type": "string",
+          "title": "州/省，必填字段"
+        },
+        "country": {
+          "type": "string",
+          "title": "国家，必填字段"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string"
+        }
+      },
+      "title": "定义地址信息的消息结构",
+      "required": [
+        "zipCode",
+        "streetAddress"
+      ]
+    },
     "v1GetOrderStatusResp": {
       "type": "object",
       "properties": {
@@ -520,6 +460,19 @@
         "shippingStatus": {
           "$ref": "#/definitions/v1ShippingStatus",
           "title": "货运状态"
+        },
+        "userAddress": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户收货地址"
+        },
+        "trackingNumber": {
+          "type": "string",
+          "description": "物流单号",
+          "title": "merchantaddress.v1.MerchantAddress merchant_address = 6;  // 商家发货地址"
+        },
+        "carrier": {
+          "type": "string",
+          "title": "承运商"
         }
       },
       "title": "查询订单状态响应的消息结构"
@@ -544,6 +497,11 @@
           "format": "int64",
           "title": "订单 ID"
         },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
         "userId": {
           "type": "string"
         },
@@ -552,7 +510,7 @@
           "title": "货币代码（如 USD、CNY），长度固定为 3"
         },
         "address": {
-          "$ref": "#/definitions/v1Address",
+          "$ref": "#/definitions/v1ConsumerAddress",
           "title": "用户地址信息"
         },
         "email": {
@@ -636,7 +594,7 @@
           "title": "货币代码（如 USD、CNY），长度固定为 3"
         },
         "address": {
-          "$ref": "#/definitions/v1Address",
+          "$ref": "#/definitions/v1ConsumerAddress",
           "title": "用户地址信息"
         },
         "email": {
@@ -663,10 +621,6 @@
         }
       },
       "title": "创建订单响应的消息结构"
-    },
-    "v1ShipOrderResp": {
-      "type": "object",
-      "title": "商家发货响应的消息结构"
     },
     "v1ShippingStatus": {
       "type": "string",

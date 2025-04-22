@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package ecommerce.admin.v1;
+
+option go_package = "backend/api/admin/comment/v1;admincommentv1";
+
+import "google/api/annotations.proto";
+
+service AdminComment {
+  // 设置评论敏感词
+  rpc SetSensitiveWords(SetSensitiveWordsReq) returns (SetSensitiveWordsReply) {
+    option (google.api.http) = {
+      put: "/v1/admin/comments/sensitiveWords",
+      body: "*"
+    };
+  }
+
+  // 查询评论敏感词
+  rpc GetSensitiveWords(GetSensitiveWordsReq) returns (GetSensitiveWordsReply) {
+    option (google.api.http) = {
+      get: "/v1/admin/comments/sensitiveWords"
+    };
+  }
+}
+
+message SetSensitiveWordsReq {
+  repeated string words = 1;
+}
+
+message SetSensitiveWordsReply {}
+
+message GetSensitiveWordsReq {}
+
+message GetSensitiveWordsReply {
+  repeated string words = 1;
+}

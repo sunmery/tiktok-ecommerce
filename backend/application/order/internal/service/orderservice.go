@@ -212,7 +212,7 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 		paymentStatus := pkg.MapPaymentStatusToProto(firstSubOrder.PaymentStatus)
 
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
-		address := &userv1.Address{
+		address := &userv1.ConsumerAddress{
 			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
 			City:          "",
 			State:         "",
@@ -296,6 +296,31 @@ func (s *OrderServiceService) GetOrderStatus(ctx context.Context, req *v1.GetOrd
 		SubOrderId:     orderStatus.SubOrderId,
 		PaymentStatus:  pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus),
 		ShippingStatus: pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
+		UserAddress: &userv1.ConsumerAddress{
+			StreetAddress: orderStatus.UserAddress.StreetAddress,
+			City:          orderStatus.UserAddress.City,
+			State:         orderStatus.UserAddress.State,
+			Country:       orderStatus.UserAddress.Country,
+			ZipCode:       orderStatus.UserAddress.ZipCode,
+		},
+		// MerchantAddress: &merchantAddressv1.MerchantAddress{
+		// 	// Id:            0,
+		// 	// MerchantId:    "",
+		// 	AddressType:   orderStatus.MerchantAddress.AddressType,
+		// 	ContactPerson: orderStatus.MerchantAddress.ContactPerson,
+		// 	ContactPhone:  orderStatus.MerchantAddress.ContactPhone,
+		// 	StreetAddress: orderStatus.MerchantAddress.StreetAddress,
+		// 	City:          orderStatus.MerchantAddress.City,
+		// 	State:         orderStatus.MerchantAddress.State,
+		// 	Country:       orderStatus.MerchantAddress.Country,
+		// 	ZipCode:       orderStatus.MerchantAddress.ZipCode,
+		// 	// IsDefault:     false,
+		// 	// CreatedAt:     nil,
+		// 	// UpdatedAt:     nil,
+		// 	// Remarks:       "",
+		// },
+		TrackingNumber: orderStatus.TrackingNumber,
+		Carrier:        orderStatus.Carrier,
 	}, nil
 }
 
@@ -320,35 +345,6 @@ func (s *OrderServiceService) UpdateOrderStatus(ctx context.Context, req *v1.Upd
 	}
 	log.Debugf("orderStatus: %v", orderStatus)
 	return &v1.UpdateOrderStatusResp{}, nil
-}
-
-// ShipOrder 发货(商家角色)
-func (s *OrderServiceService) ShipOrder(ctx context.Context, req *v1.ShipOrderReq) (*v1.ShipOrderResp, error) {
-	// 从网关获取用户ID
-	// userId, err := globalpkg.GetMetadataUesrID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
-	// }
-	// 验证订单ID
-	if req.OrderId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "order ID is required")
-	}
-	// 调用业务层标记订单为已支付
-	orderPaid, err := s.uc.ShipOrder(ctx, &biz.ShipOrderReq{
-		// UserId:            userId,
-		OrderId:           req.OrderId,
-		TrackingNumber:    req.TrackingNumber,
-		Carrier:           req.Carrier,
-		EstimatedDelivery: req.EstimatedDelivery,
-	})
-	if err != nil {
-		// 根据错误类型返回不同的状态码
-		if err.Error() == "order does not belong to user" {
-			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
-		}
-	}
-	log.Debugf("orderPaid: %v", orderPaid)
-	return &v1.ShipOrderResp{}, nil
 }
 
 // ConfirmReceived 确认收货(用户角色)

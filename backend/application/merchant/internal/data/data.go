@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	merchantAddressv1 "backend/api/merchant/address/v1"
+	userv1 "backend/api/user/v1"
+
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
@@ -29,14 +32,16 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewDiscovery, NewProductServiceClient, NewInventoryRepo, NewProductRepo, NewOrderRepo, NewAddressRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewDiscovery, NewProductServiceClient, NewInventoryRepo, NewProductRepo, NewOrderRepo, NewAddressRepo, NewMerchantAddressServiceClient, NewUserServiceClient)
 
 type Data struct {
-	db        *models.Queries
-	pgx       *pgxpool.Pool
-	rdb       *redis.Client
-	logger    *log.Helper
-	productv1 productv1.ProductServiceClient
+	db                *models.Queries
+	pgx               *pgxpool.Pool
+	rdb               *redis.Client
+	logger            *log.Helper
+	productv1         productv1.ProductServiceClient
+	userv1            userv1.UserServiceClient
+	merchantAddressv1 merchantAddressv1.MerchantAddressesClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -48,16 +53,20 @@ func NewData(
 	rdb *redis.Client,
 	logger log.Logger,
 	productv1 productv1.ProductServiceClient,
+	userv1 userv1.UserServiceClient,
+	merchantAddressv1 merchantAddressv1.MerchantAddressesClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:        models.New(db),        // 数据库
-		pgx:       db,                    // 数据库事务
-		rdb:       rdb,                   // 缓存
-		logger:    log.NewHelper(logger), // 注入日志
-		productv1: productv1,             // 商品服务
+		db:                models.New(db),        // 数据库
+		pgx:               db,                    // 数据库事务
+		rdb:               rdb,                   // 缓存
+		logger:            log.NewHelper(logger), // 注入日志
+		productv1:         productv1,             // 商品服务
+		userv1:            userv1,                // 用户服务
+		merchantAddressv1: merchantAddressv1,     // 商家地址服务
 	}, cleanup, nil
 }
 
@@ -73,6 +82,42 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	}
 	r := consul.New(cli, consul.WithHealthCheck(false))
 	return r, nil
+}
+
+// NewMerchantAddressServiceClient 商家地址微服务
+func NewMerchantAddressServiceClient(d registry.Discovery, logger log.Logger) (merchantAddressv1.MerchantAddressesClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.MerchantServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return merchantAddressv1.NewMerchantAddressesClient(conn), nil
+}
+
+// NewUserServiceClient 用户微服务
+func NewUserServiceClient(d registry.Discovery, logger log.Logger) (userv1.UserServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.UserServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return userv1.NewUserServiceClient(conn), nil
 }
 
 // NewProductServiceClient 商品微服务

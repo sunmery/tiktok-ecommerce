@@ -8,7 +8,6 @@ package productv1
 
 import (
 	v1 "backend/api/product/v1"
-	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -234,7 +233,7 @@ var File_product_v1_product_proto protoreflect.FileDescriptor
 
 const file_product_v1_product_proto_rawDesc = "" +
 	"\n" +
-	"\x18product/v1/product.proto\x12\x15ecommerce.merchant.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17validate/validate.proto\x1a$backend/api/product/v1/product.proto\x1a\x1cgoogle/protobuf/struct.proto\"L\n" +
+	"\x18product/v1/product.proto\x12\x15ecommerce.merchant.v1\x1a\x1cgoogle/api/annotations.proto\x1a$backend/api/product/v1/product.proto\x1a\x1cgoogle/protobuf/struct.proto\"L\n" +
 	"\x19GetMerchantProductRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"\xf3\x01\n" +

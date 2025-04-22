@@ -20,40 +20,40 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationUserServiceCreateAddresses = "/ecommerce.user.v1.UserService/CreateAddresses"
+const OperationUserServiceCreateConsumerAddresses = "/ecommerce.user.v1.UserService/CreateConsumerAddresses"
 const OperationUserServiceCreateCreditCard = "/ecommerce.user.v1.UserService/CreateCreditCard"
-const OperationUserServiceDeleteAddresses = "/ecommerce.user.v1.UserService/DeleteAddresses"
+const OperationUserServiceDeleteConsumerAddresses = "/ecommerce.user.v1.UserService/DeleteConsumerAddresses"
 const OperationUserServiceDeleteCreditCard = "/ecommerce.user.v1.UserService/DeleteCreditCard"
 const OperationUserServiceDeleteFavorites = "/ecommerce.user.v1.UserService/DeleteFavorites"
 const OperationUserServiceDeleteUser = "/ecommerce.user.v1.UserService/DeleteUser"
-const OperationUserServiceGetAddress = "/ecommerce.user.v1.UserService/GetAddress"
-const OperationUserServiceGetAddresses = "/ecommerce.user.v1.UserService/GetAddresses"
+const OperationUserServiceGetConsumerAddress = "/ecommerce.user.v1.UserService/GetConsumerAddress"
+const OperationUserServiceGetConsumerAddresses = "/ecommerce.user.v1.UserService/GetConsumerAddresses"
 const OperationUserServiceGetCreditCard = "/ecommerce.user.v1.UserService/GetCreditCard"
 const OperationUserServiceGetFavorites = "/ecommerce.user.v1.UserService/GetFavorites"
 const OperationUserServiceGetUserProfile = "/ecommerce.user.v1.UserService/GetUserProfile"
 const OperationUserServiceGetUsers = "/ecommerce.user.v1.UserService/GetUsers"
 const OperationUserServiceListCreditCards = "/ecommerce.user.v1.UserService/ListCreditCards"
 const OperationUserServiceSetFavorites = "/ecommerce.user.v1.UserService/SetFavorites"
-const OperationUserServiceUpdateAddresses = "/ecommerce.user.v1.UserService/UpdateAddresses"
+const OperationUserServiceUpdateConsumerAddresses = "/ecommerce.user.v1.UserService/UpdateConsumerAddresses"
 const OperationUserServiceUpdateUser = "/ecommerce.user.v1.UserService/UpdateUser"
 
 type UserServiceHTTPServer interface {
-	// CreateAddresses 创建用户地址
-	CreateAddresses(context.Context, *Address) (*Address, error)
+	// CreateConsumerAddresses 创建用户地址
+	CreateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error)
 	// CreateCreditCard 创建用户的信用卡信息
 	CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error)
-	// DeleteAddresses 删除用户地址
-	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	// DeleteConsumerAddresses 删除用户地址
+	DeleteConsumerAddresses(context.Context, *DeleteConsumerAddressesRequest) (*DeleteConsumerAddressesReply, error)
 	// DeleteCreditCard 删除用户的信用卡信息
 	DeleteCreditCard(context.Context, *DeleteCreditCardsRequest) (*emptypb.Empty, error)
 	// DeleteFavorites 删除商品收藏
 	DeleteFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error)
 	// DeleteUser 删除用户
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
-	// GetAddress 根据 ID获取用户地址
-	GetAddress(context.Context, *GetAddressRequest) (*Address, error)
-	// GetAddresses 获取用户地址列表
-	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
+	// GetConsumerAddress 根据 ID获取用户地址
+	GetConsumerAddress(context.Context, *GetConsumerAddressRequest) (*ConsumerAddress, error)
+	// GetConsumerAddresses 获取用户地址列表
+	GetConsumerAddresses(context.Context, *emptypb.Empty) (*GetConsumerAddressesReply, error)
 	// GetCreditCard 根据ID搜索用户的信用卡信息
 	GetCreditCard(context.Context, *GetCreditCardRequest) (*CreditCard, error)
 	// GetFavorites 获取用户商品收藏
@@ -66,8 +66,8 @@ type UserServiceHTTPServer interface {
 	ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error)
 	// SetFavorites 添加商品收藏
 	SetFavorites(context.Context, *UpdateFavoritesRequest) (*UpdateFavoritesResply, error)
-	// UpdateAddresses 更新用户地址
-	UpdateAddresses(context.Context, *Address) (*Address, error)
+	// UpdateConsumerAddresses 更新用户地址
+	UpdateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error)
 	// UpdateUser 更新用户信息
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 }
@@ -77,12 +77,12 @@ func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r.GET("/v1/users/profile", _UserService_GetUserProfile0_HTTP_Handler(srv))
 	r.GET("/v1/users", _UserService_GetUsers0_HTTP_Handler(srv))
 	r.POST("/v1/users", _UserService_DeleteUser0_HTTP_Handler(srv))
-	r.POST("/v1/users/address", _UserService_CreateAddresses0_HTTP_Handler(srv))
-	r.PATCH("/v1/users/address", _UserService_UpdateAddresses0_HTTP_Handler(srv))
-	r.DELETE("/v1/users/address", _UserService_DeleteAddresses0_HTTP_Handler(srv))
-	r.GET("/v1/users/address", _UserService_GetAddress0_HTTP_Handler(srv))
+	r.POST("/v1/users/address", _UserService_CreateConsumerAddresses0_HTTP_Handler(srv))
+	r.PATCH("/v1/users/address", _UserService_UpdateConsumerAddresses0_HTTP_Handler(srv))
+	r.DELETE("/v1/users/address", _UserService_DeleteConsumerAddresses0_HTTP_Handler(srv))
+	r.GET("/v1/users/address", _UserService_GetConsumerAddress0_HTTP_Handler(srv))
 	r.POST("/v1/users/credit_cards", _UserService_CreateCreditCard0_HTTP_Handler(srv))
-	r.GET("/v1/users/addresses", _UserService_GetAddresses0_HTTP_Handler(srv))
+	r.GET("/v1/users/addresses", _UserService_GetConsumerAddresses0_HTTP_Handler(srv))
 	r.GET("/v1/users/credit_cards", _UserService_ListCreditCards0_HTTP_Handler(srv))
 	r.GET("/v1/users/favorites", _UserService_GetFavorites0_HTTP_Handler(srv))
 	r.PUT("/v1/users/favorites", _UserService_SetFavorites0_HTTP_Handler(srv))
@@ -152,84 +152,84 @@ func _UserService_DeleteUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx h
 	}
 }
 
-func _UserService_CreateAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_CreateConsumerAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in Address
+		var in ConsumerAddress
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceCreateAddresses)
+		http.SetOperation(ctx, OperationUserServiceCreateConsumerAddresses)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CreateAddresses(ctx, req.(*Address))
+			return srv.CreateConsumerAddresses(ctx, req.(*ConsumerAddress))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*Address)
+		reply := out.(*ConsumerAddress)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _UserService_UpdateAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_UpdateConsumerAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in Address
+		var in ConsumerAddress
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceUpdateAddresses)
+		http.SetOperation(ctx, OperationUserServiceUpdateConsumerAddresses)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UpdateAddresses(ctx, req.(*Address))
+			return srv.UpdateConsumerAddresses(ctx, req.(*ConsumerAddress))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*Address)
+		reply := out.(*ConsumerAddress)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _UserService_DeleteAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_DeleteConsumerAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in DeleteAddressesRequest
+		var in DeleteConsumerAddressesRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceDeleteAddresses)
+		http.SetOperation(ctx, OperationUserServiceDeleteConsumerAddresses)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.DeleteAddresses(ctx, req.(*DeleteAddressesRequest))
+			return srv.DeleteConsumerAddresses(ctx, req.(*DeleteConsumerAddressesRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*DeleteAddressesReply)
+		reply := out.(*DeleteConsumerAddressesReply)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _UserService_GetAddress0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_GetConsumerAddress0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in GetAddressRequest
+		var in GetConsumerAddressRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceGetAddress)
+		http.SetOperation(ctx, OperationUserServiceGetConsumerAddress)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetAddress(ctx, req.(*GetAddressRequest))
+			return srv.GetConsumerAddress(ctx, req.(*GetConsumerAddressRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*Address)
+		reply := out.(*ConsumerAddress)
 		return ctx.Result(200, reply)
 	}
 }
@@ -256,21 +256,21 @@ func _UserService_CreateCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func
 	}
 }
 
-func _UserService_GetAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_GetConsumerAddresses0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in emptypb.Empty
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserServiceGetAddresses)
+		http.SetOperation(ctx, OperationUserServiceGetConsumerAddresses)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetAddresses(ctx, req.(*emptypb.Empty))
+			return srv.GetConsumerAddresses(ctx, req.(*emptypb.Empty))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*GetAddressesReply)
+		reply := out.(*GetConsumerAddressesReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -424,21 +424,21 @@ func _UserService_DeleteCreditCard0_HTTP_Handler(srv UserServiceHTTPServer) func
 }
 
 type UserServiceHTTPClient interface {
-	CreateAddresses(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
+	CreateConsumerAddresses(ctx context.Context, req *ConsumerAddress, opts ...http.CallOption) (rsp *ConsumerAddress, err error)
 	CreateCreditCard(ctx context.Context, req *CreditCard, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
-	DeleteAddresses(ctx context.Context, req *DeleteAddressesRequest, opts ...http.CallOption) (rsp *DeleteAddressesReply, err error)
+	DeleteConsumerAddresses(ctx context.Context, req *DeleteConsumerAddressesRequest, opts ...http.CallOption) (rsp *DeleteConsumerAddressesReply, err error)
 	DeleteCreditCard(ctx context.Context, req *DeleteCreditCardsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	DeleteFavorites(ctx context.Context, req *UpdateFavoritesRequest, opts ...http.CallOption) (rsp *UpdateFavoritesResply, err error)
 	DeleteUser(ctx context.Context, req *DeleteUserRequest, opts ...http.CallOption) (rsp *DeleteUserResponse, err error)
-	GetAddress(ctx context.Context, req *GetAddressRequest, opts ...http.CallOption) (rsp *Address, err error)
-	GetAddresses(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *GetAddressesReply, err error)
+	GetConsumerAddress(ctx context.Context, req *GetConsumerAddressRequest, opts ...http.CallOption) (rsp *ConsumerAddress, err error)
+	GetConsumerAddresses(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *GetConsumerAddressesReply, err error)
 	GetCreditCard(ctx context.Context, req *GetCreditCardRequest, opts ...http.CallOption) (rsp *CreditCard, err error)
 	GetFavorites(ctx context.Context, req *GetFavoritesRequest, opts ...http.CallOption) (rsp *Favorites, err error)
 	GetUserProfile(ctx context.Context, req *GetProfileRequest, opts ...http.CallOption) (rsp *GetProfileResponse, err error)
 	GetUsers(ctx context.Context, req *GetUsersRequest, opts ...http.CallOption) (rsp *GetUsersResponse, err error)
 	ListCreditCards(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *CreditCards, err error)
 	SetFavorites(ctx context.Context, req *UpdateFavoritesRequest, opts ...http.CallOption) (rsp *UpdateFavoritesResply, err error)
-	UpdateAddresses(ctx context.Context, req *Address, opts ...http.CallOption) (rsp *Address, err error)
+	UpdateConsumerAddresses(ctx context.Context, req *ConsumerAddress, opts ...http.CallOption) (rsp *ConsumerAddress, err error)
 	UpdateUser(ctx context.Context, req *UpdateUserRequest, opts ...http.CallOption) (rsp *UpdateUserResponse, err error)
 }
 
@@ -450,11 +450,11 @@ func NewUserServiceHTTPClient(client *http.Client) UserServiceHTTPClient {
 	return &UserServiceHTTPClientImpl{client}
 }
 
-func (c *UserServiceHTTPClientImpl) CreateAddresses(ctx context.Context, in *Address, opts ...http.CallOption) (*Address, error) {
-	var out Address
+func (c *UserServiceHTTPClientImpl) CreateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...http.CallOption) (*ConsumerAddress, error) {
+	var out ConsumerAddress
 	pattern := "/v1/users/address"
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationUserServiceCreateAddresses))
+	opts = append(opts, http.Operation(OperationUserServiceCreateConsumerAddresses))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
@@ -476,11 +476,11 @@ func (c *UserServiceHTTPClientImpl) CreateCreditCard(ctx context.Context, in *Cr
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...http.CallOption) (*DeleteAddressesReply, error) {
-	var out DeleteAddressesReply
+func (c *UserServiceHTTPClientImpl) DeleteConsumerAddresses(ctx context.Context, in *DeleteConsumerAddressesRequest, opts ...http.CallOption) (*DeleteConsumerAddressesReply, error) {
+	var out DeleteConsumerAddressesReply
 	pattern := "/v1/users/address"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationUserServiceDeleteAddresses))
+	opts = append(opts, http.Operation(OperationUserServiceDeleteConsumerAddresses))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
 	if err != nil {
@@ -528,11 +528,11 @@ func (c *UserServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUs
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) GetAddress(ctx context.Context, in *GetAddressRequest, opts ...http.CallOption) (*Address, error) {
-	var out Address
+func (c *UserServiceHTTPClientImpl) GetConsumerAddress(ctx context.Context, in *GetConsumerAddressRequest, opts ...http.CallOption) (*ConsumerAddress, error) {
+	var out ConsumerAddress
 	pattern := "/v1/users/address"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationUserServiceGetAddress))
+	opts = append(opts, http.Operation(OperationUserServiceGetConsumerAddress))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -541,11 +541,11 @@ func (c *UserServiceHTTPClientImpl) GetAddress(ctx context.Context, in *GetAddre
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*GetAddressesReply, error) {
-	var out GetAddressesReply
+func (c *UserServiceHTTPClientImpl) GetConsumerAddresses(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*GetConsumerAddressesReply, error) {
+	var out GetConsumerAddressesReply
 	pattern := "/v1/users/addresses"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationUserServiceGetAddresses))
+	opts = append(opts, http.Operation(OperationUserServiceGetConsumerAddresses))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -632,11 +632,11 @@ func (c *UserServiceHTTPClientImpl) SetFavorites(ctx context.Context, in *Update
 	return &out, nil
 }
 
-func (c *UserServiceHTTPClientImpl) UpdateAddresses(ctx context.Context, in *Address, opts ...http.CallOption) (*Address, error) {
-	var out Address
+func (c *UserServiceHTTPClientImpl) UpdateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...http.CallOption) (*ConsumerAddress, error) {
+	var out ConsumerAddress
 	pattern := "/v1/users/address"
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationUserServiceUpdateAddresses))
+	opts = append(opts, http.Operation(OperationUserServiceUpdateConsumerAddresses))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
