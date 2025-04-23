@@ -311,10 +311,8 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {
 	// 生成雪花ID
-	orderID := id.SnowflakeID()
-
-	order, err := o.data.db.CreateOrder(ctx, models.CreateOrderParams{
-		ID:            orderID,
+	params := models.CreateOrderParams{
+		ID:            id.SnowflakeID(),
 		UserID:        req.UserId,
 		Currency:      req.Currency,
 		StreetAddress: req.Address.StreetAddress,
@@ -323,10 +321,9 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		Country:       req.Address.Country,
 		ZipCode:       req.Address.ZipCode,
 		Email:         req.Email,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("创建主订单失败: %w", err)
 	}
+	log.Debugf("params: %+v", params)
+	order, _ := o.data.db.CreateOrder(ctx, params)
 
 	// 分单
 	for _, item := range req.OrderItems {
@@ -337,9 +334,9 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 				Cost: item.Cost,
 			},
 		}
-		itemsJSON, err := json.Marshal(items)
-		if err != nil {
-			return nil, fmt.Errorf("序列化订单项失败: %w", err)
+		itemsJSON, marshalErr := json.Marshal(items)
+		if marshalErr != nil {
+			return nil, kerrors.New(400, "INVALID_ORDER_ITEM", fmt.Sprintf("序列化订单项失败: %v", marshalErr))
 		}
 
 		// 转换价格到pgtype.Numeric
@@ -349,29 +346,29 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		}
 
 		// 创建子订单ID
-		subOrderID := id.SnowflakeID()
-
-		_, subOrderErr := o.data.db.CreateSubOrder(ctx, models.CreateSubOrderParams{
-			ID:          subOrderID,
+		params := models.CreateSubOrderParams{
+			ID:          id.SnowflakeID(),
 			OrderID:     order.ID,
 			MerchantID:  item.Item.MerchantId,
 			TotalAmount: totalAmount,
 			Currency:    req.Currency,
-			Status:      "PENDING",
+			Status:      string(constants.PaymentPending),
 			Items:       itemsJSON,
-		})
+		}
+		log.Debugf("params: %+v", params)
+		_, subOrderErr := o.data.db.CreateSubOrder(ctx, params)
 		if subOrderErr != nil {
 			return nil, fmt.Errorf("创建子订单失败: %w", subOrderErr)
 		}
 
 		// 预扣库存
-		_, err = o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
+		_, updateInventoryErr := o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
 			ProductId:  item.Item.ProductId.String(),
 			MerchantId: item.Item.MerchantId.String(),
 			Stock:      -int32(item.Item.Quantity),
 		})
-		if err != nil {
-			return nil, err
+		if updateInventoryErr != nil {
+			return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("更新库存失败: %v", updateInventoryErr))
 		}
 	}
 

@@ -1,15 +1,15 @@
 package data
 
 import (
-	"backend/application/category/internal/biz"
-	"backend/application/category/internal/data/models"
 	"context"
 	"fmt"
+
+	"backend/application/category/internal/biz"
+	"backend/application/category/internal/data/models"
+
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/jackc/pgx/v5"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type categoryRepo struct {
@@ -19,10 +19,13 @@ type categoryRepo struct {
 
 func (r *categoryRepo) GetCategories(ctx context.Context, ids []int64) ([]*biz.Category, error) {
 	// 执行SQL查询
-	rows, err := r.data.DB(ctx).BatchGetCategories(ctx, ids)
+	log.Debugf("ids:%v", ids)
+
+	rows, err := r.data.db.BatchGetCategories(ctx, ids)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "数据库查询失败")
+		return nil, errors.New(500, "get categories failed", err.Error())
 	}
+
 	var categories []*biz.Category
 	for _, row := range rows {
 		categories = append(categories, &biz.Category{
@@ -37,6 +40,7 @@ func (r *categoryRepo) GetCategories(ctx context.Context, ids []int64) ([]*biz.C
 			UpdatedAt: row.UpdatedAt,
 		})
 	}
+
 	return categories, nil
 }
 
@@ -66,7 +70,6 @@ func (r *categoryRepo) GetCategory(ctx context.Context, id int64) (*biz.Category
 // 4. 更新父节点的is_leaf状态（如果没有其他子节点则设为true）
 // 数据访问层实现
 func (r *categoryRepo) DeleteCategory(ctx context.Context, id uint64) error {
-
 	qtx := r.data.DB(ctx)
 
 	// 1. 获取被删分类的path
@@ -300,6 +303,7 @@ func convertDBCategory(dbCategory models.CategoriesCategories) *biz.Category {
 		UpdatedAt: dbCategory.UpdatedAt,
 	}
 }
+
 func convertDBGetCategoryRow(dbCategory models.GetCategoryRow) *biz.Category {
 	return &biz.Category{
 		ID:        uint64(dbCategory.ID),
@@ -313,6 +317,7 @@ func convertDBGetCategoryRow(dbCategory models.GetCategoryRow) *biz.Category {
 		UpdatedAt: dbCategory.UpdatedAt,
 	}
 }
+
 func convertDBGetLeafCategoriesRow(dbCategory models.GetLeafCategoriesRow) *biz.Category {
 	return &biz.Category{
 		ID:        uint64(dbCategory.ID),

@@ -51,8 +51,8 @@ type BatchGetCategoriesRow struct {
 //	    updated_at
 //	FROM categories.categories
 //	WHERE id = ANY($1::bigint[])
-func (q *Queries) BatchGetCategories(ctx context.Context, ids []int64) ([]BatchGetCategoriesRow, error) {
-	rows, err := q.db.Query(ctx, BatchGetCategories, ids)
+func (q *Queries) BatchGetCategories(ctx context.Context, dollar_1 []int64) ([]BatchGetCategoriesRow, error) {
+	rows, err := q.db.Query(ctx, BatchGetCategories, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +330,64 @@ type DeleteCategoryParams struct {
 func (q *Queries) DeleteCategory(ctx context.Context, arg DeleteCategoryParams) error {
 	_, err := q.db.Exec(ctx, DeleteCategory, arg.ID, arg.Path)
 	return err
+}
+
+const GetCategories = `-- name: GetCategories :one
+SELECT
+    id,
+    COALESCE(parent_id, 0) AS parent_id,
+    level,
+    path::text AS path,
+    name,
+    sort_order,
+    is_leaf,
+    created_at,
+    updated_at
+FROM categories.categories
+WHERE id = $1
+`
+
+type GetCategoriesRow struct {
+	ID        int64
+	ParentID  int64
+	Level     int16
+	Path      string
+	Name      string
+	SortOrder int16
+	IsLeaf    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// GetCategories
+//
+//	SELECT
+//	    id,
+//	    COALESCE(parent_id, 0) AS parent_id,
+//	    level,
+//	    path::text AS path,
+//	    name,
+//	    sort_order,
+//	    is_leaf,
+//	    created_at,
+//	    updated_at
+//	FROM categories.categories
+//	WHERE id = $1
+func (q *Queries) GetCategories(ctx context.Context, id int64) (GetCategoriesRow, error) {
+	row := q.db.QueryRow(ctx, GetCategories, id)
+	var i GetCategoriesRow
+	err := row.Scan(
+		&i.ID,
+		&i.ParentID,
+		&i.Level,
+		&i.Path,
+		&i.Name,
+		&i.SortOrder,
+		&i.IsLeaf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const GetCategory = `-- name: GetCategory :one

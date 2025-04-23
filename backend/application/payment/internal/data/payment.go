@@ -86,7 +86,7 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 		UserID:   req.UserID,
 		Amount:   amount,
 		Currency: req.Currency,
-		Method:   "alipay",
+		Method:   string(constants.PaymentMethodAlipay),
 		Status:   string(biz.PaymentStatusPending),
 		Subject:  req.Subject,
 		TradeNo:  tradeNo,

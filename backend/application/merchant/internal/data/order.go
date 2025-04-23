@@ -245,12 +245,12 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		// 添加子订单到结果集
 		subOrders = append(subOrders, &biz.SubOrder{
 			OrderID:        orderID,
-			SubOrderID:     orderID,
+			SubOrderID:     order.SubOrderID,
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,
 			Status:         constants.PaymentStatus(order.PaymentStatus.(string)),
-			ShippingStatus: constants.ShippingStatus(order.PaymentStatus.(string)),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus.(string)),
 			Items:          orderItems,
 			CreatedAt:      order.CreatedAt,
 			UpdatedAt:      order.UpdatedAt,
