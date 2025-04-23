@@ -7,7 +7,6 @@
 package merchantorderv1
 
 import (
-	v1 "backend/api/order/v1"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -29,9 +28,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrderClient interface {
 	// 查询商家订单列表(商家侧)
-	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*v1.Orders, error)
+	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error)
 	// 商家发货
-	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error)
+	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderReply, error)
 }
 
 type orderClient struct {
@@ -42,9 +41,9 @@ func NewOrderClient(cc grpc.ClientConnInterface) OrderClient {
 	return &orderClient{cc}
 }
 
-func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*v1.Orders, error) {
+func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(v1.Orders)
+	out := new(GetMerchantOrdersReply)
 	err := c.cc.Invoke(ctx, Order_GetMerchantOrders_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -52,9 +51,9 @@ func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrde
 	return out, nil
 }
 
-func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderResp, error) {
+func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ShipOrderResp)
+	out := new(ShipOrderReply)
 	err := c.cc.Invoke(ctx, Order_ShipOrder_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -67,9 +66,9 @@ func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...g
 // for forward compatibility.
 type OrderServer interface {
 	// 查询商家订单列表(商家侧)
-	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error)
+	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	// 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error)
+	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error)
 	mustEmbedUnimplementedOrderServer()
 }
 
@@ -80,10 +79,10 @@ type OrderServer interface {
 // pointer dereference when methods are called.
 type UnimplementedOrderServer struct{}
 
-func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error) {
+func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantOrders not implemented")
 }
-func (UnimplementedOrderServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error) {
+func (UnimplementedOrderServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShipOrder not implemented")
 }
 func (UnimplementedOrderServer) mustEmbedUnimplementedOrderServer() {}

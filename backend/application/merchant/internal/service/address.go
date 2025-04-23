@@ -75,7 +75,7 @@ func (s *AddressService) CreateMerchantAddress(ctx context.Context, req *pb.Merc
 	}, nil
 }
 
-func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.BatchCreateMerchantAddressesRequest) (*pb.BatchCreateMerchantAddressesReply, error) {
+func (s *AddressService) BatchCreateMerchantAddresses(ctx context.Context, req *pb.BatchCreateMerchantAddressesRequest) (*pb.BatchCreateMerchantAddressesReply, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -132,7 +132,7 @@ func (s *AddressService) BatchCreateAddresses(ctx context.Context, req *pb.Batch
 	}, nil
 }
 
-func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.MerchantAddress) (*pb.MerchantAddress, error) {
+func (s *AddressService) UpdateMerchantAddress(ctx context.Context, req *pb.MerchantAddress) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -172,7 +172,7 @@ func (s *AddressService) UpdateAddress(ctx context.Context, req *pb.MerchantAddr
 	}, nil
 }
 
-func (s *AddressService) DeleteAddress(ctx context.Context, req *pb.DeletMerchanteAddressRequest) (*empty.Empty, error) {
+func (s *AddressService) DeletMerchanteAddress(ctx context.Context, req *pb.DeletMerchanteAddressRequest) (*empty.Empty, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -184,7 +184,7 @@ func (s *AddressService) DeleteAddress(ctx context.Context, req *pb.DeletMerchan
 	})
 }
 
-func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetMerchantAddressRequest) (*pb.MerchantAddress, error) {
+func (s *AddressService) GetMerchantAddress(ctx context.Context, req *pb.GetMerchantAddressRequest) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -215,7 +215,7 @@ func (s *AddressService) GetAddress(ctx context.Context, req *pb.GetMerchantAddr
 	}, nil
 }
 
-func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListMerchantAddressesRequest) (*pb.ListMerchantAddressesReply, error) {
+func (s *AddressService) ListMerchantAddresses(ctx context.Context, req *pb.ListMerchantAddressesRequest) (*pb.ListMerchantAddressesReply, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")
@@ -257,7 +257,7 @@ func (s *AddressService) ListAddresses(ctx context.Context, req *pb.ListMerchant
 	}, nil
 }
 
-func (s *AddressService) SetDefaultAddress(ctx context.Context, req *pb.SetDefaultMerchantAddressRequest) (*pb.MerchantAddress, error) {
+func (s *AddressService) SetDefaultMerchantAddress(ctx context.Context, req *pb.SetDefaultMerchantAddressRequest) (*pb.MerchantAddress, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, errors.New(400, "INVALID_MERCHANT_ID", "invalid merchant id")

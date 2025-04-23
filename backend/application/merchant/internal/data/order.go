@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
+	"backend/constants"
+
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 
 	"backend/application/merchant/internal/pkg/id"
 
-	"backend/constants"
-
 	"github.com/go-kratos/kratos/v2/log"
-
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"backend/pkg/types"
 
@@ -33,6 +33,48 @@ func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 		data: data,
 		log:  log.NewHelper(logger),
 	}
+}
+
+func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.ShipOrderResp, error) {
+	tx := o.data.DB(ctx)
+
+	merchantID := types.ToPgUUID(req.MerchantID)
+	snowflakeID := id.SnowflakeID()
+	shippingFee, err := types.Float64ToNumeric(req.ShippingFee)
+	if err != nil {
+		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
+	}
+
+	receiverAddress, err := tx.GetConsumerAddress(ctx, &req.SubOrderId)
+	if err != nil {
+		return nil, kerrors.New(400, "receiver_address", "invalid receiver address")
+	}
+
+	// TODO 这个receiverAddress存储了处理地址以外的字段, 可能在数据库去除或者 go 结构体提取
+	receiverAddressJSON, err := json.Marshal(receiverAddress)
+	if err != nil {
+		return nil, kerrors.New(400, "receiver_address", "invalid receiver address")
+	}
+
+	ship, err := tx.CreateShip(ctx, models.CreateShipParams{
+		ID:             &snowflakeID,
+		MerchantID:     merchantID,
+		SubOrderID:     &req.SubOrderId,
+		TrackingNumber: &req.TrackingNumber,
+		Carrier:        &req.Carrier,
+		// Delivery:        req.Delivery,
+		ShippingAddress: req.ShippingAddress, // 使用JSON格式的地址
+		ReceiverAddress: receiverAddressJSON, // 使用JSON格式的地址
+		ShippingFee:     shippingFee,
+	})
+	if err != nil {
+		return nil, kerrors.New(500, "shipId", "create shipping error")
+	}
+
+	return &biz.ShipOrderResp{
+		Id:        ship.ID,
+		CreatedAt: ship.CreatedAt.Local(),
+	}, nil
 }
 
 func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantOrdersReq) (*biz.GetMerchantOrdersReply, error) {
@@ -66,7 +108,7 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 
 	if len(orders) == 0 {
 		o.log.WithContext(ctx).Infof("商户 %s 没有订单记录", req.UserID)
-		return &biz.GetMerchantOrdersReply{Orders: []*biz.SubOrder{}}, nil
+		return &biz.GetMerchantOrdersReply{Orders: nil}, nil
 	}
 
 	// 创建一个映射以存储订单ID与子订单的关系
@@ -81,10 +123,10 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 	// 去重订单ID
 	uniqueOrderIDs := make(map[int64]bool)
 	var uniqueIDs []int64
-	for _, id := range orderIDs {
-		if !uniqueOrderIDs[id] {
-			uniqueOrderIDs[id] = true
-			uniqueIDs = append(uniqueIDs, id)
+	for _, orderId := range orderIDs {
+		if !uniqueOrderIDs[orderId] {
+			uniqueOrderIDs[orderId] = true
+			uniqueIDs = append(uniqueIDs, orderId)
 		}
 	}
 
@@ -104,8 +146,8 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 			for _, order := range orders {
 				if order.OrderID == subOrder.OrderID {
 					subOrder.SubOrderID = order.SubOrderID
-					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
-					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
+					subOrder.Status = constants.PaymentStatus(order.PaymentStatus.(string))
+					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus.(string))
 					break
 				}
 			}
@@ -117,47 +159,7 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 	return &biz.GetMerchantOrdersReply{Orders: respOrders}, nil
 }
 
-func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.ShipOrderResp, error) {
-	tx := o.data.DB(ctx)
-
-	merchantID := types.ToPgUUID(req.MerchantID)
-	snowflakeID := id.SnowflakeID()
-	shippingFee, err := types.Float64ToNumeric(req.ShippingFee)
-	if err != nil {
-		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
-	}
-
-	shippingAddressJSON, err := json.Marshal(req.ShippingAddress)
-	if err != nil {
-		return nil, kerrors.New(500, "shipping_address_json", "failed to marshal receiver address")
-	}
-
-	receiverAddressJSON, err := json.Marshal(req.ReceiverAddress)
-	if err != nil {
-		return nil, kerrors.New(500, "receiver_address", "failed to marshal receiver address")
-	}
-
-	ship, err := tx.CreateShip(ctx, models.CreateShipParams{
-		ID:             &snowflakeID,
-		MerchantID:     merchantID,
-		SubOrderID:     &req.SubOrderId,
-		TrackingNumber: &req.TrackingNumber,
-		Carrier:        &req.Carrier,
-		// Delivery:        req.Delivery,
-		ShippingAddress: shippingAddressJSON, // 使用JSON格式的地址
-		ReceiverAddress: receiverAddressJSON, // 使用JSON格式的地址
-		ShippingFee:     shippingFee,
-	})
-	if err != nil {
-		return nil, kerrors.New(500, "shipId", "create shipping error")
-	}
-
-	return &biz.ShipOrderResp{
-		Id:        ship.ID,
-		CreatedAt: ship.CreatedAt.Local(),
-	}, nil
-}
-
+// 获取订单的子订单信息
 func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.SubOrder, error) {
 	// 使用父上下文创建子上下文，保留链路追踪信息
 	subCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -192,7 +194,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 
 		var subOrderItems []SubOrderItem
 		if err := json.Unmarshal(order.Items, &subOrderItems); err != nil {
-			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrdersID)
+			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrderID)
 
 			// 尝试记录原始数据用于调试
 			o.log.WithContext(ctx).Debugf("原始子订单数据: %s", string(order.Items))
@@ -206,7 +208,7 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		for _, item := range subOrderItems {
 			// 验证商品ID和商家ID的有效性
 			if item.Item == nil {
-				o.log.WithContext(ctx).Warnf("子订单项缺少商品信息, 跳过此项, 订单ID: %d, 子订单ID: %d", orderID, order.SubOrdersID)
+				o.log.WithContext(ctx).Warnf("子订单项缺少商品信息, 跳过此项, 订单ID: %d, 子订单ID: %d", orderID, order.SubOrderID)
 				continue
 			}
 
@@ -229,26 +231,26 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 		case pgtype.Numeric:
 			convertedAmount, err := types.NumericToFloat(v)
 			if err != nil {
-				o.log.WithContext(ctx).Errorf("转换金额失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrdersID)
+				o.log.WithContext(ctx).Errorf("转换金额失败: %v, 订单ID: %d, 子订单ID: %d", err, orderID, order.SubOrderID)
 				return nil, fmt.Errorf("转换金额失败: %w", err)
 			}
 			amount = convertedAmount
 		case float64:
 			amount = v
 		default:
-			o.log.WithContext(ctx).Errorf("未知的金额类型: %T, 订单ID: %d, 子订单ID: %d", order.TotalAmount, orderID, order.SubOrdersID)
+			o.log.WithContext(ctx).Errorf("未知的金额类型: %T, 订单ID: %d, 子订单ID: %d", order.TotalAmount, orderID, order.SubOrderID)
 			return nil, fmt.Errorf("未知的金额类型: %T", order.TotalAmount)
 		}
 
 		// 添加子订单到结果集
 		subOrders = append(subOrders, &biz.SubOrder{
 			OrderID:        orderID,
-			SubOrderID:     order.SubOrdersID,
+			SubOrderID:     orderID,
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,
-			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
-			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
+			Status:         constants.PaymentStatus(order.PaymentStatus.(string)),
+			ShippingStatus: constants.ShippingStatus(order.PaymentStatus.(string)),
 			Items:          orderItems,
 			CreatedAt:      order.CreatedAt,
 			UpdatedAt:      order.UpdatedAt,

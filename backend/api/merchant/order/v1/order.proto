@@ -11,17 +11,17 @@ import "backend/api/order/v1/order.proto";
 
 service Order {
   // 查询商家订单列表(商家侧)
-  rpc GetMerchantOrders(GetMerchantOrdersReq) returns (order.v1.Orders) {
+  rpc GetMerchantOrders(GetMerchantOrdersReq) returns (GetMerchantOrdersReply) {
     option (google.api.http) = {
       get: "/v1/merchants/orders"
     };
   }
 
   // 商家发货
-  rpc ShipOrder(ShipOrderReq) returns (ShipOrderResp) {
+  rpc ShipOrder(ShipOrderReq) returns (ShipOrderReply) {
     option (google.api.http) = {
       put: "/v1/merchants/orders/{sub_order_id}/ship" // 定义 HTTP PUT 请求路径，路径参数为 order_id
-      body: "*"                         // 表示请求体包含所有字段
+      body: "*"
     };
   }
 
@@ -34,6 +34,10 @@ message GetMerchantOrdersReq {
   uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
 }
 
+message GetMerchantOrdersReply {
+  repeated order.v1.Order orders = 1; // 订单列表
+}
+
 message ReceiverAddress {
   string name = 1; // 收件人姓名
   string phone = 2; // 收件人电话
@@ -42,19 +46,16 @@ message ReceiverAddress {
 
 // 商家发货请求的消息结构
 message ShipOrderReq {
-  int64 id = 7; // 物流ID
   int64 sub_order_id = 1; // 子订单 ID
   string tracking_number = 2; // 物流单号
   string carrier = 3; // 承运商
-  string shipping_status = 8; // 物流状态
   string delivery = 4; // 送达时间
   double shipping_fee = 9; // 运费
   google.protobuf.Struct shipping_address = 5; // 发货地址
-  ReceiverAddress receiver_address = 6; // 收货地址
 }
 
 // 商家发货响应的消息结构
-message ShipOrderResp {
+message ShipOrderReply {
   int64 id = 1; // 物流ID
   google.protobuf.Timestamp created_at = 2; // 创建时间
 }

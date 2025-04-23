@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrderService_PlaceOrder_FullMethodName        = "/ecommerce.order.v1.OrderService/PlaceOrder"
-	OrderService_GetConsumerOrders_FullMethodName = "/ecommerce.order.v1.OrderService/GetConsumerOrders"
-	OrderService_GetAllOrders_FullMethodName      = "/ecommerce.order.v1.OrderService/GetAllOrders"
-	OrderService_GetOrder_FullMethodName          = "/ecommerce.order.v1.OrderService/GetOrder"
-	OrderService_MarkOrderPaid_FullMethodName     = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
-	OrderService_GetOrderStatus_FullMethodName    = "/ecommerce.order.v1.OrderService/GetOrderStatus"
-	OrderService_UpdateOrderStatus_FullMethodName = "/ecommerce.order.v1.OrderService/UpdateOrderStatus"
-	OrderService_ConfirmReceived_FullMethodName   = "/ecommerce.order.v1.OrderService/ConfirmReceived"
+	OrderService_PlaceOrder_FullMethodName          = "/ecommerce.order.v1.OrderService/PlaceOrder"
+	OrderService_GetConsumerOrders_FullMethodName   = "/ecommerce.order.v1.OrderService/GetConsumerOrders"
+	OrderService_GetAllOrders_FullMethodName        = "/ecommerce.order.v1.OrderService/GetAllOrders"
+	OrderService_GetOrder_FullMethodName            = "/ecommerce.order.v1.OrderService/GetOrder"
+	OrderService_MarkOrderPaid_FullMethodName       = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
+	OrderService_CreateOrderShipping_FullMethodName = "/ecommerce.order.v1.OrderService/CreateOrderShipping"
+	OrderService_GetShipOrderStatus_FullMethodName  = "/ecommerce.order.v1.OrderService/GetShipOrderStatus"
+	OrderService_UpdateOrderStatus_FullMethodName   = "/ecommerce.order.v1.OrderService/UpdateOrderStatus"
+	OrderService_ConfirmReceived_FullMethodName     = "/ecommerce.order.v1.OrderService/ConfirmReceived"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -43,8 +44,9 @@ type OrderServiceClient interface {
 	GetOrder(ctx context.Context, in *GetOrderReq, opts ...grpc.CallOption) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
-	// 查询订单状态(支付状态和货运状态)
-	GetOrderStatus(ctx context.Context, in *GetOrderStatusReq, opts ...grpc.CallOption) (*GetOrderStatusResp, error)
+	CreateOrderShipping(ctx context.Context, in *CreateOrderShippingReq, opts ...grpc.CallOption) (*CreateOrderShippingResp, error)
+	// 查询订单货运状态
+	GetShipOrderStatus(ctx context.Context, in *GetShipOrderStatusReq, opts ...grpc.CallOption) (*GetShipOrderStatusReply, error)
 	// 更新订单状态
 	UpdateOrderStatus(ctx context.Context, in *UpdateOrderStatusReq, opts ...grpc.CallOption) (*UpdateOrderStatusResp, error)
 	// 用户确认收货
@@ -109,10 +111,20 @@ func (c *orderServiceClient) MarkOrderPaid(ctx context.Context, in *MarkOrderPai
 	return out, nil
 }
 
-func (c *orderServiceClient) GetOrderStatus(ctx context.Context, in *GetOrderStatusReq, opts ...grpc.CallOption) (*GetOrderStatusResp, error) {
+func (c *orderServiceClient) CreateOrderShipping(ctx context.Context, in *CreateOrderShippingReq, opts ...grpc.CallOption) (*CreateOrderShippingResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetOrderStatusResp)
-	err := c.cc.Invoke(ctx, OrderService_GetOrderStatus_FullMethodName, in, out, cOpts...)
+	out := new(CreateOrderShippingResp)
+	err := c.cc.Invoke(ctx, OrderService_CreateOrderShipping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) GetShipOrderStatus(ctx context.Context, in *GetShipOrderStatusReq, opts ...grpc.CallOption) (*GetShipOrderStatusReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetShipOrderStatusReply)
+	err := c.cc.Invoke(ctx, OrderService_GetShipOrderStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +165,9 @@ type OrderServiceServer interface {
 	GetOrder(context.Context, *GetOrderReq) (*Order, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
-	// 查询订单状态(支付状态和货运状态)
-	GetOrderStatus(context.Context, *GetOrderStatusReq) (*GetOrderStatusResp, error)
+	CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error)
+	// 查询订单货运状态
+	GetShipOrderStatus(context.Context, *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
 	// 更新订单状态
 	UpdateOrderStatus(context.Context, *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error)
 	// 用户确认收货
@@ -184,8 +197,11 @@ func (UnimplementedOrderServiceServer) GetOrder(context.Context, *GetOrderReq) (
 func (UnimplementedOrderServiceServer) MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderPaid not implemented")
 }
-func (UnimplementedOrderServiceServer) GetOrderStatus(context.Context, *GetOrderStatusReq) (*GetOrderStatusResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOrderStatus not implemented")
+func (UnimplementedOrderServiceServer) CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderShipping not implemented")
+}
+func (UnimplementedOrderServiceServer) GetShipOrderStatus(context.Context, *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetShipOrderStatus not implemented")
 }
 func (UnimplementedOrderServiceServer) UpdateOrderStatus(context.Context, *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrderStatus not implemented")
@@ -304,20 +320,38 @@ func _OrderService_MarkOrderPaid_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_GetOrderStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOrderStatusReq)
+func _OrderService_CreateOrderShipping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderShippingReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).GetOrderStatus(ctx, in)
+		return srv.(OrderServiceServer).CreateOrderShipping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrderService_GetOrderStatus_FullMethodName,
+		FullMethod: OrderService_CreateOrderShipping_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).GetOrderStatus(ctx, req.(*GetOrderStatusReq))
+		return srv.(OrderServiceServer).CreateOrderShipping(ctx, req.(*CreateOrderShippingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_GetShipOrderStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetShipOrderStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetShipOrderStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetShipOrderStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetShipOrderStatus(ctx, req.(*GetShipOrderStatusReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -386,8 +420,12 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_MarkOrderPaid_Handler,
 		},
 		{
-			MethodName: "GetOrderStatus",
-			Handler:    _OrderService_GetOrderStatus_Handler,
+			MethodName: "CreateOrderShipping",
+			Handler:    _OrderService_CreateOrderShipping_Handler,
+		},
+		{
+			MethodName: "GetShipOrderStatus",
+			Handler:    _OrderService_GetShipOrderStatus_Handler,
 		},
 		{
 			MethodName: "UpdateOrderStatus",

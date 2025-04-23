@@ -48,7 +48,7 @@ type SubOrder struct {
 	MerchantID     uuid.UUID
 	TotalAmount    float64
 	Currency       string
-	PaymentStatus  constants.PaymentStatus
+	Status         constants.PaymentStatus
 	ShippingStatus constants.ShippingStatus
 	Items          []*OrderItem
 	CreatedAt      time.Time

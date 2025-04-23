@@ -7,7 +7,6 @@
 package merchantorderv1
 
 import (
-	v1 "backend/api/order/v1"
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
@@ -25,9 +24,9 @@ const OperationOrderShipOrder = "/ecommerce.merchantorder.v1.Order/ShipOrder"
 
 type OrderHTTPServer interface {
 	// GetMerchantOrders 查询商家订单列表(商家侧)
-	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error)
+	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	// ShipOrder 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderResp, error)
+	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error)
 }
 
 func RegisterOrderHTTPServer(s *http.Server, srv OrderHTTPServer) {
@@ -50,7 +49,7 @@ func _Order_GetMerchantOrders0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.C
 		if err != nil {
 			return err
 		}
-		reply := out.(*v1.Orders)
+		reply := out.(*GetMerchantOrdersReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -75,14 +74,14 @@ func _Order_ShipOrder0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.Context) 
 		if err != nil {
 			return err
 		}
-		reply := out.(*ShipOrderResp)
+		reply := out.(*ShipOrderReply)
 		return ctx.Result(200, reply)
 	}
 }
 
 type OrderHTTPClient interface {
-	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq, opts ...http.CallOption) (rsp *v1.Orders, err error)
-	ShipOrder(ctx context.Context, req *ShipOrderReq, opts ...http.CallOption) (rsp *ShipOrderResp, err error)
+	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq, opts ...http.CallOption) (rsp *GetMerchantOrdersReply, err error)
+	ShipOrder(ctx context.Context, req *ShipOrderReq, opts ...http.CallOption) (rsp *ShipOrderReply, err error)
 }
 
 type OrderHTTPClientImpl struct {
@@ -93,8 +92,8 @@ func NewOrderHTTPClient(client *http.Client) OrderHTTPClient {
 	return &OrderHTTPClientImpl{client}
 }
 
-func (c *OrderHTTPClientImpl) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...http.CallOption) (*v1.Orders, error) {
-	var out v1.Orders
+func (c *OrderHTTPClientImpl) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...http.CallOption) (*GetMerchantOrdersReply, error) {
+	var out GetMerchantOrdersReply
 	pattern := "/v1/merchants/orders"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationOrderGetMerchantOrders))
@@ -106,8 +105,8 @@ func (c *OrderHTTPClientImpl) GetMerchantOrders(ctx context.Context, in *GetMerc
 	return &out, nil
 }
 
-func (c *OrderHTTPClientImpl) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...http.CallOption) (*ShipOrderResp, error) {
-	var out ShipOrderResp
+func (c *OrderHTTPClientImpl) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...http.CallOption) (*ShipOrderReply, error) {
+	var out ShipOrderReply
 	pattern := "/v1/merchants/orders/{sub_order_id}/ship"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationOrderShipOrder))

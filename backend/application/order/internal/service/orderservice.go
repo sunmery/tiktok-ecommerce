@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"backend/application/order/internal/pkg"
+	globalPkg "backend/pkg"
 
 	"backend/constants"
 
@@ -272,58 +275,6 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	return &v1.MarkOrderPaidResp{}, nil
 }
 
-func (s *OrderServiceService) GetOrderStatus(ctx context.Context, req *v1.GetOrderStatusReq) (*v1.GetOrderStatusResp, error) {
-	// 从网关获取用户ID
-	userId, err := globalpkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
-	}
-	// 验证订单ID
-	if req.OrderId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "order ID is required")
-	}
-	// 调用业务层获取订单状态
-	orderStatus, err := s.uc.GetOrderStatus(ctx, &biz.GetOrderStatusReq{
-		UserId:  userId,
-		OrderId: req.OrderId,
-	})
-	if err != nil {
-		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
-	}
-	log.Debugf("orderStatus: %v", orderStatus)
-	return &v1.GetOrderStatusResp{
-		OrderId:        orderStatus.OrderId,
-		SubOrderId:     orderStatus.SubOrderId,
-		PaymentStatus:  pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus),
-		ShippingStatus: pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
-		UserAddress: &userv1.ConsumerAddress{
-			StreetAddress: orderStatus.UserAddress.StreetAddress,
-			City:          orderStatus.UserAddress.City,
-			State:         orderStatus.UserAddress.State,
-			Country:       orderStatus.UserAddress.Country,
-			ZipCode:       orderStatus.UserAddress.ZipCode,
-		},
-		// MerchantAddress: &merchantAddressv1.MerchantAddress{
-		// 	// Id:            0,
-		// 	// MerchantId:    "",
-		// 	AddressType:   orderStatus.MerchantAddress.AddressType,
-		// 	ContactPerson: orderStatus.MerchantAddress.ContactPerson,
-		// 	ContactPhone:  orderStatus.MerchantAddress.ContactPhone,
-		// 	StreetAddress: orderStatus.MerchantAddress.StreetAddress,
-		// 	City:          orderStatus.MerchantAddress.City,
-		// 	State:         orderStatus.MerchantAddress.State,
-		// 	Country:       orderStatus.MerchantAddress.Country,
-		// 	ZipCode:       orderStatus.MerchantAddress.ZipCode,
-		// 	// IsDefault:     false,
-		// 	// CreatedAt:     nil,
-		// 	// UpdatedAt:     nil,
-		// 	// Remarks:       "",
-		// },
-		TrackingNumber: orderStatus.TrackingNumber,
-		Carrier:        orderStatus.Carrier,
-	}, nil
-}
-
 func (s *OrderServiceService) UpdateOrderStatus(ctx context.Context, req *v1.UpdateOrderStatusReq) (*v1.UpdateOrderStatusResp, error) {
 	// 从网关获取用户ID
 	userId, err := globalpkg.GetMetadataUesrID(ctx)
@@ -371,4 +322,43 @@ func (s *OrderServiceService) ConfirmReceived(ctx context.Context, req *v1.Confi
 	}
 	log.Debugf("orderPaid: %v", orderPaid)
 	return &v1.ConfirmReceivedResp{}, nil
+}
+
+func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.GetShipOrderStatusReq) (*v1.GetShipOrderStatusReply, error) {
+	// 从网关获取用户ID
+	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
+	}
+	// 验证订单ID
+	if req.SubOrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层获取订单状态
+	orderStatus, err := s.uc.GetShipOrderStatus(ctx, &biz.GetShipOrderStatusReq{
+		UserId:     userId,
+		SubOrderId: req.SubOrderId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+	}
+	log.Debugf("orderStatus: %v", orderStatus)
+	merchantAddress, err := structpb.NewStruct(orderStatus.ShippingAddress)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to convert merchant address to struct")
+	}
+	userAddress, err := structpb.NewStruct(orderStatus.ReceiverAddress)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to convert user address to struct")
+	}
+	return &v1.GetShipOrderStatusReply{
+		OrderId:    orderStatus.SubOrderId,
+		SubOrderId: orderStatus.SubOrderId,
+		// PaymentStatus: pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus),
+		ShippingStatus:  pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
+		ReceiverAddress: userAddress,
+		ShippingAddress: merchantAddress,
+		TrackingNumber:  orderStatus.TrackingNumber,
+		Carrier:         orderStatus.Carrier,
+	}, nil
 }

@@ -14,10 +14,11 @@ const (
 )
 
 const (
-	ShippingPending   ShippingStatus = "PENDING_SHIPMENT" // 待发货
-	ShippingShipped   ShippingStatus = "SHIPPED"          // 已发货
-	ShippingInTransit ShippingStatus = "IN_TRANSIT"       // 运输中
-	ShippingDelivered ShippingStatus = "DELIVERED"        // 已送达
-	ShippingConfirmed ShippingStatus = "CONFIRMED"        // 确认收货
-	ShippingCancelled ShippingStatus = "CANCELLED"        // 已取消发货
+	ShippingWaitCommand ShippingStatus = "WAIT_COMMAND"     // 等待操作, 支付完成支付和订单分单好之后, 商家获取订单时展示
+	ShippingPending     ShippingStatus = "PENDING_SHIPMENT" // 待发货
+	ShippingShipped     ShippingStatus = "SHIPPED"          // 已发货
+	ShippingInTransit   ShippingStatus = "IN_TRANSIT"       // 运输中
+	ShippingDelivered   ShippingStatus = "DELIVERED"        // 已送达
+	ShippingConfirmed   ShippingStatus = "CONFIRMED"        // 确认收货
+	ShippingCancelled   ShippingStatus = "CANCELLED"        // 已取消发货
 )

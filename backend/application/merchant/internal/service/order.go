@@ -40,7 +40,7 @@ func NewOrderService(oc *biz.OrderUsecase) *OrderService {
 }
 
 // GetMerchantOrders 获取商家订单列表
-func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*v1.Orders, error) {
+func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*orderv1.GetMerchantOrdersReply, error) {
 	// 从网关获取用户ID
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 	// 检查是否有订单
 	if len(resp.Orders) == 0 {
 		log.Infof("商家 %s 没有订单记录", userId)
-		return &v1.Orders{Orders: []*v1.Order{}}, nil
+		return &orderv1.GetMerchantOrdersReply{Orders: nil}, nil
 	}
 
 	// 按照商家订单分组
@@ -95,7 +95,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 订单项集合 - 汇总所有子订单的订单项
 		var orderItems []*v1.OrderItem
-		var shippingStatus constants.ShippingStatus
+		// var shippingStatus constants.ShippingStatus
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
 				// 确保CartItem中的数据是有效的
@@ -113,15 +113,15 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 					Cost: item.Cost,
 				})
 			}
-			shippingStatus = subOrder.ShippingStatus
+			// shippingStatus = subOrder.ShippingStatus
 		}
 
 		// 转换时间戳
 		createdAt := timestamppb.New(firstSubOrder.CreatedAt)
 
 		// 解析支付状态和运输状态
-		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.PaymentStatus))
-		ShippingStatus := pkg.MapShippingStatusToProto(shippingStatus)
+		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.Status))
+		// ShippingStatus := pkg.MapShippingStatusToProto(shippingStatus)
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
 		address := &userv1.ConsumerAddress{
 			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
@@ -133,23 +133,25 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 添加订单到响应列表
 		orders = append(orders, &v1.Order{
-			Items:          orderItems,
-			OrderId:        firstSubOrder.OrderID,
-			SubOrderId:     &firstSubOrder.SubOrderID,
-			UserId:         firstSubOrder.MerchantID.String(),
-			Currency:       firstSubOrder.Currency,
-			Address:        address,
-			Email:          "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
-			CreatedAt:      createdAt,
-			PaymentStatus:  paymentStatus,
-			ShippingStatus: ShippingStatus,
+			Items:         orderItems,
+			OrderId:       firstSubOrder.OrderID,
+			SubOrderId:    &firstSubOrder.SubOrderID,
+			UserId:        firstSubOrder.MerchantID.String(),
+			Currency:      firstSubOrder.Currency,
+			Address:       address,
+			Email:         "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
+			CreatedAt:     createdAt,
+			PaymentStatus: paymentStatus,
+			// ShippingStatus: ShippingStatus,
 		})
 	}
-	return &v1.Orders{Orders: orders}, nil
+	return &orderv1.GetMerchantOrdersReply{
+		Orders: orders,
+	}, nil
 }
 
 // ShipOrder 发货
-func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq) (*orderv1.ShipOrderResp, error) {
+func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq) (*orderv1.ShipOrderReply, error) {
 	// 从网关获取用户ID
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -160,17 +162,11 @@ func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq)
 		return nil, status.Error(codes.InvalidArgument, "order ID is required")
 	}
 
-	receiverAddressJSON, err := json.Marshal(req.ReceiverAddress)
-	if err != nil {
-		return nil, kerrors.New(500, "receiver_address", err.Error())
-	}
-
 	shippingAddress, err := json.Marshal(req.ShippingAddress)
 	if err != nil {
 		return nil, kerrors.New(500, "shipping_address", err.Error())
 	}
 
-	log.Debugf("shippingAddress%+v", shippingAddress)
 	shipOrder, err := s.oc.ShipOrder(ctx, &biz.ShipOrderReq{
 		MerchantID:      userId,
 		SubOrderId:      req.SubOrderId,
@@ -178,14 +174,13 @@ func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq)
 		Carrier:         req.Carrier,
 		ShippingStatus:  constants.ShippingShipped,
 		ShippingAddress: shippingAddress,
-		ReceiverAddress: receiverAddressJSON,
 		ShippingFee:     req.ShippingFee,
 	})
 	if err != nil {
 		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
 	}
 	log.Debugf("shipOrder: %v", shipOrder)
-	return &orderv1.ShipOrderResp{
+	return &orderv1.ShipOrderReply{
 		Id:        shipOrder.Id,
 		CreatedAt: timestamppb.New(shipOrder.CreatedAt),
 	}, nil

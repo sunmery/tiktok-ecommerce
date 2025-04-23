@@ -42,34 +42,17 @@ type orderRepo struct {
 }
 
 func (o *orderRepo) UpdateOrderStatus(ctx context.Context, req *biz.UpdateOrderStatusReq) (*biz.UpdateOrderStatusResp, error) {
-	err := o.data.db.UpdateOrderPaymentStatus(ctx, models.UpdateOrderPaymentStatusParams{
-		ID:            req.OrderId,
-		PaymentStatus: string(req.Status),
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
-		}
-		return nil, err
-	}
+	// err := o.data.db.UpdateOrderPaymentStatus(ctx, models.UpdateOrderPaymentStatusParams{
+	// 	ID:            req.OrderId,
+	// 	PaymentStatus: string(req.Status),
+	// })
+	// if err != nil {
+	// 	if errors.Is(err, pgx.ErrNoRows) {
+	// 		return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
+	// 	}
+	// 	return nil, err
+	// }
 	return &biz.UpdateOrderStatusResp{}, nil
-}
-
-func (o *orderRepo) GetOrderStatus(ctx context.Context, req *biz.GetOrderStatusReq) (*biz.GetOrderStatusReply, error) {
-	orderStatus, err := o.data.db.GetOrderStatus(ctx, req.OrderId)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
-		}
-		return nil, err
-	}
-
-	return &biz.GetOrderStatusReply{
-		OrderId:        orderStatus.OrderID,
-		SubOrderId:     orderStatus.SubOrderID,
-		PaymentStatus:  constants.PaymentStatus(orderStatus.PaymentStatus),
-		ShippingStatus: constants.ShippingStatus(orderStatus.ShippingStatus),
-	}, nil
 }
 
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
@@ -127,15 +110,11 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
 	}
 
-	// 更新订单物流状态为待发货
+	// 更新货运状态为等待操作
 	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
-		ShippingStatus: "PENDING_SHIPMENT",
-		ID:             req.OrderId,
+		ShippingStatus: string(constants.ShippingWaitCommand),
+		SubOrderID:     &req.OrderId,
 	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
-		return nil, fmt.Errorf("failed to update order shipping status: %w", err)
-	}
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
@@ -163,7 +142,7 @@ func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceive
 	// 更新订单物流状态为已确认收货
 	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
 		ShippingStatus: string(constants.ShippingConfirmed),
-		ID:             req.OrderId,
+		SubOrderID:     &req.OrderId,
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
@@ -196,6 +175,9 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 
 	// 将所有子订单的OrderItem合并到一个列表
 	var allItems []*v1.OrderItem
+
+	paymentStatus := constants.PaymentPending
+	shippingStatus := constants.ShippingWaitCommand
 	for _, subOrder := range subOrders {
 		for _, item := range subOrder.Items {
 			allItems = append(allItems, &v1.OrderItem{
@@ -209,14 +191,17 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 				Cost: item.Cost,
 			})
 		}
+		subOrder.PaymentStatus = paymentStatus
+		subOrder.ShippingStatus = shippingStatus
 	}
 
 	// 构建主订单
 	orderProto := &v1.Order{
-		Items:    allItems,
-		OrderId:  order.ID,
-		UserId:   order.UserID.String(),
-		Currency: order.Currency,
+		Items:      allItems,
+		OrderId:    order.ID,
+		SubOrderId: nil,
+		UserId:     order.UserID.String(),
+		Currency:   order.Currency,
 		Address: &userv1.ConsumerAddress{
 			StreetAddress: order.StreetAddress,
 			City:          order.City,
@@ -224,10 +209,10 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 			Country:       order.Country,
 			ZipCode:       order.ZipCode,
 		},
-		Email:         order.Email,
-		CreatedAt:     timestamppb.New(order.CreatedAt),
-		PaymentStatus: pkg.MapPaymentStatusToProto(constants.PaymentStatus(order.PaymentStatus)),
-		// ShippingStatus: 0,
+		Email:          order.Email,
+		CreatedAt:      timestamppb.New(order.CreatedAt),
+		PaymentStatus:  pkg.MapPaymentStatusToProto(paymentStatus),
+		ShippingStatus: pkg.MapShippingStatusToProto(shippingStatus),
 	}
 
 	return orderProto, nil
@@ -257,6 +242,8 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 	}
 
 	orders := make([]*v1.Order, 0, len(consumerOrders))
+	paymentStatus := constants.PaymentPending
+	shippingStatus := constants.ShippingWaitCommand
 	for _, order := range consumerOrders {
 		// 解析子订单JSON
 		var subOrdersData []byte
@@ -274,7 +261,6 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 
 		// 将所有子订单的OrderItem合并到一个列表
 		var allItems []*v1.OrderItem
-		var shippingStatus v1.ShippingStatus
 		var subOrderId int64
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
@@ -290,8 +276,9 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 				})
 			}
 
-			shippingStatus = pkg.MapShippingStatusToProto(subOrder.ShippingStatus)
 			subOrderId = subOrder.ID // 设置子订单ID
+			subOrder.PaymentStatus = paymentStatus
+			subOrder.ShippingStatus = shippingStatus
 		}
 
 		// 构建主订单
@@ -309,8 +296,8 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 			},
 			Email:          order.Email,
 			CreatedAt:      timestamppb.New(order.CreatedAt),
-			PaymentStatus:  pkg.MapPaymentStatusToProto(constants.PaymentStatus(order.PaymentStatus)),
-			ShippingStatus: shippingStatus,
+			PaymentStatus:  pkg.MapPaymentStatusToProto(paymentStatus),
+			ShippingStatus: pkg.MapShippingStatusToProto(shippingStatus),
 			SubOrderId:     &subOrderId,
 		}
 
@@ -421,7 +408,7 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 	}
 
 	if len(orders) == 0 {
-		return &biz.GetAllOrdersReply{Orders: []*biz.SubOrder{}}, nil
+		return &biz.GetAllOrdersReply{Orders: nil}, nil
 	}
 
 	// 创建一个映射以存储订单ID与子订单的关系
@@ -458,7 +445,7 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 			// 查找对应的原始订单以获取支付状态
 			for _, order := range orders {
 				if order.ID == subOrder.ID {
-					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
+					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus.(string))
 					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
 				}
@@ -468,6 +455,43 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 	}
 
 	return &biz.GetAllOrdersReply{Orders: respOrders}, nil
+}
+
+func (o *orderRepo) GetShipOrderStatus(ctx context.Context, req *biz.GetShipOrderStatusReq) (*biz.GetShipOrderStatusReply, error) {
+	orderStatus, err := o.data.db.GetShipOrderStatus(ctx, req.SubOrderId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.SubOrderId))
+		}
+		return nil, err
+	}
+
+	shippingFee, err := types.NumericToFloat(orderStatus.ShippingFee)
+	if err != nil {
+		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
+	}
+	receiverAddress := make(map[string]any)
+	err = json.Unmarshal(orderStatus.ReceiverAddress, &receiverAddress)
+
+	shippingAddress := make(map[string]any)
+	err = json.Unmarshal(orderStatus.ShippingAddress, &shippingAddress)
+	if err != nil {
+		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
+	}
+
+	return &biz.GetShipOrderStatusReply{
+		Id:              orderStatus.ID,
+		SubOrderId:      orderStatus.SubOrderID,
+		TrackingNumber:  orderStatus.TrackingNumber,
+		Carrier:         orderStatus.Carrier,
+		ShippingStatus:  constants.ShippingStatus(orderStatus.ShippingStatus),
+		Delivery:        orderStatus.Delivery,
+		ShippingFee:     shippingFee,
+		ReceiverAddress: receiverAddress,
+		ShippingAddress: shippingAddress,
+		CreatedAt:       orderStatus.CreatedAt,
+		UpdatedAt:       orderStatus.UpdatedAt,
+	}, nil
 }
 
 // 解析GetConsumerOrders返回的子订单JSON
@@ -623,8 +647,8 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,
-			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
-			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
+			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus.(string)),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus.(string)),
 			Items:          orderItems,
 			CreatedAt:      order.CreatedAt.Time,
 			UpdatedAt:      order.UpdatedAt.Time,

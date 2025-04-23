@@ -86,6 +86,50 @@ func (x *GetMerchantOrdersReq) GetPageSize() uint32 {
 	return 0
 }
 
+type GetMerchantOrdersReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Orders        []*v1.Order            `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"` // 订单列表
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMerchantOrdersReply) Reset() {
+	*x = GetMerchantOrdersReply{}
+	mi := &file_order_v1_order_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMerchantOrdersReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMerchantOrdersReply) ProtoMessage() {}
+
+func (x *GetMerchantOrdersReply) ProtoReflect() protoreflect.Message {
+	mi := &file_order_v1_order_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMerchantOrdersReply.ProtoReflect.Descriptor instead.
+func (*GetMerchantOrdersReply) Descriptor() ([]byte, []int) {
+	return file_order_v1_order_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GetMerchantOrdersReply) GetOrders() []*v1.Order {
+	if x != nil {
+		return x.Orders
+	}
+	return nil
+}
+
 type ReceiverAddress struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`       // 收件人姓名
@@ -97,7 +141,7 @@ type ReceiverAddress struct {
 
 func (x *ReceiverAddress) Reset() {
 	*x = ReceiverAddress{}
-	mi := &file_order_v1_order_proto_msgTypes[1]
+	mi := &file_order_v1_order_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -109,7 +153,7 @@ func (x *ReceiverAddress) String() string {
 func (*ReceiverAddress) ProtoMessage() {}
 
 func (x *ReceiverAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_order_v1_order_proto_msgTypes[1]
+	mi := &file_order_v1_order_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -122,7 +166,7 @@ func (x *ReceiverAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReceiverAddress.ProtoReflect.Descriptor instead.
 func (*ReceiverAddress) Descriptor() ([]byte, []int) {
-	return file_order_v1_order_proto_rawDescGZIP(), []int{1}
+	return file_order_v1_order_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ReceiverAddress) GetName() string {
@@ -149,22 +193,19 @@ func (x *ReceiverAddress) GetAddress() *structpb.Struct {
 // 商家发货请求的消息结构
 type ShipOrderReq struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	Id              int64                  `protobuf:"varint,7,opt,name=id,proto3" json:"id,omitempty"`                                                 // 物流ID
 	SubOrderId      int64                  `protobuf:"varint,1,opt,name=sub_order_id,json=subOrderId,proto3" json:"sub_order_id,omitempty"`             // 子订单 ID
 	TrackingNumber  string                 `protobuf:"bytes,2,opt,name=tracking_number,json=trackingNumber,proto3" json:"tracking_number,omitempty"`    // 物流单号
 	Carrier         string                 `protobuf:"bytes,3,opt,name=carrier,proto3" json:"carrier,omitempty"`                                        // 承运商
-	ShippingStatus  string                 `protobuf:"bytes,8,opt,name=shipping_status,json=shippingStatus,proto3" json:"shipping_status,omitempty"`    // 物流状态
 	Delivery        string                 `protobuf:"bytes,4,opt,name=delivery,proto3" json:"delivery,omitempty"`                                      // 送达时间
 	ShippingFee     float64                `protobuf:"fixed64,9,opt,name=shipping_fee,json=shippingFee,proto3" json:"shipping_fee,omitempty"`           // 运费
 	ShippingAddress *structpb.Struct       `protobuf:"bytes,5,opt,name=shipping_address,json=shippingAddress,proto3" json:"shipping_address,omitempty"` // 发货地址
-	ReceiverAddress *ReceiverAddress       `protobuf:"bytes,6,opt,name=receiver_address,json=receiverAddress,proto3" json:"receiver_address,omitempty"` // 收货地址
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ShipOrderReq) Reset() {
 	*x = ShipOrderReq{}
-	mi := &file_order_v1_order_proto_msgTypes[2]
+	mi := &file_order_v1_order_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -176,7 +217,7 @@ func (x *ShipOrderReq) String() string {
 func (*ShipOrderReq) ProtoMessage() {}
 
 func (x *ShipOrderReq) ProtoReflect() protoreflect.Message {
-	mi := &file_order_v1_order_proto_msgTypes[2]
+	mi := &file_order_v1_order_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -189,14 +230,7 @@ func (x *ShipOrderReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShipOrderReq.ProtoReflect.Descriptor instead.
 func (*ShipOrderReq) Descriptor() ([]byte, []int) {
-	return file_order_v1_order_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ShipOrderReq) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
+	return file_order_v1_order_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ShipOrderReq) GetSubOrderId() int64 {
@@ -216,13 +250,6 @@ func (x *ShipOrderReq) GetTrackingNumber() string {
 func (x *ShipOrderReq) GetCarrier() string {
 	if x != nil {
 		return x.Carrier
-	}
-	return ""
-}
-
-func (x *ShipOrderReq) GetShippingStatus() string {
-	if x != nil {
-		return x.ShippingStatus
 	}
 	return ""
 }
@@ -248,15 +275,8 @@ func (x *ShipOrderReq) GetShippingAddress() *structpb.Struct {
 	return nil
 }
 
-func (x *ShipOrderReq) GetReceiverAddress() *ReceiverAddress {
-	if x != nil {
-		return x.ReceiverAddress
-	}
-	return nil
-}
-
 // 商家发货响应的消息结构
-type ShipOrderResp struct {
+type ShipOrderReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                               // 物流ID
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"` // 创建时间
@@ -264,21 +284,21 @@ type ShipOrderResp struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ShipOrderResp) Reset() {
-	*x = ShipOrderResp{}
-	mi := &file_order_v1_order_proto_msgTypes[3]
+func (x *ShipOrderReply) Reset() {
+	*x = ShipOrderReply{}
+	mi := &file_order_v1_order_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ShipOrderResp) String() string {
+func (x *ShipOrderReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ShipOrderResp) ProtoMessage() {}
+func (*ShipOrderReply) ProtoMessage() {}
 
-func (x *ShipOrderResp) ProtoReflect() protoreflect.Message {
-	mi := &file_order_v1_order_proto_msgTypes[3]
+func (x *ShipOrderReply) ProtoReflect() protoreflect.Message {
+	mi := &file_order_v1_order_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -289,19 +309,19 @@ func (x *ShipOrderResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ShipOrderResp.ProtoReflect.Descriptor instead.
-func (*ShipOrderResp) Descriptor() ([]byte, []int) {
-	return file_order_v1_order_proto_rawDescGZIP(), []int{3}
+// Deprecated: Use ShipOrderReply.ProtoReflect.Descriptor instead.
+func (*ShipOrderReply) Descriptor() ([]byte, []int) {
+	return file_order_v1_order_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ShipOrderResp) GetId() int64 {
+func (x *ShipOrderReply) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *ShipOrderResp) GetCreatedAt() *timestamppb.Timestamp {
+func (x *ShipOrderReply) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
@@ -317,29 +337,28 @@ const file_order_v1_order_proto_rawDesc = "" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\rR\bpageSize\"n\n" +
+	"\tpage_size\x18\x03 \x01(\rR\bpageSize\"K\n" +
+	"\x16GetMerchantOrdersReply\x121\n" +
+	"\x06orders\x18\x01 \x03(\v2\x19.ecommerce.order.v1.OrderR\x06orders\"n\n" +
 	"\x0fReceiverAddress\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05phone\x18\x02 \x01(\tR\x05phone\x121\n" +
-	"\aaddress\x18\x03 \x01(\v2\x17.google.protobuf.StructR\aaddress\"\x87\x03\n" +
-	"\fShipOrderReq\x12\x0e\n" +
-	"\x02id\x18\a \x01(\x03R\x02id\x12 \n" +
+	"\aaddress\x18\x03 \x01(\v2\x17.google.protobuf.StructR\aaddress\"\xf6\x01\n" +
+	"\fShipOrderReq\x12 \n" +
 	"\fsub_order_id\x18\x01 \x01(\x03R\n" +
 	"subOrderId\x12'\n" +
 	"\x0ftracking_number\x18\x02 \x01(\tR\x0etrackingNumber\x12\x18\n" +
-	"\acarrier\x18\x03 \x01(\tR\acarrier\x12'\n" +
-	"\x0fshipping_status\x18\b \x01(\tR\x0eshippingStatus\x12\x1a\n" +
+	"\acarrier\x18\x03 \x01(\tR\acarrier\x12\x1a\n" +
 	"\bdelivery\x18\x04 \x01(\tR\bdelivery\x12!\n" +
 	"\fshipping_fee\x18\t \x01(\x01R\vshippingFee\x12B\n" +
-	"\x10shipping_address\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddress\x12V\n" +
-	"\x10receiver_address\x18\x06 \x01(\v2+.ecommerce.merchantorder.v1.ReceiverAddressR\x0freceiverAddress\"Z\n" +
-	"\rShipOrderResp\x12\x0e\n" +
+	"\x10shipping_address\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddress\"[\n" +
+	"\x0eShipOrderReply\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x129\n" +
 	"\n" +
-	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2\xa0\x02\n" +
-	"\x05Order\x12\x7f\n" +
-	"\x11GetMerchantOrders\x120.ecommerce.merchantorder.v1.GetMerchantOrdersReq\x1a\x1a.ecommerce.order.v1.Orders\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/merchants/orders\x12\x95\x01\n" +
-	"\tShipOrder\x12(.ecommerce.merchantorder.v1.ShipOrderReq\x1a).ecommerce.merchantorder.v1.ShipOrderResp\"3\x82\xd3\xe4\x93\x02-:\x01*\x1a(/v1/merchants/orders/{sub_order_id}/shipB/Z-backend/api/merchant/order/v1;merchantorderv1b\x06proto3"
+	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2\xba\x02\n" +
+	"\x05Order\x12\x97\x01\n" +
+	"\x11GetMerchantOrders\x120.ecommerce.merchantorder.v1.GetMerchantOrdersReq\x1a2.ecommerce.merchantorder.v1.GetMerchantOrdersReply\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/merchants/orders\x12\x96\x01\n" +
+	"\tShipOrder\x12(.ecommerce.merchantorder.v1.ShipOrderReq\x1a*.ecommerce.merchantorder.v1.ShipOrderReply\"3\x82\xd3\xe4\x93\x02-:\x01*\x1a(/v1/merchants/orders/{sub_order_id}/shipB/Z-backend/api/merchant/order/v1;merchantorderv1b\x06proto3"
 
 var (
 	file_order_v1_order_proto_rawDescOnce sync.Once
@@ -353,25 +372,26 @@ func file_order_v1_order_proto_rawDescGZIP() []byte {
 	return file_order_v1_order_proto_rawDescData
 }
 
-var file_order_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_order_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_order_v1_order_proto_goTypes = []any{
-	(*GetMerchantOrdersReq)(nil),  // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReq
-	(*ReceiverAddress)(nil),       // 1: ecommerce.merchantorder.v1.ReceiverAddress
-	(*ShipOrderReq)(nil),          // 2: ecommerce.merchantorder.v1.ShipOrderReq
-	(*ShipOrderResp)(nil),         // 3: ecommerce.merchantorder.v1.ShipOrderResp
-	(*structpb.Struct)(nil),       // 4: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*v1.Orders)(nil),             // 6: ecommerce.order.v1.Orders
+	(*GetMerchantOrdersReq)(nil),   // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReq
+	(*GetMerchantOrdersReply)(nil), // 1: ecommerce.merchantorder.v1.GetMerchantOrdersReply
+	(*ReceiverAddress)(nil),        // 2: ecommerce.merchantorder.v1.ReceiverAddress
+	(*ShipOrderReq)(nil),           // 3: ecommerce.merchantorder.v1.ShipOrderReq
+	(*ShipOrderReply)(nil),         // 4: ecommerce.merchantorder.v1.ShipOrderReply
+	(*v1.Order)(nil),               // 5: ecommerce.order.v1.Order
+	(*structpb.Struct)(nil),        // 6: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
 }
 var file_order_v1_order_proto_depIdxs = []int32{
-	4, // 0: ecommerce.merchantorder.v1.ReceiverAddress.address:type_name -> google.protobuf.Struct
-	4, // 1: ecommerce.merchantorder.v1.ShipOrderReq.shipping_address:type_name -> google.protobuf.Struct
-	1, // 2: ecommerce.merchantorder.v1.ShipOrderReq.receiver_address:type_name -> ecommerce.merchantorder.v1.ReceiverAddress
-	5, // 3: ecommerce.merchantorder.v1.ShipOrderResp.created_at:type_name -> google.protobuf.Timestamp
+	5, // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReply.orders:type_name -> ecommerce.order.v1.Order
+	6, // 1: ecommerce.merchantorder.v1.ReceiverAddress.address:type_name -> google.protobuf.Struct
+	6, // 2: ecommerce.merchantorder.v1.ShipOrderReq.shipping_address:type_name -> google.protobuf.Struct
+	7, // 3: ecommerce.merchantorder.v1.ShipOrderReply.created_at:type_name -> google.protobuf.Timestamp
 	0, // 4: ecommerce.merchantorder.v1.Order.GetMerchantOrders:input_type -> ecommerce.merchantorder.v1.GetMerchantOrdersReq
-	2, // 5: ecommerce.merchantorder.v1.Order.ShipOrder:input_type -> ecommerce.merchantorder.v1.ShipOrderReq
-	6, // 6: ecommerce.merchantorder.v1.Order.GetMerchantOrders:output_type -> ecommerce.order.v1.Orders
-	3, // 7: ecommerce.merchantorder.v1.Order.ShipOrder:output_type -> ecommerce.merchantorder.v1.ShipOrderResp
+	3, // 5: ecommerce.merchantorder.v1.Order.ShipOrder:input_type -> ecommerce.merchantorder.v1.ShipOrderReq
+	1, // 6: ecommerce.merchantorder.v1.Order.GetMerchantOrders:output_type -> ecommerce.merchantorder.v1.GetMerchantOrdersReply
+	4, // 7: ecommerce.merchantorder.v1.Order.ShipOrder:output_type -> ecommerce.merchantorder.v1.ShipOrderReply
 	6, // [6:8] is the sub-list for method output_type
 	4, // [4:6] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -390,7 +410,7 @@ func file_order_v1_order_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_order_v1_order_proto_rawDesc), len(file_order_v1_order_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

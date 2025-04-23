@@ -7,10 +7,10 @@ option go_package = "backend/api/order/v1;orderv1";
 import "google/api/annotations.proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 import "validate/validate.proto";
 import "backend/api/cart/v1/cart.proto";
 import "backend/api/user/v1/user.proto";
-//import "backend/api/merchant/address/v1/address.proto";
 
 service OrderService {
   // 创建订单
@@ -50,10 +50,17 @@ service OrderService {
     };
   }
 
-  // 查询订单状态(支付状态和货运状态)
-  rpc GetOrderStatus(GetOrderStatusReq) returns (GetOrderStatusResp) {
+  rpc CreateOrderShipping(CreateOrderShippingReq) returns (CreateOrderShippingResp) {
     option (google.api.http) = {
-      get: "/v1/orders/{order_id}/status" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      post: "/v1/orders/{sub_order_id}/ship" // 定义 HTTP POST 请求路径，路径参数为 order_id
+      body: "*"                          // 表示请求体包含所有字段
+    };
+  }
+
+  // 查询订单货运状态
+  rpc GetShipOrderStatus(GetShipOrderStatusReq) returns (GetShipOrderStatusReply) {
+    option (google.api.http) = {
+      get: "/v1/orders/{sub_order_id}/ship/status"
     };
   }
 
@@ -72,6 +79,37 @@ service OrderService {
       body: "*"                            // 表示请求体包含所有字段
     };
   }
+}
+
+message CreateOrderShippingReq {
+  int64 id = 1;
+  optional string merchant_id = 2;
+  int64 sub_order_id = 10;
+  ShippingStatus shipping_status = 3;
+  string tracking_number = 4;
+  string carrier = 5;
+  google.protobuf.Timestamp delivery = 6;
+  google.protobuf.Struct shipping_address = 7;
+  google.protobuf.Struct receiver_address = 8;
+  double shipping_fe = 9;
+}
+
+message CreateOrderShippingResp{}
+
+message GetShipOrderStatusReq {
+  int64 sub_order_id = 1; //  子订单 ID
+}
+
+// 查询订单状态响应的消息结构
+message GetShipOrderStatusReply {
+  int64 order_id = 1; // 主订单 ID
+  int64 sub_order_id = 2; // 子订单 ID
+  order.v1.PaymentStatus payment_status = 3; // 支付状态
+  order.v1.ShippingStatus shipping_status = 4; // 货运状态
+  google.protobuf.Struct receiver_address = 5;  // 用户收货地址
+  google.protobuf.Struct shipping_address = 6;  // 商家发货地址
+  string tracking_number = 7;  // 物流单号
+  string carrier = 8;  // 承运商
 }
 
 // 创建订单请求的消息结构
@@ -121,17 +159,17 @@ enum ShippingStatus {
 message Order {
   repeated OrderItem items = 1; // 订单项列表
   int64 order_id = 2; // 订单 ID
-  optional int64 sub_order_id =  10; // 子订单 ID
-  string user_id = 3 [
+  optional int64 sub_order_id = 3; // 子订单 ID
+  string user_id = 4 [
     (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
     (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
   ];
-  string currency = 4 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
-  user.v1.ConsumerAddress address = 5; // 用户地址信息
-  string email = 6; // 用户邮箱
-  google.protobuf.Timestamp created_at = 7; // 订单创建时间
-  PaymentStatus payment_status = 8; // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
-  ShippingStatus shipping_status = 9; // 货运状态
+  string currency = 5 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string email = 7; // 用户邮箱
+  google.protobuf.Timestamp created_at = 8; // 订单创建时间
+  PaymentStatus payment_status = 9; // 支付状态
+  ShippingStatus shipping_status = 10; // 冗余货运状态
 }
 
 message GetOrderReq {
@@ -165,11 +203,6 @@ message MarkOrderPaidReq {
 // 标记订单为已支付响应的消息结构
 message MarkOrderPaidResp {}
 
-// 查询订单状态请求的消息结构
-message GetOrderStatusReq {
-  int64 order_id = 1; // 订单 ID
-}
-
 // 更新订单状态请求的消息结构
 message UpdateOrderStatusReq {
   int64 order_id = 1; // 订单 ID
@@ -178,18 +211,6 @@ message UpdateOrderStatusReq {
 
 // 更新订单状态响应的消息结构
 message UpdateOrderStatusResp {}
-
-// 查询订单状态响应的消息结构
-message GetOrderStatusResp {
-  int64 order_id = 1; // 主订单 ID
-  int64 sub_order_id = 2; // 子订单 ID
-  PaymentStatus payment_status = 3; // 支付状态
-  ShippingStatus shipping_status = 4; // 货运状态
-  user.v1.ConsumerAddress user_address = 5;  // 用户收货地址
-//  merchantaddress.v1.MerchantAddress merchant_address = 6;  // 商家发货地址
-  string tracking_number = 7;  // 物流单号
-  string carrier = 8;  // 承运商
-}
 
 // 用户确认收货请求的消息结构
 message ConfirmReceivedReq {

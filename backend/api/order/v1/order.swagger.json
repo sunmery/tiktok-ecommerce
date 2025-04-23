@@ -252,37 +252,6 @@
       }
     },
     "/v1/orders/{orderId}/status": {
-      "get": {
-        "summary": "查询订单状态(支付状态和货运状态)",
-        "operationId": "OrderService_GetOrderStatus",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetOrderStatusResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "orderId",
-            "description": "订单 ID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      },
       "put": {
         "summary": "更新订单状态",
         "operationId": "OrderService_UpdateOrderStatus",
@@ -322,12 +291,119 @@
           "OrderService"
         ]
       }
+    },
+    "/v1/orders/{subOrderId}/ship": {
+      "post": {
+        "operationId": "OrderService_CreateOrderShipping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateOrderShippingResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "subOrderId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceCreateOrderShippingBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
+    "/v1/orders/{subOrderId}/ship/status": {
+      "get": {
+        "summary": "查询订单货运状态",
+        "operationId": "OrderService_GetShipOrderStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetShipOrderStatusReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "subOrderId",
+            "description": "子订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
     }
   },
   "definitions": {
     "OrderServiceConfirmReceivedBody": {
       "type": "object",
       "title": "用户确认收货请求的消息结构"
+    },
+    "OrderServiceCreateOrderShippingBody": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus"
+        },
+        "trackingNumber": {
+          "type": "string"
+        },
+        "carrier": {
+          "type": "string"
+        },
+        "delivery": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "shippingAddress": {
+          "type": "object"
+        },
+        "receiverAddress": {
+          "type": "object"
+        },
+        "shippingFe": {
+          "type": "number",
+          "format": "double"
+        }
+      }
     },
     "OrderServiceMarkOrderPaidBody": {
       "type": "object",
@@ -353,6 +429,14 @@
       },
       "additionalProperties": {},
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "rpcStatus": {
       "type": "object",
@@ -440,7 +524,10 @@
         "streetAddress"
       ]
     },
-    "v1GetOrderStatusResp": {
+    "v1CreateOrderShippingResp": {
+      "type": "object"
+    },
+    "v1GetShipOrderStatusReply": {
       "type": "object",
       "properties": {
         "orderId": {
@@ -461,14 +548,17 @@
           "$ref": "#/definitions/v1ShippingStatus",
           "title": "货运状态"
         },
-        "userAddress": {
-          "$ref": "#/definitions/v1ConsumerAddress",
+        "receiverAddress": {
+          "type": "object",
           "title": "用户收货地址"
+        },
+        "shippingAddress": {
+          "type": "object",
+          "title": "商家发货地址"
         },
         "trackingNumber": {
           "type": "string",
-          "description": "物流单号",
-          "title": "merchantaddress.v1.MerchantAddress merchant_address = 6;  // 商家发货地址"
+          "title": "物流单号"
         },
         "carrier": {
           "type": "string",
@@ -524,11 +614,11 @@
         },
         "paymentStatus": {
           "$ref": "#/definitions/v1PaymentStatus",
-          "title": "支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）"
+          "title": "支付状态"
         },
         "shippingStatus": {
           "$ref": "#/definitions/v1ShippingStatus",
-          "title": "货运状态"
+          "title": "冗余货运状态"
         }
       },
       "title": "订单的消息结构"

@@ -89,11 +89,13 @@ CREATE TABLE orders.orders
     country        VARCHAR(100)              NOT NULL,
     zip_code       VARCHAR(10)               NOT NULL,
     email          VARCHAR(320)              NOT NULL, -- 支持最大邮箱长度
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+        CHECK (payment_status IN ('PENDING', 'PAID', 'CANCELLED', 'FAILED', 'CANCELLED')),
     created_at     timestamptz DEFAULT now() NOT NULL, -- Unix时间戳，避免时区问题
     updated_at     timestamptz DEFAULT now() NOT NULL
 );
-COMMENT
     ON TABLE orders.orders IS '主订单表，记录订单汇总信息';
+COMMENT
 
 -- 创建子订单表（按商家分单）
 CREATE TABLE orders.sub_orders
@@ -110,15 +112,4 @@ CREATE TABLE orders.sub_orders
 );
 COMMENT
     ON TABLE orders.sub_orders IS '子订单表，按商家分单存储';
--- 主订单表
-ALTER TABLE orders.orders
-    ADD COLUMN payment_status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-        CHECK (payment_status IN ('PENDING', 'PAID', 'CANCELLED', 'FAILED', 'CANCELLED'));
--- 子订单表添加货运状态字段
-ALTER TABLE orders.sub_orders
-    ADD COLUMN shipping_status VARCHAR(20) NOT NULL DEFAULT 'PENDING_SHIPMENT'
-        CHECK (shipping_status IN ('PENDING_SHIPMENT', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CONFIRMED', 'CANCELLED'));
--- 主订单表添加物流信息字段
-ALTER TABLE orders.sub_orders
-    ADD COLUMN tracking_number VARCHAR(100),
-    ADD COLUMN carrier VARCHAR(100);
+
