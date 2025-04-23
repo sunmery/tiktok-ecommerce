@@ -6,11 +6,10 @@ type (
 )
 
 const (
-	PaymentPending    PaymentStatus = "PENDING"    // 等待支付
-	PaymentProcessing PaymentStatus = "PROCESSING" // 支付中
-	PaymentPaid       PaymentStatus = "PAID"       // 已支付
-	PaymentFailed     PaymentStatus = "FAILED"     // 支付失败
-	PaymentCancelled  PaymentStatus = "CANCELLED"  // 取消支付
+	PaymentPending   PaymentStatus = "PENDING"   // 等待支付
+	PaymentPaid      PaymentStatus = "PAID"      // 已支付
+	PaymentFailed    PaymentStatus = "FAILED"    // 支付失败
+	PaymentCancelled PaymentStatus = "CANCELLED" // 取消支付
 )
 
 const (

@@ -10,8 +10,6 @@ func MapPaymentStatusToProto(status constants.PaymentStatus) v1.PaymentStatus {
 	switch status {
 	case constants.PaymentPending:
 		return v1.PaymentStatus_NOT_PAID
-	case constants.PaymentProcessing:
-		return v1.PaymentStatus_PROCESSING
 	case constants.PaymentPaid:
 		return v1.PaymentStatus_PAID
 	case constants.PaymentFailed:

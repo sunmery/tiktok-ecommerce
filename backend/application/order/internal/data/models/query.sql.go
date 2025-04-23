@@ -195,19 +195,19 @@ type GetConsumerOrdersParams struct {
 }
 
 type GetConsumerOrdersRow struct {
-	ID            int64       `json:"id"`
-	UserID        uuid.UUID   `json:"userID"`
-	Currency      string      `json:"currency"`
-	StreetAddress string      `json:"streetAddress"`
-	City          string      `json:"city"`
-	State         string      `json:"state"`
-	Country       string      `json:"country"`
-	ZipCode       string      `json:"zipCode"`
-	Email         string      `json:"email"`
-	PaymentStatus interface{} `json:"paymentStatus"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
-	SubOrders     []byte      `json:"subOrders"`
+	ID            int64               `json:"id"`
+	UserID        uuid.UUID           `json:"userID"`
+	Currency      string              `json:"currency"`
+	StreetAddress string              `json:"streetAddress"`
+	City          string              `json:"city"`
+	State         string              `json:"state"`
+	Country       string              `json:"country"`
+	ZipCode       string              `json:"zipCode"`
+	Email         string              `json:"email"`
+	PaymentStatus OrdersPaymentStatus `json:"paymentStatus"`
+	CreatedAt     time.Time           `json:"createdAt"`
+	UpdatedAt     time.Time           `json:"updatedAt"`
+	SubOrders     []byte              `json:"subOrders"`
 }
 
 // GetConsumerOrders
@@ -293,19 +293,19 @@ type GetOrderByIDParams struct {
 }
 
 type GetOrderByIDRow struct {
-	ID            int64       `json:"id"`
-	UserID        uuid.UUID   `json:"userID"`
-	Currency      string      `json:"currency"`
-	StreetAddress string      `json:"streetAddress"`
-	City          string      `json:"city"`
-	State         string      `json:"state"`
-	Country       string      `json:"country"`
-	ZipCode       string      `json:"zipCode"`
-	Email         string      `json:"email"`
-	PaymentStatus interface{} `json:"paymentStatus"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
-	SubOrders     []byte      `json:"subOrders"`
+	ID            int64               `json:"id"`
+	UserID        uuid.UUID           `json:"userID"`
+	Currency      string              `json:"currency"`
+	StreetAddress string              `json:"streetAddress"`
+	City          string              `json:"city"`
+	State         string              `json:"state"`
+	Country       string              `json:"country"`
+	ZipCode       string              `json:"zipCode"`
+	Email         string              `json:"email"`
+	PaymentStatus OrdersPaymentStatus `json:"paymentStatus"`
+	CreatedAt     time.Time           `json:"createdAt"`
+	UpdatedAt     time.Time           `json:"updatedAt"`
+	SubOrders     []byte              `json:"subOrders"`
 }
 
 // GetOrderByID
@@ -378,7 +378,7 @@ type GetOrderByUserIDRow struct {
 	Items          []byte               `json:"items"`
 	CreatedAt      time.Time            `json:"createdAt"`
 	UpdatedAt      time.Time            `json:"updatedAt"`
-	PaymentStatus  interface{}          `json:"paymentStatus"`
+	PaymentStatus  OrdersPaymentStatus  `json:"paymentStatus"`
 	ShippingStatus OrdersShippingStatus `json:"shippingStatus"`
 }
 
@@ -521,7 +521,7 @@ type GetUserOrdersWithSubordersRow struct {
 	Country        string                   `json:"country"`
 	ZipCode        string                   `json:"zipCode"`
 	Email          string                   `json:"email"`
-	PaymentStatus  interface{}              `json:"paymentStatus"`
+	PaymentStatus  OrdersPaymentStatus      `json:"paymentStatus"`
 	ShippingStatus NullOrdersShippingStatus `json:"shippingStatus"`
 	OrderCreated   time.Time                `json:"orderCreated"`
 	Suborders      []byte                   `json:"suborders"`
@@ -623,7 +623,7 @@ type ListOrdersRow struct {
 	Items          []byte               `json:"items"`
 	CreatedAt      time.Time            `json:"createdAt"`
 	UpdatedAt      time.Time            `json:"updatedAt"`
-	PaymentStatus  interface{}          `json:"paymentStatus"`
+	PaymentStatus  OrdersPaymentStatus  `json:"paymentStatus"`
 	ShippingStatus OrdersShippingStatus `json:"shippingStatus"`
 }
 
@@ -874,9 +874,9 @@ WHERE id = $1
 `
 
 type UpdatePaymentStatusRow struct {
-	ID            int64       `json:"id"`
-	UserID        uuid.UUID   `json:"userID"`
-	PaymentStatus interface{} `json:"paymentStatus"`
+	ID            int64               `json:"id"`
+	UserID        uuid.UUID           `json:"userID"`
+	PaymentStatus OrdersPaymentStatus `json:"paymentStatus"`
 }
 
 // -- name: UpdateSubOrderStatus :exec

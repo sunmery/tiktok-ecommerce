@@ -15,7 +15,7 @@ CREATE TABLE orders.orders
     country        VARCHAR(100)              NOT NULL,
     zip_code       VARCHAR(10)               NOT NULL, -- 支付状态
     email          VARCHAR(320)              NOT NULL, -- 支持最大邮箱长度
-    payment_status payment_status            NOT NULL DEFAULT 'PENDING',
+    payment_status orders.payment_status            NOT NULL DEFAULT 'PENDING',
     created_at     timestamptz DEFAULT now() NOT NULL, -- Unix时间戳，避免时区问题
     updated_at     timestamptz DEFAULT now() NOT NULL
 );

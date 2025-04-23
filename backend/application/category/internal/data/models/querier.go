@@ -128,21 +128,6 @@ type Querier interface {
 	//  WHERE id = (SELECT parent_id FROM deleted_nodes LIMIT 1)
 	//    AND (SELECT parent_id FROM deleted_nodes LIMIT 1) IS NOT NULL
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) error
-	//GetCategories
-	//
-	//  SELECT
-	//      id,
-	//      COALESCE(parent_id, 0) AS parent_id,
-	//      level,
-	//      path::text AS path,
-	//      name,
-	//      sort_order,
-	//      is_leaf,
-	//      created_at,
-	//      updated_at
-	//  FROM categories.categories
-	//  WHERE id = $1
-	GetCategories(ctx context.Context, id int64) (GetCategoriesRow, error)
 	//GetCategory
 	//
 	//  SELECT

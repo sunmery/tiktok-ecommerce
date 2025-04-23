@@ -64,24 +64,31 @@ func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 
 func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
 	o.log.WithContext(ctx).Infof("Marking order %d as paid for user %s", req.OrderId, req.UserId)
-	tx := o.data.DB(ctx)
+	tx := o.data.db
 
 	// 获取订单信息，确认订单存在且属于该用户，使用FOR UPDATE锁定行
-	updatePaymentStatusResult, err := tx.UpdatePaymentStatus(ctx, req.OrderId)
+	updatePaymentStatusResult, err := o.data.db.UpdatePaymentStatus(ctx, req.OrderId)
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
-		return nil, fmt.Errorf("failed to get order: %w", err)
+		return nil, fmt.Errorf("updatePaymentStatusResult failed to get order: %w", err)
 	}
 	fmt.Printf("updatePaymentStatusResult: %#v", updatePaymentStatusResult)
 
+	paymentPaidErr := updatePaymentStatusResult.PaymentStatus.Scan(string(constants.PaymentPaid))
+	if paymentPaidErr != nil {
+		log.Errorf("Failed to scan payment status: %v", paymentPaidErr)
+		return nil, err
+	}
+
 	// 验证订单所有者
+	log.Debugf("r%+v, req:%+v", updatePaymentStatusResult.UserID.String(), req.UserId.String())
 	if updatePaymentStatusResult.UserID.String() != req.UserId.String() {
 		o.log.WithContext(ctx).Warnf("Order %d does not belong to user %s, order.UserID:%s", req.OrderId, req.UserId.String(), updatePaymentStatusResult.UserID.String())
 		return nil, fmt.Errorf("order does not belong to user")
 	}
 
 	// 检查订单当前支付状态
-	if updatePaymentStatusResult.PaymentStatus == string(constants.PaymentPaid) {
+	if updatePaymentStatusResult.PaymentStatus.Scan(string(constants.PaymentPaid)) == nil {
 		// 订单已经是已支付状态，直接返回成功
 		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
 		return &biz.MarkOrderPaidResp{}, nil
@@ -91,30 +98,34 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 		req.OrderId, updatePaymentStatusResult.PaymentStatus, string(constants.PaymentPaid))
 
 	// 更新订单支付状态为已支付
-	_, err = tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
+	_, markOrderAsPaidErr := tx.MarkOrderAsPaid(ctx, models.MarkOrderAsPaidParams{
 		PaymentStatus: string(constants.PaymentPaid),
 		ID:            req.OrderId,
 	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order payment status: %v", err)
-		return nil, fmt.Errorf("failed to update order payment status: %w", err)
+	if markOrderAsPaidErr != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order payment status: %v", markOrderAsPaidErr)
+		return nil, fmt.Errorf("failed to update order payment status: %w", markOrderAsPaidErr)
 	}
 
 	// 更新子订单状态
-	_, err = tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
+	_, markSubOrderAsPaidErr := tx.MarkSubOrderAsPaid(ctx, models.MarkSubOrderAsPaidParams{
 		Status:  string(constants.PaymentPaid),
 		OrderID: req.OrderId,
 	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", err)
-		return nil, fmt.Errorf("failed to update sub orders payment status: %w", err)
+	if markSubOrderAsPaidErr != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update sub orders payment status: %v", markSubOrderAsPaidErr)
+		return nil, fmt.Errorf("failed to update sub orders payment status: %w", markSubOrderAsPaidErr)
 	}
 
 	// 更新货运状态为等待操作
-	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+	updateOrderShippingStatusErr := tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
 		ShippingStatus: string(constants.ShippingWaitCommand),
 		SubOrderID:     &req.OrderId,
 	})
+	if updateOrderShippingStatusErr != nil {
+		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", updateOrderShippingStatusErr)
+		return nil, fmt.Errorf("failed to update order shipping status: %w", updateOrderShippingStatusErr)
+	}
 
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
@@ -130,7 +141,7 @@ func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceive
 	})
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
-		return nil, fmt.Errorf("failed to get order: %w", err)
+		return nil, fmt.Errorf("getOrderById failed to get order: %w", err)
 	}
 
 	// 验证订单所有者
@@ -442,7 +453,7 @@ func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) 
 			// 查找对应的原始订单以获取支付状态
 			for _, order := range orders {
 				if order.ID == subOrder.ID {
-					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus.(string))
+					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
 					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
 				}

@@ -253,21 +253,12 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	}
 
 	// 调用业务层标记订单为已支付
-	orderPaid, err := s.uc.MarkOrderPaid(ctx, &biz.MarkOrderPaidReq{
+	orderPaid, markOrderPaidErr := s.uc.MarkOrderPaid(ctx, &biz.MarkOrderPaidReq{
 		UserId:  userId,
 		OrderId: req.OrderId,
 	})
-	if err != nil {
-		// 根据错误类型返回不同的状态码
-		if err.Error() == "order does not belong to user" {
-			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
-		} else if err.Error() == "invalid order ID format" {
-			return nil, status.Error(codes.InvalidArgument, "invalid order ID format")
-		} else if err.Error() == "failed to get order" {
-			return nil, status.Error(codes.NotFound, "order not found")
-		}
-		// 其他错误作为内部错误处理
-		return nil, status.Errorf(codes.Internal, "failed to mark order as paid: %v", err)
+	if markOrderPaidErr != nil {
+		return nil, markOrderPaidErr
 	}
 
 	log.Debugf("orderPaid: %v", orderPaid)

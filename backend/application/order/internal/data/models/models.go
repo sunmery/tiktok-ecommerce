@@ -152,18 +152,18 @@ func AllOrdersShippingStatusValues() []OrdersShippingStatus {
 
 // 主订单表，记录订单汇总信息
 type OrdersOrders struct {
-	ID            int64       `json:"id"`
-	UserID        uuid.UUID   `json:"userID"`
-	Currency      string      `json:"currency"`
-	StreetAddress string      `json:"streetAddress"`
-	City          string      `json:"city"`
-	State         string      `json:"state"`
-	Country       string      `json:"country"`
-	ZipCode       string      `json:"zipCode"`
-	Email         string      `json:"email"`
-	PaymentStatus interface{} `json:"paymentStatus"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
+	ID            int64               `json:"id"`
+	UserID        uuid.UUID           `json:"userID"`
+	Currency      string              `json:"currency"`
+	StreetAddress string              `json:"streetAddress"`
+	City          string              `json:"city"`
+	State         string              `json:"state"`
+	Country       string              `json:"country"`
+	ZipCode       string              `json:"zipCode"`
+	Email         string              `json:"email"`
+	PaymentStatus OrdersPaymentStatus `json:"paymentStatus"`
+	CreatedAt     time.Time           `json:"createdAt"`
+	UpdatedAt     time.Time           `json:"updatedAt"`
 }
 
 type OrdersShippingInfo struct {

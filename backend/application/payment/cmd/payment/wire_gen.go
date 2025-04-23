@@ -14,6 +14,9 @@ import (
 	"backend/application/payment/internal/service"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
+)
+
+import (
 	_ "go.uber.org/automaxprocs"
 )
 
