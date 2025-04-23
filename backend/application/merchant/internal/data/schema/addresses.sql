@@ -21,9 +21,3 @@ CREATE TABLE merchant.addresses
     created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
-
--- 索引优化方案
-CREATE INDEX idx_merchant_addr_main ON merchant.addresses (merchant_id)
-    WHERE is_default = true; -- 快速查询默认地址
-
-CREATE INDEX idx_merchant_addr_type ON merchant.addresses (merchant_id, address_type);

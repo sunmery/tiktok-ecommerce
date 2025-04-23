@@ -27,7 +27,7 @@ INSERT INTO merchant.addresses (id,
                                  remarks)
 VALUES (UNNEST($1::bigint[]),
         UNNEST($2::uuid[]),
-        UNNEST($3::varchar[]),
+        UNNEST($3::merchant.address_type[]),
         UNNEST($4::varchar[]),
         UNNEST($5::varchar[]),
         UNNEST($6::text[]),
@@ -43,7 +43,7 @@ RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_a
 type BatchCreateAddressesParams struct {
 	ID            []int64
 	MerchantID    []uuid.UUID
-	AddressType   []string
+	AddressType   []interface{}
 	ContactPerson []string
 	ContactPhone  []string
 	StreetAddress []string
@@ -71,7 +71,7 @@ type BatchCreateAddressesParams struct {
 //	                                 remarks)
 //	VALUES (UNNEST($1::bigint[]),
 //	        UNNEST($2::uuid[]),
-//	        UNNEST($3::varchar[]),
+//	        UNNEST($3::merchant.address_type[]),
 //	        UNNEST($4::varchar[]),
 //	        UNNEST($5::varchar[]),
 //	        UNNEST($6::text[]),

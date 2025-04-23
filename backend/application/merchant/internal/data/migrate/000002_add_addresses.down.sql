@@ -1,1 +1,1 @@
-DROP TABLE merchants.addresses CASCADE;
+DROP TABLE merchant.addresses CASCADE;

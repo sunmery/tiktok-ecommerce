@@ -87,7 +87,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 					ProductId:  cart.ProductId,
 					Quantity:   itemQuantity,
 					Name:       p.Name,
-					Picture:    p.Images[0].Url, // Use first image if primary not found
+					Picture:    p.Images[0].Url,
 				})
 
 				orderItems = append(orderItems, &v1.OrderItem{
@@ -98,7 +98,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 						Name:       p.Name,
 						Picture:    p.Images[0].Url,
 					},
-					Cost: itemTotal, // Use total cost for the item quantity
+					Cost: itemTotal,
 				})
 
 				amount += itemTotal
@@ -128,7 +128,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 
 	// 调用订单微服务创建订单
 	order, orderErr := c.data.orderv1.PlaceOrder(ctx, &v1.PlaceOrderReq{
-		Currency: "CNY", // Use fixed currency for now
+		Currency: string(constants.CNY), // Use fixed currency for now
 		Address: &userv1.ConsumerAddress{
 			Id:            address.Id,
 			UserId:        address.UserId,

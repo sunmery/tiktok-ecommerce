@@ -6,7 +6,10 @@ CREATE TABLE IF NOT EXISTS orders.shipping_info
     merchant_id      UUID                   NOT NULL,              -- 商家 id
     tracking_number  VARCHAR(100)           NOT NULL,              -- 物流单号
     carrier          VARCHAR(100)           NOT NULL,              -- 承运商
-    shipping_status  orders.shipping_status NOT NULL DEFAULT 'WAIT_COMMAND',
+    shipping_status VARCHAR(15)               NOT NULL DEFAULT 'WAIT_COMMAND'
+        CHECK ( shipping_status IN
+                ('WAIT_COMMAND', 'PENDING_SHIPMENT', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CONFIRMED',
+                 'CANCELLED')),                         -- 物流状态
     delivery         TIMESTAMPTZ            NOT NULL,              -- 送达时间
     shipping_address JSONB                  NOT NULL,              -- 发货地址信息
     receiver_address JSONB                  NOT NULL,              -- 收货地址信息

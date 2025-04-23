@@ -14,8 +14,6 @@ import (
 
 	orderv1 "backend/api/merchant/order/v1"
 
-	"github.com/google/uuid"
-
 	"github.com/go-kratos/kratos/v2/log"
 
 	cartv1 "backend/api/cart/v1"
@@ -48,18 +46,6 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
 	}
 
-	// 使用请求中的merchant_id覆盖，如果有指定的话
-	if req.MerchantId != "" {
-		// 此处可以添加权限检查，确保当前用户有权查看指定商家的订单
-		log.Infof("使用指定的商家ID: %s", req.MerchantId)
-		parsedId, parseErr := uuid.Parse(req.MerchantId)
-		if parseErr != nil {
-			log.Errorf("商家ID格式无效: %v", parseErr)
-			return nil, status.Error(codes.InvalidArgument, "商家ID格式无效")
-		}
-		userId = parsedId
-	}
-
 	// 调用业务层获取订单列表
 	resp, err := s.oc.GetMerchantOrders(ctx, &biz.GetMerchantOrdersReq{
 		UserID:   userId,
@@ -67,8 +53,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		PageSize: req.PageSize,
 	})
 	if err != nil {
-		log.Errorf("获取商家订单失败: %v", err)
-		return nil, status.Errorf(codes.Internal, "获取商家订单失败: %v", err)
+		return nil, err
 	}
 
 	// 检查是否有订单

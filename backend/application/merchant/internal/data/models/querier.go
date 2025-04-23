@@ -27,7 +27,7 @@ type Querier interface {
 	//                                   remarks)
 	//  VALUES (UNNEST($1::bigint[]),
 	//          UNNEST($2::uuid[]),
-	//          UNNEST($3::varchar[]),
+	//          UNNEST($3::merchant.address_type[]),
 	//          UNNEST($4::varchar[]),
 	//          UNNEST($5::varchar[]),
 	//          UNNEST($6::text[]),
@@ -155,6 +155,31 @@ type Querier interface {
 	//  ORDER BY (i.stock * 1.0 / COALESCE(sa.threshold, 10))
 	//  LIMIT $3 OFFSET $2
 	GetLowStockProducts(ctx context.Context, arg GetLowStockProductsParams) ([]GetLowStockProductsRow, error)
+	//GetMerchantOrders
+	//
+	//  SELECT oo.id,
+	//         oo.payment_status,
+	//         oo.user_id,
+	//         oo.currency,
+	//         oo.street_address,
+	//         oo.city,
+	//         oo.state,
+	//         oo.country,
+	//         oo.zip_code,
+	//         oo.email,
+	//         os.order_id        AS order_id,
+	//         os.merchant_id,
+	//         os.total_amount,
+	//         os.items,
+	//         os.shipping_status AS shipping_status,
+	//         os.created_at,
+	//         os.updated_at
+	//  FROM orders.sub_orders os
+	//           JOIN orders.orders oo on os.order_id = oo.id
+	//  WHERE os.merchant_id = $1
+	//  ORDER BY os.created_at DESC
+	//  LIMIT $3 OFFSET $2
+	GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersParams) ([]GetMerchantOrdersRow, error)
 	//GetMerchantProducts
 	//
 	//  SELECT p.id,
@@ -258,31 +283,6 @@ type Querier interface {
 	//  ORDER BY id
 	//  LIMIT $4 OFFSET $5
 	ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error)
-	//ListOrdersByUser
-	//
-	//  SELECT oo.id AS order_id,
-	//         os.merchant_id,
-	//         total_amount,
-	//         os.currency,
-	//         os.shipping_status,
-	//         oo.payment_status,
-	//         si.sub_order_id,
-	//         si.tracking_number,
-	//         si.carrier,
-	//         si.shipping_status,
-	//         si.delivery,
-	//         si.shipping_address,
-	//         si.receiver_address,
-	//         si.shipping_fee,
-	//         si.created_at,
-	//         items
-	//  FROM orders.sub_orders os
-	//           JOIN orders.orders oo on os.order_id = oo.id
-	//           LEFT JOIN orders.shipping_info si on os.id = si.sub_order_id
-	//  WHERE os.merchant_id = $1
-	//  ORDER BY si.created_at DESC
-	//  LIMIT $3 OFFSET $2
-	ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]ListOrdersByUserRow, error)
 	//QuerySubOrders
 	//
 	//  SELECT os.id AS sub_order_id,

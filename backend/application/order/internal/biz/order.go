@@ -33,7 +33,7 @@ type SubOrder struct {
 }
 
 type (
-	GetConsumerOrdersReq struct {
+	GetOrdersReq struct {
 		UserId   uuid.UUID
 		Page     uint32
 		PageSize uint32
@@ -42,6 +42,30 @@ type (
 		Orders []*v1.Order
 	}
 )
+
+// // GetMerchantOrdersReq 获取商家订单
+// type (
+// 	GetMerchantOrdersReq struct {
+// 		MerchantId uuid.UUID
+// 		Page       uint32
+// 		PageSize   uint32
+// 	}
+// 	MerchantOrdersSubOrder struct {
+// 		OrderID        int64
+// 		SubOrderID     int64
+// 		MerchantID     uuid.UUID
+// 		TotalAmount    float64
+// 		Currency       string
+// 		PaymentStatus  constants.PaymentStatus
+// 		ShippingStatus constants.ShippingStatus
+// 		Items          []*OrderItem
+// 		CreatedAt      time.Time
+// 		UpdatedAt      time.Time
+// 	}
+// 	GetMerchantOrdersReply struct {
+// 		Orders []*MerchantOrdersSubOrder
+// 	}
+// )
 
 // CartItem 购物车商品, 是以 JSON 存储到数据库中, 需要添加tags
 // 最终是给前端展示, 所以使用小驼峰符合前端变量命名规范
@@ -152,7 +176,8 @@ func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
-	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error)
+	GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error)
+	// GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
 
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
@@ -167,9 +192,9 @@ func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*Pl
 	return oc.repo.PlaceOrder(ctx, req)
 }
 
-func (oc *OrderUsecase) GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*Orders, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order GetConsumerOrders:%+v", req)
-	return oc.repo.GetConsumerOrders(ctx, req)
+func (oc *OrderUsecase) GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetOrders:%+v", req)
+	return oc.repo.GetOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error) {

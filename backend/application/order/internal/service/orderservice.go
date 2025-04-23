@@ -111,7 +111,7 @@ func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq)
 	}, nil
 }
 
-func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.GetConsumerOrdersReq) (*v1.Orders, error) {
+func (s *OrderServiceService) GetOrders(ctx context.Context, req *v1.GetOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
 	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -120,14 +120,14 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 	}
 
 	// 构建业务层请求
-	listReq := &biz.GetConsumerOrdersReq{
+	listReq := &biz.GetOrdersReq{
 		UserId:   userId,
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}
 
 	// 调用业务层获取订单列表
-	resp, err := s.uc.GetConsumerOrders(ctx, listReq)
+	resp, err := s.uc.GetOrders(ctx, listReq)
 	if err != nil {
 		log.Errorf("获取用户订单失败: %v", err)
 		return nil, status.Errorf(codes.Internal, "获取用户订单失败: %v", err)

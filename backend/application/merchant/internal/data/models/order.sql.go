@@ -25,7 +25,7 @@ type CreateShipParams struct {
 	ID              *int64
 	MerchantID      pgtype.UUID
 	SubOrderID      *int64
-	ShippingStatus  interface{}
+	ShippingStatus  *string
 	TrackingNumber  *string
 	Carrier         *string
 	Delivery        pgtype.Timestamptz
@@ -91,10 +91,10 @@ type GetConsumerAddressRow struct {
 	Country        string
 	ZipCode        string
 	Email          string
-	PaymentStatus  interface{}
+	PaymentStatus  string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	ShippingStatus interface{}
+	ShippingStatus string
 }
 
 // 通过子订单 ID 去查询主订单的地址, 因为用户可能下单多个商品, 分别属于不同商家, 但地址并不会变化
@@ -134,106 +134,108 @@ func (q *Queries) GetConsumerAddress(ctx context.Context, id *int64) (GetConsume
 	return i, err
 }
 
-const ListOrdersByUser = `-- name: ListOrdersByUser :many
-SELECT oo.id AS order_id,
-       os.merchant_id,
-       total_amount,
-       os.currency,
-       os.shipping_status,
+const GetMerchantOrders = `-- name: GetMerchantOrders :many
+SELECT oo.id,
        oo.payment_status,
-       si.sub_order_id,
-       si.tracking_number,
-       si.carrier,
-       si.shipping_status,
-       si.delivery,
-       si.shipping_address,
-       si.receiver_address,
-       si.shipping_fee,
-       si.created_at,
-       items
+       oo.user_id,
+       oo.currency,
+       oo.street_address,
+       oo.city,
+       oo.state,
+       oo.country,
+       oo.zip_code,
+       oo.email,
+       os.order_id        AS order_id,
+       os.merchant_id,
+       os.total_amount,
+       os.items,
+       os.shipping_status AS shipping_status,
+       os.created_at,
+       os.updated_at
 FROM orders.sub_orders os
          JOIN orders.orders oo on os.order_id = oo.id
-         LEFT JOIN orders.shipping_info si on os.id = si.sub_order_id
 WHERE os.merchant_id = $1
-ORDER BY si.created_at DESC
+ORDER BY os.created_at DESC
 LIMIT $3 OFFSET $2
 `
 
-type ListOrdersByUserParams struct {
+type GetMerchantOrdersParams struct {
 	MerchantID pgtype.UUID
 	Page       *int64
 	PageSize   *int64
 }
 
-type ListOrdersByUserRow struct {
-	OrderID          int64
-	MerchantID       uuid.UUID
-	TotalAmount      interface{}
-	Currency         string
-	ShippingStatus   interface{}
-	PaymentStatus    interface{}
-	SubOrderID       int64
-	TrackingNumber   string
-	Carrier          string
-	ShippingStatus_2 interface{}
-	Delivery         time.Time
-	ShippingAddress  []byte
-	ReceiverAddress  []byte
-	ShippingFee      interface{}
-	CreatedAt        time.Time
-	Items            []byte
+type GetMerchantOrdersRow struct {
+	ID             int64
+	PaymentStatus  string
+	UserID         uuid.UUID
+	Currency       string
+	StreetAddress  string
+	City           string
+	State          string
+	Country        string
+	ZipCode        string
+	Email          string
+	OrderID        int64
+	MerchantID     uuid.UUID
+	TotalAmount    interface{}
+	Items          []byte
+	ShippingStatus string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
-// ListOrdersByUser
+// GetMerchantOrders
 //
-//	SELECT oo.id AS order_id,
-//	       os.merchant_id,
-//	       total_amount,
-//	       os.currency,
-//	       os.shipping_status,
+//	SELECT oo.id,
 //	       oo.payment_status,
-//	       si.sub_order_id,
-//	       si.tracking_number,
-//	       si.carrier,
-//	       si.shipping_status,
-//	       si.delivery,
-//	       si.shipping_address,
-//	       si.receiver_address,
-//	       si.shipping_fee,
-//	       si.created_at,
-//	       items
+//	       oo.user_id,
+//	       oo.currency,
+//	       oo.street_address,
+//	       oo.city,
+//	       oo.state,
+//	       oo.country,
+//	       oo.zip_code,
+//	       oo.email,
+//	       os.order_id        AS order_id,
+//	       os.merchant_id,
+//	       os.total_amount,
+//	       os.items,
+//	       os.shipping_status AS shipping_status,
+//	       os.created_at,
+//	       os.updated_at
 //	FROM orders.sub_orders os
 //	         JOIN orders.orders oo on os.order_id = oo.id
-//	         LEFT JOIN orders.shipping_info si on os.id = si.sub_order_id
 //	WHERE os.merchant_id = $1
-//	ORDER BY si.created_at DESC
+//	ORDER BY os.created_at DESC
 //	LIMIT $3 OFFSET $2
-func (q *Queries) ListOrdersByUser(ctx context.Context, arg ListOrdersByUserParams) ([]ListOrdersByUserRow, error) {
-	rows, err := q.db.Query(ctx, ListOrdersByUser, arg.MerchantID, arg.Page, arg.PageSize)
+func (q *Queries) GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersParams) ([]GetMerchantOrdersRow, error) {
+	rows, err := q.db.Query(ctx, GetMerchantOrders, arg.MerchantID, arg.Page, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListOrdersByUserRow
+	var items []GetMerchantOrdersRow
 	for rows.Next() {
-		var i ListOrdersByUserRow
+		var i GetMerchantOrdersRow
 		if err := rows.Scan(
+			&i.ID,
+			&i.PaymentStatus,
+			&i.UserID,
+			&i.Currency,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.Email,
 			&i.OrderID,
 			&i.MerchantID,
 			&i.TotalAmount,
-			&i.Currency,
-			&i.ShippingStatus,
-			&i.PaymentStatus,
-			&i.SubOrderID,
-			&i.TrackingNumber,
-			&i.Carrier,
-			&i.ShippingStatus_2,
-			&i.Delivery,
-			&i.ShippingAddress,
-			&i.ReceiverAddress,
-			&i.ShippingFee,
-			&i.CreatedAt,
 			&i.Items,
+			&i.ShippingStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -271,8 +273,8 @@ type QuerySubOrdersRow struct {
 	Items          []byte
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	PaymentStatus  interface{}
-	ShippingStatus interface{}
+	PaymentStatus  string
+	ShippingStatus string
 }
 
 // QuerySubOrders

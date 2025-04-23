@@ -32,7 +32,7 @@ INSERT INTO merchant.addresses (id,
                                  remarks)
 VALUES (UNNEST(@id::bigint[]),
         UNNEST(@merchant_id::uuid[]),
-        UNNEST(@address_type::varchar[]),
+        UNNEST(@address_type::merchant.address_type[]),
         UNNEST(@contact_person::varchar[]),
         UNNEST(@contact_phone::varchar[]),
         UNNEST(@street_address::text[]),

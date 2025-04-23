@@ -93,11 +93,16 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 	o.log.WithContext(ctx).Infof("获取商户 %s 的订单列表, 页码: %d, 每页数量: %d", req.UserID, req.Page, req.PageSize)
 
 	// 查询订单列表
-	userId := types.ToPgUUID(req.UserID)
-	pageSize := int64(req.PageSize)
+	// orders, err := o.data.orderv1.GetMerchantOrders(ctx, &v1.GetMerchantOrdersReq{
+	// 	MerchantId: req.UserID.String(),
+	// 	Page:       (req.Page - 1) * req.PageSize,
+	// 	PageSize:   req.PageSize,
+	// })
+	userID := types.ToPgUUID(req.UserID)
 	page := int64((req.Page - 1) * req.PageSize)
-	orders, err := o.data.db.ListOrdersByUser(ctx, models.ListOrdersByUserParams{
-		MerchantID: userId,
+	pageSize := int64(req.PageSize)
+	orders, err := o.data.db.GetMerchantOrders(ctx, models.GetMerchantOrdersParams{
+		MerchantID: userID,
 		PageSize:   &pageSize,
 		Page:       &page,
 	})
@@ -117,7 +122,8 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 
 	// 收集所有主订单ID
 	for _, order := range orders {
-		orderIDs = append(orderIDs, order.OrderID)
+		log.Debugf("orders订单: %+v", order)
+		orderIDs = append(orderIDs, order.ID)
 	}
 
 	// 去重订单ID
@@ -144,10 +150,13 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 		for _, subOrder := range subOrders {
 			// 查找对应的原始订单以获取支付状态
 			for _, order := range orders {
-				if order.OrderID == subOrder.OrderID {
-					subOrder.SubOrderID = order.SubOrderID
-					subOrder.Status = constants.PaymentStatus(order.PaymentStatus.(string))
-					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus.(string))
+				if order.ID == subOrder.OrderID {
+					// subOrder.SubOrderID = order.OrderID
+					// subOrder.TotalAmount = order.TotalAmount
+					// subOrder.Currency = order.Currency.String
+					// subOrder.CreatedAt = order.CreatedAt.Local()
+					subOrder.Status = constants.PaymentStatus(order.PaymentStatus)
+					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
 					break
 				}
 			}
@@ -249,8 +258,8 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,
-			Status:         constants.PaymentStatus(order.PaymentStatus.(string)),
-			ShippingStatus: constants.ShippingStatus(order.ShippingStatus.(string)),
+			Status:         constants.PaymentStatus(order.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
 			Items:          orderItems,
 			CreatedAt:      order.CreatedAt,
 			UpdatedAt:      order.UpdatedAt,

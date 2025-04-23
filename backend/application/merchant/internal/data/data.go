@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	orderv1 "backend/api/order/v1"
+
 	merchantAddressv1 "backend/api/merchant/address/v1"
 	userv1 "backend/api/user/v1"
 
@@ -32,7 +34,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewDiscovery, NewProductServiceClient, NewInventoryRepo, NewProductRepo, NewOrderRepo, NewAddressRepo, NewMerchantAddressServiceClient, NewUserServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewDiscovery, NewProductServiceClient, NewInventoryRepo, NewProductRepo, NewOrderRepo, NewAddressRepo, NewMerchantAddressServiceClient, NewUserServiceClient, NewOrderServiceClient)
 
 type Data struct {
 	db                *models.Queries
@@ -42,6 +44,7 @@ type Data struct {
 	productv1         productv1.ProductServiceClient
 	userv1            userv1.UserServiceClient
 	merchantAddressv1 merchantAddressv1.MerchantAddressesClient
+	orderv1           orderv1.OrderServiceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -55,6 +58,7 @@ func NewData(
 	productv1 productv1.ProductServiceClient,
 	userv1 userv1.UserServiceClient,
 	merchantAddressv1 merchantAddressv1.MerchantAddressesClient,
+	orderv1 orderv1.OrderServiceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -67,6 +71,7 @@ func NewData(
 		productv1:         productv1,             // 商品服务
 		userv1:            userv1,                // 用户服务
 		merchantAddressv1: merchantAddressv1,     // 商家地址服务
+		orderv1:           orderv1,               // 公共订单服务
 	}, cleanup, nil
 }
 
@@ -118,6 +123,24 @@ func NewUserServiceClient(d registry.Discovery, logger log.Logger) (userv1.UserS
 		return nil, err
 	}
 	return userv1.NewUserServiceClient(conn), nil
+}
+
+// NewOrderServiceClient 订单微服务(公共)
+func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.OrderServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.OrderServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return orderv1.NewOrderServiceClient(conn), nil
 }
 
 // NewProductServiceClient 商品微服务

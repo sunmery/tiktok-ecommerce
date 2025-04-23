@@ -22,7 +22,7 @@ service OrderService {
   }
 
   // 查询用户订单列表
-  rpc GetConsumerOrders(GetConsumerOrdersReq) returns (Orders) {
+  rpc GetOrders(GetOrdersReq) returns (Orders) {
     option (google.api.http) = {
       get: "/v1/orders"
     };
@@ -50,6 +50,7 @@ service OrderService {
     };
   }
 
+  // 创建订单货运信息
   rpc CreateOrderShipping(CreateOrderShippingReq) returns (CreateOrderShippingResp) {
     option (google.api.http) = {
       post: "/v1/orders/{sub_order_id}/ship" // 定义 HTTP POST 请求路径，路径参数为 order_id
@@ -176,7 +177,7 @@ message GetOrderReq {
   int64 id = 1; // 用户 ID
 }
 
-message GetConsumerOrdersReq {
+message GetOrdersReq {
   string user_id = 1; // 用户 ID
   uint32 page = 2; // 分页参数：当前页码，默认值为 0
   uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100

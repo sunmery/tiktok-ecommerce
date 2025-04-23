@@ -1,3 +1,24 @@
+-- name: GetOrders :many
+SELECT oo.*,
+       json_agg(
+               json_build_object(
+                       'sub_order_id', os.id,
+                       'merchant_id', os.merchant_id,
+                       'total_amount', os.total_amount,
+                       'currency', os.currency,
+                       'status', os.status,
+                       'shipping_status', os.shipping_status,
+                       'items', os.items,
+                       'created_at', os.created_at,
+                       'updated_at', os.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders oo
+         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+WHERE oo.user_id = @user_id
+GROUP BY oo.id
+LIMIT @page_size OFFSET @page;
+
 -- name: CreateOrder :one
 INSERT INTO orders.orders (id, user_id, currency, street_address,
                            city, state, country, zip_code, email)
@@ -58,27 +79,6 @@ FROM orders.sub_orders os
          JOIN orders.orders oo
               ON os.order_id = oo.id
 ORDER BY os.created_at DESC
-LIMIT @page_size OFFSET @page;
-
--- name: GetConsumerOrders :many
-SELECT oo.*,
-       json_agg(
-               json_build_object(
-                       'sub_order_id', os.id,
-                       'merchant_id', os.merchant_id,
-                       'total_amount', os.total_amount,
-                       'currency', os.currency,
-                       'status', os.status,
-                       'shipping_status', os.shipping_status,
-                       'items', os.items,
-                       'created_at', os.created_at,
-                       'updated_at', os.updated_at
-               )
-       ) AS sub_orders
-FROM orders.orders oo
-         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
-WHERE oo.user_id = @user_id
-GROUP BY oo.id
 LIMIT @page_size OFFSET @page;
 
 -- name: GetUserOrdersWithSuborders :many

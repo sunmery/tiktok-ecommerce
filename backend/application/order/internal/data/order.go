@@ -74,12 +74,6 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	}
 	fmt.Printf("updatePaymentStatusResult: %#v", updatePaymentStatusResult)
 
-	paymentPaidErr := updatePaymentStatusResult.PaymentStatus.Scan(string(constants.PaymentPaid))
-	if paymentPaidErr != nil {
-		log.Errorf("Failed to scan payment status: %v", paymentPaidErr)
-		return nil, err
-	}
-
 	// 验证订单所有者
 	log.Debugf("r%+v, req:%+v", updatePaymentStatusResult.UserID.String(), req.UserId.String())
 	if updatePaymentStatusResult.UserID.String() != req.UserId.String() {
@@ -88,7 +82,7 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	}
 
 	// 检查订单当前支付状态
-	if updatePaymentStatusResult.PaymentStatus.Scan(string(constants.PaymentPaid)) == nil {
+	if updatePaymentStatusResult.PaymentStatus == string(constants.PaymentPaid) {
 		// 订单已经是已支付状态，直接返回成功
 		o.log.WithContext(ctx).Infof("Order %d is already marked as paid", req.OrderId)
 		return &biz.MarkOrderPaidResp{}, nil
@@ -118,8 +112,9 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 	}
 
 	// 更新货运状态为等待操作
+	shippingWaitCommand := string(constants.ShippingWaitCommand)
 	updateOrderShippingStatusErr := tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
-		ShippingStatus: string(constants.ShippingWaitCommand),
+		ShippingStatus: &shippingWaitCommand,
 		SubOrderID:     &req.OrderId,
 	})
 	if updateOrderShippingStatusErr != nil {
@@ -151,8 +146,9 @@ func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceive
 	}
 
 	// 更新订单物流状态为已确认收货
+	shippingConfirmed := string(constants.ShippingConfirmed)
 	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
-		ShippingStatus: string(constants.ShippingConfirmed),
+		ShippingStatus: &shippingConfirmed,
 		SubOrderID:     &req.OrderId,
 	})
 	if err != nil {
@@ -229,7 +225,7 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 	return orderProto, nil
 }
 
-func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.Orders, error) {
+func (o *orderRepo) GetOrders(ctx context.Context, req *biz.GetOrdersReq) (*biz.Orders, error) {
 	// 设置默认分页参数
 	if req.Page == 0 {
 		req.Page = 1
@@ -242,7 +238,7 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 		req.PageSize = 100
 	}
 
-	consumerOrders, err := o.data.db.GetConsumerOrders(ctx, models.GetConsumerOrdersParams{
+	rows, err := o.data.db.GetOrders(ctx, models.GetOrdersParams{
 		UserID:   req.UserId,
 		PageSize: int64(req.PageSize),
 		Page:     int64((req.Page - 1) * req.PageSize),
@@ -252,10 +248,10 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 		return nil, fmt.Errorf("获取用户订单列表失败: %w", err)
 	}
 
-	orders := make([]*v1.Order, 0, len(consumerOrders))
+	orders := make([]*v1.Order, 0, len(rows))
 	paymentStatus := constants.PaymentPending
 	shippingStatus := constants.ShippingWaitCommand
-	for _, order := range consumerOrders {
+	for _, order := range rows {
 		// 解析子订单JSON
 		var subOrdersData []byte
 		if order.SubOrders != nil {
@@ -502,7 +498,7 @@ func (o *orderRepo) GetShipOrderStatus(ctx context.Context, req *biz.GetShipOrde
 	}, nil
 }
 
-// 解析GetConsumerOrders返回的子订单JSON
+// 解析GetOrders返回的子订单JSON
 func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	if data == nil || len(data) == 0 || string(data) == "null" || string(data) == "[null]" {
 		return []*biz.SubOrder{}, nil
@@ -655,8 +651,8 @@ func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.Sub
 			MerchantID:     order.MerchantID,
 			TotalAmount:    amount,
 			Currency:       order.Currency,
-			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus.(string)),
-			ShippingStatus: constants.ShippingStatus(order.ShippingStatus.(string)),
+			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
 			Items:          orderItems,
 			CreatedAt:      order.CreatedAt.Time,
 			UpdatedAt:      order.UpdatedAt.Time,

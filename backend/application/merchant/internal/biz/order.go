@@ -12,16 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type PaymentStatus string
-
-const (
-	PaymentPending    PaymentStatus = "PENDING"
-	PaymentProcessing PaymentStatus = "PROCESSING"
-	PaymentPaid       PaymentStatus = "PAID"
-	PaymentFailed     PaymentStatus = "FAILED"
-	PaymentCancelled  PaymentStatus = "CANCELLED"
-)
-
 // CartItem 购物车商品, 是以 JSON 存储到数据库中, 需要添加tags
 // 最终是给前端展示, 所以使用小驼峰符合前端变量命名规范
 type CartItem struct {
@@ -113,6 +103,6 @@ func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantO
 }
 
 func (oc *OrderUsecase) ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error) {
-	// oc.log.WithContext(ctx).Debugf("biz/order ShipOrder req:%+v", req)
+	oc.log.WithContext(ctx).Debugf("biz/order ShipOrder req:%+v", req)
 	return oc.repo.ShipOrder(ctx, req)
 }

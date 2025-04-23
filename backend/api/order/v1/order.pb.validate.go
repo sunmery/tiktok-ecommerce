@@ -1505,22 +1505,22 @@ var _ interface {
 	ErrorName() string
 } = GetOrderReqValidationError{}
 
-// Validate checks the field values on GetConsumerOrdersReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetConsumerOrdersReq) Validate() error {
+// Validate checks the field values on GetOrdersReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GetOrdersReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetConsumerOrdersReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetConsumerOrdersReqMultiError, or nil if none found.
-func (m *GetConsumerOrdersReq) ValidateAll() error {
+// ValidateAll checks the field values on GetOrdersReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GetOrdersReqMultiError, or
+// nil if none found.
+func (m *GetOrdersReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetConsumerOrdersReq) validate(all bool) error {
+func (m *GetOrdersReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1534,19 +1534,18 @@ func (m *GetConsumerOrdersReq) validate(all bool) error {
 	// no validation rules for PageSize
 
 	if len(errors) > 0 {
-		return GetConsumerOrdersReqMultiError(errors)
+		return GetOrdersReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetConsumerOrdersReqMultiError is an error wrapping multiple validation
-// errors returned by GetConsumerOrdersReq.ValidateAll() if the designated
-// constraints aren't met.
-type GetConsumerOrdersReqMultiError []error
+// GetOrdersReqMultiError is an error wrapping multiple validation errors
+// returned by GetOrdersReq.ValidateAll() if the designated constraints aren't met.
+type GetOrdersReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetConsumerOrdersReqMultiError) Error() string {
+func (m GetOrdersReqMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1555,11 +1554,11 @@ func (m GetConsumerOrdersReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetConsumerOrdersReqMultiError) AllErrors() []error { return m }
+func (m GetOrdersReqMultiError) AllErrors() []error { return m }
 
-// GetConsumerOrdersReqValidationError is the validation error returned by
-// GetConsumerOrdersReq.Validate if the designated constraints aren't met.
-type GetConsumerOrdersReqValidationError struct {
+// GetOrdersReqValidationError is the validation error returned by
+// GetOrdersReq.Validate if the designated constraints aren't met.
+type GetOrdersReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1567,24 +1566,22 @@ type GetConsumerOrdersReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetConsumerOrdersReqValidationError) Field() string { return e.field }
+func (e GetOrdersReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetConsumerOrdersReqValidationError) Reason() string { return e.reason }
+func (e GetOrdersReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetConsumerOrdersReqValidationError) Cause() error { return e.cause }
+func (e GetOrdersReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetConsumerOrdersReqValidationError) Key() bool { return e.key }
+func (e GetOrdersReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetConsumerOrdersReqValidationError) ErrorName() string {
-	return "GetConsumerOrdersReqValidationError"
-}
+func (e GetOrdersReqValidationError) ErrorName() string { return "GetOrdersReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e GetConsumerOrdersReqValidationError) Error() string {
+func (e GetOrdersReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1596,14 +1593,14 @@ func (e GetConsumerOrdersReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetConsumerOrdersReq.%s: %s%s",
+		"invalid %sGetOrdersReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetConsumerOrdersReqValidationError{}
+var _ error = GetOrdersReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1611,7 +1608,115 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetConsumerOrdersReqValidationError{}
+} = GetOrdersReqValidationError{}
+
+// Validate checks the field values on GetMerchantOrdersReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMerchantOrdersReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMerchantOrdersReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMerchantOrdersReqMultiError, or nil if none found.
+func (m *GetMerchantOrdersReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMerchantOrdersReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	// no validation rules for Page
+
+	// no validation rules for PageSize
+
+	if len(errors) > 0 {
+		return GetMerchantOrdersReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMerchantOrdersReqMultiError is an error wrapping multiple validation
+// errors returned by GetMerchantOrdersReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetMerchantOrdersReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMerchantOrdersReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMerchantOrdersReqMultiError) AllErrors() []error { return m }
+
+// GetMerchantOrdersReqValidationError is the validation error returned by
+// GetMerchantOrdersReq.Validate if the designated constraints aren't met.
+type GetMerchantOrdersReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMerchantOrdersReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMerchantOrdersReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMerchantOrdersReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMerchantOrdersReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMerchantOrdersReqValidationError) ErrorName() string {
+	return "GetMerchantOrdersReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMerchantOrdersReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMerchantOrdersReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMerchantOrdersReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMerchantOrdersReqValidationError{}
 
 // Validate checks the field values on GetAllOrdersReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

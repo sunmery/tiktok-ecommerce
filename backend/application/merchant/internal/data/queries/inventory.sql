@@ -131,3 +131,4 @@ FROM products.products p
                        AND p.merchant_id = sa.merchant_id
 WHERE i.stock <= COALESCE(sa.threshold, @threshold)
   AND p.merchant_id = @merchant_id::uuid;
+

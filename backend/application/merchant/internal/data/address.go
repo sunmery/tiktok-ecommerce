@@ -41,6 +41,12 @@ func (a addressRepo) BatchCreateAddresses(ctx context.Context, req *biz.BatchCre
 	isDefaults := make([]bool, len(req.Addresses))
 	remarks := make([]string, len(req.Addresses))
 
+	// TODO
+	// err := (*models.MerchantAddressType).Scan(string(addr.AddressType))
+	// if err != nil {
+	// 	return nil, kerrors.New(400, "address_type", "invalid address type")
+	// }
+
 	for i, addr := range req.Addresses {
 		ids[i] = id.SnowflakeID()
 		merchantIds[i] = addr.MerchantId
@@ -55,10 +61,11 @@ func (a addressRepo) BatchCreateAddresses(ctx context.Context, req *biz.BatchCre
 		isDefaults[i] = addr.IsDefault
 		remarks[i] = addr.Remarks
 	}
+
 	params := models.BatchCreateAddressesParams{
-		ID:            ids,
-		MerchantID:    merchantIds,
-		AddressType:   addressTypes,
+		ID:         ids,
+		MerchantID: merchantIds,
+		// AddressType:   addressTypes, // TODO
 		ContactPerson: contactPersons,
 		ContactPhone:  contactPhones,
 		StreetAddress: streetAddresses,

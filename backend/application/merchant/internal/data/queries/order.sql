@@ -1,27 +1,28 @@
-SET SEARCH_PATH to merchant,orders;
+CREATE SCHEMA IF NOT EXISTS orders;
+SET SEARCH_PATH to orders;
 
--- name: ListOrdersByUser :many
-SELECT oo.id AS order_id,
-       os.merchant_id,
-       total_amount,
-       os.currency,
-       os.shipping_status,
+-- name: GetMerchantOrders :many
+SELECT oo.id,
        oo.payment_status,
-       si.sub_order_id,
-       si.tracking_number,
-       si.carrier,
-       si.shipping_status,
-       si.delivery,
-       si.shipping_address,
-       si.receiver_address,
-       si.shipping_fee,
-       si.created_at,
-       items
+       oo.user_id,
+       oo.currency,
+       oo.street_address,
+       oo.city,
+       oo.state,
+       oo.country,
+       oo.zip_code,
+       oo.email,
+       os.order_id        AS order_id,
+       os.merchant_id,
+       os.total_amount,
+       os.items,
+       os.shipping_status AS shipping_status,
+       os.created_at,
+       os.updated_at
 FROM orders.sub_orders os
          JOIN orders.orders oo on os.order_id = oo.id
-         LEFT JOIN orders.shipping_info si on os.id = si.sub_order_id
 WHERE os.merchant_id = @merchant_id
-ORDER BY si.created_at DESC
+ORDER BY os.created_at DESC
 LIMIT @page_size OFFSET @page;
 
 -- name: QuerySubOrders :many

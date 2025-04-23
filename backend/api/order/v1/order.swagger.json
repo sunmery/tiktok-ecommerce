@@ -60,7 +60,7 @@
     "/v1/orders": {
       "get": {
         "summary": "查询用户订单列表",
-        "operationId": "OrderService_GetConsumerOrders",
+        "operationId": "OrderService_GetOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -294,6 +294,7 @@
     },
     "/v1/orders/{subOrderId}/ship": {
       "post": {
+        "summary": "创建订单货运信息",
         "operationId": "OrderService_CreateOrderShipping",
         "responses": {
           "200": {

@@ -22,8 +22,8 @@ const _ = http.SupportPackageIsVersion1
 const OperationOrderServiceConfirmReceived = "/ecommerce.order.v1.OrderService/ConfirmReceived"
 const OperationOrderServiceCreateOrderShipping = "/ecommerce.order.v1.OrderService/CreateOrderShipping"
 const OperationOrderServiceGetAllOrders = "/ecommerce.order.v1.OrderService/GetAllOrders"
-const OperationOrderServiceGetConsumerOrders = "/ecommerce.order.v1.OrderService/GetConsumerOrders"
 const OperationOrderServiceGetOrder = "/ecommerce.order.v1.OrderService/GetOrder"
+const OperationOrderServiceGetOrders = "/ecommerce.order.v1.OrderService/GetOrders"
 const OperationOrderServiceGetShipOrderStatus = "/ecommerce.order.v1.OrderService/GetShipOrderStatus"
 const OperationOrderServiceMarkOrderPaid = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
 const OperationOrderServicePlaceOrder = "/ecommerce.order.v1.OrderService/PlaceOrder"
@@ -32,13 +32,14 @@ const OperationOrderServiceUpdateOrderStatus = "/ecommerce.order.v1.OrderService
 type OrderServiceHTTPServer interface {
 	// ConfirmReceived 用户确认收货
 	ConfirmReceived(context.Context, *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
+	// CreateOrderShipping 创建订单货运信息
 	CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error)
 	// GetAllOrders 查询全部订单列表(管理员侧)
 	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
-	// GetConsumerOrders 查询用户订单列表
-	GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*Orders, error)
 	// GetOrder 根据订单ID查询
 	GetOrder(context.Context, *GetOrderReq) (*Order, error)
+	// GetOrders 查询用户订单列表
+	GetOrders(context.Context, *GetOrdersReq) (*Orders, error)
 	// GetShipOrderStatus 查询订单货运状态
 	GetShipOrderStatus(context.Context, *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
 	// MarkOrderPaid 标记订单为已支付
@@ -52,7 +53,7 @@ type OrderServiceHTTPServer interface {
 func RegisterOrderServiceHTTPServer(s *http.Server, srv OrderServiceHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/orders", _OrderService_PlaceOrder0_HTTP_Handler(srv))
-	r.GET("/v1/orders", _OrderService_GetConsumerOrders0_HTTP_Handler(srv))
+	r.GET("/v1/orders", _OrderService_GetOrders0_HTTP_Handler(srv))
 	r.GET("/v1/admin/orders", _OrderService_GetAllOrders0_HTTP_Handler(srv))
 	r.GET("/v1/orders/{id}", _OrderService_GetOrder0_HTTP_Handler(srv))
 	r.POST("/v1/orders/{order_id}/paid", _OrderService_MarkOrderPaid0_HTTP_Handler(srv))
@@ -84,15 +85,15 @@ func _OrderService_PlaceOrder0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx
 	}
 }
 
-func _OrderService_GetConsumerOrders0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
+func _OrderService_GetOrders0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in GetConsumerOrdersReq
+		var in GetOrdersReq
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationOrderServiceGetConsumerOrders)
+		http.SetOperation(ctx, OperationOrderServiceGetOrders)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetConsumerOrders(ctx, req.(*GetConsumerOrdersReq))
+			return srv.GetOrders(ctx, req.(*GetOrdersReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -270,8 +271,8 @@ type OrderServiceHTTPClient interface {
 	ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq, opts ...http.CallOption) (rsp *ConfirmReceivedResp, err error)
 	CreateOrderShipping(ctx context.Context, req *CreateOrderShippingReq, opts ...http.CallOption) (rsp *CreateOrderShippingResp, err error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq, opts ...http.CallOption) (rsp *Orders, err error)
-	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq, opts ...http.CallOption) (rsp *Orders, err error)
 	GetOrder(ctx context.Context, req *GetOrderReq, opts ...http.CallOption) (rsp *Order, err error)
+	GetOrders(ctx context.Context, req *GetOrdersReq, opts ...http.CallOption) (rsp *Orders, err error)
 	GetShipOrderStatus(ctx context.Context, req *GetShipOrderStatusReq, opts ...http.CallOption) (rsp *GetShipOrderStatusReply, err error)
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq, opts ...http.CallOption) (rsp *MarkOrderPaidResp, err error)
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq, opts ...http.CallOption) (rsp *PlaceOrderResp, err error)
@@ -325,11 +326,11 @@ func (c *OrderServiceHTTPClientImpl) GetAllOrders(ctx context.Context, in *GetAl
 	return &out, nil
 }
 
-func (c *OrderServiceHTTPClientImpl) GetConsumerOrders(ctx context.Context, in *GetConsumerOrdersReq, opts ...http.CallOption) (*Orders, error) {
-	var out Orders
-	pattern := "/v1/orders"
+func (c *OrderServiceHTTPClientImpl) GetOrder(ctx context.Context, in *GetOrderReq, opts ...http.CallOption) (*Order, error) {
+	var out Order
+	pattern := "/v1/orders/{id}"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationOrderServiceGetConsumerOrders))
+	opts = append(opts, http.Operation(OperationOrderServiceGetOrder))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -338,11 +339,11 @@ func (c *OrderServiceHTTPClientImpl) GetConsumerOrders(ctx context.Context, in *
 	return &out, nil
 }
 
-func (c *OrderServiceHTTPClientImpl) GetOrder(ctx context.Context, in *GetOrderReq, opts ...http.CallOption) (*Order, error) {
-	var out Order
-	pattern := "/v1/orders/{id}"
+func (c *OrderServiceHTTPClientImpl) GetOrders(ctx context.Context, in *GetOrdersReq, opts ...http.CallOption) (*Orders, error) {
+	var out Orders
+	pattern := "/v1/orders"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationOrderServiceGetOrder))
+	opts = append(opts, http.Operation(OperationOrderServiceGetOrders))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
