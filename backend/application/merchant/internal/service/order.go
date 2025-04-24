@@ -96,6 +96,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 					},
 					Cost: item.Cost,
 				})
+
 			}
 		}
 
@@ -106,15 +107,13 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.Status))
 		shippingStatus := pkg.MapShippingStatusToProto(firstSubOrder.ShippingStatus)
 
-		log.Debugf("shippingStatus: %+v", shippingStatus)
-		log.Debugf("firstSubOrder.ShippingStatus: %+v", firstSubOrder.ShippingStatus)
 		// 创建地址信息
 		address := &userv1.ConsumerAddress{
-			StreetAddress: "未提供地址信息",
-			City:          "",
-			State:         "",
-			Country:       "",
-			ZipCode:       "",
+			StreetAddress: firstSubOrder.StreetAddress,
+			City:          firstSubOrder.City,
+			State:         firstSubOrder.State,
+			Country:       firstSubOrder.Country,
+			ZipCode:       firstSubOrder.ZipCode,
 		}
 
 		// 添加订单到响应列表
@@ -122,10 +121,10 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 			Items:          orderItems,
 			OrderId:        firstSubOrder.OrderID,
 			SubOrderId:     &firstSubOrder.SubOrderID,
-			UserId:         firstSubOrder.MerchantID.String(),
+			UserId:         firstSubOrder.UserID.String(),
 			Currency:       firstSubOrder.Currency,
 			Address:        address,
-			Email:          "未提供邮箱",
+			Email:          firstSubOrder.Email,
 			CreatedAt:      createdAt,
 			PaymentStatus:  paymentStatus,
 			ShippingStatus: shippingStatus,

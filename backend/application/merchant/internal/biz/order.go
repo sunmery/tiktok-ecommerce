@@ -34,10 +34,19 @@ type Address struct {
 
 type SubOrder struct {
 	OrderID        int64
+	UserID         uuid.UUID
+	Address        *Address
+	PaymentMethod  constants.PaymentMethod
 	SubOrderID     int64
 	MerchantID     uuid.UUID
-	TotalAmount    float64
 	Currency       string
+	TotalAmount    float64
+	StreetAddress  string
+	City           string
+	Country        string
+	State          string
+	ZipCode        string
+	Email          string
 	Status         constants.PaymentStatus
 	ShippingStatus constants.ShippingStatus
 	Items          []*OrderItem
