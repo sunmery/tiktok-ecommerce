@@ -354,6 +354,18 @@ type Querier interface {
 	//    AND merchant_id = $12
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (MerchantAddresses, error)
+	//UpdateOrderShippingStatus
+	//
+	//  WITH update_shipping_info_ship_status AS (
+	//      UPDATE orders.shipping_info
+	//          SET shipping_status = $1,
+	//              updated_at = now()
+	//          WHERE sub_order_id = $2)
+	//  UPDATE orders.sub_orders
+	//  SET shipping_status = $1,
+	//      updated_at      = now()
+	//  WHERE id = $2
+	UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error
 	//UpdateProduct
 	//
 	//  WITH update_product AS (

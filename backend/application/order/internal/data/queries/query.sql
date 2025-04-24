@@ -160,12 +160,6 @@ SET status     = @status,
 WHERE order_id = @order_id
 RETURNING *;
 
--- -- name: UpdateOrderPaymentStatus :exec
--- UPDATE orders.orders
--- SET payment_status = @payment_status,
---     updated_at     = now()
--- WHERE id = @id;
-
 -- name: CreateOrderShipping :exec
 INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
                                  shipping_address, receiver_address, shipping_fee)

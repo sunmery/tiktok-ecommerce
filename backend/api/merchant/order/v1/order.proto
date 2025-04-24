@@ -20,7 +20,15 @@ service Order {
   // 商家发货
   rpc ShipOrder(ShipOrderReq) returns (ShipOrderReply) {
     option (google.api.http) = {
-      put: "/v1/merchants/orders/{sub_order_id}/ship" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      put: "/v1/merchants/orders/ship/{sub_order_id}"
+      body: "*"
+    };
+  }
+
+   // 更新订单货运状态
+  rpc UpdateOrderShippingStatus(UpdateOrderShippingStatusReq) returns (UpdateOrderShippingStatusReply) {
+    option (google.api.http) = {
+      put: "/v1/merchants/orders/ship/{sub_order_id}/status"
       body: "*"
     };
   }
@@ -59,3 +67,13 @@ message ShipOrderReply {
   int64 id = 1; // 物流ID
   google.protobuf.Timestamp created_at = 2; // 创建时间
 }
+
+
+// 更新订单状态请求的消息结构
+message UpdateOrderShippingStatusReq {
+  int64 sub_order_id = 1; // 子订单 ID
+  string shipping_status = 2; // 新的订单状态
+}
+
+// 更新订单状态响应的消息结构
+message UpdateOrderShippingStatusReply {}

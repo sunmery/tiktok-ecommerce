@@ -41,20 +41,6 @@ type orderRepo struct {
 	log  *log.Helper
 }
 
-func (o *orderRepo) UpdateOrderStatus(ctx context.Context, req *biz.UpdateOrderStatusReq) (*biz.UpdateOrderStatusResp, error) {
-	// err := o.data.db.UpdateOrderPaymentStatus(ctx, models.UpdateOrderPaymentStatusParams{
-	// 	ID:            req.OrderId,
-	// 	PaymentStatus: string(req.Status),
-	// })
-	// if err != nil {
-	// 	if errors.Is(err, pgx.ErrNoRows) {
-	// 		return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该订单'%d'的商品", req.OrderId))
-	// 	}
-	// 	return nil, err
-	// }
-	return &biz.UpdateOrderStatusResp{}, nil
-}
-
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 	return &orderRepo{
 		data: data,

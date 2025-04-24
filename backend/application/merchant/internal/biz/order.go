@@ -79,6 +79,16 @@ type (
 	}
 )
 
+// 更新订单状态
+type (
+	UpdateOrderShippingStatusReq struct {
+		UserId         uuid.UUID
+		SubOrderId     int64
+		ShippingStatus constants.ShippingStatus
+	}
+	UpdateOrderShippingStatusResply struct{}
+)
+
 type OrderUsecase struct {
 	repo OrderRepo
 	log  *log.Helper
@@ -95,6 +105,7 @@ func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 type OrderRepo interface {
 	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error)
+	UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error)
 }
 
 func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error) {
@@ -105,4 +116,9 @@ func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantO
 func (oc *OrderUsecase) ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error) {
 	oc.log.WithContext(ctx).Debugf("biz/order ShipOrder req:%+v", req)
 	return oc.repo.ShipOrder(ctx, req)
+}
+
+func (oc *OrderUsecase) UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order UpdateOrderShippingStatus req:%+v", req)
+	return oc.repo.UpdateOrderShippingStatus(ctx, req)
 }

@@ -65,14 +65,6 @@ service OrderService {
     };
   }
 
-  // 更新订单状态
-  rpc UpdateOrderStatus(UpdateOrderStatusReq) returns (UpdateOrderStatusResp) {
-    option (google.api.http) = {
-      put: "/v1/orders/{order_id}/status" // 定义 HTTP PUT 请求路径，路径参数为 order_id
-      body: "*"                         // 表示请求体包含所有字段
-    };
-  }
-
   // 用户确认收货
   rpc ConfirmReceived(ConfirmReceivedReq) returns (ConfirmReceivedResp) {
     option (google.api.http) = {
@@ -148,12 +140,13 @@ enum PaymentStatus {
 
 // 货运状态的枚举类型
 enum ShippingStatus {
-  PENDING_SHIPMENT = 0; //  待发货
-  SHIPPED = 1; // 已发货
-  IN_TRANSIT = 2; // 运输中
-  DELIVERED = 3; // 已送达
-  CONFIRMED = 4; // 已收货
-  CANCELLED_SHIPMENT = 5; // 已取消发货
+  WAIT_COMMAND = 0; //   等待操作
+  PENDING_SHIPMENT = 1; //  待发货
+  SHIPPED = 2; // 已发货
+  IN_TRANSIT = 3; // 运输中
+  DELIVERED = 4; // 已送达
+  CONFIRMED = 5; // 已收货
+  CANCELLED_SHIPMENT = 6; // 已取消发货
 }
 
 // 订单的消息结构
@@ -203,15 +196,6 @@ message MarkOrderPaidReq {
 
 // 标记订单为已支付响应的消息结构
 message MarkOrderPaidResp {}
-
-// 更新订单状态请求的消息结构
-message UpdateOrderStatusReq {
-  int64 order_id = 1; // 订单 ID
-  string status = 2; // 新的订单状态
-}
-
-// 更新订单状态响应的消息结构
-message UpdateOrderStatusResp {}
 
 // 用户确认收货请求的消息结构
 message ConfirmReceivedReq {

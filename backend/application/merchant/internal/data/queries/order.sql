@@ -1,6 +1,17 @@
 CREATE SCHEMA IF NOT EXISTS orders;
 SET SEARCH_PATH to orders;
 
+-- name: UpdateOrderShippingStatus :exec
+WITH update_shipping_info_ship_status AS (
+    UPDATE orders.shipping_info
+        SET shipping_status = @shipping_status,
+            updated_at = now()
+        WHERE sub_order_id = @sub_order_id)
+UPDATE orders.sub_orders
+SET shipping_status = @shipping_status,
+    updated_at      = now()
+WHERE id = @sub_order_id;
+
 -- name: GetMerchantOrders :many
 SELECT oo.id,
        oo.payment_status,

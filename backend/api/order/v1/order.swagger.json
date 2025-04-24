@@ -716,6 +716,7 @@
     "v1ShippingStatus": {
       "type": "string",
       "enum": [
+        "WAIT_COMMAND",
         "PENDING_SHIPMENT",
         "SHIPPED",
         "IN_TRANSIT",
@@ -723,8 +724,8 @@
         "CONFIRMED",
         "CANCELLED_SHIPMENT"
       ],
-      "default": "PENDING_SHIPMENT",
-      "description": "- PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
+      "default": "WAIT_COMMAND",
+      "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
       "title": "货运状态的枚举类型"
     },
     "v1UpdateOrderStatusResp": {

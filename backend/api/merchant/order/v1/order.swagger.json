@@ -64,7 +64,7 @@
         ]
       }
     },
-    "/v1/merchants/orders/{subOrderId}/ship": {
+    "/v1/merchants/orders/ship/{subOrderId}": {
       "put": {
         "summary": "商家发货",
         "operationId": "Order_ShipOrder",
@@ -104,6 +104,47 @@
           "Order"
         ]
       }
+    },
+    "/v1/merchants/orders/ship/{subOrderId}/status": {
+      "put": {
+        "summary": "更新订单货运状态",
+        "operationId": "Order_UpdateOrderShippingStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateOrderShippingStatusReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "subOrderId",
+            "description": "子订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderUpdateOrderShippingStatusBody"
+            }
+          }
+        ],
+        "tags": [
+          "Order"
+        ]
+      }
     }
   },
   "definitions": {
@@ -133,6 +174,16 @@
         }
       },
       "title": "商家发货请求的消息结构"
+    },
+    "OrderUpdateOrderShippingStatusBody": {
+      "type": "object",
+      "properties": {
+        "shippingStatus": {
+          "type": "string",
+          "title": "新的订单状态"
+        }
+      },
+      "title": "更新订单状态请求的消息结构"
     },
     "googleprotobufAny": {
       "type": "object",
@@ -347,6 +398,7 @@
     "v1ShippingStatus": {
       "type": "string",
       "enum": [
+        "WAIT_COMMAND",
         "PENDING_SHIPMENT",
         "SHIPPED",
         "IN_TRANSIT",
@@ -354,9 +406,13 @@
         "CONFIRMED",
         "CANCELLED_SHIPMENT"
       ],
-      "default": "PENDING_SHIPMENT",
-      "description": "- PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
+      "default": "WAIT_COMMAND",
+      "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
       "title": "货运状态的枚举类型"
+    },
+    "v1UpdateOrderShippingStatusReply": {
+      "type": "object",
+      "title": "更新订单状态响应的消息结构"
     }
   }
 }

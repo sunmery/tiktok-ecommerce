@@ -24,3 +24,12 @@ func GetMetadataUesrID(ctx context.Context) (uuid.UUID, error) {
 
 	return userId, nil
 }
+
+// GetMetadataOwner 从网关获取用户组织
+func GetMetadataOwner(ctx context.Context) (string, error) {
+	var owner string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		owner = md.Get(constants.Owner)
+	}
+	return owner, nil
+}

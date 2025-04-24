@@ -24,6 +24,8 @@ func MapPaymentStatusToProto(status string) v1.PaymentStatus {
 // MapShippingStatusToProto 将字符串运输状态转换为Proto枚举
 func MapShippingStatusToProto(status constants.ShippingStatus) v1.ShippingStatus {
 	switch status {
+	case constants.ShippingWaitCommand:
+		return v1.ShippingStatus_WAIT_COMMAND
 	case constants.ShippingPending:
 		return v1.ShippingStatus_PENDING_SHIPMENT
 	case constants.ShippingShipped:
@@ -37,6 +39,6 @@ func MapShippingStatusToProto(status constants.ShippingStatus) v1.ShippingStatus
 	case constants.ShippingCancelled:
 		return v1.ShippingStatus_CANCELLED_SHIPMENT
 	default:
-		return v1.ShippingStatus_PENDING_SHIPMENT
+		return v1.ShippingStatus_WAIT_COMMAND
 	}
 }

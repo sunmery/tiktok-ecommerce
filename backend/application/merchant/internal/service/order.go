@@ -80,7 +80,6 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 订单项集合 - 汇总所有子订单的订单项
 		var orderItems []*v1.OrderItem
-		// var shippingStatus constants.ShippingStatus
 		for _, subOrder := range subOrders {
 			for _, item := range subOrder.Items {
 				// 确保CartItem中的数据是有效的
@@ -98,7 +97,6 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 					Cost: item.Cost,
 				})
 			}
-			// shippingStatus = subOrder.ShippingStatus
 		}
 
 		// 转换时间戳
@@ -106,10 +104,13 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 解析支付状态和运输状态
 		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.Status))
-		// ShippingStatus := pkg.MapShippingStatusToProto(shippingStatus)
-		// 创建地址信息 (在真实场景中需要从订单数据中获取)
+		shippingStatus := pkg.MapShippingStatusToProto(firstSubOrder.ShippingStatus)
+
+		log.Debugf("shippingStatus: %+v", shippingStatus)
+		log.Debugf("firstSubOrder.ShippingStatus: %+v", firstSubOrder.ShippingStatus)
+		// 创建地址信息
 		address := &userv1.ConsumerAddress{
-			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
+			StreetAddress: "未提供地址信息",
 			City:          "",
 			State:         "",
 			Country:       "",
@@ -118,16 +119,16 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 
 		// 添加订单到响应列表
 		orders = append(orders, &v1.Order{
-			Items:         orderItems,
-			OrderId:       firstSubOrder.OrderID,
-			SubOrderId:    &firstSubOrder.SubOrderID,
-			UserId:        firstSubOrder.MerchantID.String(),
-			Currency:      firstSubOrder.Currency,
-			Address:       address,
-			Email:         "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
-			CreatedAt:     createdAt,
-			PaymentStatus: paymentStatus,
-			// ShippingStatus: ShippingStatus,
+			Items:          orderItems,
+			OrderId:        firstSubOrder.OrderID,
+			SubOrderId:     &firstSubOrder.SubOrderID,
+			UserId:         firstSubOrder.MerchantID.String(),
+			Currency:       firstSubOrder.Currency,
+			Address:        address,
+			Email:          "未提供邮箱",
+			CreatedAt:      createdAt,
+			PaymentStatus:  paymentStatus,
+			ShippingStatus: shippingStatus,
 		})
 	}
 	return &orderv1.GetMerchantOrdersReply{
@@ -169,4 +170,28 @@ func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq)
 		Id:        shipOrder.Id,
 		CreatedAt: timestamppb.New(shipOrder.CreatedAt),
 	}, nil
+}
+
+func (s *OrderService) UpdateOrderShippingStatus(ctx context.Context, req *orderv1.UpdateOrderShippingStatusReq) (*orderv1.UpdateOrderShippingStatusReply, error) {
+	// 从网关获取用户ID
+	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
+	}
+	// 验证订单ID
+	if req.SubOrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层获取订单状态
+	log.Debugf("constants.ShippingStatus(req.ShippingStatus): %v", req)
+	orderStatus, err := s.oc.UpdateOrderShippingStatus(ctx, &biz.UpdateOrderShippingStatusReq{
+		UserId:         userId,
+		SubOrderId:     req.SubOrderId,
+		ShippingStatus: constants.ShippingStatus(req.ShippingStatus),
+	})
+	if err != nil {
+		return nil, err
+	}
+	log.Debugf("orderStatus: %v", orderStatus)
+	return &orderv1.UpdateOrderShippingStatusReply{}, nil
 }

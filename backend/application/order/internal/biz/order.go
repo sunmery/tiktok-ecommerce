@@ -121,16 +121,6 @@ type GetOrderReq struct {
 	OrderId int64
 }
 
-// 更新订单状态
-type (
-	UpdateOrderStatusReq struct {
-		UserId  uuid.UUID
-		OrderId int64
-		Status  constants.PaymentStatus
-	}
-	UpdateOrderStatusResp struct{}
-)
-
 // 确认收货
 type (
 	ConfirmReceivedReq struct {
@@ -177,13 +167,11 @@ func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
 	GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error)
-	// GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
 
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
 	GetShipOrderStatus(ctx context.Context, req *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
-	UpdateOrderStatus(ctx context.Context, req *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error)
 	ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
 }
 
@@ -212,13 +200,8 @@ func (oc *OrderUsecase) GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Ord
 	return oc.repo.GetOrder(ctx, req)
 }
 
-func (oc *OrderUsecase) UpdateOrderStatus(ctx context.Context, req *UpdateOrderStatusReq) (*UpdateOrderStatusResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order UpdateOrderStatus req:%+v", req)
-	return oc.repo.UpdateOrderStatus(ctx, req)
-}
-
 func (oc *OrderUsecase) ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq) (*ConfirmReceivedResp, error) {
-	// oc.log.WithContext(ctx).Debugf("biz/order ConfirmReceived req:%+v", req)
+	oc.log.WithContext(ctx).Debugf("biz/order ConfirmReceived req:%+v", req)
 	return oc.repo.ConfirmReceived(ctx, req)
 }
 

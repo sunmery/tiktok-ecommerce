@@ -37,31 +37,6 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, shipping_status, created_at, updated_at
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
-	//GetMerchantOrders
-	//
-	//  SELECT oo.id,
-	//         oo.payment_status,
-	//         oo.user_id,
-	//         oo.currency,
-	//         oo.street_address,
-	//         oo.city,
-	//         oo.state,
-	//         oo.country,
-	//         oo.zip_code,
-	//         oo.email,
-	//         os.order_id        AS order_id,
-	//         os.merchant_id,
-	//         os.total_amount,
-	//         os.items,
-	//         os.shipping_status AS shipping_status,
-	//         os.created_at,
-	//         os.updated_at
-	//  FROM orders.sub_orders os
-	//           JOIN orders.orders oo on os.order_id = oo.id
-	//  WHERE os.merchant_id = $1
-	//  ORDER BY os.created_at DESC
-	//  LIMIT $3 OFFSET $2
-	GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersParams) ([]GetMerchantOrdersRow, error)
 	//GetOrderByID
 	//
 	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,

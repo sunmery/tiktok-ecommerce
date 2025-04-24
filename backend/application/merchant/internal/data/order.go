@@ -3,8 +3,11 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -151,6 +154,10 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 			// 查找对应的原始订单以获取支付状态
 			for _, order := range orders {
 				if order.ID == subOrder.OrderID {
+					log.Debugf("order.PaymentStatus: %+v", order.PaymentStatus)
+					log.Debugf("subOrder.ShippingStatus.ShippingStatus: %+v", subOrder.ShippingStatus)
+					log.Debugf("order.ShippingStatus: %+v", order.ShippingStatus)
+
 					// subOrder.SubOrderID = order.OrderID
 					// subOrder.TotalAmount = order.TotalAmount
 					// subOrder.Currency = order.Currency.String
@@ -166,6 +173,21 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 
 	o.log.WithContext(ctx).Debugf("获取到 %d 个商户订单", len(respOrders))
 	return &biz.GetMerchantOrdersReply{Orders: respOrders}, nil
+}
+
+func (o *orderRepo) UpdateOrderShippingStatus(ctx context.Context, req *biz.UpdateOrderShippingStatusReq) (*biz.UpdateOrderShippingStatusResply, error) {
+	shippingStatus := string(req.ShippingStatus)
+	err := o.data.db.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+		ShippingStatus: &shippingStatus,
+		SubOrderID:     &req.SubOrderId,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "ORDER_ID_NOT_FOUND", fmt.Sprintf("未找到该子订单'%d'的商品", req.SubOrderId))
+		}
+		return nil, kerrors.New(500, "UPDATE_ORDER_SHIPPING_STATUS", fmt.Sprintf("更新子订单'%d'的物流状态失败: %v", req.SubOrderId, err))
+	}
+	return &biz.UpdateOrderShippingStatusResply{}, nil
 }
 
 // 获取订单的子订单信息

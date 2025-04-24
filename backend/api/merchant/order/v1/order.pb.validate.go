@@ -680,3 +680,213 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ShipOrderReplyValidationError{}
+
+// Validate checks the field values on UpdateOrderShippingStatusReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateOrderShippingStatusReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateOrderShippingStatusReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateOrderShippingStatusReqMultiError, or nil if none found.
+func (m *UpdateOrderShippingStatusReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateOrderShippingStatusReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SubOrderId
+
+	// no validation rules for ShippingStatus
+
+	if len(errors) > 0 {
+		return UpdateOrderShippingStatusReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateOrderShippingStatusReqMultiError is an error wrapping multiple
+// validation errors returned by UpdateOrderShippingStatusReq.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateOrderShippingStatusReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateOrderShippingStatusReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateOrderShippingStatusReqMultiError) AllErrors() []error { return m }
+
+// UpdateOrderShippingStatusReqValidationError is the validation error returned
+// by UpdateOrderShippingStatusReq.Validate if the designated constraints
+// aren't met.
+type UpdateOrderShippingStatusReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateOrderShippingStatusReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateOrderShippingStatusReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateOrderShippingStatusReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateOrderShippingStatusReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateOrderShippingStatusReqValidationError) ErrorName() string {
+	return "UpdateOrderShippingStatusReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateOrderShippingStatusReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateOrderShippingStatusReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateOrderShippingStatusReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateOrderShippingStatusReqValidationError{}
+
+// Validate checks the field values on UpdateOrderShippingStatusReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateOrderShippingStatusReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateOrderShippingStatusReply with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateOrderShippingStatusReplyMultiError, or nil if none found.
+func (m *UpdateOrderShippingStatusReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateOrderShippingStatusReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return UpdateOrderShippingStatusReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateOrderShippingStatusReplyMultiError is an error wrapping multiple
+// validation errors returned by UpdateOrderShippingStatusReply.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateOrderShippingStatusReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateOrderShippingStatusReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateOrderShippingStatusReplyMultiError) AllErrors() []error { return m }
+
+// UpdateOrderShippingStatusReplyValidationError is the validation error
+// returned by UpdateOrderShippingStatusReply.Validate if the designated
+// constraints aren't met.
+type UpdateOrderShippingStatusReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateOrderShippingStatusReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateOrderShippingStatusReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateOrderShippingStatusReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateOrderShippingStatusReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateOrderShippingStatusReplyValidationError) ErrorName() string {
+	return "UpdateOrderShippingStatusReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateOrderShippingStatusReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateOrderShippingStatusReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateOrderShippingStatusReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateOrderShippingStatusReplyValidationError{}

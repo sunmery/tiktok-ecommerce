@@ -323,3 +323,36 @@ func (q *Queries) QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySu
 	}
 	return items, nil
 }
+
+const UpdateOrderShippingStatus = `-- name: UpdateOrderShippingStatus :exec
+WITH update_shipping_info_ship_status AS (
+    UPDATE orders.shipping_info
+        SET shipping_status = $1,
+            updated_at = now()
+        WHERE sub_order_id = $2)
+UPDATE orders.sub_orders
+SET shipping_status = $1,
+    updated_at      = now()
+WHERE id = $2
+`
+
+type UpdateOrderShippingStatusParams struct {
+	ShippingStatus *string
+	SubOrderID     *int64
+}
+
+// UpdateOrderShippingStatus
+//
+//	WITH update_shipping_info_ship_status AS (
+//	    UPDATE orders.shipping_info
+//	        SET shipping_status = $1,
+//	            updated_at = now()
+//	        WHERE sub_order_id = $2)
+//	UPDATE orders.sub_orders
+//	SET shipping_status = $1,
+//	    updated_at      = now()
+//	WHERE id = $2
+func (q *Queries) UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error {
+	_, err := q.db.Exec(ctx, UpdateOrderShippingStatus, arg.ShippingStatus, arg.SubOrderID)
+	return err
+}

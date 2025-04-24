@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Order_GetMerchantOrders_FullMethodName = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
-	Order_ShipOrder_FullMethodName         = "/ecommerce.merchantorder.v1.Order/ShipOrder"
+	Order_GetMerchantOrders_FullMethodName         = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
+	Order_ShipOrder_FullMethodName                 = "/ecommerce.merchantorder.v1.Order/ShipOrder"
+	Order_UpdateOrderShippingStatus_FullMethodName = "/ecommerce.merchantorder.v1.Order/UpdateOrderShippingStatus"
 )
 
 // OrderClient is the client API for Order service.
@@ -31,6 +32,8 @@ type OrderClient interface {
 	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error)
 	// 商家发货
 	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderReply, error)
+	// 更新订单货运状态
+	UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...grpc.CallOption) (*UpdateOrderShippingStatusReply, error)
 }
 
 type orderClient struct {
@@ -61,6 +64,16 @@ func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...g
 	return out, nil
 }
 
+func (c *orderClient) UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...grpc.CallOption) (*UpdateOrderShippingStatusReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateOrderShippingStatusReply)
+	err := c.cc.Invoke(ctx, Order_UpdateOrderShippingStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServer is the server API for Order service.
 // All implementations must embed UnimplementedOrderServer
 // for forward compatibility.
@@ -69,6 +82,8 @@ type OrderServer interface {
 	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	// 商家发货
 	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error)
+	// 更新订单货运状态
+	UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error)
 	mustEmbedUnimplementedOrderServer()
 }
 
@@ -84,6 +99,9 @@ func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantO
 }
 func (UnimplementedOrderServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShipOrder not implemented")
+}
+func (UnimplementedOrderServer) UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrderShippingStatus not implemented")
 }
 func (UnimplementedOrderServer) mustEmbedUnimplementedOrderServer() {}
 func (UnimplementedOrderServer) testEmbeddedByValue()               {}
@@ -142,6 +160,24 @@ func _Order_ShipOrder_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Order_UpdateOrderShippingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrderShippingStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServer).UpdateOrderShippingStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Order_UpdateOrderShippingStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServer).UpdateOrderShippingStatus(ctx, req.(*UpdateOrderShippingStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Order_ServiceDesc is the grpc.ServiceDesc for Order service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +192,10 @@ var Order_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ShipOrder",
 			Handler:    _Order_ShipOrder_Handler,
+		},
+		{
+			MethodName: "UpdateOrderShippingStatus",
+			Handler:    _Order_UpdateOrderShippingStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

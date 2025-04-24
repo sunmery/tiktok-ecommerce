@@ -328,6 +328,96 @@ func (x *ShipOrderReply) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// 更新订单状态请求的消息结构
+type UpdateOrderShippingStatusReq struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SubOrderId     int64                  `protobuf:"varint,1,opt,name=sub_order_id,json=subOrderId,proto3" json:"sub_order_id,omitempty"`          // 子订单 ID
+	ShippingStatus string                 `protobuf:"bytes,2,opt,name=shipping_status,json=shippingStatus,proto3" json:"shipping_status,omitempty"` // 新的订单状态
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *UpdateOrderShippingStatusReq) Reset() {
+	*x = UpdateOrderShippingStatusReq{}
+	mi := &file_order_v1_order_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateOrderShippingStatusReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrderShippingStatusReq) ProtoMessage() {}
+
+func (x *UpdateOrderShippingStatusReq) ProtoReflect() protoreflect.Message {
+	mi := &file_order_v1_order_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrderShippingStatusReq.ProtoReflect.Descriptor instead.
+func (*UpdateOrderShippingStatusReq) Descriptor() ([]byte, []int) {
+	return file_order_v1_order_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *UpdateOrderShippingStatusReq) GetSubOrderId() int64 {
+	if x != nil {
+		return x.SubOrderId
+	}
+	return 0
+}
+
+func (x *UpdateOrderShippingStatusReq) GetShippingStatus() string {
+	if x != nil {
+		return x.ShippingStatus
+	}
+	return ""
+}
+
+// 更新订单状态响应的消息结构
+type UpdateOrderShippingStatusReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateOrderShippingStatusReply) Reset() {
+	*x = UpdateOrderShippingStatusReply{}
+	mi := &file_order_v1_order_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateOrderShippingStatusReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrderShippingStatusReply) ProtoMessage() {}
+
+func (x *UpdateOrderShippingStatusReply) ProtoReflect() protoreflect.Message {
+	mi := &file_order_v1_order_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrderShippingStatusReply.ProtoReflect.Descriptor instead.
+func (*UpdateOrderShippingStatusReply) Descriptor() ([]byte, []int) {
+	return file_order_v1_order_proto_rawDescGZIP(), []int{6}
+}
+
 var File_order_v1_order_proto protoreflect.FileDescriptor
 
 const file_order_v1_order_proto_rawDesc = "" +
@@ -355,10 +445,16 @@ const file_order_v1_order_proto_rawDesc = "" +
 	"\x0eShipOrderReply\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x129\n" +
 	"\n" +
-	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2\xba\x02\n" +
+	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"i\n" +
+	"\x1cUpdateOrderShippingStatusReq\x12 \n" +
+	"\fsub_order_id\x18\x01 \x01(\x03R\n" +
+	"subOrderId\x12'\n" +
+	"\x0fshipping_status\x18\x02 \x01(\tR\x0eshippingStatus\" \n" +
+	"\x1eUpdateOrderShippingStatusReply2\x8a\x04\n" +
 	"\x05Order\x12\x97\x01\n" +
 	"\x11GetMerchantOrders\x120.ecommerce.merchantorder.v1.GetMerchantOrdersReq\x1a2.ecommerce.merchantorder.v1.GetMerchantOrdersReply\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/merchants/orders\x12\x96\x01\n" +
-	"\tShipOrder\x12(.ecommerce.merchantorder.v1.ShipOrderReq\x1a*.ecommerce.merchantorder.v1.ShipOrderReply\"3\x82\xd3\xe4\x93\x02-:\x01*\x1a(/v1/merchants/orders/{sub_order_id}/shipB/Z-backend/api/merchant/order/v1;merchantorderv1b\x06proto3"
+	"\tShipOrder\x12(.ecommerce.merchantorder.v1.ShipOrderReq\x1a*.ecommerce.merchantorder.v1.ShipOrderReply\"3\x82\xd3\xe4\x93\x02-:\x01*\x1a(/v1/merchants/orders/ship/{sub_order_id}\x12\xcd\x01\n" +
+	"\x19UpdateOrderShippingStatus\x128.ecommerce.merchantorder.v1.UpdateOrderShippingStatusReq\x1a:.ecommerce.merchantorder.v1.UpdateOrderShippingStatusReply\":\x82\xd3\xe4\x93\x024:\x01*\x1a//v1/merchants/orders/ship/{sub_order_id}/statusB/Z-backend/api/merchant/order/v1;merchantorderv1b\x06proto3"
 
 var (
 	file_order_v1_order_proto_rawDescOnce sync.Once
@@ -372,28 +468,32 @@ func file_order_v1_order_proto_rawDescGZIP() []byte {
 	return file_order_v1_order_proto_rawDescData
 }
 
-var file_order_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_order_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_order_v1_order_proto_goTypes = []any{
-	(*GetMerchantOrdersReq)(nil),   // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReq
-	(*GetMerchantOrdersReply)(nil), // 1: ecommerce.merchantorder.v1.GetMerchantOrdersReply
-	(*ReceiverAddress)(nil),        // 2: ecommerce.merchantorder.v1.ReceiverAddress
-	(*ShipOrderReq)(nil),           // 3: ecommerce.merchantorder.v1.ShipOrderReq
-	(*ShipOrderReply)(nil),         // 4: ecommerce.merchantorder.v1.ShipOrderReply
-	(*v1.Order)(nil),               // 5: ecommerce.order.v1.Order
-	(*structpb.Struct)(nil),        // 6: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
+	(*GetMerchantOrdersReq)(nil),           // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReq
+	(*GetMerchantOrdersReply)(nil),         // 1: ecommerce.merchantorder.v1.GetMerchantOrdersReply
+	(*ReceiverAddress)(nil),                // 2: ecommerce.merchantorder.v1.ReceiverAddress
+	(*ShipOrderReq)(nil),                   // 3: ecommerce.merchantorder.v1.ShipOrderReq
+	(*ShipOrderReply)(nil),                 // 4: ecommerce.merchantorder.v1.ShipOrderReply
+	(*UpdateOrderShippingStatusReq)(nil),   // 5: ecommerce.merchantorder.v1.UpdateOrderShippingStatusReq
+	(*UpdateOrderShippingStatusReply)(nil), // 6: ecommerce.merchantorder.v1.UpdateOrderShippingStatusReply
+	(*v1.Order)(nil),                       // 7: ecommerce.order.v1.Order
+	(*structpb.Struct)(nil),                // 8: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),          // 9: google.protobuf.Timestamp
 }
 var file_order_v1_order_proto_depIdxs = []int32{
-	5, // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReply.orders:type_name -> ecommerce.order.v1.Order
-	6, // 1: ecommerce.merchantorder.v1.ReceiverAddress.address:type_name -> google.protobuf.Struct
-	6, // 2: ecommerce.merchantorder.v1.ShipOrderReq.shipping_address:type_name -> google.protobuf.Struct
-	7, // 3: ecommerce.merchantorder.v1.ShipOrderReply.created_at:type_name -> google.protobuf.Timestamp
+	7, // 0: ecommerce.merchantorder.v1.GetMerchantOrdersReply.orders:type_name -> ecommerce.order.v1.Order
+	8, // 1: ecommerce.merchantorder.v1.ReceiverAddress.address:type_name -> google.protobuf.Struct
+	8, // 2: ecommerce.merchantorder.v1.ShipOrderReq.shipping_address:type_name -> google.protobuf.Struct
+	9, // 3: ecommerce.merchantorder.v1.ShipOrderReply.created_at:type_name -> google.protobuf.Timestamp
 	0, // 4: ecommerce.merchantorder.v1.Order.GetMerchantOrders:input_type -> ecommerce.merchantorder.v1.GetMerchantOrdersReq
 	3, // 5: ecommerce.merchantorder.v1.Order.ShipOrder:input_type -> ecommerce.merchantorder.v1.ShipOrderReq
-	1, // 6: ecommerce.merchantorder.v1.Order.GetMerchantOrders:output_type -> ecommerce.merchantorder.v1.GetMerchantOrdersReply
-	4, // 7: ecommerce.merchantorder.v1.Order.ShipOrder:output_type -> ecommerce.merchantorder.v1.ShipOrderReply
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
+	5, // 6: ecommerce.merchantorder.v1.Order.UpdateOrderShippingStatus:input_type -> ecommerce.merchantorder.v1.UpdateOrderShippingStatusReq
+	1, // 7: ecommerce.merchantorder.v1.Order.GetMerchantOrders:output_type -> ecommerce.merchantorder.v1.GetMerchantOrdersReply
+	4, // 8: ecommerce.merchantorder.v1.Order.ShipOrder:output_type -> ecommerce.merchantorder.v1.ShipOrderReply
+	6, // 9: ecommerce.merchantorder.v1.Order.UpdateOrderShippingStatus:output_type -> ecommerce.merchantorder.v1.UpdateOrderShippingStatusReply
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
 	4, // [4:4] is the sub-list for extension extendee
 	0, // [0:4] is the sub-list for field type_name
@@ -410,7 +510,7 @@ func file_order_v1_order_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_order_v1_order_proto_rawDesc), len(file_order_v1_order_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
