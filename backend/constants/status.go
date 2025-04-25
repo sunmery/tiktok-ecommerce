@@ -41,14 +41,14 @@ const (
 )
 
 const (
-	FreezeFrozen    = "FROZEN"    // 冻结余额
-	FreezeConfirmed = "CONFIRMED" // 确认余额
-	FreezeCanceled  = "CANCELED"  // 取消冻结
+	FreezeFrozen    FreezeStatus = "FROZEN"    // 冻结余额
+	FreezeConfirmed FreezeStatus = "CONFIRMED" // 确认余额
+	FreezeCanceled  FreezeStatus = "CANCELED"  // 取消冻结
 )
 
 const (
-	TransactionRecharge = "RECHARGE" // 充值
-	TransactionPayment  = "PAYMENT"  // 支付
-	TransactionRefund   = "REFUND"   // 退款
-	TransactionWithdraw = "WITHDRAW" // 提现
+	TransactionRecharge TransactionType = "RECHARGE" // 充值
+	TransactionPayment  TransactionType = "PAYMENT"  // 支付
+	TransactionRefund   TransactionType = "REFUND"   // 退款
+	TransactionWithdraw TransactionType = "WITHDRAW" // 提现
 )

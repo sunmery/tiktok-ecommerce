@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	globalPkg "backend/pkg"
 
@@ -192,15 +193,15 @@ func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeReq
 	}
 
 	// 3. 检查冻结状态
-	if freeze.Status != constants.FreezeFrozen {
+	if freeze.Status != string(constants.FreezeFrozen) { // 将 constants.FreezeFrozen 转换为 string
 		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", fmt.Sprintf("freeze is not in FROZEN status: %v not in %v", freeze.Status, constants.FreezeFrozen))
 	}
 
 	// 4. 更新冻结记录状态为取消
 	rows, err := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
-		Status:        constants.FreezeCanceled,
+		Status:        string(constants.FreezeCanceled),
 		ID:            req.FreezeId,
-		CurrentStatus: constants.FreezeFrozen,
+		CurrentStatus: string(constants.FreezeFrozen),
 	})
 	if err != nil {
 		return nil, kerrors.New(500, "UPDATE_FREEZE_STATUS_FAILED", "update freeze status failed")
@@ -400,7 +401,7 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
 		ID:                id.SnowflakeID(),
-		Type:              constants.TransactionRecharge,
+		Type:              string(constants.TransactionRecharge),
 		Amount:            amount,
 		Currency:          string(req.Currency),
 		FromUserID:        req.UserId,
@@ -486,7 +487,7 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
 		ID:                id.SnowflakeID(),
-		Type:              constants.TransactionWithdraw,
+		Type:              string(constants.TransactionWithdraw),
 		Amount:            amount,
 		Currency:          string(req.Currency),
 		FromUserID:        req.UserId,
@@ -522,20 +523,27 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 3. 检查冻结状态
-	if freeze.Status != constants.FreezeFrozen {
-		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", fmt.Sprintf("freeze is not in FROZEN status: %v not in %v", freeze.Status, constants.FreezeFrozen))
+	if freeze.Status != string(constants.FreezeFrozen) { // 将 constants.FreezeFrozen 转换为 string
+		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", fmt.Sprintf("freeze is not in FROZEN status: %s", freeze.Status))
 	}
 
-	// 4. 更新冻结记录状态为确认
-	rows, UpdateFreezeStatusErr := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
-		Status:        constants.FreezeConfirmed,
+	// 4. 检查冻结是否过期
+	if time.Now().After(freeze.ExpiresAt) {
+		// 如果冻结已过期，返回错误，阻止后续操作
+		// 可选：在这里可以添加逻辑将冻结状态更新为 EXPIRED 并解冻余额，但这通常由单独的清理任务完成
+		return nil, kerrors.New(400, "FREEZE_EXPIRED", fmt.Sprintf("freeze record %d has expired", req.FreezeId))
+	}
+
+	// 5. 更新冻结记录状态为已使用
+	rowsAffected, UpdateFreezeStatusErr := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
+		Status:        string(constants.FreezeConfirmed),
 		ID:            req.FreezeId,
-		CurrentStatus: constants.FreezeFrozen,
+		CurrentStatus: string(constants.FreezeFrozen),
 	})
 	if UpdateFreezeStatusErr != nil {
 		return nil, kerrors.New(500, "UPDATE_FREEZE_STATUS_FAILED", fmt.Sprintf("update freeze status failed:%v", UpdateFreezeStatusErr.Error()))
 	}
-	if rows == 0 {
+	if rowsAffected == 0 {
 		return nil, kerrors.New(409, "FREEZE_STATUS_CHANGED", fmt.Sprintf("freeze status has been changed:%v", UpdateFreezeStatusErr))
 	}
 
@@ -586,7 +594,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
 		ID:                id.SnowflakeID(),
-		Type:              constants.TransactionPayment,
+		Type:              string(constants.TransactionPayment),
 		Amount:            freeze.Amount,
 		Currency:          freeze.Currency,
 		FromUserID:        freeze.UserID,
