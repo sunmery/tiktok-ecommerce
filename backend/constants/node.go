@@ -11,4 +11,5 @@ const (
 	CartServiceNode     = 8
 	CategoryServiceNode = 9
 	UserServiceNode     = 10
+	BalancerServiceNode = 11
 )

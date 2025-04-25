@@ -1,0 +1,564 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/balancer.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Balance"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/balances/freeze": {
+      "post": {
+        "summary": "冻结用户余额",
+        "operationId": "Balance_FreezeBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FreezeBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1FreezeBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/freezes/{freezeId}/cancel": {
+      "post": {
+        "summary": "取消冻结",
+        "operationId": "Balance_CancelFreeze",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CancelFreezeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "freezeId",
+            "description": "冻结记录ID (BIGINT as string)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceCancelFreezeBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/freezes/{freezeId}/confirm": {
+      "post": {
+        "summary": "确认转账（解冻并转给商家）",
+        "operationId": "Balance_ConfirmTransfer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConfirmTransferResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "freezeId",
+            "description": "冻结记录ID (BIGINT as string)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceConfirmTransferBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/merchants/{merchantId}/balance": {
+      "get": {
+        "summary": "获取商家余额",
+        "operationId": "Balance_GetMerchantBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "merchantId",
+            "description": "UUID as string",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "currency",
+            "description": "指定币种",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/users/{userId}/balance": {
+      "get": {
+        "summary": "获取用户余额",
+        "operationId": "Balance_GetUserBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "UUID as string",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "currency",
+            "description": "指定币种",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/users/{userId}/recharge": {
+      "post": {
+        "summary": "用户充值",
+        "operationId": "Balance_RechargeBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RechargeBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户 UUID (string)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceRechargeBalanceBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/users/{userId}/withdraw": {
+      "post": {
+        "summary": "用户提现",
+        "operationId": "Balance_WithdrawBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1WithdrawBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户 UUID (string)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceWithdrawBalanceBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "BalanceCancelFreezeBody": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "title": "取消原因"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
+        }
+      }
+    },
+    "BalanceConfirmTransferBody": {
+      "type": "object",
+      "properties": {
+        "idempotencyKey": {
+          "type": "string",
+          "description": "幂等键",
+          "title": "merchant_id 可以从 freeze_id 关联的 order_id 推出，或者在这里显式传入\nstring merchant_id = 2;"
+        },
+        "expectedUserVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
+        },
+        "expectedMerchantVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的商家余额版本号"
+        }
+      }
+    },
+    "BalanceRechargeBalanceBody": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "充值金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "充值币种"
+        },
+        "externalTransactionId": {
+          "type": "string",
+          "title": "外部支付流水号 (如支付宝/微信订单号)"
+        },
+        "paymentMethodType": {
+          "type": "string",
+          "title": "支付方式类型 (e.g., \"ALIPAY\", \"WECHAT\")"
+        },
+        "paymentAccount": {
+          "type": "string",
+          "title": "支付账号快照"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
+        }
+      }
+    },
+    "BalanceWithdrawBalanceBody": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "提现金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "提现币种"
+        },
+        "paymentMethodId": {
+          "type": "string",
+          "title": "用户选择的提现方式ID (BIGINT as string from user_payment_methods)"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1BalanceResponse": {
+      "type": "object",
+      "properties": {
+        "available": {
+          "type": "number",
+          "format": "double",
+          "title": "可用余额"
+        },
+        "frozen": {
+          "type": "number",
+          "format": "double",
+          "title": "冻结余额  - 对商家可能总为 0"
+        },
+        "currency": {
+          "type": "string",
+          "title": "返回币种"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32",
+          "title": "当前版本号 (用于乐观锁)"
+        }
+      }
+    },
+    "v1CancelFreezeResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "用户余额新版本号"
+        }
+      }
+    },
+    "v1ConfirmTransferResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "transactionId": {
+          "type": "string",
+          "title": "交易流水ID (BIGINT as string)"
+        },
+        "newUserVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "用户余额新版本号"
+        },
+        "newMerchantVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "商家余额新版本号"
+        }
+      }
+    },
+    "v1FreezeBalanceRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "title": "用户 UUID (string)"
+        },
+        "orderId": {
+          "type": "string",
+          "title": "订单 UUID (string), 用于关联"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "冻结金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "冻结币种"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "冻结过期时间"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键 (例如使用 order_id 或单独生成)"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号 (用于乐观锁)"
+        }
+      }
+    },
+    "v1FreezeBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "freezeId": {
+          "type": "string",
+          "title": "冻结记录ID (BIGINT as string)"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "操作后用户余额的新版本号"
+        }
+      }
+    },
+    "v1RechargeBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "transactionId": {
+          "type": "string",
+          "title": "内部交易流水ID (BIGINT as string)"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "用户余额新版本号"
+        }
+      }
+    },
+    "v1WithdrawBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "transactionId": {
+          "type": "string",
+          "title": "内部交易流水ID (BIGINT as string) - 初始状态可能是 PENDING"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "用户余额新版本号"
+        }
+      }
+    }
+  }
+}

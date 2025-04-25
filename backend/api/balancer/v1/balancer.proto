@@ -1,0 +1,166 @@
+syntax = "proto3";
+
+package ecommerce.balancer.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+// 引入其他可能需要的类型，例如标准错误
+// import "google/rpc/status.proto";
+
+option go_package = "backend/api/balancer/v1;balancerv1";
+
+// 货币枚举
+enum Currency {
+  CURRENCY_UNSPECIFIED = 0;
+  CNY = 1; // 人民币
+  USD = 2; // 美元
+}
+
+// Balance Service 定义
+service Balance {
+  // 获取用户余额
+  rpc GetUserBalance(GetUserBalanceRequest) returns (BalanceResponse) {
+    option (google.api.http) = {
+      get: "/v1/balances/users/{user_id}/balance"
+    };
+  }
+
+  // 冻结用户余额
+  rpc FreezeBalance(FreezeBalanceRequest) returns (FreezeBalanceResponse) {
+    option (google.api.http) = {
+      post: "/v1/balances/freeze"
+      body: "*"
+    };
+  }
+
+  // 确认转账（解冻并转给商家）
+  rpc ConfirmTransfer(ConfirmTransferRequest) returns (ConfirmTransferResponse) {
+    option (google.api.http) = {
+      post: "/v1/balances/freezes/{freeze_id}/confirm"
+      body: "*"
+    };
+  }
+
+  // 取消冻结
+  rpc CancelFreeze(CancelFreezeRequest) returns (CancelFreezeResponse) {
+    option (google.api.http) = {
+      post: "/v1/balances/freezes/{freeze_id}/cancel"
+      body: "*"
+    };
+  }
+
+  // 获取商家余额
+  rpc GetMerchantBalance(GetMerchantBalanceRequest) returns (BalanceResponse) {
+    option (google.api.http) = {
+      get: "/v1/balances/merchants/{merchant_id}/balance"
+    };
+  }
+
+  // 用户充值
+  rpc RechargeBalance(RechargeBalanceRequest) returns (RechargeBalanceResponse) {
+    option (google.api.http) = {
+      post: "/v1/balances/users/{user_id}/recharge"
+      body: "*"
+    };
+  }
+
+  // 用户提现
+  rpc WithdrawBalance(WithdrawBalanceRequest) returns (WithdrawBalanceResponse) {
+    option (google.api.http) = {
+      post: "/v1/balances/users/{user_id}/withdraw"
+      body: "*"
+    };
+  }
+}
+
+message GetUserBalanceRequest {
+  string user_id = 1;       // UUID as string
+  string currency = 2;    // 指定币种
+}
+
+message GetMerchantBalanceRequest {
+  string merchant_id = 1; // UUID as string
+  string currency = 2;  // 指定币种
+}
+
+message BalanceResponse {
+  double available = 1;      // 可用余额 
+  double frozen = 2;         // 冻结余额  - 对商家可能总为 0
+  string currency = 3;    // 返回币种
+  int32 version = 4;        // 当前版本号 (用于乐观锁)
+}
+
+message FreezeBalanceRequest {
+  string user_id = 1;              // 用户 UUID (string)
+  string order_id = 2;             // 订单 UUID (string), 用于关联
+  double amount = 3;                // 冻结金额
+  string currency = 4;           // 冻结币种
+  google.protobuf.Timestamp expires_at = 5; // 冻结过期时间
+  string idempotency_key = 6;      // 幂等键 (例如使用 order_id 或单独生成)
+  int32 expected_version = 7;      // 期望的用户余额版本号 (用于乐观锁)
+}
+
+message FreezeBalanceResponse {
+  string freeze_id = 1;            // 冻结记录ID (BIGINT as string)
+  int32 new_version = 2;           // 操作后用户余额的新版本号
+}
+
+message ConfirmTransferRequest {
+  string freeze_id = 1;            // 冻结记录ID (BIGINT as string)
+  // merchant_id 可以从 freeze_id 关联的 order_id 推出，或者在这里显式传入
+  // string merchant_id = 2;
+  string idempotency_key = 3;      // 幂等键
+  int32 expected_user_version = 4; // 期望的用户余额版本号
+  int32 expected_merchant_version = 5; // 期望的商家余额版本号
+}
+
+message ConfirmTransferResponse {
+  bool success = 1;
+  string transaction_id = 2;       // 交易流水ID (BIGINT as string)
+  int32 new_user_version = 3;      // 用户余额新版本号
+  int32 new_merchant_version = 4;  // 商家余额新版本号
+}
+
+message CancelFreezeRequest {
+  string freeze_id = 1;            // 冻结记录ID (BIGINT as string)
+  string reason = 2;               // 取消原因
+  string idempotency_key = 3;      // 幂等键
+  int32 expected_version = 4;      // 期望的用户余额版本号
+}
+
+message CancelFreezeResponse {
+  bool success = 1;
+  int32 new_version = 2;           // 用户余额新版本号
+}
+
+message RechargeBalanceRequest {
+  string user_id = 1;             // 用户 UUID (string)
+  double amount = 2;               // 充值金额
+  string currency = 3;          // 充值币种
+  string external_transaction_id = 4; // 外部支付流水号 (如支付宝/微信订单号)
+  string payment_method_type = 5; // 支付方式类型 (e.g., "ALIPAY", "WECHAT")
+  string payment_account = 6;     // 支付账号快照
+  string idempotency_key = 7;     // 幂等键
+  int32 expected_version = 8;     // 期望的用户余额版本号
+}
+
+message RechargeBalanceResponse {
+  bool success = 1;
+  string transaction_id = 2;      // 内部交易流水ID (BIGINT as string)
+  int32 new_version = 3;          // 用户余额新版本号
+}
+
+message WithdrawBalanceRequest {
+  string user_id = 1;             // 用户 UUID (string)
+  double amount = 2;               // 提现金额
+  string currency = 3;          // 提现币种
+  string payment_method_id = 4;   // 用户选择的提现方式ID (BIGINT as string from user_payment_methods)
+  string idempotency_key = 5;     // 幂等键
+  int32 expected_version = 6;     // 期望的用户余额版本号
+}
+
+message WithdrawBalanceResponse {
+  bool success = 1;
+  string transaction_id = 2;      // 内部交易流水ID (BIGINT as string) - 初始状态可能是 PENDING
+  int32 new_version = 3;          // 用户余额新版本号
+}
