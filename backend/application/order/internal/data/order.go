@@ -235,8 +235,8 @@ func (o *orderRepo) GetOrders(ctx context.Context, req *biz.GetOrdersReq) (*biz.
 	}
 
 	orders := make([]*v1.Order, 0, len(rows))
-	paymentStatus := constants.PaymentPending
-	shippingStatus := constants.ShippingWaitCommand
+	var paymentStatus constants.PaymentStatus
+	var shippingStatus constants.ShippingStatus
 	for _, order := range rows {
 		// 解析子订单JSON
 		var subOrdersData []byte
@@ -270,8 +270,8 @@ func (o *orderRepo) GetOrders(ctx context.Context, req *biz.GetOrdersReq) (*biz.
 			}
 
 			subOrderId = subOrder.ID // 设置子订单ID
-			subOrder.PaymentStatus = paymentStatus
-			subOrder.ShippingStatus = shippingStatus
+			paymentStatus = subOrder.PaymentStatus
+			shippingStatus = subOrder.ShippingStatus
 		}
 
 		// 构建主订单
