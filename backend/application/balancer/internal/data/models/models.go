@@ -14,7 +14,7 @@ import (
 type BalancesBalanceFreezes struct {
 	ID        int64          `json:"id"`
 	UserID    uuid.UUID      `json:"userID"`
-	OrderID   uuid.UUID      `json:"orderID"`
+	OrderID   int64          `json:"orderID"`
 	Currency  string         `json:"currency"`
 	Amount    pgtype.Numeric `json:"amount"`
 	Status    string         `json:"status"`
@@ -57,13 +57,13 @@ type BalancesTransactions struct {
 }
 
 type BalancesUserBalances struct {
-	UserID    uuid.UUID          `json:"userID"`
-	Currency  string             `json:"currency"`
-	Available pgtype.Numeric     `json:"available"`
-	Frozen    pgtype.Numeric     `json:"frozen"`
-	Version   int32              `json:"version"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
+	UserID    uuid.UUID      `json:"userID"`
+	Currency  string         `json:"currency"`
+	Available pgtype.Numeric `json:"available"`
+	Frozen    pgtype.Numeric `json:"frozen"`
+	Version   int32          `json:"version"`
+	CreatedAt *time.Time     `json:"createdAt"`
+	UpdatedAt *time.Time     `json:"updatedAt"`
 }
 
 type BalancesUserPaymentMethods struct {

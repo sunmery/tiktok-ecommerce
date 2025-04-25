@@ -13,14 +13,15 @@ import (
 )
 
 const CreateFreeze = `-- name: CreateFreeze :one
-INSERT INTO balances.balance_freezes (user_id, order_id, currency, amount, status, expires_at, created_at, updated_at)
-VALUES ($1, $2, $3, $4, 'FROZEN', $5, NOW(), NOW())
+INSERT INTO balances.balance_freezes (id, user_id, order_id, currency, amount, status, expires_at)
+VALUES ($1, $2, $3, $4, $5, 'FROZEN', $6)
 RETURNING id
 `
 
 type CreateFreezeParams struct {
+	ID        int64              `json:"id"`
 	UserID    uuid.UUID          `json:"userID"`
-	OrderID   uuid.UUID          `json:"orderID"`
+	OrderID   int64              `json:"orderID"`
 	Currency  string             `json:"currency"`
 	Amount    pgtype.Numeric     `json:"amount"`
 	ExpiresAt pgtype.Timestamptz `json:"expiresAt"`
@@ -28,11 +29,12 @@ type CreateFreezeParams struct {
 
 // 创建冻结记录
 //
-//	INSERT INTO balances.balance_freezes (user_id, order_id, currency, amount, status, expires_at, created_at, updated_at)
-//	VALUES ($1, $2, $3, $4, 'FROZEN', $5, NOW(), NOW())
+//	INSERT INTO balances.balance_freezes (id, user_id, order_id, currency, amount, status, expires_at)
+//	VALUES ($1, $2, $3, $4, $5, 'FROZEN', $6)
 //	RETURNING id
 func (q *Queries) CreateFreeze(ctx context.Context, arg CreateFreezeParams) (int64, error) {
 	row := q.db.QueryRow(ctx, CreateFreeze,
+		arg.ID,
 		arg.UserID,
 		arg.OrderID,
 		arg.Currency,
@@ -46,7 +48,8 @@ func (q *Queries) CreateFreeze(ctx context.Context, arg CreateFreezeParams) (int
 
 const GetExpiredFreezes = `-- name: GetExpiredFreezes :many
 
-SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+FROM balances.balance_freezes
 WHERE status = 'FROZEN'
   AND expires_at < NOW()
 `
@@ -54,7 +57,8 @@ WHERE status = 'FROZEN'
 // 确保当前状态是预期的状态 (例如 'FROZEN')
 // 获取所有已过期但仍处于冻结状态的记录 (用于定时任务处理)
 //
-//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+//	FROM balances.balance_freezes
 //	WHERE status = 'FROZEN'
 //	  AND expires_at < NOW()
 func (q *Queries) GetExpiredFreezes(ctx context.Context) ([]BalancesBalanceFreezes, error) {
@@ -88,15 +92,15 @@ func (q *Queries) GetExpiredFreezes(ctx context.Context) ([]BalancesBalanceFreez
 }
 
 const GetFreeze = `-- name: GetFreeze :one
-
-SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+FROM balances.balance_freezes
 WHERE id = $1
 `
 
-// 返回冻结记录的 ID
 // 根据 ID 获取冻结记录
 //
-//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+//	FROM balances.balance_freezes
 //	WHERE id = $1
 func (q *Queries) GetFreeze(ctx context.Context, id int64) (BalancesBalanceFreezes, error) {
 	row := q.db.QueryRow(ctx, GetFreeze, id)
@@ -116,19 +120,23 @@ func (q *Queries) GetFreeze(ctx context.Context, id int64) (BalancesBalanceFreez
 }
 
 const GetFreezeByOrderForUser = `-- name: GetFreezeByOrderForUser :one
-SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
-WHERE user_id = $1 AND order_id = $2
+SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+FROM balances.balance_freezes
+WHERE user_id = $1
+  AND order_id = $2
 `
 
 type GetFreezeByOrderForUserParams struct {
 	UserID  uuid.UUID `json:"userID"`
-	OrderID uuid.UUID `json:"orderID"`
+	OrderID int64     `json:"orderID"`
 }
 
 // 根据用户 ID 和订单 ID 获取冻结记录 (假设一个订单只有一个冻结记录)
 //
-//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
-//	WHERE user_id = $1 AND order_id = $2
+//	SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+//	FROM balances.balance_freezes
+//	WHERE user_id = $1
+//	  AND order_id = $2
 func (q *Queries) GetFreezeByOrderForUser(ctx context.Context, arg GetFreezeByOrderForUserParams) (BalancesBalanceFreezes, error) {
 	row := q.db.QueryRow(ctx, GetFreezeByOrderForUser, arg.UserID, arg.OrderID)
 	var i BalancesBalanceFreezes
@@ -148,7 +156,7 @@ func (q *Queries) GetFreezeByOrderForUser(ctx context.Context, arg GetFreezeByOr
 
 const UpdateFreezeStatus = `-- name: UpdateFreezeStatus :execrows
 UPDATE balances.balance_freezes
-SET status = $1,
+SET status     = $1,
     updated_at = NOW()
 WHERE id = $2
   AND status = $3
@@ -163,7 +171,7 @@ type UpdateFreezeStatusParams struct {
 // 更新冻结记录状态 (例如: FROZEN -> CONFIRMED 或 FROZEN -> CANCELED)
 //
 //	UPDATE balances.balance_freezes
-//	SET status = $1,
+//	SET status     = $1,
 //	    updated_at = NOW()
 //	WHERE id = $2
 //	  AND status = $3

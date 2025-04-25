@@ -13,20 +13,21 @@ import (
 )
 
 const CreateTransaction = `-- name: CreateTransaction :one
-INSERT INTO balances.transactions (
-    type, amount, currency, from_user_id, to_merchant_id,
-    payment_method_type, payment_account, payment_extra, status,
-    created_at, updated_at
+INSERT INTO balances.transactions (id,
+                                   type, amount, currency, from_user_id, to_merchant_id,
+                                   payment_method_type, payment_account, payment_extra, status,
+                                   created_at, updated_at
     -- freeze_id 可以在创建支付流水时关联
     -- , freeze_id
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
-    -- , $10
 )
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,NOW(), NOW()
+           -- , $10
+       )
 RETURNING id
 `
 
 type CreateTransactionParams struct {
+	ID                int64          `json:"id"`
 	Type              string         `json:"type"`
 	Amount            pgtype.Numeric `json:"amount"`
 	Currency          string         `json:"currency"`
@@ -40,19 +41,20 @@ type CreateTransactionParams struct {
 
 // 创建交易流水记录
 //
-//	INSERT INTO balances.transactions (
-//	    type, amount, currency, from_user_id, to_merchant_id,
-//	    payment_method_type, payment_account, payment_extra, status,
-//	    created_at, updated_at
+//	INSERT INTO balances.transactions (id,
+//	                                   type, amount, currency, from_user_id, to_merchant_id,
+//	                                   payment_method_type, payment_account, payment_extra, status,
+//	                                   created_at, updated_at
 //	    -- freeze_id 可以在创建支付流水时关联
 //	    -- , freeze_id
-//	) VALUES (
-//	    $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
-//	    -- , $10
 //	)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,NOW(), NOW()
+//	           -- , $10
+//	       )
 //	RETURNING id
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error) {
 	row := q.db.QueryRow(ctx, CreateTransaction,
+		arg.ID,
 		arg.Type,
 		arg.Amount,
 		arg.Currency,
@@ -69,8 +71,10 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const GetMerchantPaymentMethod = `-- name: GetMerchantPaymentMethod :one
-SELECT id, merchant_id, type, is_default, account_details, created_at FROM balances.merchant_payment_methods
-WHERE id = $1 AND merchant_id = $2
+SELECT id, merchant_id, type, is_default, account_details, created_at
+FROM balances.merchant_payment_methods
+WHERE id = $1
+  AND merchant_id = $2
 `
 
 type GetMerchantPaymentMethodParams struct {
@@ -80,8 +84,10 @@ type GetMerchantPaymentMethodParams struct {
 
 // 获取商家支付方式详情 (未来可能用于商家提现)
 //
-//	SELECT id, merchant_id, type, is_default, account_details, created_at FROM balances.merchant_payment_methods
-//	WHERE id = $1 AND merchant_id = $2
+//	SELECT id, merchant_id, type, is_default, account_details, created_at
+//	FROM balances.merchant_payment_methods
+//	WHERE id = $1
+//	  AND merchant_id = $2
 func (q *Queries) GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantPaymentMethodParams) (BalancesMerchantPaymentMethods, error) {
 	row := q.db.QueryRow(ctx, GetMerchantPaymentMethod, arg.ID, arg.MerchantID)
 	var i BalancesMerchantPaymentMethods
@@ -97,13 +103,15 @@ func (q *Queries) GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantP
 }
 
 const GetTransaction = `-- name: GetTransaction :one
-SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at FROM balances.transactions
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+FROM balances.transactions
 WHERE id = $1
 `
 
 // 根据 ID 获取交易流水记录
 //
-//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at FROM balances.transactions
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+//	FROM balances.transactions
 //	WHERE id = $1
 func (q *Queries) GetTransaction(ctx context.Context, id int64) (BalancesTransactions, error) {
 	row := q.db.QueryRow(ctx, GetTransaction, id)
@@ -126,9 +134,10 @@ func (q *Queries) GetTransaction(ctx context.Context, id int64) (BalancesTransac
 }
 
 const GetUserPaymentMethod = `-- name: GetUserPaymentMethod :one
-
-SELECT id, user_id, type, is_default, account_details, created_at FROM balances.user_payment_methods
-WHERE id = $1 AND user_id = $2
+SELECT id, user_id, type, is_default, account_details, created_at
+FROM balances.user_payment_methods
+WHERE id = $1
+  AND user_id = $2
 `
 
 type GetUserPaymentMethodParams struct {
@@ -136,11 +145,12 @@ type GetUserPaymentMethodParams struct {
 	UserID uuid.UUID `json:"userID"`
 }
 
-// === Payment Methods (示例) ===
 // 获取用户支付方式详情 (可能在提现时需要)
 //
-//	SELECT id, user_id, type, is_default, account_details, created_at FROM balances.user_payment_methods
-//	WHERE id = $1 AND user_id = $2
+//	SELECT id, user_id, type, is_default, account_details, created_at
+//	FROM balances.user_payment_methods
+//	WHERE id = $1
+//	  AND user_id = $2
 func (q *Queries) GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMethodParams) (BalancesUserPaymentMethods, error) {
 	row := q.db.QueryRow(ctx, GetUserPaymentMethod, arg.ID, arg.UserID)
 	var i BalancesUserPaymentMethods
@@ -158,7 +168,7 @@ func (q *Queries) GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMe
 const UpdateTransactionStatus = `-- name: UpdateTransactionStatus :execrows
 
 UPDATE balances.transactions
-SET status = $1,
+SET status     = $1,
     updated_at = NOW()
 WHERE id = $2
 `
@@ -172,7 +182,7 @@ type UpdateTransactionStatusParams struct {
 // 更新交易流水状态
 //
 //	UPDATE balances.transactions
-//	SET status = $1,
+//	SET status     = $1,
 //	    updated_at = NOW()
 //	WHERE id = $2
 func (q *Queries) UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) (int64, error) {

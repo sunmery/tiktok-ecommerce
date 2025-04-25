@@ -24,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1FreezeBalanceResponse"
+              "$ref": "#/definitions/v1FreezeBalanceReply"
             }
           },
           "default": {
@@ -57,7 +57,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CancelFreezeResponse"
+              "$ref": "#/definitions/v1CancelFreezeReply"
             }
           },
           "default": {
@@ -70,10 +70,11 @@
         "parameters": [
           {
             "name": "freezeId",
-            "description": "冻结记录ID (BIGINT as string)",
+            "description": "冻结记录ID",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "int64"
           },
           {
             "name": "body",
@@ -97,7 +98,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ConfirmTransferResponse"
+              "$ref": "#/definitions/v1ConfirmTransferReply"
             }
           },
           "default": {
@@ -110,10 +111,11 @@
         "parameters": [
           {
             "name": "freezeId",
-            "description": "冻结记录ID (BIGINT as string)",
+            "description": "冻结记录ID",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "format": "int64"
           },
           {
             "name": "body",
@@ -137,7 +139,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1BalanceResponse"
+              "$ref": "#/definitions/v1BalanceReply"
             }
           },
           "default": {
@@ -166,6 +168,44 @@
         "tags": [
           "Balance"
         ]
+      },
+      "put": {
+        "summary": "创建商家余额\n为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)",
+        "operationId": "Balance_CreateMerchantBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMerchantBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "merchantId",
+            "description": "UUID as string",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceCreateMerchantBalanceBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
       }
     },
     "/v1/balances/users/{userId}/balance": {
@@ -176,7 +216,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1BalanceResponse"
+              "$ref": "#/definitions/v1BalanceReply"
             }
           },
           "default": {
@@ -205,6 +245,44 @@
         "tags": [
           "Balance"
         ]
+      },
+      "put": {
+        "summary": "创建消费者余额\n为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)",
+        "operationId": "Balance_CreateConsumerBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateConsumerBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "UUID as string",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceCreateConsumerBalanceBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
       }
     },
     "/v1/balances/users/{userId}/recharge": {
@@ -215,7 +293,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1RechargeBalanceResponse"
+              "$ref": "#/definitions/v1RechargeBalanceReply"
             }
           },
           "default": {
@@ -255,7 +333,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1WithdrawBalanceResponse"
+              "$ref": "#/definitions/v1WithdrawBalanceReply"
             }
           },
           "default": {
@@ -310,10 +388,13 @@
     "BalanceConfirmTransferBody": {
       "type": "object",
       "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "merchant_id 可以从 freeze_id 关联的 order_id 推出，或者在这里显式传入"
+        },
         "idempotencyKey": {
           "type": "string",
-          "description": "幂等键",
-          "title": "merchant_id 可以从 freeze_id 关联的 order_id 推出，或者在这里显式传入\nstring merchant_id = 2;"
+          "title": "幂等键"
         },
         "expectedUserVersion": {
           "type": "integer",
@@ -324,6 +405,62 @@
           "type": "integer",
           "format": "int32",
           "title": "期望的商家余额版本号"
+        },
+        "paymentAccount": {
+          "type": "string",
+          "title": "支付账号"
+        }
+      }
+    },
+    "BalanceCreateConsumerBalanceBody": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "title": "指定币种"
+        },
+        "initialBalance": {
+          "type": "number",
+          "format": "double",
+          "title": "初始余额"
+        },
+        "balancerType": {
+          "type": "string",
+          "title": "余额类型"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "title": "是否默认余额"
+        },
+        "accountDetails": {
+          "type": "object",
+          "title": "账户详情 (JSON 格式)"
+        }
+      }
+    },
+    "BalanceCreateMerchantBalanceBody": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "title": "指定币种"
+        },
+        "initialBalance": {
+          "type": "number",
+          "format": "double",
+          "title": "初始余额"
+        },
+        "balancerType": {
+          "type": "string",
+          "title": "余额类型"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "title": "是否默认余额"
+        },
+        "accountDetails": {
+          "type": "object",
+          "title": "账户详情 (JSON 格式)"
         }
       }
     },
@@ -341,6 +478,7 @@
         },
         "externalTransactionId": {
           "type": "string",
+          "format": "int64",
           "title": "外部支付流水号 (如支付宝/微信订单号)"
         },
         "paymentMethodType": {
@@ -398,6 +536,14 @@
       },
       "additionalProperties": {}
     },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
     "rpcStatus": {
       "type": "object",
       "properties": {
@@ -417,7 +563,7 @@
         }
       }
     },
-    "v1BalanceResponse": {
+    "v1BalanceReply": {
       "type": "object",
       "properties": {
         "available": {
@@ -441,7 +587,7 @@
         }
       }
     },
-    "v1CancelFreezeResponse": {
+    "v1CancelFreezeReply": {
       "type": "object",
       "properties": {
         "success": {
@@ -454,7 +600,7 @@
         }
       }
     },
-    "v1ConfirmTransferResponse": {
+    "v1ConfirmTransferReply": {
       "type": "object",
       "properties": {
         "success": {
@@ -462,7 +608,8 @@
         },
         "transactionId": {
           "type": "string",
-          "title": "交易流水ID (BIGINT as string)"
+          "format": "int64",
+          "title": "交易流水ID"
         },
         "newUserVersion": {
           "type": "integer",
@@ -476,6 +623,51 @@
         }
       }
     },
+    "v1CreateConsumerBalanceReply": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "available": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1CreateMerchantBalanceReply": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "available": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1FreezeBalanceReply": {
+      "type": "object",
+      "properties": {
+        "freezeId": {
+          "type": "string",
+          "format": "int64",
+          "title": "冻结记录ID"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "操作后用户余额的新版本号"
+        }
+      }
+    },
     "v1FreezeBalanceRequest": {
       "type": "object",
       "properties": {
@@ -485,7 +677,8 @@
         },
         "orderId": {
           "type": "string",
-          "title": "订单 UUID (string), 用于关联"
+          "format": "int64",
+          "title": "订单id, 用于关联"
         },
         "amount": {
           "type": "number",
@@ -496,14 +689,10 @@
           "type": "string",
           "title": "冻结币种"
         },
-        "expiresAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "冻结过期时间"
-        },
         "idempotencyKey": {
           "type": "string",
-          "title": "幂等键 (例如使用 order_id 或单独生成)"
+          "description": "幂等键 (例如使用 order_id 或单独生成)",
+          "title": "google.protobuf.Timestamp expires_at = 5; // 冻结过期时间"
         },
         "expectedVersion": {
           "type": "integer",
@@ -512,21 +701,7 @@
         }
       }
     },
-    "v1FreezeBalanceResponse": {
-      "type": "object",
-      "properties": {
-        "freezeId": {
-          "type": "string",
-          "title": "冻结记录ID (BIGINT as string)"
-        },
-        "newVersion": {
-          "type": "integer",
-          "format": "int32",
-          "title": "操作后用户余额的新版本号"
-        }
-      }
-    },
-    "v1RechargeBalanceResponse": {
+    "v1RechargeBalanceReply": {
       "type": "object",
       "properties": {
         "success": {
@@ -534,7 +709,8 @@
         },
         "transactionId": {
           "type": "string",
-          "title": "内部交易流水ID (BIGINT as string)"
+          "format": "int64",
+          "title": "内部交易流水ID"
         },
         "newVersion": {
           "type": "integer",
@@ -543,7 +719,7 @@
         }
       }
     },
-    "v1WithdrawBalanceResponse": {
+    "v1WithdrawBalanceReply": {
       "type": "object",
       "properties": {
         "success": {
@@ -551,7 +727,8 @@
         },
         "transactionId": {
           "type": "string",
-          "title": "内部交易流水ID (BIGINT as string) - 初始状态可能是 PENDING"
+          "format": "int64",
+          "title": "内部交易流水ID  - 初始状态可能是 PENDING"
         },
         "newVersion": {
           "type": "integer",

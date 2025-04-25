@@ -22,38 +22,48 @@ type Querier interface {
 	//    AND frozen >= $3 -- 确保冻结余额充足
 	//    AND version = $4
 	ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezeParams) (int64, error)
-	// 创建冻结记录
-	//
-	//  INSERT INTO balances.balance_freezes (user_id, order_id, currency, amount, status, expires_at, created_at, updated_at)
-	//  VALUES ($1, $2, $3, $4, 'FROZEN', $5, NOW(), NOW())
-	//  RETURNING id
-	CreateFreeze(ctx context.Context, arg CreateFreezeParams) (int64, error)
-	// 为商家创建指定币种的初始余额记录
-	//
-	//  INSERT INTO balances.merchant_balances (merchant_id, currency, available, version, created_at, updated_at)
-	//  VALUES ($1, $2, 0, 0, NOW(), NOW())
-	//  RETURNING merchant_id, currency, available, version, created_at, updated_at
-	CreateMerchantBalance(ctx context.Context, arg CreateMerchantBalanceParams) (BalancesMerchantBalances, error)
-	// 创建交易流水记录
-	//
-	//  INSERT INTO balances.transactions (
-	//      type, amount, currency, from_user_id, to_merchant_id,
-	//      payment_method_type, payment_account, payment_extra, status,
-	//      created_at, updated_at
-	//      -- freeze_id 可以在创建支付流水时关联
-	//      -- , freeze_id
-	//  ) VALUES (
-	//      $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
-	//      -- , $10
-	//  )
-	//  RETURNING id
-	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	//
 	//  INSERT INTO balances.user_balances (user_id, currency, available, frozen, version)
-	//  VALUES ($1, $2, 0, 0, 0)
-	//  RETURNING user_id, currency, available, frozen, version, created_at, updated_at
-	CreateUserBalance(ctx context.Context, arg CreateUserBalanceParams) (BalancesUserBalances, error)
+	//  VALUES ($1, $2, $3, 0, 0)
+	//  RETURNING user_id, currency, available
+	CreateConsumerBalance(ctx context.Context, arg CreateConsumerBalanceParams) (CreateConsumerBalanceRow, error)
+	// 创建用户支付方式
+	//
+	//  INSERT INTO balances.user_payment_methods (id, user_id, type, is_default, account_details)
+	//  VALUES ($1, $2, $3, $4, $5)
+	CreateConsumerPaymentMethods(ctx context.Context, arg CreateConsumerPaymentMethodsParams) error
+	// 创建冻结记录
+	//
+	//  INSERT INTO balances.balance_freezes (id, user_id, order_id, currency, amount, status, expires_at)
+	//  VALUES ($1, $2, $3, $4, $5, 'FROZEN', $6)
+	//  RETURNING id
+	CreateFreeze(ctx context.Context, arg CreateFreezeParams) (int64, error)
+	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+	//
+	//  INSERT INTO balances.merchant_balances (merchant_id, currency, available, version)
+	//  VALUES ($1, $2, $3, 0)
+	//  RETURNING merchant_id, currency, available
+	CreateMerchantBalance(ctx context.Context, arg CreateMerchantBalanceParams) (CreateMerchantBalanceRow, error)
+	// 创建用户支付方式
+	//
+	//  INSERT INTO balances.merchant_payment_methods (id, merchant_id, type, is_default, account_details)
+	//  VALUES ($1, $2, $3, $4, $5)
+	CreateMerchantPaymentMethods(ctx context.Context, arg CreateMerchantPaymentMethodsParams) error
+	// 创建交易流水记录
+	//
+	//  INSERT INTO balances.transactions (id,
+	//                                     type, amount, currency, from_user_id, to_merchant_id,
+	//                                     payment_method_type, payment_account, payment_extra, status,
+	//                                     created_at, updated_at
+	//      -- freeze_id 可以在创建支付流水时关联
+	//      -- , freeze_id
+	//  )
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,NOW(), NOW()
+	//             -- , $10
+	//         )
+	//  RETURNING id
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
 	// 乐观锁检查
 	// 减少用户可用余额 (用于发起提现) - 使用乐观锁
 	//
@@ -85,21 +95,23 @@ type Querier interface {
 	// 获取所有已过期但仍处于冻结状态的记录 (用于定时任务处理)
 	//
 	//
-	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+	//  FROM balances.balance_freezes
 	//  WHERE status = 'FROZEN'
 	//    AND expires_at < NOW()
 	GetExpiredFreezes(ctx context.Context) ([]BalancesBalanceFreezes, error)
-	// 返回冻结记录的 ID
 	// 根据 ID 获取冻结记录
 	//
-	//
-	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
+	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+	//  FROM balances.balance_freezes
 	//  WHERE id = $1
 	GetFreeze(ctx context.Context, id int64) (BalancesBalanceFreezes, error)
 	// 根据用户 ID 和订单 ID 获取冻结记录 (假设一个订单只有一个冻结记录)
 	//
-	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at FROM balances.balance_freezes
-	//  WHERE user_id = $1 AND order_id = $2
+	//  SELECT id, user_id, order_id, currency, amount, status, created_at, updated_at, expires_at
+	//  FROM balances.balance_freezes
+	//  WHERE user_id = $1
+	//    AND order_id = $2
 	GetFreezeByOrderForUser(ctx context.Context, arg GetFreezeByOrderForUserParams) (BalancesBalanceFreezes, error)
 	// 获取指定商家和币种的余额信息
 	//
@@ -110,12 +122,15 @@ type Querier interface {
 	GetMerchantBalance(ctx context.Context, arg GetMerchantBalanceParams) (GetMerchantBalanceRow, error)
 	// 获取商家支付方式详情 (未来可能用于商家提现)
 	//
-	//  SELECT id, merchant_id, type, is_default, account_details, created_at FROM balances.merchant_payment_methods
-	//  WHERE id = $1 AND merchant_id = $2
+	//  SELECT id, merchant_id, type, is_default, account_details, created_at
+	//  FROM balances.merchant_payment_methods
+	//  WHERE id = $1
+	//    AND merchant_id = $2
 	GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantPaymentMethodParams) (BalancesMerchantPaymentMethods, error)
 	// 根据 ID 获取交易流水记录
 	//
-	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at FROM balances.transactions
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+	//  FROM balances.transactions
 	//  WHERE id = $1
 	GetTransaction(ctx context.Context, id int64) (BalancesTransactions, error)
 	// 获取指定用户和币种的余额信息
@@ -125,12 +140,12 @@ type Querier interface {
 	//  WHERE user_id = $1
 	//    AND currency = $2
 	GetUserBalance(ctx context.Context, arg GetUserBalanceParams) (GetUserBalanceRow, error)
-	// === Payment Methods (示例) ===
 	// 获取用户支付方式详情 (可能在提现时需要)
 	//
-	//
-	//  SELECT id, user_id, type, is_default, account_details, created_at FROM balances.user_payment_methods
-	//  WHERE id = $1 AND user_id = $2
+	//  SELECT id, user_id, type, is_default, account_details, created_at
+	//  FROM balances.user_payment_methods
+	//  WHERE id = $1
+	//    AND user_id = $2
 	GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMethodParams) (BalancesUserPaymentMethods, error)
 	// 乐观锁检查
 	// 增加商家可用余额 (用于确认转账成功) - 使用乐观锁
@@ -171,7 +186,7 @@ type Querier interface {
 	// 更新冻结记录状态 (例如: FROZEN -> CONFIRMED 或 FROZEN -> CANCELED)
 	//
 	//  UPDATE balances.balance_freezes
-	//  SET status = $1,
+	//  SET status     = $1,
 	//      updated_at = NOW()
 	//  WHERE id = $2
 	//    AND status = $3
@@ -181,7 +196,7 @@ type Querier interface {
 	//
 	//
 	//  UPDATE balances.transactions
-	//  SET status = $1,
+	//  SET status     = $1,
 	//      updated_at = NOW()
 	//  WHERE id = $2
 	UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) (int64, error)

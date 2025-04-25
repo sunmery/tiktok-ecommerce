@@ -4,7 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
+
+	"backend/application/balancer/pkg/id"
+
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/jackc/pgx/v5"
 
@@ -35,7 +40,8 @@ func NewBalancerRepo(data *Data, logger log.Logger) biz.BalancerRepo {
 	}
 }
 
-func (b balancerRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceRequest) (*biz.FreezeBalanceResponse, error) {
+// FreezeBalance 冻结余额
+func (b balancerRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceRequest) (*biz.FreezeBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -45,73 +51,65 @@ func (b balancerRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceR
 		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
 	}
 
-	// 检查是否已存在相同订单的冻结记录（幂等性检查）
-	orderUUID, err := uuid.Parse(req.OrderId)
-	if err != nil {
-		return nil, kerrors.New(400, "INVALID_ORDER_ID", "invalid order id format")
-	}
-
 	// 尝试获取已存在的冻结记录
 	existingFreeze, err := tx.GetFreezeByOrderForUser(ctx, models.GetFreezeByOrderForUserParams{
 		UserID:  req.UserId,
-		OrderID: orderUUID,
+		OrderID: req.OrderId,
 	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// 执行冻结操作
+			rows, err := tx.FreezeUserBalance(ctx, models.FreezeUserBalanceParams{
+				UserID:          req.UserId,
+				Currency:        string(req.Currency),
+				Amount:          amount,
+				ExpectedVersion: req.ExpectedVersion,
+			})
+			if err != nil {
+				return nil, kerrors.New(500, "FREEZE_BALANCE_FAILED", "freeze balance failed")
+			}
+			if rows == 0 {
+				return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", fmt.Sprintf("balance version mismatch or insufficient funds:%v", err))
+			}
 
-	// 如果已存在冻结记录，直接返回
-	if err == nil {
-		// 已存在冻结记录，返回现有记录ID
-		return &biz.FreezeBalanceResponse{
-			FreezeId:   strconv.FormatInt(existingFreeze.ID, 10),
-			NewVersion: req.ExpectedVersion, // 保持版本不变，因为没有执行冻结操作
-		}, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
-		// 如果是其他错误，则返回错误
+			// 3. 创建冻结记录
+			freezeId, err := tx.CreateFreeze(ctx, models.CreateFreezeParams{
+				ID:       id.SnowflakeID(),
+				UserID:   req.UserId,
+				OrderID:  req.OrderId,
+				Currency: string(req.Currency),
+				Amount:   amount,
+				ExpiresAt: pgtype.Timestamptz{
+					Time:  req.ExpiresAt,
+					Valid: true,
+				},
+			})
+			if err != nil {
+				return nil, kerrors.New(500, "CREATE_FREEZE_FAILED", fmt.Sprintf("create freeze failed: %v", err))
+			}
+
+			return &biz.FreezeBalanceReply{
+				FreezeId:   freezeId,
+				NewVersion: req.ExpectedVersion + 1, // 版本号+1
+			}, nil
+		}
 		return nil, kerrors.New(500, "GET_FREEZE_FAILED", "failed to check existing freeze")
 	}
 
-	// 执行冻结操作
-	rows, err := tx.FreezeUserBalance(ctx, models.FreezeUserBalanceParams{
-		UserID:          req.UserId,
-		Currency:        string(req.Currency),
-		Amount:          amount,
-		ExpectedVersion: req.ExpectedVersion,
-	})
-	if err != nil {
-		return nil, kerrors.New(500, "FREEZE_BALANCE_FAILED", "freeze balance failed")
-	}
-	if rows == 0 {
-		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", "balance version mismatch or insufficient funds")
-	}
-
-	// 3. 创建冻结记录
-	freezeId, err := tx.CreateFreeze(ctx, models.CreateFreezeParams{
-		UserID:   req.UserId,
-		OrderID:  orderUUID,
-		Currency: string(req.Currency),
-		Amount:   amount,
-		// ExpiresAt: req.ExpiresAt,
-	})
-	if err != nil {
-		return nil, kerrors.New(500, "CREATE_FREEZE_FAILED", "create freeze record failed")
-	}
-
-	return &biz.FreezeBalanceResponse{
-		FreezeId:   strconv.FormatInt(freezeId, 10),
-		NewVersion: req.ExpectedVersion + 1, // 版本号+1
+	// 如果已存在冻结记录，直接返回现有记录ID
+	return &biz.FreezeBalanceReply{
+		FreezeId:   existingFreeze.ID,
+		NewVersion: req.ExpectedVersion, // 保持版本不变，因为没有执行冻结操作
 	}, nil
 }
 
-func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeRequest) (*biz.CancelFreezeResponse, error) {
+// CancelFreeze 取消冻结余额
+func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeRequest) (*biz.CancelFreezeReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
 	// 2. 获取冻结记录
-	freezeId, err := strconv.ParseInt(req.FreezeId, 10, 64)
-	if err != nil {
-		return nil, kerrors.New(400, "INVALID_FREEZE_ID", "invalid freeze id format")
-	}
-
-	freeze, err := tx.GetFreeze(ctx, freezeId)
+	freeze, err := tx.GetFreeze(ctx, req.FreezeId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, kerrors.New(404, "FREEZE_NOT_FOUND", "freeze record not found")
@@ -120,15 +118,15 @@ func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeReq
 	}
 
 	// 3. 检查冻结状态
-	if freeze.Status != "FROZEN" {
-		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", "freeze is not in FROZEN status")
+	if freeze.Status != constants.FreezeFrozen {
+		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", fmt.Sprintf("freeze is not in FROZEN status: %v not in %v", freeze.Status, constants.FreezeFrozen))
 	}
 
 	// 4. 更新冻结记录状态为取消
 	rows, err := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
-		Status:        "CANCELED",
-		ID:            freezeId,
-		CurrentStatus: "FROZEN",
+		Status:        constants.FreezeCanceled,
+		ID:            req.FreezeId,
+		CurrentStatus: constants.FreezeFrozen,
 	})
 	if err != nil {
 		return nil, kerrors.New(500, "UPDATE_FREEZE_STATUS_FAILED", "update freeze status failed")
@@ -151,13 +149,13 @@ func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeReq
 		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", "balance version mismatch")
 	}
 
-	return &biz.CancelFreezeResponse{
+	return &biz.CancelFreezeReply{
 		Success:    true,
 		NewVersion: req.ExpectedVersion + 1, // 版本号+1
 	}, nil
 }
 
-func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMerchantBalanceRequest) (*biz.BalanceResponse, error) {
+func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMerchantBalanceRequest) (*biz.BalanceReply, error) {
 	balance, err := b.data.db.GetMerchantBalance(ctx, models.GetMerchantBalanceParams{
 		MerchantID: req.MerchantId,
 		Currency:   string(req.Currency),
@@ -173,7 +171,7 @@ func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMercha
 		return nil, kerrors.New(500, "CONVERT_AVAILABLE_FAILED", "convert available to float64 failed")
 	}
 
-	return &biz.BalanceResponse{
+	return &biz.BalanceReply{
 		Available: available,
 		Frozen:    0, // 商家账户没有冻结余额
 		Currency:  constants.Currency(balance.Currency),
@@ -181,7 +179,87 @@ func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMercha
 	}, nil
 }
 
-func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanceRequest) (*biz.BalanceResponse, error) {
+func (b balancerRepo) CreateConsumerBalance(ctx context.Context, req *biz.CreateConsumerBalanceRequest) (*biz.CreateConsumerBalanceReply, error) {
+	tx := b.data.DB(ctx)
+
+	initialBalance, err := types.Float64ToNumeric(req.InitialBalance)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
+	}
+
+	CreateUserPaymentMethodsErr := tx.CreateConsumerPaymentMethods(ctx, models.CreateConsumerPaymentMethodsParams{
+		ID:             id.SnowflakeID(),
+		UserID:         req.UserId,
+		Type:           req.BalancerType,
+		IsDefault:      req.IsDefault,
+		AccountDetails: req.AccountDetails,
+	})
+	if CreateUserPaymentMethodsErr != nil {
+		return nil, err
+	}
+
+	reply, err := tx.CreateConsumerBalance(ctx, models.CreateConsumerBalanceParams{
+		UserID:    req.UserId,
+		Currency:  string(req.Currency),
+		Available: initialBalance,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	available, err := types.NumericToFloat(reply.Available)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AVAILABLE_FAILED", "convert available to float64 failed")
+	}
+
+	return &biz.CreateConsumerBalanceReply{
+		UserId:    reply.UserID,
+		Currency:  constants.Currency(reply.Currency),
+		Available: available,
+	}, nil
+}
+
+func (b balancerRepo) CreateMerchantBalance(ctx context.Context, req *biz.CreateMerchantBalanceRequest) (*biz.CreateMerchantBalanceReply, error) {
+	tx := b.data.DB(ctx)
+
+	initialBalance, err := types.Float64ToNumeric(req.InitialBalance)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
+	}
+
+	CreateUserPaymentMethodsErr := tx.CreateMerchantPaymentMethods(ctx, models.CreateMerchantPaymentMethodsParams{
+		ID:             id.SnowflakeID(),
+		MerchantID:     req.MerchantId,
+		Type:           req.BalancerType,
+		IsDefault:      req.IsDefault,
+		AccountDetails: req.AccountDetails,
+	})
+	if CreateUserPaymentMethodsErr != nil {
+		return nil, err
+	}
+
+	reply, err := tx.CreateMerchantBalance(ctx, models.CreateMerchantBalanceParams{
+		MerchantID: req.MerchantId,
+		Currency:   string(req.Currency),
+		Available:  initialBalance,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	available, err := types.NumericToFloat(reply.Available)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AVAILABLE_FAILED", "convert available to float64 failed")
+	}
+
+	return &biz.CreateMerchantBalanceReply{
+		UserId:    reply.MerchantID,
+		Currency:  constants.Currency(reply.Currency),
+		Available: available,
+	}, nil
+}
+
+func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanceRequest) (*biz.BalanceReply, error) {
 	balance, err := b.data.db.GetUserBalance(ctx, models.GetUserBalanceParams{
 		UserID:   req.UserId,
 		Currency: string(req.Currency),
@@ -201,7 +279,7 @@ func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanc
 		return nil, kerrors.New(500, "CONVERT_FROZEN_FAILED", "convert available to float64 failed")
 	}
 
-	return &biz.BalanceResponse{
+	return &biz.BalanceReply{
 		Available: available,
 		Frozen:    frozen,
 		Currency:  constants.Currency(balance.Currency),
@@ -209,7 +287,7 @@ func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanc
 	}, nil
 }
 
-func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBalanceRequest) (*biz.RechargeBalanceResponse, error) {
+func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBalanceRequest) (*biz.RechargeBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -248,7 +326,8 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
-		Type:              "RECHARGE",
+		ID:                id.SnowflakeID(),
+		Type:              constants.TransactionRecharge,
 		Amount:            amount,
 		Currency:          string(req.Currency),
 		FromUserID:        req.UserId,
@@ -259,17 +338,18 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 		Status:            "PAID", // 充值通常是已支付状态
 	})
 	if err != nil {
-		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", "create transaction record failed")
+		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", fmt.Sprintf("create transaction failed: %v", err))
 	}
 
-	return &biz.RechargeBalanceResponse{
+	return &biz.RechargeBalanceReply{
 		Success:       true,
-		TransactionId: strconv.FormatInt(transactionId, 10),
+		TransactionId: transactionId,
 		NewVersion:    req.ExpectedVersion + 1, // 版本号+1
 	}, nil
 }
 
-func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBalanceRequest) (*biz.WithdrawBalanceResponse, error) {
+// WithdrawBalance 用户提现
+func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBalanceRequest) (*biz.WithdrawBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -306,7 +386,7 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 		return nil, kerrors.New(500, "DECREASE_BALANCE_FAILED", "decrease balance failed")
 	}
 	if rows == 0 {
-		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", "balance version mismatch or insufficient funds")
+		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", fmt.Sprintf("balance version mismatch or insufficient funds:%v", err))
 	}
 
 	// 4. 创建交易记录
@@ -333,7 +413,8 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
-		Type:              "WITHDRAW",
+		ID:                id.SnowflakeID(),
+		Type:              constants.TransactionWithdraw,
 		Amount:            amount,
 		Currency:          string(req.Currency),
 		FromUserID:        req.UserId,
@@ -344,27 +425,23 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 		Status:            "PENDING", // 提现通常是待处理状态
 	})
 	if err != nil {
-		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", "create transaction record failed")
+		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", fmt.Sprintf("create transaction failed: %v", err))
 	}
 
-	return &biz.WithdrawBalanceResponse{
+	return &biz.WithdrawBalanceReply{
 		Success:       true,
-		TransactionId: strconv.FormatInt(transactionId, 10),
+		TransactionId: transactionId,
 		NewVersion:    req.ExpectedVersion + 1, // 版本号+1
 	}, nil
 }
 
-func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransferRequest) (*biz.ConfirmTransferResponse, error) {
+// ConfirmTransfer 确认转账
+func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransferRequest) (*biz.ConfirmTransferReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
 	// 2. 获取冻结记录
-	freezeId, err := strconv.ParseInt(req.FreezeId, 10, 64)
-	if err != nil {
-		return nil, kerrors.New(400, "INVALID_FREEZE_ID", "invalid freeze id format")
-	}
-
-	freeze, err := tx.GetFreeze(ctx, freezeId)
+	freeze, err := tx.GetFreeze(ctx, req.FreezeId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, kerrors.New(404, "FREEZE_NOT_FOUND", "freeze record not found")
@@ -373,51 +450,44 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 3. 检查冻结状态
-	if freeze.Status != "FROZEN" {
-		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", "freeze is not in FROZEN status")
+	if freeze.Status != constants.FreezeFrozen {
+		return nil, kerrors.New(400, "INVALID_FREEZE_STATUS", fmt.Sprintf("freeze is not in FROZEN status: %v not in %v", freeze.Status, constants.FreezeFrozen))
 	}
 
 	// 4. 更新冻结记录状态为确认
-	rows, err := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
-		Status:        "CONFIRMED",
-		ID:            freezeId,
-		CurrentStatus: "FROZEN",
+	rows, UpdateFreezeStatusErr := tx.UpdateFreezeStatus(ctx, models.UpdateFreezeStatusParams{
+		Status:        constants.FreezeConfirmed,
+		ID:            req.FreezeId,
+		CurrentStatus: constants.FreezeFrozen,
 	})
-	if err != nil {
-		return nil, kerrors.New(500, "UPDATE_FREEZE_STATUS_FAILED", "update freeze status failed")
+	if UpdateFreezeStatusErr != nil {
+		return nil, kerrors.New(500, "UPDATE_FREEZE_STATUS_FAILED", fmt.Sprintf("update freeze status failed:%v", UpdateFreezeStatusErr.Error()))
 	}
 	if rows == 0 {
-		return nil, kerrors.New(409, "FREEZE_STATUS_CHANGED", "freeze status has been changed")
+		return nil, kerrors.New(409, "FREEZE_STATUS_CHANGED", fmt.Sprintf("freeze status has been changed:%v", UpdateFreezeStatusErr))
 	}
 
 	// 5. 确认用户冻结（减少冻结余额）
-	rows, err = tx.ConfirmUserFreeze(ctx, models.ConfirmUserFreezeParams{
+	rows, ConfirmUserFreezeErr := tx.ConfirmUserFreeze(ctx, models.ConfirmUserFreezeParams{
 		UserID:          freeze.UserID,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,
 		ExpectedVersion: req.ExpectedUserVersion,
 	})
-	if err != nil {
-		return nil, kerrors.New(500, "CONFIRM_FREEZE_FAILED", "confirm freeze failed")
+	if ConfirmUserFreezeErr != nil {
+		return nil, kerrors.New(500, "CONFIRM_FREEZE_FAILED", fmt.Sprintf("confirm freeze failed: %v", ConfirmUserFreezeErr.Error()))
 	}
 	if rows == 0 {
 		return nil, kerrors.New(409, "USER_OPTIMISTIC_LOCK_FAILED", "user balance version mismatch")
 	}
 
 	// 6. 获取商家ID（从订单ID）
-	orderUUID, err := uuid.Parse(freeze.OrderID.String())
-	if err != nil {
-		return nil, kerrors.New(500, "INVALID_ORDER_ID", "invalid order id format")
-	}
-
-	merchantId, err := b.getMerchantIDFromOrder(ctx, orderUUID)
-	if err != nil {
-		return nil, kerrors.New(500, "GET_MERCHANT_ID_FAILED", "get merchant id from order failed")
-	}
+	// orderId := freeze.OrderID
+	// merchantId, err := b.getMerchantIDFromOrder(ctx, orderId)
 
 	// 7. 增加商家可用余额
 	rows, err = tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
-		MerchantID:      merchantId,
+		MerchantID:      req.MerchantId,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,
 		ExpectedVersion: req.ExpectedMerchantVersion,
@@ -434,7 +504,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	paymentExtra := map[string]interface{}{
 		"freeze_id":       req.FreezeId,
 		"idempotency_key": req.IdempotencyKey,
-		"order_id":        freeze.OrderID.String(),
+		"order_id":        freeze.OrderID,
 	}
 	paymentExtraJson, err := json.Marshal(paymentExtra)
 	if err != nil {
@@ -443,32 +513,25 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
-		Type:              "PAYMENT",
+		ID:                id.SnowflakeID(),
+		Type:              constants.TransactionPayment,
 		Amount:            freeze.Amount,
 		Currency:          freeze.Currency,
 		FromUserID:        freeze.UserID,
-		ToMerchantID:      merchantId,
-		PaymentMethodType: "BALANCE", // 使用余额支付
-		PaymentAccount:    "internal_balance",
+		ToMerchantID:      req.MerchantId,
+		PaymentMethodType: string(constants.PaymentMethodBalancer), // 使用余额支付
+		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,
-		Status:            "PAID", // 已支付状态
+		Status:            string(constants.PaymentPaid), // 已支付状态
 	})
 	if err != nil {
-		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", "create transaction record failed")
+		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", fmt.Sprintf("create transaction failed: %v", err))
 	}
 
-	return &biz.ConfirmTransferResponse{
+	return &biz.ConfirmTransferReply{
 		Success:            true,
-		TransactionId:      strconv.FormatInt(transactionId, 10),
+		TransactionId:      transactionId,
 		NewUserVersion:     req.ExpectedUserVersion + 1,     // 用户余额版本号+1
 		NewMerchantVersion: req.ExpectedMerchantVersion + 1, // 商家余额版本号+1
 	}, nil
-}
-
-// 辅助方法：从订单ID获取商家ID
-func (b balancerRepo) getMerchantIDFromOrder(ctx context.Context, orderID uuid.UUID) (uuid.UUID, error) {
-	// 实际实现中，可能需要调用订单服务获取商家ID
-	// 这里简化处理，返回一个假的商家ID
-	// 在实际项目中，应该替换为真实的实现
-	return uuid.New(), nil
 }

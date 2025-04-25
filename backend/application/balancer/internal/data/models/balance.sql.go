@@ -55,65 +55,120 @@ func (q *Queries) ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezePa
 	return result.RowsAffected(), nil
 }
 
-const CreateMerchantBalance = `-- name: CreateMerchantBalance :one
-INSERT INTO balances.merchant_balances (merchant_id, currency, available, version, created_at, updated_at)
-VALUES ($1, $2, 0, 0, NOW(), NOW())
-RETURNING merchant_id, currency, available, version, created_at, updated_at
-`
-
-type CreateMerchantBalanceParams struct {
-	MerchantID uuid.UUID `json:"merchantID"`
-	Currency   string    `json:"currency"`
-}
-
-// 为商家创建指定币种的初始余额记录
-//
-//	INSERT INTO balances.merchant_balances (merchant_id, currency, available, version, created_at, updated_at)
-//	VALUES ($1, $2, 0, 0, NOW(), NOW())
-//	RETURNING merchant_id, currency, available, version, created_at, updated_at
-func (q *Queries) CreateMerchantBalance(ctx context.Context, arg CreateMerchantBalanceParams) (BalancesMerchantBalances, error) {
-	row := q.db.QueryRow(ctx, CreateMerchantBalance, arg.MerchantID, arg.Currency)
-	var i BalancesMerchantBalances
-	err := row.Scan(
-		&i.MerchantID,
-		&i.Currency,
-		&i.Available,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const CreateUserBalance = `-- name: CreateUserBalance :one
+const CreateConsumerBalance = `-- name: CreateConsumerBalance :one
 INSERT INTO balances.user_balances (user_id, currency, available, frozen, version)
-VALUES ($1, $2, 0, 0, 0)
-RETURNING user_id, currency, available, frozen, version, created_at, updated_at
+VALUES ($1, $2, $3, 0, 0)
+RETURNING user_id, currency, available
 `
 
-type CreateUserBalanceParams struct {
-	UserID   uuid.UUID `json:"userID"`
-	Currency string    `json:"currency"`
+type CreateConsumerBalanceParams struct {
+	UserID    uuid.UUID      `json:"userID"`
+	Currency  string         `json:"currency"`
+	Available pgtype.Numeric `json:"available"`
+}
+
+type CreateConsumerBalanceRow struct {
+	UserID    uuid.UUID      `json:"userID"`
+	Currency  string         `json:"currency"`
+	Available pgtype.Numeric `json:"available"`
 }
 
 // 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 //
 //	INSERT INTO balances.user_balances (user_id, currency, available, frozen, version)
-//	VALUES ($1, $2, 0, 0, 0)
-//	RETURNING user_id, currency, available, frozen, version, created_at, updated_at
-func (q *Queries) CreateUserBalance(ctx context.Context, arg CreateUserBalanceParams) (BalancesUserBalances, error) {
-	row := q.db.QueryRow(ctx, CreateUserBalance, arg.UserID, arg.Currency)
-	var i BalancesUserBalances
-	err := row.Scan(
-		&i.UserID,
-		&i.Currency,
-		&i.Available,
-		&i.Frozen,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
+//	VALUES ($1, $2, $3, 0, 0)
+//	RETURNING user_id, currency, available
+func (q *Queries) CreateConsumerBalance(ctx context.Context, arg CreateConsumerBalanceParams) (CreateConsumerBalanceRow, error) {
+	row := q.db.QueryRow(ctx, CreateConsumerBalance, arg.UserID, arg.Currency, arg.Available)
+	var i CreateConsumerBalanceRow
+	err := row.Scan(&i.UserID, &i.Currency, &i.Available)
 	return i, err
+}
+
+const CreateConsumerPaymentMethods = `-- name: CreateConsumerPaymentMethods :exec
+INSERT INTO balances.user_payment_methods (id, user_id, type, is_default, account_details)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type CreateConsumerPaymentMethodsParams struct {
+	ID             int64     `json:"id"`
+	UserID         uuid.UUID `json:"userID"`
+	Type           string    `json:"type"`
+	IsDefault      bool      `json:"isDefault"`
+	AccountDetails []byte    `json:"accountDetails"`
+}
+
+// 创建用户支付方式
+//
+//	INSERT INTO balances.user_payment_methods (id, user_id, type, is_default, account_details)
+//	VALUES ($1, $2, $3, $4, $5)
+func (q *Queries) CreateConsumerPaymentMethods(ctx context.Context, arg CreateConsumerPaymentMethodsParams) error {
+	_, err := q.db.Exec(ctx, CreateConsumerPaymentMethods,
+		arg.ID,
+		arg.UserID,
+		arg.Type,
+		arg.IsDefault,
+		arg.AccountDetails,
+	)
+	return err
+}
+
+const CreateMerchantBalance = `-- name: CreateMerchantBalance :one
+INSERT INTO balances.merchant_balances (merchant_id, currency, available, version)
+VALUES ($1, $2, $3, 0)
+RETURNING merchant_id, currency, available
+`
+
+type CreateMerchantBalanceParams struct {
+	MerchantID uuid.UUID      `json:"merchantID"`
+	Currency   string         `json:"currency"`
+	Available  pgtype.Numeric `json:"available"`
+}
+
+type CreateMerchantBalanceRow struct {
+	MerchantID uuid.UUID      `json:"merchantID"`
+	Currency   string         `json:"currency"`
+	Available  pgtype.Numeric `json:"available"`
+}
+
+// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+//
+//	INSERT INTO balances.merchant_balances (merchant_id, currency, available, version)
+//	VALUES ($1, $2, $3, 0)
+//	RETURNING merchant_id, currency, available
+func (q *Queries) CreateMerchantBalance(ctx context.Context, arg CreateMerchantBalanceParams) (CreateMerchantBalanceRow, error) {
+	row := q.db.QueryRow(ctx, CreateMerchantBalance, arg.MerchantID, arg.Currency, arg.Available)
+	var i CreateMerchantBalanceRow
+	err := row.Scan(&i.MerchantID, &i.Currency, &i.Available)
+	return i, err
+}
+
+const CreateMerchantPaymentMethods = `-- name: CreateMerchantPaymentMethods :exec
+INSERT INTO balances.merchant_payment_methods (id, merchant_id, type, is_default, account_details)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type CreateMerchantPaymentMethodsParams struct {
+	ID             int64     `json:"id"`
+	MerchantID     uuid.UUID `json:"merchantID"`
+	Type           string    `json:"type"`
+	IsDefault      bool      `json:"isDefault"`
+	AccountDetails []byte    `json:"accountDetails"`
+}
+
+// 创建用户支付方式
+//
+//	INSERT INTO balances.merchant_payment_methods (id, merchant_id, type, is_default, account_details)
+//	VALUES ($1, $2, $3, $4, $5)
+func (q *Queries) CreateMerchantPaymentMethods(ctx context.Context, arg CreateMerchantPaymentMethodsParams) error {
+	_, err := q.db.Exec(ctx, CreateMerchantPaymentMethods,
+		arg.ID,
+		arg.MerchantID,
+		arg.Type,
+		arg.IsDefault,
+		arg.AccountDetails,
+	)
+	return err
 }
 
 const DecreaseUserAvailableBalance = `-- name: DecreaseUserAvailableBalance :execrows

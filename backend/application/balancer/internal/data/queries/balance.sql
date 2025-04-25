@@ -5,11 +5,27 @@ FROM balances.user_balances
 WHERE user_id = $1
   AND currency = $2;
 
--- name: CreateUserBalance :one
+-- name: CreateConsumerPaymentMethods :exec
+-- 创建用户支付方式
+INSERT INTO balances.user_payment_methods (id, user_id, type, is_default, account_details)
+VALUES ($1, $2, $3, $4, $5);
+
+-- name: CreateMerchantPaymentMethods :exec
+-- 创建用户支付方式
+INSERT INTO balances.merchant_payment_methods (id, merchant_id, type, is_default, account_details)
+VALUES ($1, $2, $3, $4, $5);
+
+-- name: CreateConsumerBalance :one
 -- 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 INSERT INTO balances.user_balances (user_id, currency, available, frozen, version)
-VALUES ($1, $2, 0, 0, 0)
-RETURNING *;
+VALUES ($1, $2, $3, 0, 0)
+RETURNING user_id, currency, available;
+
+-- name: CreateMerchantBalance :one
+-- 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+INSERT INTO balances.merchant_balances (merchant_id, currency, available, version)
+VALUES ($1, $2, $3, 0)
+RETURNING merchant_id, currency, available;
 
 -- name: GetMerchantBalance :one
 -- 获取指定商家和币种的余额信息
@@ -17,12 +33,6 @@ SELECT available, version, currency
 FROM balances.merchant_balances
 WHERE merchant_id = $1
   AND currency = $2;
-
--- name: CreateMerchantBalance :one
--- 为商家创建指定币种的初始余额记录
-INSERT INTO balances.merchant_balances (merchant_id, currency, available, version, created_at, updated_at)
-VALUES ($1, $2, 0, 0, NOW(), NOW())
-RETURNING *;
 
 -- name: IncreaseUserAvailableBalance :execrows
 -- 增加用户可用余额 (用于充值成功, 取消提现, 取消冻结成功后资金退回) - 使用乐观锁

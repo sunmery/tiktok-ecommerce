@@ -1,8 +1,11 @@
 package constants
 
 type (
-	PaymentStatus  string // 支付状态
-	ShippingStatus string // 发货状态
+	PaymentStatus   string // 支付状态
+	ShippingStatus  string // 发货状态
+	FreezeStatus    string // 余额冻结状态
+	PaymentMethod   string // 支付方式
+	TransactionType string // 交易类型
 )
 
 const (
@@ -20,4 +23,24 @@ const (
 	ShippingDelivered   ShippingStatus = "DELIVERED"        // 已送达
 	ShippingConfirmed   ShippingStatus = "CONFIRMED"        // 确认收货
 	ShippingCancelled   ShippingStatus = "CANCELLED"        // 已取消发货
+)
+
+const (
+	PaymentMethodAlipay   PaymentMethod = "ALIPAY"
+	PaymentMethodWechat   PaymentMethod = "WECHAT"
+	PaymentMethodBalancer PaymentMethod = "BALANCER"
+	PaymentMethodBankCard PaymentMethod = "BANK_CARD"
+)
+
+const (
+	FreezeFrozen    = "FROZEN"    // 冻结余额
+	FreezeConfirmed = "CONFIRMED" // 确认余额
+	FreezeCanceled  = "CANCELED"  // 取消冻结
+)
+
+const (
+	TransactionRecharge = "RECHARGE" // 充值
+	TransactionPayment  = "PAYMENT"  // 支付
+	TransactionRefund   = "REFUND"   // 退款
+	TransactionWithdraw = "WITHDRAW" // 提现
 )
