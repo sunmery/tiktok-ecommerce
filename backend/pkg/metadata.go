@@ -33,3 +33,27 @@ func GetMetadataOwner(ctx context.Context) (string, error) {
 	}
 	return owner, nil
 }
+
+// GetMetadataRole 从网关获取用户角色
+func GetMetadataRole(ctx context.Context) (constants.RoleType, error) {
+	var role string
+	if md, ok := metadata.FromServerContext(ctx); ok {
+		role = md.Get(constants.Role)
+	}
+	return getRole(role), nil
+}
+
+func getRole(role string) constants.RoleType {
+	switch role {
+	case "consumer":
+		return constants.Consumer
+	case "merchant":
+		return constants.Merchant
+	case "admin":
+		return constants.Admin
+	case "guest":
+		return constants.Guest
+	default:
+		return constants.Guest
+	}
+}

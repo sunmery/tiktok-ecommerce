@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"strconv"
 
-	"backend/application/balancer/pkg/id"
+	globalPkg "backend/pkg"
+
+	"github.com/google/uuid"
+
+	"backend/application/balancer/internal/pkg/id"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/jackc/pgx/v5"
 
 	"backend/constants"
-
-	"github.com/google/uuid"
 
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 
@@ -38,6 +40,78 @@ func NewBalancerRepo(data *Data, logger log.Logger) biz.BalancerRepo {
 		data: data,
 		log:  log.NewHelper(logger),
 	}
+}
+
+func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransactionsRequest) (*biz.GetTransactionsReply, error) {
+	page := (req.Page - 1) * req.PageSize
+	pageSize := req.PageSize
+
+	role, err := globalPkg.GetMetadataRole(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var transactions []models.BalancesTransactions
+	switch role {
+	case constants.Consumer:
+		transactions, err = b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
+			UserID:   req.UserId,
+			Currency: req.Currency,
+			Status:   string(req.PaymentStatus),
+			Page:     page,
+			PageSize: pageSize,
+		})
+		if err != nil {
+			return nil, err
+		}
+	case constants.Merchant:
+		transactions, err = b.data.db.GetMerchantTransactions(ctx, models.GetMerchantTransactionsParams{
+			MerchantID: req.UserId,
+			Currency:   req.Currency,
+			Status:     string(req.PaymentStatus),
+			Page:       page,
+			PageSize:   pageSize,
+		})
+	}
+
+	var bizTransactions []*biz.Transactions
+	for _, t := range transactions {
+		amount, err := types.NumericToFloat(t.Amount)
+		if err != nil {
+			return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to float64 failed")
+		}
+
+		fromUserId, err := uuid.Parse(t.FromUserID.String())
+		if err != nil {
+			return nil, kerrors.New(500, "PARSE_USER_ID_FAILED", "parse user id failed")
+		}
+
+		toMerchantId, err := uuid.Parse(t.ToMerchantID.String())
+		if err != nil {
+			return nil, kerrors.New(500, "PARSE_MERCHANT_ID_FAILED", "parse merchant id failed")
+		}
+
+		bizTransaction := &biz.Transactions{
+			Id:                t.ID,
+			Type:              constants.TransactionType(t.Type),
+			Amount:            amount,
+			Currency:          t.Currency,
+			FromUserId:        fromUserId,
+			ToMerchantId:      toMerchantId,
+			PaymentMethodType: constants.PaymentMethod(t.PaymentMethodType),
+			PaymentAccount:    t.PaymentAccount,
+			PaymentExtra:      t.PaymentExtra,
+			Status:            constants.PaymentStatus(t.Status),
+			CreatedAt:         t.CreatedAt,
+			UpdatedAt:         t.UpdatedAt,
+		}
+
+		bizTransactions = append(bizTransactions, bizTransaction)
+	}
+
+	return &biz.GetTransactionsReply{
+		Transactions: bizTransactions,
+	}, nil
 }
 
 // FreezeBalance 冻结余额
@@ -311,8 +385,7 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 	}
 
 	// 3. 创建交易记录
-	// 为了简化，我们使用一个假的商家ID（实际应用中可能是平台账户）
-	merchantId := uuid.New()
+	merchantId := req.MerchantId
 
 	// 构建额外信息JSON
 	paymentExtra := map[string]interface{}{
@@ -390,8 +463,7 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 	}
 
 	// 4. 创建交易记录
-	// 为了简化，我们使用一个假的商家ID（实际应用中可能是平台账户）
-	merchantId := uuid.New()
+	merchantId := req.MerchantId
 
 	// 从支付方式中提取账号信息
 	var accountInfo string

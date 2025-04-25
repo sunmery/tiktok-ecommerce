@@ -208,6 +208,65 @@
         ]
       }
     },
+    "/v1/balances/transactions": {
+      "get": {
+        "summary": "获取商家或者用户订单流水",
+        "operationId": "Balance_GetTransactions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTransactionsReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "UUID as string",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "currency",
+            "description": "指定币种",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "paymentStatus",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
     "/v1/balances/users/{userId}/balance": {
       "get": {
         "summary": "获取用户余额",
@@ -467,6 +526,10 @@
     "BalanceRechargeBalanceBody": {
       "type": "object",
       "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "商家 ID (string)"
+        },
         "amount": {
           "type": "number",
           "format": "double",
@@ -503,6 +566,9 @@
     "BalanceWithdrawBalanceBody": {
       "type": "object",
       "properties": {
+        "merchantId": {
+          "type": "string"
+        },
         "amount": {
           "type": "number",
           "format": "double",
@@ -701,6 +767,18 @@
         }
       }
     },
+    "v1GetTransactionsReply": {
+      "type": "object",
+      "properties": {
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Transactions"
+          }
+        }
+      }
+    },
     "v1RechargeBalanceReply": {
       "type": "object",
       "properties": {
@@ -716,6 +794,51 @@
           "type": "integer",
           "format": "int32",
           "title": "用户余额新版本号"
+        }
+      }
+    },
+    "v1Transactions": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "type": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "fromUserId": {
+          "type": "string"
+        },
+        "toMerchantId": {
+          "type": "string"
+        },
+        "paymentMethodType": {
+          "type": "string"
+        },
+        "paymentAccount": {
+          "type": "string"
+        },
+        "paymentExtra": {
+          "type": "object"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

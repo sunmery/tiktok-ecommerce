@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/google/uuid"
 
 	"backend/constants"
@@ -201,14 +205,74 @@ func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerc
 	}, nil
 }
 
+func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransactionsRequest) (*pb.GetTransactionsReply, error) {
+	var err error
+	var userId uuid.UUID
+	userId, err = globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	transactions, err := s.uc.GetTransactions(ctx, &biz.GetTransactionsRequest{
+		UserId:        userId,
+		Currency:      req.Currency,
+		Page:          req.Page,
+		PageSize:      req.PageSize,
+		PaymentStatus: constants.PaymentStatus(req.PaymentStatus),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var pbTransactions []*pb.Transactions
+	for _, t := range transactions.Transactions {
+		pbTransaction := &pb.Transactions{
+			Id:                t.Id,
+			Type:              string(t.Type),
+			Amount:            t.Amount,
+			Currency:          t.Currency,
+			FromUserId:        t.FromUserId.String(),
+			ToMerchantId:      t.ToMerchantId.String(),
+			PaymentMethodType: string(t.PaymentMethodType),
+			PaymentAccount:    t.PaymentAccount,
+			Status:            string(t.Status),
+		}
+
+		if t.PaymentExtra != nil {
+			pbTransaction.PaymentExtra = &structpb.Struct{}
+			if err := json.Unmarshal(t.PaymentExtra, &pbTransaction.PaymentExtra.Fields); err != nil {
+				return nil, err
+			}
+		}
+
+		pbTransaction.CreatedAt = timestamppb.New(t.CreatedAt)
+		pbTransaction.UpdatedAt = timestamppb.New(t.UpdatedAt)
+
+		pbTransactions = append(pbTransactions, pbTransaction)
+	}
+
+	return &pb.GetTransactionsReply{
+		Transactions: pbTransactions,
+	}, nil
+}
+
 func (s *BalanceService) RechargeBalance(ctx context.Context, req *pb.RechargeBalanceRequest) (*pb.RechargeBalanceReply, error) {
-	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := s.uc.RechargeBalance(ctx, &biz.RechargeBalanceRequest{
 		UserId:                userId,
+		MerchantId:            merchantId,
 		Amount:                req.Amount,
 		Currency:              constants.Currency(req.Currency),
 		ExternalTransactionId: req.ExternalTransactionId,
@@ -229,13 +293,18 @@ func (s *BalanceService) RechargeBalance(ctx context.Context, req *pb.RechargeBa
 }
 
 func (s *BalanceService) WithdrawBalance(ctx context.Context, req *pb.WithdrawBalanceRequest) (*pb.WithdrawBalanceReply, error) {
-	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := s.uc.WithdrawBalance(ctx, &biz.WithdrawBalanceRequest{
 		UserId:          userId,
+		MerchantId:      merchantId,
 		Amount:          req.Amount,
 		Currency:        constants.Currency(req.Currency),
 		PaymentMethodId: req.PaymentMethodId,

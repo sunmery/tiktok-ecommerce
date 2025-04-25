@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"backend/application/balancer/internal/conf"
-	"backend/application/balancer/pkg"
 	"backend/constants"
+	"backend/pkg"
 
 	"github.com/go-kratos/kratos/v2/registry"
 

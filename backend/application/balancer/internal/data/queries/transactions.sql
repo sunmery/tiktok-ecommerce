@@ -7,7 +7,7 @@ INSERT INTO balances.transactions (id,
     -- freeze_id 可以在创建支付流水时关联
     -- , freeze_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,NOW(), NOW()
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()
            -- , $10
        )
 RETURNING id;
@@ -20,11 +20,24 @@ SET status     = $1,
     updated_at = NOW()
 WHERE id = $2;
 
--- name: GetTransaction :one
--- 根据 ID 获取交易流水记录
+-- name: GetMerchantTransactions :many
+-- 根据 商家ID 获取交易流水记录
 SELECT *
 FROM balances.transactions
-WHERE id = $1;
+WHERE to_merchant_id = @merchant_id
+  AND currency = COALESCE(@currency, currency)
+  AND status = COALESCE(@status, status)
+LIMIT @page_size OFFSET @page;
+
+-- name: GetConsumerTransactions :many
+-- 根据 用户ID 获取交易流水记录
+SELECT *
+FROM balances.transactions
+WHERE from_user_id = @user_id
+  AND currency = COALESCE(@currency, currency)
+  AND status = COALESCE(@status, status)
+LIMIT @page_size OFFSET @page;
+
 
 -- name: GetUserPaymentMethod :one
 -- 获取用户支付方式详情 (可能在提现时需要)

@@ -4,6 +4,7 @@ package ecommerce.balancer.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "backend/api/balancer/v1;balancerv1";
 
@@ -64,6 +65,13 @@ service Balance {
     };
   }
 
+  // 获取商家或者用户订单流水
+  rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsReply) {
+    option (google.api.http) = {
+      get: "/v1/balances/transactions"
+    };
+  }
+
   // 用户充值
   rpc RechargeBalance(RechargeBalanceRequest) returns (RechargeBalanceReply) {
     option (google.api.http) = {
@@ -114,6 +122,33 @@ message CreateConsumerBalanceReply {
 message GetUserBalanceRequest {
   string user_id = 1;       // UUID as string
   string currency = 2;    // 指定币种
+}
+
+message GetTransactionsRequest {
+  string user_id = 1;       // UUID as string
+  string currency = 2;    // 指定币种
+  int64 page = 3;
+  int64 page_size = 4;
+  string payment_status = 5;
+}
+
+message Transactions {
+  int64 id = 1;
+  string type = 2;
+  double amount = 3;
+  string currency = 4;
+  string from_user_id = 5;
+  string to_merchant_id = 6;
+  string payment_method_type = 7;
+  string payment_account = 8;
+  google.protobuf.Struct payment_extra = 9;
+  string status = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message GetTransactionsReply {
+  repeated Transactions transactions = 1;
 }
 
 message GetMerchantBalanceRequest {
@@ -174,6 +209,7 @@ message CancelFreezeReply {
 
 message RechargeBalanceRequest {
   string user_id = 1;             // 用户 UUID (string)
+  string merchant_id = 9;         // 商家 ID (string)
   double amount = 2;               // 充值金额
   string currency = 3;          // 充值币种
   int64 external_transaction_id = 4; // 外部支付流水号 (如支付宝/微信订单号)
@@ -191,6 +227,7 @@ message RechargeBalanceReply {
 
 message WithdrawBalanceRequest {
   string user_id = 1;             // 用户 UUID (string)
+  string merchant_id = 7;
   double amount = 2;               // 提现金额
   string currency = 3;          // 提现币种
   string payment_method_id = 4;   // 用户选择的提现方式ID (BIGINT as string from user_payment_methods)

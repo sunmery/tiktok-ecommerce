@@ -11,6 +11,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -363,6 +364,258 @@ func (x *GetUserBalanceRequest) GetCurrency() string {
 	return ""
 }
 
+type GetTransactionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`           // 指定币种
+	Page          int64                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int64                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PaymentStatus string                 `protobuf:"bytes,5,opt,name=payment_status,json=paymentStatus,proto3" json:"payment_status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTransactionsRequest) Reset() {
+	*x = GetTransactionsRequest{}
+	mi := &file_v1_balancer_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTransactionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTransactionsRequest) ProtoMessage() {}
+
+func (x *GetTransactionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_balancer_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTransactionsRequest.ProtoReflect.Descriptor instead.
+func (*GetTransactionsRequest) Descriptor() ([]byte, []int) {
+	return file_v1_balancer_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetTransactionsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetTransactionsRequest) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *GetTransactionsRequest) GetPage() int64 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetTransactionsRequest) GetPageSize() int64 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *GetTransactionsRequest) GetPaymentStatus() string {
+	if x != nil {
+		return x.PaymentStatus
+	}
+	return ""
+}
+
+type Transactions struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type              string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Amount            float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Currency          string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	FromUserId        string                 `protobuf:"bytes,5,opt,name=from_user_id,json=fromUserId,proto3" json:"from_user_id,omitempty"`
+	ToMerchantId      string                 `protobuf:"bytes,6,opt,name=to_merchant_id,json=toMerchantId,proto3" json:"to_merchant_id,omitempty"`
+	PaymentMethodType string                 `protobuf:"bytes,7,opt,name=payment_method_type,json=paymentMethodType,proto3" json:"payment_method_type,omitempty"`
+	PaymentAccount    string                 `protobuf:"bytes,8,opt,name=payment_account,json=paymentAccount,proto3" json:"payment_account,omitempty"`
+	PaymentExtra      *structpb.Struct       `protobuf:"bytes,9,opt,name=payment_extra,json=paymentExtra,proto3" json:"payment_extra,omitempty"`
+	Status            string                 `protobuf:"bytes,10,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *Transactions) Reset() {
+	*x = Transactions{}
+	mi := &file_v1_balancer_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Transactions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Transactions) ProtoMessage() {}
+
+func (x *Transactions) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_balancer_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Transactions.ProtoReflect.Descriptor instead.
+func (*Transactions) Descriptor() ([]byte, []int) {
+	return file_v1_balancer_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Transactions) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Transactions) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Transactions) GetAmount() float64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *Transactions) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *Transactions) GetFromUserId() string {
+	if x != nil {
+		return x.FromUserId
+	}
+	return ""
+}
+
+func (x *Transactions) GetToMerchantId() string {
+	if x != nil {
+		return x.ToMerchantId
+	}
+	return ""
+}
+
+func (x *Transactions) GetPaymentMethodType() string {
+	if x != nil {
+		return x.PaymentMethodType
+	}
+	return ""
+}
+
+func (x *Transactions) GetPaymentAccount() string {
+	if x != nil {
+		return x.PaymentAccount
+	}
+	return ""
+}
+
+func (x *Transactions) GetPaymentExtra() *structpb.Struct {
+	if x != nil {
+		return x.PaymentExtra
+	}
+	return nil
+}
+
+func (x *Transactions) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *Transactions) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Transactions) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type GetTransactionsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Transactions  []*Transactions        `protobuf:"bytes,1,rep,name=transactions,proto3" json:"transactions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTransactionsReply) Reset() {
+	*x = GetTransactionsReply{}
+	mi := &file_v1_balancer_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTransactionsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTransactionsReply) ProtoMessage() {}
+
+func (x *GetTransactionsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_balancer_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTransactionsReply.ProtoReflect.Descriptor instead.
+func (*GetTransactionsReply) Descriptor() ([]byte, []int) {
+	return file_v1_balancer_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetTransactionsReply) GetTransactions() []*Transactions {
+	if x != nil {
+		return x.Transactions
+	}
+	return nil
+}
+
 type GetMerchantBalanceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"` // UUID as string
@@ -373,7 +626,7 @@ type GetMerchantBalanceRequest struct {
 
 func (x *GetMerchantBalanceRequest) Reset() {
 	*x = GetMerchantBalanceRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[5]
+	mi := &file_v1_balancer_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -385,7 +638,7 @@ func (x *GetMerchantBalanceRequest) String() string {
 func (*GetMerchantBalanceRequest) ProtoMessage() {}
 
 func (x *GetMerchantBalanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[5]
+	mi := &file_v1_balancer_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -398,7 +651,7 @@ func (x *GetMerchantBalanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMerchantBalanceRequest.ProtoReflect.Descriptor instead.
 func (*GetMerchantBalanceRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{5}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetMerchantBalanceRequest) GetMerchantId() string {
@@ -427,7 +680,7 @@ type BalanceReply struct {
 
 func (x *BalanceReply) Reset() {
 	*x = BalanceReply{}
-	mi := &file_v1_balancer_proto_msgTypes[6]
+	mi := &file_v1_balancer_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -439,7 +692,7 @@ func (x *BalanceReply) String() string {
 func (*BalanceReply) ProtoMessage() {}
 
 func (x *BalanceReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[6]
+	mi := &file_v1_balancer_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -452,7 +705,7 @@ func (x *BalanceReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BalanceReply.ProtoReflect.Descriptor instead.
 func (*BalanceReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{6}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *BalanceReply) GetAvailable() float64 {
@@ -498,7 +751,7 @@ type FreezeBalanceRequest struct {
 
 func (x *FreezeBalanceRequest) Reset() {
 	*x = FreezeBalanceRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[7]
+	mi := &file_v1_balancer_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -510,7 +763,7 @@ func (x *FreezeBalanceRequest) String() string {
 func (*FreezeBalanceRequest) ProtoMessage() {}
 
 func (x *FreezeBalanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[7]
+	mi := &file_v1_balancer_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -523,7 +776,7 @@ func (x *FreezeBalanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeBalanceRequest.ProtoReflect.Descriptor instead.
 func (*FreezeBalanceRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{7}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *FreezeBalanceRequest) GetUserId() string {
@@ -578,7 +831,7 @@ type FreezeBalanceReply struct {
 
 func (x *FreezeBalanceReply) Reset() {
 	*x = FreezeBalanceReply{}
-	mi := &file_v1_balancer_proto_msgTypes[8]
+	mi := &file_v1_balancer_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -590,7 +843,7 @@ func (x *FreezeBalanceReply) String() string {
 func (*FreezeBalanceReply) ProtoMessage() {}
 
 func (x *FreezeBalanceReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[8]
+	mi := &file_v1_balancer_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -603,7 +856,7 @@ func (x *FreezeBalanceReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeBalanceReply.ProtoReflect.Descriptor instead.
 func (*FreezeBalanceReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{8}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *FreezeBalanceReply) GetFreezeId() int64 {
@@ -635,7 +888,7 @@ type ConfirmTransferRequest struct {
 
 func (x *ConfirmTransferRequest) Reset() {
 	*x = ConfirmTransferRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[9]
+	mi := &file_v1_balancer_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -647,7 +900,7 @@ func (x *ConfirmTransferRequest) String() string {
 func (*ConfirmTransferRequest) ProtoMessage() {}
 
 func (x *ConfirmTransferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[9]
+	mi := &file_v1_balancer_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -660,7 +913,7 @@ func (x *ConfirmTransferRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmTransferRequest.ProtoReflect.Descriptor instead.
 func (*ConfirmTransferRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{9}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ConfirmTransferRequest) GetFreezeId() int64 {
@@ -717,7 +970,7 @@ type ConfirmTransferReply struct {
 
 func (x *ConfirmTransferReply) Reset() {
 	*x = ConfirmTransferReply{}
-	mi := &file_v1_balancer_proto_msgTypes[10]
+	mi := &file_v1_balancer_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -729,7 +982,7 @@ func (x *ConfirmTransferReply) String() string {
 func (*ConfirmTransferReply) ProtoMessage() {}
 
 func (x *ConfirmTransferReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[10]
+	mi := &file_v1_balancer_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -742,7 +995,7 @@ func (x *ConfirmTransferReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmTransferReply.ProtoReflect.Descriptor instead.
 func (*ConfirmTransferReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{10}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ConfirmTransferReply) GetSuccess() bool {
@@ -785,7 +1038,7 @@ type CancelFreezeRequest struct {
 
 func (x *CancelFreezeRequest) Reset() {
 	*x = CancelFreezeRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[11]
+	mi := &file_v1_balancer_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -797,7 +1050,7 @@ func (x *CancelFreezeRequest) String() string {
 func (*CancelFreezeRequest) ProtoMessage() {}
 
 func (x *CancelFreezeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[11]
+	mi := &file_v1_balancer_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -810,7 +1063,7 @@ func (x *CancelFreezeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelFreezeRequest.ProtoReflect.Descriptor instead.
 func (*CancelFreezeRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{11}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CancelFreezeRequest) GetFreezeId() int64 {
@@ -851,7 +1104,7 @@ type CancelFreezeReply struct {
 
 func (x *CancelFreezeReply) Reset() {
 	*x = CancelFreezeReply{}
-	mi := &file_v1_balancer_proto_msgTypes[12]
+	mi := &file_v1_balancer_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -863,7 +1116,7 @@ func (x *CancelFreezeReply) String() string {
 func (*CancelFreezeReply) ProtoMessage() {}
 
 func (x *CancelFreezeReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[12]
+	mi := &file_v1_balancer_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -876,7 +1129,7 @@ func (x *CancelFreezeReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelFreezeReply.ProtoReflect.Descriptor instead.
 func (*CancelFreezeReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{12}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CancelFreezeReply) GetSuccess() bool {
@@ -896,6 +1149,7 @@ func (x *CancelFreezeReply) GetNewVersion() int32 {
 type RechargeBalanceRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	UserId                string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                 // 用户 UUID (string)
+	MerchantId            string                 `protobuf:"bytes,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`                                     // 商家 ID (string)
 	Amount                float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`                                                             // 充值金额
 	Currency              string                 `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`                                                           // 充值币种
 	ExternalTransactionId int64                  `protobuf:"varint,4,opt,name=external_transaction_id,json=externalTransactionId,proto3" json:"external_transaction_id,omitempty"` // 外部支付流水号 (如支付宝/微信订单号)
@@ -909,7 +1163,7 @@ type RechargeBalanceRequest struct {
 
 func (x *RechargeBalanceRequest) Reset() {
 	*x = RechargeBalanceRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[13]
+	mi := &file_v1_balancer_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -921,7 +1175,7 @@ func (x *RechargeBalanceRequest) String() string {
 func (*RechargeBalanceRequest) ProtoMessage() {}
 
 func (x *RechargeBalanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[13]
+	mi := &file_v1_balancer_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -934,12 +1188,19 @@ func (x *RechargeBalanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RechargeBalanceRequest.ProtoReflect.Descriptor instead.
 func (*RechargeBalanceRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{13}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RechargeBalanceRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *RechargeBalanceRequest) GetMerchantId() string {
+	if x != nil {
+		return x.MerchantId
 	}
 	return ""
 }
@@ -1004,7 +1265,7 @@ type RechargeBalanceReply struct {
 
 func (x *RechargeBalanceReply) Reset() {
 	*x = RechargeBalanceReply{}
-	mi := &file_v1_balancer_proto_msgTypes[14]
+	mi := &file_v1_balancer_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1016,7 +1277,7 @@ func (x *RechargeBalanceReply) String() string {
 func (*RechargeBalanceReply) ProtoMessage() {}
 
 func (x *RechargeBalanceReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[14]
+	mi := &file_v1_balancer_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1029,7 +1290,7 @@ func (x *RechargeBalanceReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RechargeBalanceReply.ProtoReflect.Descriptor instead.
 func (*RechargeBalanceReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{14}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *RechargeBalanceReply) GetSuccess() bool {
@@ -1055,7 +1316,8 @@ func (x *RechargeBalanceReply) GetNewVersion() int32 {
 
 type WithdrawBalanceRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                              // 用户 UUID (string)
+	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 UUID (string)
+	MerchantId      string                 `protobuf:"bytes,7,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Amount          float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`                                          // 提现金额
 	Currency        string                 `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`                                        // 提现币种
 	PaymentMethodId string                 `protobuf:"bytes,4,opt,name=payment_method_id,json=paymentMethodId,proto3" json:"payment_method_id,omitempty"` // 用户选择的提现方式ID (BIGINT as string from user_payment_methods)
@@ -1067,7 +1329,7 @@ type WithdrawBalanceRequest struct {
 
 func (x *WithdrawBalanceRequest) Reset() {
 	*x = WithdrawBalanceRequest{}
-	mi := &file_v1_balancer_proto_msgTypes[15]
+	mi := &file_v1_balancer_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1079,7 +1341,7 @@ func (x *WithdrawBalanceRequest) String() string {
 func (*WithdrawBalanceRequest) ProtoMessage() {}
 
 func (x *WithdrawBalanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[15]
+	mi := &file_v1_balancer_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1092,12 +1354,19 @@ func (x *WithdrawBalanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawBalanceRequest.ProtoReflect.Descriptor instead.
 func (*WithdrawBalanceRequest) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{15}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *WithdrawBalanceRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *WithdrawBalanceRequest) GetMerchantId() string {
+	if x != nil {
+		return x.MerchantId
 	}
 	return ""
 }
@@ -1148,7 +1417,7 @@ type WithdrawBalanceReply struct {
 
 func (x *WithdrawBalanceReply) Reset() {
 	*x = WithdrawBalanceReply{}
-	mi := &file_v1_balancer_proto_msgTypes[16]
+	mi := &file_v1_balancer_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1160,7 +1429,7 @@ func (x *WithdrawBalanceReply) String() string {
 func (*WithdrawBalanceReply) ProtoMessage() {}
 
 func (x *WithdrawBalanceReply) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_balancer_proto_msgTypes[16]
+	mi := &file_v1_balancer_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1173,7 +1442,7 @@ func (x *WithdrawBalanceReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawBalanceReply.ProtoReflect.Descriptor instead.
 func (*WithdrawBalanceReply) Descriptor() ([]byte, []int) {
-	return file_v1_balancer_proto_rawDescGZIP(), []int{16}
+	return file_v1_balancer_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *WithdrawBalanceReply) GetSuccess() bool {
@@ -1201,7 +1470,7 @@ var File_v1_balancer_proto protoreflect.FileDescriptor
 
 const file_v1_balancer_proto_rawDesc = "" +
 	"\n" +
-	"\x11v1/balancer.proto\x12\x15ecommerce.balancer.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x8a\x02\n" +
+	"\x11v1/balancer.proto\x12\x15ecommerce.balancer.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8a\x02\n" +
 	"\x1cCreateMerchantBalanceRequest\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12\x1a\n" +
@@ -1229,7 +1498,32 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\tavailable\x18\x03 \x01(\x01R\tavailable\"L\n" +
 	"\x15GetUserBalanceRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
-	"\bcurrency\x18\x02 \x01(\tR\bcurrency\"X\n" +
+	"\bcurrency\x18\x02 \x01(\tR\bcurrency\"\xa5\x01\n" +
+	"\x16GetTransactionsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
+	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x03R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x04 \x01(\x03R\bpageSize\x12%\n" +
+	"\x0epayment_status\x18\x05 \x01(\tR\rpaymentStatus\"\xd3\x03\n" +
+	"\fTransactions\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\x01R\x06amount\x12\x1a\n" +
+	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12 \n" +
+	"\ffrom_user_id\x18\x05 \x01(\tR\n" +
+	"fromUserId\x12$\n" +
+	"\x0eto_merchant_id\x18\x06 \x01(\tR\ftoMerchantId\x12.\n" +
+	"\x13payment_method_type\x18\a \x01(\tR\x11paymentMethodType\x12'\n" +
+	"\x0fpayment_account\x18\b \x01(\tR\x0epaymentAccount\x12<\n" +
+	"\rpayment_extra\x18\t \x01(\v2\x17.google.protobuf.StructR\fpaymentExtra\x12\x16\n" +
+	"\x06status\x18\n" +
+	" \x01(\tR\x06status\x129\n" +
+	"\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"_\n" +
+	"\x14GetTransactionsReply\x12G\n" +
+	"\ftransactions\x18\x01 \x03(\v2#.ecommerce.balancer.v1.TransactionsR\ftransactions\"X\n" +
 	"\x19GetMerchantBalanceRequest\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12\x1a\n" +
@@ -1271,9 +1565,11 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\x11CancelFreezeReply\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1f\n" +
 	"\vnew_version\x18\x02 \x01(\x05R\n" +
-	"newVersion\"\xca\x02\n" +
+	"newVersion\"\xeb\x02\n" +
 	"\x16RechargeBalanceRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
+	"\vmerchant_id\x18\t \x01(\tR\n" +
+	"merchantId\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x01R\x06amount\x12\x1a\n" +
 	"\bcurrency\x18\x03 \x01(\tR\bcurrency\x126\n" +
 	"\x17external_transaction_id\x18\x04 \x01(\x03R\x15externalTransactionId\x12.\n" +
@@ -1285,9 +1581,11 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\x12\x1f\n" +
 	"\vnew_version\x18\x03 \x01(\x05R\n" +
-	"newVersion\"\xe5\x01\n" +
+	"newVersion\"\x86\x02\n" +
 	"\x16WithdrawBalanceRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
+	"\vmerchant_id\x18\a \x01(\tR\n" +
+	"merchantId\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x01R\x06amount\x12\x1a\n" +
 	"\bcurrency\x18\x03 \x01(\tR\bcurrency\x12*\n" +
 	"\x11payment_method_id\x18\x04 \x01(\tR\x0fpaymentMethodId\x12'\n" +
@@ -1297,7 +1595,7 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\x12\x1f\n" +
 	"\vnew_version\x18\x03 \x01(\x05R\n" +
-	"newVersion2\xbd\v\n" +
+	"newVersion2\xd0\f\n" +
 	"\aBalance\x12\xb0\x01\n" +
 	"\x15CreateConsumerBalance\x123.ecommerce.balancer.v1.CreateConsumerBalanceRequest\x1a1.ecommerce.balancer.v1.CreateConsumerBalanceReply\"/\x82\xd3\xe4\x93\x02):\x01*\x1a$/v1/balances/users/{user_id}/balance\x12\xb8\x01\n" +
 	"\x15CreateMerchantBalance\x123.ecommerce.balancer.v1.CreateMerchantBalanceRequest\x1a1.ecommerce.balancer.v1.CreateMerchantBalanceReply\"7\x82\xd3\xe4\x93\x021:\x01*\x1a,/v1/balances/merchants/{merchant_id}/balance\x12\x91\x01\n" +
@@ -1305,7 +1603,8 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\rFreezeBalance\x12+.ecommerce.balancer.v1.FreezeBalanceRequest\x1a).ecommerce.balancer.v1.FreezeBalanceReply\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/balances/freeze\x12\xa2\x01\n" +
 	"\x0fConfirmTransfer\x12-.ecommerce.balancer.v1.ConfirmTransferRequest\x1a+.ecommerce.balancer.v1.ConfirmTransferReply\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/balances/freezes/{freeze_id}/confirm\x12\x98\x01\n" +
 	"\fCancelFreeze\x12*.ecommerce.balancer.v1.CancelFreezeRequest\x1a(.ecommerce.balancer.v1.CancelFreezeReply\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/balances/freezes/{freeze_id}/cancel\x12\xa1\x01\n" +
-	"\x12GetMerchantBalance\x120.ecommerce.balancer.v1.GetMerchantBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\"4\x82\xd3\xe4\x93\x02.\x12,/v1/balances/merchants/{merchant_id}/balance\x12\x9f\x01\n" +
+	"\x12GetMerchantBalance\x120.ecommerce.balancer.v1.GetMerchantBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\"4\x82\xd3\xe4\x93\x02.\x12,/v1/balances/merchants/{merchant_id}/balance\x12\x90\x01\n" +
+	"\x0fGetTransactions\x12-.ecommerce.balancer.v1.GetTransactionsRequest\x1a+.ecommerce.balancer.v1.GetTransactionsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/balances/transactions\x12\x9f\x01\n" +
 	"\x0fRechargeBalance\x12-.ecommerce.balancer.v1.RechargeBalanceRequest\x1a+.ecommerce.balancer.v1.RechargeBalanceReply\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/balances/users/{user_id}/recharge\x12\x9f\x01\n" +
 	"\x0fWithdrawBalance\x12-.ecommerce.balancer.v1.WithdrawBalanceRequest\x1a+.ecommerce.balancer.v1.WithdrawBalanceReply\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/balances/users/{user_id}/withdrawB$Z\"backend/api/balancer/v1;balancerv1b\x06proto3"
 
@@ -1321,53 +1620,63 @@ func file_v1_balancer_proto_rawDescGZIP() []byte {
 	return file_v1_balancer_proto_rawDescData
 }
 
-var file_v1_balancer_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_v1_balancer_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_v1_balancer_proto_goTypes = []any{
 	(*CreateMerchantBalanceRequest)(nil), // 0: ecommerce.balancer.v1.CreateMerchantBalanceRequest
 	(*CreateMerchantBalanceReply)(nil),   // 1: ecommerce.balancer.v1.CreateMerchantBalanceReply
 	(*CreateConsumerBalanceRequest)(nil), // 2: ecommerce.balancer.v1.CreateConsumerBalanceRequest
 	(*CreateConsumerBalanceReply)(nil),   // 3: ecommerce.balancer.v1.CreateConsumerBalanceReply
 	(*GetUserBalanceRequest)(nil),        // 4: ecommerce.balancer.v1.GetUserBalanceRequest
-	(*GetMerchantBalanceRequest)(nil),    // 5: ecommerce.balancer.v1.GetMerchantBalanceRequest
-	(*BalanceReply)(nil),                 // 6: ecommerce.balancer.v1.BalanceReply
-	(*FreezeBalanceRequest)(nil),         // 7: ecommerce.balancer.v1.FreezeBalanceRequest
-	(*FreezeBalanceReply)(nil),           // 8: ecommerce.balancer.v1.FreezeBalanceReply
-	(*ConfirmTransferRequest)(nil),       // 9: ecommerce.balancer.v1.ConfirmTransferRequest
-	(*ConfirmTransferReply)(nil),         // 10: ecommerce.balancer.v1.ConfirmTransferReply
-	(*CancelFreezeRequest)(nil),          // 11: ecommerce.balancer.v1.CancelFreezeRequest
-	(*CancelFreezeReply)(nil),            // 12: ecommerce.balancer.v1.CancelFreezeReply
-	(*RechargeBalanceRequest)(nil),       // 13: ecommerce.balancer.v1.RechargeBalanceRequest
-	(*RechargeBalanceReply)(nil),         // 14: ecommerce.balancer.v1.RechargeBalanceReply
-	(*WithdrawBalanceRequest)(nil),       // 15: ecommerce.balancer.v1.WithdrawBalanceRequest
-	(*WithdrawBalanceReply)(nil),         // 16: ecommerce.balancer.v1.WithdrawBalanceReply
-	(*structpb.Struct)(nil),              // 17: google.protobuf.Struct
+	(*GetTransactionsRequest)(nil),       // 5: ecommerce.balancer.v1.GetTransactionsRequest
+	(*Transactions)(nil),                 // 6: ecommerce.balancer.v1.Transactions
+	(*GetTransactionsReply)(nil),         // 7: ecommerce.balancer.v1.GetTransactionsReply
+	(*GetMerchantBalanceRequest)(nil),    // 8: ecommerce.balancer.v1.GetMerchantBalanceRequest
+	(*BalanceReply)(nil),                 // 9: ecommerce.balancer.v1.BalanceReply
+	(*FreezeBalanceRequest)(nil),         // 10: ecommerce.balancer.v1.FreezeBalanceRequest
+	(*FreezeBalanceReply)(nil),           // 11: ecommerce.balancer.v1.FreezeBalanceReply
+	(*ConfirmTransferRequest)(nil),       // 12: ecommerce.balancer.v1.ConfirmTransferRequest
+	(*ConfirmTransferReply)(nil),         // 13: ecommerce.balancer.v1.ConfirmTransferReply
+	(*CancelFreezeRequest)(nil),          // 14: ecommerce.balancer.v1.CancelFreezeRequest
+	(*CancelFreezeReply)(nil),            // 15: ecommerce.balancer.v1.CancelFreezeReply
+	(*RechargeBalanceRequest)(nil),       // 16: ecommerce.balancer.v1.RechargeBalanceRequest
+	(*RechargeBalanceReply)(nil),         // 17: ecommerce.balancer.v1.RechargeBalanceReply
+	(*WithdrawBalanceRequest)(nil),       // 18: ecommerce.balancer.v1.WithdrawBalanceRequest
+	(*WithdrawBalanceReply)(nil),         // 19: ecommerce.balancer.v1.WithdrawBalanceReply
+	(*structpb.Struct)(nil),              // 20: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),        // 21: google.protobuf.Timestamp
 }
 var file_v1_balancer_proto_depIdxs = []int32{
-	17, // 0: ecommerce.balancer.v1.CreateMerchantBalanceRequest.account_details:type_name -> google.protobuf.Struct
-	17, // 1: ecommerce.balancer.v1.CreateConsumerBalanceRequest.account_details:type_name -> google.protobuf.Struct
-	2,  // 2: ecommerce.balancer.v1.Balance.CreateConsumerBalance:input_type -> ecommerce.balancer.v1.CreateConsumerBalanceRequest
-	0,  // 3: ecommerce.balancer.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balancer.v1.CreateMerchantBalanceRequest
-	4,  // 4: ecommerce.balancer.v1.Balance.GetUserBalance:input_type -> ecommerce.balancer.v1.GetUserBalanceRequest
-	7,  // 5: ecommerce.balancer.v1.Balance.FreezeBalance:input_type -> ecommerce.balancer.v1.FreezeBalanceRequest
-	9,  // 6: ecommerce.balancer.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balancer.v1.ConfirmTransferRequest
-	11, // 7: ecommerce.balancer.v1.Balance.CancelFreeze:input_type -> ecommerce.balancer.v1.CancelFreezeRequest
-	5,  // 8: ecommerce.balancer.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balancer.v1.GetMerchantBalanceRequest
-	13, // 9: ecommerce.balancer.v1.Balance.RechargeBalance:input_type -> ecommerce.balancer.v1.RechargeBalanceRequest
-	15, // 10: ecommerce.balancer.v1.Balance.WithdrawBalance:input_type -> ecommerce.balancer.v1.WithdrawBalanceRequest
-	3,  // 11: ecommerce.balancer.v1.Balance.CreateConsumerBalance:output_type -> ecommerce.balancer.v1.CreateConsumerBalanceReply
-	1,  // 12: ecommerce.balancer.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balancer.v1.CreateMerchantBalanceReply
-	6,  // 13: ecommerce.balancer.v1.Balance.GetUserBalance:output_type -> ecommerce.balancer.v1.BalanceReply
-	8,  // 14: ecommerce.balancer.v1.Balance.FreezeBalance:output_type -> ecommerce.balancer.v1.FreezeBalanceReply
-	10, // 15: ecommerce.balancer.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balancer.v1.ConfirmTransferReply
-	12, // 16: ecommerce.balancer.v1.Balance.CancelFreeze:output_type -> ecommerce.balancer.v1.CancelFreezeReply
-	6,  // 17: ecommerce.balancer.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balancer.v1.BalanceReply
-	14, // 18: ecommerce.balancer.v1.Balance.RechargeBalance:output_type -> ecommerce.balancer.v1.RechargeBalanceReply
-	16, // 19: ecommerce.balancer.v1.Balance.WithdrawBalance:output_type -> ecommerce.balancer.v1.WithdrawBalanceReply
-	11, // [11:20] is the sub-list for method output_type
-	2,  // [2:11] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	20, // 0: ecommerce.balancer.v1.CreateMerchantBalanceRequest.account_details:type_name -> google.protobuf.Struct
+	20, // 1: ecommerce.balancer.v1.CreateConsumerBalanceRequest.account_details:type_name -> google.protobuf.Struct
+	20, // 2: ecommerce.balancer.v1.Transactions.payment_extra:type_name -> google.protobuf.Struct
+	21, // 3: ecommerce.balancer.v1.Transactions.created_at:type_name -> google.protobuf.Timestamp
+	21, // 4: ecommerce.balancer.v1.Transactions.updated_at:type_name -> google.protobuf.Timestamp
+	6,  // 5: ecommerce.balancer.v1.GetTransactionsReply.transactions:type_name -> ecommerce.balancer.v1.Transactions
+	2,  // 6: ecommerce.balancer.v1.Balance.CreateConsumerBalance:input_type -> ecommerce.balancer.v1.CreateConsumerBalanceRequest
+	0,  // 7: ecommerce.balancer.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balancer.v1.CreateMerchantBalanceRequest
+	4,  // 8: ecommerce.balancer.v1.Balance.GetUserBalance:input_type -> ecommerce.balancer.v1.GetUserBalanceRequest
+	10, // 9: ecommerce.balancer.v1.Balance.FreezeBalance:input_type -> ecommerce.balancer.v1.FreezeBalanceRequest
+	12, // 10: ecommerce.balancer.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balancer.v1.ConfirmTransferRequest
+	14, // 11: ecommerce.balancer.v1.Balance.CancelFreeze:input_type -> ecommerce.balancer.v1.CancelFreezeRequest
+	8,  // 12: ecommerce.balancer.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balancer.v1.GetMerchantBalanceRequest
+	5,  // 13: ecommerce.balancer.v1.Balance.GetTransactions:input_type -> ecommerce.balancer.v1.GetTransactionsRequest
+	16, // 14: ecommerce.balancer.v1.Balance.RechargeBalance:input_type -> ecommerce.balancer.v1.RechargeBalanceRequest
+	18, // 15: ecommerce.balancer.v1.Balance.WithdrawBalance:input_type -> ecommerce.balancer.v1.WithdrawBalanceRequest
+	3,  // 16: ecommerce.balancer.v1.Balance.CreateConsumerBalance:output_type -> ecommerce.balancer.v1.CreateConsumerBalanceReply
+	1,  // 17: ecommerce.balancer.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balancer.v1.CreateMerchantBalanceReply
+	9,  // 18: ecommerce.balancer.v1.Balance.GetUserBalance:output_type -> ecommerce.balancer.v1.BalanceReply
+	11, // 19: ecommerce.balancer.v1.Balance.FreezeBalance:output_type -> ecommerce.balancer.v1.FreezeBalanceReply
+	13, // 20: ecommerce.balancer.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balancer.v1.ConfirmTransferReply
+	15, // 21: ecommerce.balancer.v1.Balance.CancelFreeze:output_type -> ecommerce.balancer.v1.CancelFreezeReply
+	9,  // 22: ecommerce.balancer.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balancer.v1.BalanceReply
+	7,  // 23: ecommerce.balancer.v1.Balance.GetTransactions:output_type -> ecommerce.balancer.v1.GetTransactionsReply
+	17, // 24: ecommerce.balancer.v1.Balance.RechargeBalance:output_type -> ecommerce.balancer.v1.RechargeBalanceReply
+	19, // 25: ecommerce.balancer.v1.Balance.WithdrawBalance:output_type -> ecommerce.balancer.v1.WithdrawBalanceReply
+	16, // [16:26] is the sub-list for method output_type
+	6,  // [6:16] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_v1_balancer_proto_init() }
@@ -1381,7 +1690,7 @@ func file_v1_balancer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_balancer_proto_rawDesc), len(file_v1_balancer_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,11 +1,19 @@
 package constants
 
 type (
+	RoleType        string // 角色类型
 	PaymentStatus   string // 支付状态
 	ShippingStatus  string // 发货状态
 	FreezeStatus    string // 余额冻结状态
 	PaymentMethod   string // 支付方式
 	TransactionType string // 交易类型
+)
+
+const (
+	Consumer RoleType = "Consumer" // 消费者
+	Merchant RoleType = "Merchant" // 商家
+	Admin    RoleType = "Admin"    // 管理员
+	Guest    RoleType = "Guest"    // 管理员
 )
 
 const (

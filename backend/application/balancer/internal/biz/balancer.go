@@ -116,6 +116,7 @@ type (
 type (
 	RechargeBalanceRequest struct {
 		UserId                uuid.UUID
+		MerchantId            uuid.UUID
 		Amount                float64
 		Currency              constants.Currency
 		ExternalTransactionId int64
@@ -134,6 +135,7 @@ type (
 type (
 	WithdrawBalanceRequest struct {
 		UserId          uuid.UUID
+		MerchantId      uuid.UUID
 		Amount          float64
 		Currency        constants.Currency
 		PaymentMethodId string
@@ -144,6 +146,33 @@ type (
 		Success       bool
 		TransactionId int64
 		NewVersion    int32
+	}
+)
+
+type (
+	Transactions struct {
+		Id                int64
+		Type              constants.TransactionType
+		Amount            float64
+		Currency          string
+		FromUserId        uuid.UUID
+		ToMerchantId      uuid.UUID
+		PaymentMethodType constants.PaymentMethod
+		PaymentAccount    string
+		PaymentExtra      json.RawMessage
+		Status            constants.PaymentStatus
+		CreatedAt         time.Time
+		UpdatedAt         time.Time
+	}
+	GetTransactionsRequest struct {
+		UserId        uuid.UUID
+		Currency      string
+		Page          int64
+		PageSize      int64
+		PaymentStatus constants.PaymentStatus
+	}
+	GetTransactionsReply struct {
+		Transactions []*Transactions
 	}
 )
 
@@ -160,6 +189,8 @@ type BalancerRepo interface {
 	FreezeBalance(ctx context.Context, req *FreezeBalanceRequest) (*FreezeBalanceReply, error)
 	// GetMerchantBalance 获取商家余额
 	GetMerchantBalance(ctx context.Context, req *GetMerchantBalanceRequest) (*BalanceReply, error)
+	// GetTransactions 获取商家交易记录
+	GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error)
 	// GetUserBalance 获取用户余额
 	GetUserBalance(ctx context.Context, req *GetUserBalanceRequest) (*BalanceReply, error)
 	// RechargeBalance 用户充值
@@ -223,4 +254,9 @@ func (cc *BalancerUsecase) RechargeBalance(ctx context.Context, req *RechargeBal
 func (cc *BalancerUsecase) WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("WithdrawBalance request: %+v", req)
 	return cc.repo.WithdrawBalance(ctx, req)
+}
+
+func (cc *BalancerUsecase) GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error) {
+	cc.log.WithContext(ctx).Debugf("GetTransactions request: %+v", req)
+	return cc.repo.GetTransactions(ctx, req)
 }
