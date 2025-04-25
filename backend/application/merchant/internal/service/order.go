@@ -93,6 +93,8 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 						MerchantId: item.Item.MerchantId.String(),
 						ProductId:  item.Item.ProductId.String(),
 						Quantity:   item.Item.Quantity,
+						Name:       item.Item.Name,
+						Picture:    item.Item.Picture,
 					},
 					Cost: item.Cost,
 				})

@@ -36,22 +36,6 @@ WHERE os.merchant_id = @merchant_id
 ORDER BY os.created_at DESC
 LIMIT @page_size OFFSET @page;
 
--- name: QuerySubOrders :many
-SELECT os.id AS sub_order_id,
-       merchant_id,
-       total_amount,
-       oo.currency,
-       status,
-       items,
-       oo.created_at,
-       oo.updated_at,
-       oo.payment_status,
-       os.shipping_status
-FROM orders.sub_orders os
-         Join orders.orders oo on os.order_id = oo.id
-WHERE order_id = @order_id
-ORDER BY created_at;
-
 -- 通过子订单 ID 去查询主订单的地址, 因为用户可能下单多个商品, 分别属于不同商家, 但地址并不会变化
 -- name: GetConsumerAddress :one
 SELECT o.id,

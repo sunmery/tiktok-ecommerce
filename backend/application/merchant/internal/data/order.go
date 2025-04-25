@@ -121,12 +121,7 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 	var respOrders []*biz.SubOrder
 	for _, order := range orders {
 		// 解析订单项
-		type SubOrderItem struct {
-			Item *biz.CartItem `json:"item"`
-			Cost float64       `json:"cost"`
-		}
-
-		var subOrderItems []SubOrderItem
+		var subOrderItems []biz.OrderItem
 		if err := json.Unmarshal(order.Items, &subOrderItems); err != nil {
 			o.log.WithContext(ctx).Errorf("解析子订单项失败: %v, 订单ID: %d", err, order.ID)
 			continue
@@ -141,7 +136,13 @@ func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantO
 			}
 
 			orderItems = append(orderItems, &biz.OrderItem{
-				Item: item.Item,
+				Item: &biz.CartItem{
+					MerchantId: item.Item.MerchantId,
+					ProductId:  item.Item.ProductId,
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
 				Cost: item.Cost,
 			})
 		}

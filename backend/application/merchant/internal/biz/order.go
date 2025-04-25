@@ -18,6 +18,8 @@ type CartItem struct {
 	MerchantId uuid.UUID `json:"merchantId"`
 	ProductId  uuid.UUID `json:"productId"`
 	Quantity   uint32    `json:"quantity"`
+	Name       string    `json:"name"`
+	Picture    string    `json:"picture"`
 }
 
 type OrderItem struct {
