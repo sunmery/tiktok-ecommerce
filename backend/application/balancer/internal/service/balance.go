@@ -208,12 +208,12 @@ func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerc
 func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransactionsRequest) (*pb.GetTransactionsReply, error) {
 	var err error
 	var userId uuid.UUID
-	userId, err = globalPkg.GetMetadataUesrID(ctx)
+	if req.UserId == "" {
+		userId, err = globalPkg.GetMetadataUesrID(ctx)
+	}
+	userId, err = uuid.Parse(req.UserId)
 	if err != nil {
-		userId, err = uuid.Parse(req.UserId)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	transactions, err := s.uc.GetTransactions(ctx, &biz.GetTransactionsRequest{
