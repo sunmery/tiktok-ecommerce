@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const ConfirmUserFreeze = `-- name: ConfirmUserFreeze :execrows
+const ConfirmUserFreeze = `-- name: ConfirmUserFreeze :exec
 
 UPDATE balances.user_balances
 SET frozen     = frozen - $3, -- 金额参数 (分)
@@ -42,17 +42,14 @@ type ConfirmUserFreezeParams struct {
 //	  AND currency = $2
 //	  AND frozen >= $3 -- 确保冻结余额充足
 //	  AND version = $4
-func (q *Queries) ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezeParams) (int64, error) {
-	result, err := q.db.Exec(ctx, ConfirmUserFreeze,
+func (q *Queries) ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezeParams) error {
+	_, err := q.db.Exec(ctx, ConfirmUserFreeze,
 		arg.UserID,
 		arg.Currency,
 		arg.Amount,
 		arg.ExpectedVersion,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return err
 }
 
 const CreateConsumerBalance = `-- name: CreateConsumerBalance :one

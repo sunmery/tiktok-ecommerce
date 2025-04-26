@@ -45,6 +45,35 @@ func NewBalancerRepo(data *Data, logger log.Logger) biz.BalancerRepo {
 	}
 }
 
+func (b balancerRepo) CreateTransaction(ctx context.Context, req *biz.CreateTransactionRequest) (*biz.CreateTransactionReply, error) {
+	amount, err := types.Float64ToNumeric(req.Amount)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
+	}
+	transactionId, err := b.data.db.CreateTransaction(ctx, models.CreateTransactionParams{
+		ID:                id.SnowflakeID(),
+		Type:              string(req.Type),
+		Amount:            amount,
+		Currency:          string(req.Currency),
+		FromUserID:        req.FromUserId,
+		ToMerchantID:      req.ToMerchantId,
+		PaymentMethodType: string(req.PaymentMethodType),
+		PaymentAccount:    req.PaymentAccount,
+		PaymentExtra:      req.PaymentExtra,
+		Status:            string(req.Status),
+		FreezeID:          req.FreezeId,
+		IdempotencyKey:    req.IdempotencyKey,
+		ConsumerVersion:   req.ConsumerVersion,
+		MerchantVersion:   req.MerchantVersion,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &biz.CreateTransactionReply{
+		Id: transactionId,
+	}, nil
+}
+
 func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransactionsRequest) (*biz.GetTransactionsReply, error) {
 	page := (req.Page - 1) * req.PageSize
 	pageSize := req.PageSize
@@ -239,7 +268,7 @@ func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMercha
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", "balance record not found")
+			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getMerchantBalance balance record not found err:%+v", err))
 		}
 		return nil, err
 	}
@@ -351,7 +380,7 @@ func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanc
 	frozen, err := types.NumericToFloat(balance.Frozen)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", "balance record not found")
+			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
 		}
 		return nil, kerrors.New(500, "CONVERT_FROZEN_FAILED", "convert available to float64 failed")
 	}
@@ -550,7 +579,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 5. 确认用户冻结（减少冻结余额）
-	rows, ConfirmUserFreezeErr := tx.ConfirmUserFreeze(ctx, models.ConfirmUserFreezeParams{
+	ConfirmUserFreezeErr := tx.ConfirmUserFreeze(ctx, models.ConfirmUserFreezeParams{
 		UserID:          freeze.UserID,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,
@@ -559,9 +588,9 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	if ConfirmUserFreezeErr != nil {
 		return nil, kerrors.New(500, "CONFIRM_FREEZE_FAILED", fmt.Sprintf("confirm freeze failed: %v", ConfirmUserFreezeErr.Error()))
 	}
-	if rows == 0 {
-		return nil, kerrors.New(409, "USER_OPTIMISTIC_LOCK_FAILED", "user balance version mismatch")
-	}
+	// if rows == 0 {
+	// 	return nil, kerrors.New(409, "USER_OPTIMISTIC_LOCK_FAILED", "user balance version mismatch")
+	// }
 
 	// 6. 获取商家ID（从订单ID）
 	merchantId, err := b.getMerchantIDFromOrder(ctx, freeze.OrderID)
@@ -573,7 +602,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 7. 增加商家可用余额
-	rows, err = tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
+	rows, err := tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
 		MerchantID:      merchantId,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,

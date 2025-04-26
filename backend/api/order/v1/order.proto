@@ -42,6 +42,13 @@ service OrderService {
     };
   }
 
+  // 根据用户主订单查询子订单
+  rpc GetUserOrdersWithSuborders(GetUserOrdersWithSubordersReq) returns (GetUserOrdersWithSubordersReply) {
+    option (google.api.http) = {
+      get: "/v1/orders/users/{order_id}"
+    };
+  }
+
   // 标记订单为已支付
   rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {
     option (google.api.http) = {
@@ -122,6 +129,9 @@ message OrderItem {
 // 创建订单响应的消息结构
 message OrderResult {
   int64 order_id = 1; // 订单 ID
+  int64 freeze_id = 2; // 冻结 ID
+  int64 consumer_version = 3; // 消费者乐观锁版本
+  int64 merchant_version = 4; // 商家乐观锁版本
 }
 
 // 创建订单响应的消息结构
@@ -167,7 +177,34 @@ message Order {
 }
 
 message GetOrderReq {
-  int64 id = 1; // 用户 ID
+  int64 id = 1; // 订单 ID
+}
+message GetUserOrdersWithSubordersReq {
+  string user_id = 1; // 用户 ID
+  int64 order_id = 2; //  订单 ID
+}
+
+message Suborders {
+  int64 id = 1;
+  int64 sub_order_id = 17;
+  string street_address = 2;
+  string city = 3;
+  string state = 4;
+  string country = 5;
+  string zip_code = 6;
+  string email = 7;
+  string merchant_id = 8;
+  string payment_status = 9;
+  string shipping_status = 10;
+  double total_amount = 11;
+  string currency = 12;
+  repeated OrderItem items = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+message GetUserOrdersWithSubordersReply {
+  repeated Suborders orders = 1; // 订单列表
 }
 
 message GetOrdersReq {

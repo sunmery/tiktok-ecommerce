@@ -6,6 +6,7 @@ import (
 
 	"backend/api/user/v1"
 
+	balancerv1 "backend/api/balancer/v1"
 	merchantAddressv1 "backend/api/merchant/address/v1"
 	productv1 "backend/api/product/v1"
 
@@ -30,13 +31,14 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient, NewProductServiceClient, NewUserServiceClient, NewMerchantAddressServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient, NewBalancerServiceClient, NewProductServiceClient, NewUserServiceClient, NewMerchantAddressServiceClient)
 
 type Data struct {
 	paymentv1         paymentv1.PaymentServiceClient
 	productv1         productv1.ProductServiceClient
 	userv1            userv1.UserServiceClient
 	merchantAddressv1 merchantAddressv1.MerchantAddressesClient
+	balancerv1        balancerv1.BalanceClient
 	db                *models.Queries
 	pgx               *pgxpool.Pool
 	rdb               *redis.Client
@@ -55,6 +57,7 @@ func NewData(
 	productv1 productv1.ProductServiceClient,
 	userv1 userv1.UserServiceClient,
 	merchantAddressv1 merchantAddressv1.MerchantAddressesClient,
+	balancerv1 balancerv1.BalanceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -69,6 +72,7 @@ func NewData(
 		productv1:         productv1,             // 商品服务
 		userv1:            userv1,                // 用户服务
 		merchantAddressv1: merchantAddressv1,     // 商家地址服务
+		balancerv1:        balancerv1,            // 余额服务
 	}, cleanup, nil
 }
 
@@ -127,6 +131,24 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	}
 	r := consul.New(cli, consul.WithHealthCheck(false))
 	return r, nil
+}
+
+// NewBalancerServiceClient 余额微服务
+func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancerv1.BalanceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.BalancerServicev1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return balancerv1.NewBalanceClient(conn), nil
 }
 
 // NewPaymentServiceClient 支付微服务

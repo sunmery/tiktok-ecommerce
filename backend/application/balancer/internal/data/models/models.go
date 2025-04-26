@@ -52,6 +52,10 @@ type BalancesTransactions struct {
 	PaymentAccount    string         `json:"paymentAccount"`
 	PaymentExtra      []byte         `json:"paymentExtra"`
 	Status            string         `json:"status"`
+	FreezeID          int64          `json:"freezeID"`
+	IdempotencyKey    string         `json:"idempotencyKey"`
+	ConsumerVersion   int64          `json:"consumerVersion"`
+	MerchantVersion   int64          `json:"merchantVersion"`
 	CreatedAt         time.Time      `json:"createdAt"`
 	UpdatedAt         time.Time      `json:"updatedAt"`
 }

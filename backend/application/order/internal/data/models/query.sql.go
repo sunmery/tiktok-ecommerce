@@ -69,7 +69,6 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 }
 
 const CreateOrderShipping = `-- name: CreateOrderShipping :exec
-
 INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
                                  shipping_address, receiver_address, shipping_fee)
 VALUES ($1, $2, $3, $4, $5, $6, $7,
@@ -89,13 +88,7 @@ type CreateOrderShippingParams struct {
 	ShippingFee     pgtype.Numeric     `json:"shippingFee"`
 }
 
-// -- name: UpdateOrderPaymentStatus :exec
-// UPDATE orders.orders
-// SET payment_status = @payment_status,
-//
-//	updated_at     = now()
-//
-// WHERE id = @id;
+// CreateOrderShipping
 //
 //	INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
 //	                                 shipping_address, receiver_address, shipping_fee)
@@ -492,39 +485,45 @@ SELECT o.id,
        o.email,
        o.payment_status,
        os.shipping_status,
-       o.created_at AS order_created,
-       jsonb_agg(
-               jsonb_build_object(
-                       'sub_order_id', os.id,
-                       'merchant_id', os.merchant_id,
-                       'total_amount', os.total_amount,
-                       'currency', os.currency,
-                       'status', os.status,
-                       'items', os.items,
-                       'created_at', os.created_at,
-                       'updated_at', os.updated_at
-               ) ORDER BY os.created_at
-       )            AS suborders
+       os.merchant_id,
+       os.id AS sub_order_id,
+       os.total_amount,
+       os.currency,
+       os.items,
+       o.created_at,
+       o.updated_at
 FROM orders.orders o
          LEFT JOIN orders.sub_orders os ON o.id = os.order_id
-WHERE o.user_id = $1::uuid
-GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at,
+WHERE o.user_id = $1
+  AND o.id = $2
+GROUP BY o.id, os.id, o.currency, os.merchant_id, o.street_address, o.city, o.state, o.country, o.zip_code, o.email,
+         o.created_at,
          os.shipping_status
 ORDER BY o.created_at DESC
 `
 
+type GetUserOrdersWithSubordersParams struct {
+	UserID  uuid.UUID `json:"userID"`
+	OrderID int64     `json:"orderID"`
+}
+
 type GetUserOrdersWithSubordersRow struct {
-	ID             int64     `json:"id"`
-	StreetAddress  string    `json:"streetAddress"`
-	City           string    `json:"city"`
-	State          string    `json:"state"`
-	Country        string    `json:"country"`
-	ZipCode        string    `json:"zipCode"`
-	Email          string    `json:"email"`
-	PaymentStatus  string    `json:"paymentStatus"`
-	ShippingStatus *string   `json:"shippingStatus"`
-	OrderCreated   time.Time `json:"orderCreated"`
-	Suborders      []byte    `json:"suborders"`
+	ID             int64          `json:"id"`
+	StreetAddress  string         `json:"streetAddress"`
+	City           string         `json:"city"`
+	State          string         `json:"state"`
+	Country        string         `json:"country"`
+	ZipCode        string         `json:"zipCode"`
+	Email          string         `json:"email"`
+	PaymentStatus  string         `json:"paymentStatus"`
+	ShippingStatus *string        `json:"shippingStatus"`
+	MerchantID     pgtype.UUID    `json:"merchantID"`
+	SubOrderID     *int64         `json:"subOrderID"`
+	TotalAmount    pgtype.Numeric `json:"totalAmount"`
+	Currency       *string        `json:"currency"`
+	Items          []byte         `json:"items"`
+	CreatedAt      time.Time      `json:"createdAt"`
+	UpdatedAt      time.Time      `json:"updatedAt"`
 }
 
 // GetUserOrdersWithSuborders
@@ -538,27 +537,23 @@ type GetUserOrdersWithSubordersRow struct {
 //	       o.email,
 //	       o.payment_status,
 //	       os.shipping_status,
-//	       o.created_at AS order_created,
-//	       jsonb_agg(
-//	               jsonb_build_object(
-//	                       'sub_order_id', os.id,
-//	                       'merchant_id', os.merchant_id,
-//	                       'total_amount', os.total_amount,
-//	                       'currency', os.currency,
-//	                       'status', os.status,
-//	                       'items', os.items,
-//	                       'created_at', os.created_at,
-//	                       'updated_at', os.updated_at
-//	               ) ORDER BY os.created_at
-//	       )            AS suborders
+//	       os.merchant_id,
+//	       os.id AS sub_order_id,
+//	       os.total_amount,
+//	       os.currency,
+//	       os.items,
+//	       o.created_at,
+//	       o.updated_at
 //	FROM orders.orders o
 //	         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
-//	WHERE o.user_id = $1::uuid
-//	GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at,
+//	WHERE o.user_id = $1
+//	  AND o.id = $2
+//	GROUP BY o.id, os.id, o.currency, os.merchant_id, o.street_address, o.city, o.state, o.country, o.zip_code, o.email,
+//	         o.created_at,
 //	         os.shipping_status
 //	ORDER BY o.created_at DESC
-func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, userID uuid.UUID) ([]GetUserOrdersWithSubordersRow, error) {
-	rows, err := q.db.Query(ctx, GetUserOrdersWithSuborders, userID)
+func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, arg GetUserOrdersWithSubordersParams) ([]GetUserOrdersWithSubordersRow, error) {
+	rows, err := q.db.Query(ctx, GetUserOrdersWithSuborders, arg.UserID, arg.OrderID)
 	if err != nil {
 		return nil, err
 	}
@@ -576,8 +571,13 @@ func (q *Queries) GetUserOrdersWithSuborders(ctx context.Context, userID uuid.UU
 			&i.Email,
 			&i.PaymentStatus,
 			&i.ShippingStatus,
-			&i.OrderCreated,
-			&i.Suborders,
+			&i.MerchantID,
+			&i.SubOrderID,
+			&i.TotalAmount,
+			&i.Currency,
+			&i.Items,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

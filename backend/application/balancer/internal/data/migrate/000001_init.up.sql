@@ -2,13 +2,13 @@ CREATE SCHEMA IF NOT EXISTS balances;
 
 CREATE TABLE balances.user_balances
 (
-    user_id   UUID UNIQUE    NOT NULL,
-    currency  CHAR(3),
-    available DECIMAL(12, 2) NOT NULL DEFAULT 0.00 CHECK (available >= 0), -- 可用余额
-    frozen    DECIMAL(12, 2) NOT NULL DEFAULT 0.00 CHECK (frozen >= 0),    -- 冻结余额
-    version   INT            NOT NULL DEFAULT 0,-- 乐观锁
-    created_at timestamptz DEFAULT NOW(),
-    updated_at timestamptz DEFAULT NOW(),
+    user_id    UUID UNIQUE    NOT NULL,
+    currency   CHAR(3),
+    available  DECIMAL(12, 2) NOT NULL DEFAULT 0.00 CHECK (available >= 0), -- 可用余额
+    frozen     DECIMAL(12, 2) NOT NULL DEFAULT 0.00 CHECK (frozen >= 0),    -- 冻结余额
+    version    INT            NOT NULL DEFAULT 0,-- 乐观锁
+    created_at timestamptz             DEFAULT NOW(),
+    updated_at timestamptz             DEFAULT NOW(),
     PRIMARY KEY (user_id, currency)
 );
 
@@ -29,7 +29,7 @@ CREATE TABLE balances.balance_freezes
 (
     id         BIGINT PRIMARY KEY,
     user_id    UUID           NOT NULL,
-    order_id   BIGINT           NOT NULL, -- 关联订单号
+    order_id   BIGINT         NOT NULL, -- 关联订单号
     currency   CHAR(3)        NOT NULL, -- 币种 ISO 4217 代码
     amount     DECIMAL(12, 2) NOT NULL CHECK (amount > 0),
     status     VARCHAR(20)    NOT NULL  -- 冻结状态: 冻结|确认|取消
@@ -89,6 +89,10 @@ CREATE TABLE balances.transactions
 
     status              VARCHAR(15)    NOT NULL DEFAULT 'PENDING'             -- 支付状态: 等待支付|已支付|取消支付|支付异常
         CHECK ( status IN ('PENDING', 'PAID', 'CANCELLED', 'FAILED') ),
+    freeze_id           BIGINT         NOT NULL,                              -- 关联冻结记录
+    idempotency_key     VARCHAR(255)   NOT NULL,                              -- 幂等键
+    consumer_version    BIGINT         NOT NULL,                              -- 用户乐观锁版本
+    merchant_version    BIGINT         NOT NULL,                              -- 商家乐观锁版本
     created_at          timestamptz    NOT NULL DEFAULT NOW(),
     updated_at          timestamptz    NOT NULL DEFAULT NOW()
 );

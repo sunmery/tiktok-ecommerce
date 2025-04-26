@@ -265,6 +265,37 @@
         "tags": [
           "Balance"
         ]
+      },
+      "put": {
+        "summary": "创建订单流水",
+        "operationId": "Balance_CreateTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateTransactionReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateTransactionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
       }
     },
     "/v1/balances/users/{userId}/balance": {
@@ -716,6 +747,72 @@
         "available": {
           "type": "number",
           "format": "double"
+        }
+      }
+    },
+    "v1CreateTransactionReply": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1CreateTransactionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "交易类型: 充值|支付|退款|提现"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "fromUserId": {
+          "type": "string"
+        },
+        "toMerchantId": {
+          "type": "string"
+        },
+        "paymentMethodType": {
+          "type": "string",
+          "title": "支付方式: ALIPAY|WECHAT|BALANCE|BANK_CARD"
+        },
+        "paymentAccount": {
+          "type": "string",
+          "title": "支付账号, 对应的第三方支付方式的账号"
+        },
+        "paymentExtra": {
+          "type": "object",
+          "title": "交易号等额外信息"
+        },
+        "status": {
+          "type": "string",
+          "title": "支付状态: 等待支付|已支付|取消支付|支付异常"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "关联冻结记录"
+        },
+        "freezeId": {
+          "type": "string",
+          "format": "int64",
+          "title": "幂等键"
+        },
+        "consumerVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "用户乐观锁版本"
+        },
+        "merchantVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "商家乐观锁版本"
         }
       }
     },

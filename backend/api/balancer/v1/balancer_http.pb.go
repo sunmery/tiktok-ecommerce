@@ -23,6 +23,7 @@ const OperationBalanceCancelFreeze = "/ecommerce.balancer.v1.Balance/CancelFreez
 const OperationBalanceConfirmTransfer = "/ecommerce.balancer.v1.Balance/ConfirmTransfer"
 const OperationBalanceCreateConsumerBalance = "/ecommerce.balancer.v1.Balance/CreateConsumerBalance"
 const OperationBalanceCreateMerchantBalance = "/ecommerce.balancer.v1.Balance/CreateMerchantBalance"
+const OperationBalanceCreateTransaction = "/ecommerce.balancer.v1.Balance/CreateTransaction"
 const OperationBalanceFreezeBalance = "/ecommerce.balancer.v1.Balance/FreezeBalance"
 const OperationBalanceGetMerchantBalance = "/ecommerce.balancer.v1.Balance/GetMerchantBalance"
 const OperationBalanceGetTransactions = "/ecommerce.balancer.v1.Balance/GetTransactions"
@@ -41,6 +42,8 @@ type BalanceHTTPServer interface {
 	// CreateMerchantBalance 创建商家余额
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	CreateMerchantBalance(context.Context, *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error)
+	// CreateTransaction 创建订单流水
+	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionReply, error)
 	// FreezeBalance 冻结用户余额
 	FreezeBalance(context.Context, *FreezeBalanceRequest) (*FreezeBalanceReply, error)
 	// GetMerchantBalance 获取商家余额
@@ -64,6 +67,7 @@ func RegisterBalanceHTTPServer(s *http.Server, srv BalanceHTTPServer) {
 	r.POST("/v1/balances/freezes/{freeze_id}/confirm", _Balance_ConfirmTransfer0_HTTP_Handler(srv))
 	r.POST("/v1/balances/freezes/{freeze_id}/cancel", _Balance_CancelFreeze0_HTTP_Handler(srv))
 	r.GET("/v1/balances/merchants/{merchant_id}/balance", _Balance_GetMerchantBalance0_HTTP_Handler(srv))
+	r.PUT("/v1/balances/transactions", _Balance_CreateTransaction0_HTTP_Handler(srv))
 	r.GET("/v1/balances/transactions", _Balance_GetTransactions0_HTTP_Handler(srv))
 	r.POST("/v1/balances/users/{user_id}/recharge", _Balance_RechargeBalance0_HTTP_Handler(srv))
 	r.POST("/v1/balances/users/{user_id}/withdraw", _Balance_WithdrawBalance0_HTTP_Handler(srv))
@@ -235,6 +239,28 @@ func _Balance_GetMerchantBalance0_HTTP_Handler(srv BalanceHTTPServer) func(ctx h
 	}
 }
 
+func _Balance_CreateTransaction0_HTTP_Handler(srv BalanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateTransactionRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBalanceCreateTransaction)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateTransaction(ctx, req.(*CreateTransactionRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateTransactionReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Balance_GetTransactions0_HTTP_Handler(srv BalanceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetTransactionsRequest
@@ -309,6 +335,7 @@ type BalanceHTTPClient interface {
 	ConfirmTransfer(ctx context.Context, req *ConfirmTransferRequest, opts ...http.CallOption) (rsp *ConfirmTransferReply, err error)
 	CreateConsumerBalance(ctx context.Context, req *CreateConsumerBalanceRequest, opts ...http.CallOption) (rsp *CreateConsumerBalanceReply, err error)
 	CreateMerchantBalance(ctx context.Context, req *CreateMerchantBalanceRequest, opts ...http.CallOption) (rsp *CreateMerchantBalanceReply, err error)
+	CreateTransaction(ctx context.Context, req *CreateTransactionRequest, opts ...http.CallOption) (rsp *CreateTransactionReply, err error)
 	FreezeBalance(ctx context.Context, req *FreezeBalanceRequest, opts ...http.CallOption) (rsp *FreezeBalanceReply, err error)
 	GetMerchantBalance(ctx context.Context, req *GetMerchantBalanceRequest, opts ...http.CallOption) (rsp *BalanceReply, err error)
 	GetTransactions(ctx context.Context, req *GetTransactionsRequest, opts ...http.CallOption) (rsp *GetTransactionsReply, err error)
@@ -369,6 +396,19 @@ func (c *BalanceHTTPClientImpl) CreateMerchantBalance(ctx context.Context, in *C
 	pattern := "/v1/balances/merchants/{merchant_id}/balance"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationBalanceCreateMerchantBalance))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *BalanceHTTPClientImpl) CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...http.CallOption) (*CreateTransactionReply, error) {
+	var out CreateTransactionReply
+	pattern := "/v1/balances/transactions"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationBalanceCreateTransaction))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {

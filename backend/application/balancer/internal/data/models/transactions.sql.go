@@ -15,14 +15,11 @@ import (
 const CreateTransaction = `-- name: CreateTransaction :one
 INSERT INTO balances.transactions (id,
                                    type, amount, currency, from_user_id, to_merchant_id,
-                                   payment_method_type, payment_account, payment_extra, status,
-                                   created_at, updated_at
-    -- freeze_id 可以在创建支付流水时关联
-    -- , freeze_id
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()
-           -- , $10
-       )
+                                   payment_method_type, payment_account, payment_extra, status, freeze_id,
+                                   idempotency_key,
+                                   consumer_version,
+                                   merchant_version)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 RETURNING id
 `
 
@@ -37,20 +34,21 @@ type CreateTransactionParams struct {
 	PaymentAccount    string         `json:"paymentAccount"`
 	PaymentExtra      []byte         `json:"paymentExtra"`
 	Status            string         `json:"status"`
+	FreezeID          int64          `json:"freezeID"`
+	IdempotencyKey    string         `json:"idempotencyKey"`
+	ConsumerVersion   int64          `json:"consumerVersion"`
+	MerchantVersion   int64          `json:"merchantVersion"`
 }
 
 // 创建交易流水记录
 //
 //	INSERT INTO balances.transactions (id,
 //	                                   type, amount, currency, from_user_id, to_merchant_id,
-//	                                   payment_method_type, payment_account, payment_extra, status,
-//	                                   created_at, updated_at
-//	    -- freeze_id 可以在创建支付流水时关联
-//	    -- , freeze_id
-//	)
-//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()
-//	           -- , $10
-//	       )
+//	                                   payment_method_type, payment_account, payment_extra, status, freeze_id,
+//	                                   idempotency_key,
+//	                                   consumer_version,
+//	                                   merchant_version)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 //	RETURNING id
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error) {
 	row := q.db.QueryRow(ctx, CreateTransaction,
@@ -64,6 +62,10 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.PaymentAccount,
 		arg.PaymentExtra,
 		arg.Status,
+		arg.FreezeID,
+		arg.IdempotencyKey,
+		arg.ConsumerVersion,
+		arg.MerchantVersion,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -71,7 +73,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const GetConsumerTransactions = `-- name: GetConsumerTransactions :many
-SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 FROM balances.transactions
 WHERE from_user_id = $1
   AND currency = COALESCE($2, currency)
@@ -89,7 +91,7 @@ type GetConsumerTransactionsParams struct {
 
 // 根据 用户ID 获取交易流水记录
 //
-//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 //	FROM balances.transactions
 //	WHERE from_user_id = $1
 //	  AND currency = COALESCE($2, currency)
@@ -121,6 +123,10 @@ func (q *Queries) GetConsumerTransactions(ctx context.Context, arg GetConsumerTr
 			&i.PaymentAccount,
 			&i.PaymentExtra,
 			&i.Status,
+			&i.FreezeID,
+			&i.IdempotencyKey,
+			&i.ConsumerVersion,
+			&i.MerchantVersion,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -167,7 +173,7 @@ func (q *Queries) GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantP
 }
 
 const GetMerchantTransactions = `-- name: GetMerchantTransactions :many
-SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 FROM balances.transactions
 WHERE to_merchant_id = $1
   AND currency = COALESCE($2, currency)
@@ -185,7 +191,7 @@ type GetMerchantTransactionsParams struct {
 
 // 根据 商家ID 获取交易流水记录
 //
-//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 //	FROM balances.transactions
 //	WHERE to_merchant_id = $1
 //	  AND currency = COALESCE($2, currency)
@@ -217,6 +223,10 @@ func (q *Queries) GetMerchantTransactions(ctx context.Context, arg GetMerchantTr
 			&i.PaymentAccount,
 			&i.PaymentExtra,
 			&i.Status,
+			&i.FreezeID,
+			&i.IdempotencyKey,
+			&i.ConsumerVersion,
+			&i.MerchantVersion,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

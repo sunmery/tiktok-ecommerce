@@ -109,6 +109,74 @@ func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq)
 	}, nil
 }
 
+// GetUserOrdersWithSuborders 根据用户主订单查询子订单
+func (s *OrderServiceService) GetUserOrdersWithSuborders(ctx context.Context, req *v1.GetUserOrdersWithSubordersReq) (*v1.GetUserOrdersWithSubordersReply, error) {
+	var userId uuid.UUID
+	var err error
+	if req.UserId == "" {
+		userId, err = globalpkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reply, getUserOrdersWithSubordersErr := s.uc.GetUserOrdersWithSuborders(ctx, &biz.GetUserOrdersWithSubordersReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+	})
+	if getUserOrdersWithSubordersErr != nil {
+		return nil, getUserOrdersWithSubordersErr
+	}
+
+	if reply == nil {
+		return nil, nil
+	}
+
+	orders := make([]*v1.Suborders, 0, len(reply.Orders))
+	for _, s := range reply.Orders {
+		var allItems []*v1.OrderItem
+		for _, item := range allItems {
+			allItems = append(allItems, &v1.OrderItem{
+				Item: &cartv1.CartItem{
+					MerchantId: item.Item.MerchantId,
+					ProductId:  item.Item.ProductId,
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+				Cost: item.Cost,
+			})
+		}
+
+		orders = append(orders, &v1.Suborders{
+			Id:             s.OrderId,
+			SubOrderId:     s.SubOrderId,
+			StreetAddress:  s.StreetAddress,
+			City:           s.City,
+			State:          s.State,
+			Country:        s.Country,
+			ZipCode:        s.ZipCode,
+			Email:          s.Email,
+			MerchantId:     s.MerchantId,
+			PaymentStatus:  string(s.PaymentStatus),
+			ShippingStatus: string(s.ShippingStatus),
+			TotalAmount:    s.TotalAmount,
+			Currency:       s.Currency,
+			Items:          allItems,
+			CreatedAt:      timestamppb.New(s.CreatedAt),
+			UpdatedAt:      timestamppb.New(s.UpdatedAt),
+		})
+	}
+	return &v1.GetUserOrdersWithSubordersReply{
+		Orders: orders,
+	}, nil
+}
+
 func (s *OrderServiceService) GetOrders(ctx context.Context, req *v1.GetOrdersReq) (*v1.Orders, error) {
 	// 从网关获取用户ID
 	userId, err := globalpkg.GetMetadataUesrID(ctx)

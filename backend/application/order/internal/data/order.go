@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
+
+	balancerv1 "backend/api/balancer/v1"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -46,6 +49,70 @@ func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 		data: data,
 		log:  log.NewHelper(logger),
 	}
+}
+
+func (o *orderRepo) GetUserOrdersWithSuborders(ctx context.Context, req *biz.GetUserOrdersWithSubordersReq) (*biz.GetUserOrdersWithSubordersReply, error) {
+	suborders, err := o.data.db.GetUserOrdersWithSuborders(ctx, models.GetUserOrdersWithSubordersParams{
+		UserID:  req.UserId,
+		OrderID: req.OrderId,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if len(suborders) == 0 {
+		return nil, nil
+	}
+
+	orders := make([]*biz.Suborder, 0, len(suborders))
+	for _, s := range suborders {
+
+		totalAmount, err := types.NumericToFloat(s.TotalAmount)
+		if err != nil {
+			return nil, err
+		}
+		var allItems []*biz.OrderItem
+		if err := json.Unmarshal(s.Items, &allItems); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal items: %w", err)
+		}
+		for _, item := range allItems {
+			allItems = append(allItems, &biz.OrderItem{
+				Item: &biz.CartItem{
+					MerchantId: item.Item.MerchantId,
+					ProductId:  item.Item.ProductId,
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+				Cost: item.Cost,
+			})
+		}
+
+		orders = append(orders, &biz.Suborder{
+			OrderId:        s.ID,
+			SubOrderId:     *s.SubOrderID,
+			StreetAddress:  s.StreetAddress,
+			City:           s.City,
+			State:          s.State,
+			Country:        s.Country,
+			ZipCode:        s.ZipCode,
+			Email:          s.Email,
+			MerchantId:     s.MerchantID.String(),
+			PaymentStatus:  constants.PaymentStatus(s.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(*(s.ShippingStatus)),
+			TotalAmount:    totalAmount,
+			Currency:       *s.Currency,
+			Items:          allItems,
+			CreatedAt:      s.CreatedAt,
+			UpdatedAt:      s.UpdatedAt,
+		})
+	}
+	return &biz.GetUserOrdersWithSubordersReply{
+		Orders: orders,
+	}, nil
 }
 
 func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq) (*biz.MarkOrderPaidResp, error) {
@@ -317,13 +384,20 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}
 	log.Debugf("params: %+v", params)
 	order, _ := o.data.db.CreateOrder(ctx, params)
-
+	var freezeBalance *balancerv1.FreezeBalanceReply
+	var merchantBalance *balancerv1.BalanceReply
 	// 分单
 	for _, item := range req.OrderItems {
 		// 序列化订单项
 		items := []biz.OrderItem{
 			{
-				Item: item.Item,
+				Item: &biz.CartItem{
+					MerchantId: item.Item.MerchantId,
+					ProductId:  item.Item.ProductId,
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
 				Cost: item.Cost,
 			},
 		}
@@ -361,15 +435,62 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			Stock:      -int32(item.Item.Quantity),
 		})
 		if updateInventoryErr != nil {
+			if errors.Is(updateInventoryErr, pgx.ErrNoRows) {
+				return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("查找该商家 id:%v的商品 id%v, 失败%v", item.Item.MerchantId.String(), item.Item.ProductId.String(), updateInventoryErr))
+			}
+			log.Errorf("商家%v 商品id%v 数量%v", item.Item.ProductId.String(), item.Item.MerchantId.String(), item.Item.Quantity)
 			return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("更新库存失败: %v", updateInventoryErr))
 		}
+
+		// 获取余额
+		userBalance, err := o.data.balancerv1.GetUserBalance(ctx, &balancerv1.GetUserBalanceRequest{
+			UserId:   req.UserId.String(),
+			Currency: req.Currency,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if userBalance.Available < item.Cost {
+			return nil, kerrors.New(400, "INSUFFICIENT_BALANCE", "可用余额不足")
+		}
+
+		// 冻结余额
+		var FreezeBalanceErr error
+		freezeBalance, FreezeBalanceErr = o.data.balancerv1.FreezeBalance(ctx, &balancerv1.FreezeBalanceRequest{
+			UserId:          req.UserId.String(),
+			OrderId:         order.ID,
+			Amount:          item.Cost,
+			Currency:        req.Currency,
+			IdempotencyKey:  strconv.FormatInt(order.ID, 10),
+			ExpectedVersion: userBalance.Version,
+		})
+		if FreezeBalanceErr != nil {
+			return nil, kerrors.New(500, "FREEZE_BALANCE_FAILED", fmt.Sprintf("冻结余额失败: %v", FreezeBalanceErr))
+		}
+		log.Debugf("item.Item.MerchantId.String(): %+v", item.Item.MerchantId.String())
+		var merchantBalanceErr error
+		merchantBalance, merchantBalanceErr = o.data.balancerv1.GetMerchantBalance(ctx, &balancerv1.GetMerchantBalanceRequest{
+			MerchantId: item.Item.MerchantId.String(),
+			Currency:   req.Currency,
+		})
+		if merchantBalanceErr != nil {
+			return nil, kerrors.New(500, "GET_MERCHANT_BALANCE_NOT_FOUND", fmt.Sprintf("查询商家余额失败: %v", merchantBalanceErr))
+		}
+
 	}
 
-	return &biz.PlaceOrderResp{
-		Order: &biz.OrderResult{
-			OrderId: order.ID,
-		},
-	}, nil
+	if freezeBalance != nil && merchantBalance != nil {
+		return &biz.PlaceOrderResp{
+			Order: &biz.OrderResult{
+				OrderId:         order.ID,
+				FreezeId:        freezeBalance.FreezeId,
+				ConsumerVersion: int64(freezeBalance.NewVersion),
+				MerchantVersion: int64(merchantBalance.Version),
+			},
+		}, nil
+	}
+	return nil, nil
 }
 
 func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) (*biz.GetAllOrdersReply, error) {

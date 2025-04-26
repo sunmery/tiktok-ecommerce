@@ -67,7 +67,7 @@ func (s *ProductService) UpdateInventory(ctx context.Context, req *pb.UpdateInve
 		Stock:      req.Stock,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, "更新库存失败")
+		return nil, err
 	}
 
 	return &pb.UpdateInventoryReply{

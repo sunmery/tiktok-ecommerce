@@ -85,7 +85,10 @@ type OrderItem struct {
 }
 
 type OrderResult struct {
-	OrderId int64
+	OrderId         int64
+	FreezeId        int64
+	ConsumerVersion int64
+	MerchantVersion int64
 }
 
 type PlaceOrderReq struct {
@@ -152,6 +155,34 @@ type (
 	}
 )
 
+type (
+	GetUserOrdersWithSubordersReq struct {
+		UserId  uuid.UUID
+		OrderId int64
+	}
+	Suborder struct {
+		OrderId        int64
+		SubOrderId     int64
+		StreetAddress  string
+		City           string
+		State          string
+		Country        string
+		ZipCode        string
+		Email          string
+		MerchantId     string
+		PaymentStatus  constants.PaymentStatus
+		ShippingStatus constants.ShippingStatus
+		TotalAmount    float64
+		Currency       string
+		Items          []*OrderItem
+		CreatedAt      time.Time
+		UpdatedAt      time.Time
+	}
+	GetUserOrdersWithSubordersReply struct {
+		Orders []*Suborder
+	}
+)
+
 type OrderUsecase struct {
 	repo OrderRepo
 	log  *log.Helper
@@ -167,6 +198,7 @@ func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
 	GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error)
+	GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
 
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
@@ -183,6 +215,11 @@ func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*Pl
 func (oc *OrderUsecase) GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error) {
 	oc.log.WithContext(ctx).Debugf("biz/order GetOrders:%+v", req)
 	return oc.repo.GetOrders(ctx, req)
+}
+
+func (oc *OrderUsecase) GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetUserOrdersWithSuborders:%+v", req)
+	return oc.repo.GetUserOrdersWithSuborders(ctx, req)
 }
 
 func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error) {

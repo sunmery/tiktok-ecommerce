@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"time"
+
+	balancerv1 "backend/api/balancer/v1"
 
 	"backend/application/payment/internal/pkg/id"
 
@@ -80,17 +83,20 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	}
 
 	// 创建支付记录
+	log.Debugf("req.ConsumerID: %v", req.ConsumerID)
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
-		ID:       id.SnowflakeID(),
-		OrderID:  req.OrderID,
-		UserID:   req.UserID,
-		Amount:   amount,
-		Currency: req.Currency,
-		Method:   string(constants.PaymentMethodAlipay),
-		Status:   string(biz.PaymentStatusPending),
-		Subject:  req.Subject,
-		TradeNo:  tradeNo,
-		Metadata: nil,
+		ID:              id.SnowflakeID(),
+		OrderID:         req.OrderID,
+		ConsumerID:      req.ConsumerID,
+		Amount:          amount,
+		Currency:        req.Currency,
+		Method:          string(constants.PaymentMethodAlipay),
+		Status:          string(biz.PaymentStatusPending),
+		Subject:         req.Subject,
+		TradeNo:         tradeNo,
+		FreezeID:        req.FreezeId,
+		ConsumerVersion: req.ConsumerVersion,
+		MerchantVersion: req.MerchanVersion,
 	})
 	if paymentsErr != nil {
 		return nil, fmt.Errorf("failed to create payment: %v", paymentsErr)
@@ -104,18 +110,19 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 
 	return &biz.CreatePaymentResp{
 		Payment: &biz.Payment{
-			ID:       payments.ID,
-			OrderID:  payments.OrderID,
-			UserID:   payments.UserID,
-			Amount:   amountResp,
-			Currency: payments.Currency,
-			Subject:  req.Subject,
-			Status:   biz.PaymentStatus(payments.Status),
-			TradeNo:  tradeNo,
+			ID:         payments.ID,
+			OrderID:    payments.OrderID,
+			ConsumerID: payments.ConsumerID,
+			Amount:     amountResp,
+			Currency:   payments.Currency,
+			Subject:    req.Subject,
+			Status:     biz.PaymentStatus(payments.Status),
+			TradeNo:    tradeNo,
 			// PayURL:    payments.PayURL,
-			PayURL:    payUrl.String(),
-			CreatedAt: payments.CreatedAt,
-			UpdatedAt: payments.UpdatedAt,
+			PayURL:     payUrl.String(),
+			NotifyTime: time.Time{},
+			CreatedAt:  payments.CreatedAt,
+			UpdatedAt:  payments.UpdatedAt,
 		},
 	}, err
 }
@@ -139,22 +146,25 @@ func (r *paymentRepo) GetPaymentStatus(ctx context.Context, req *biz.GetPaymentS
 
 	return &biz.GetPaymentStatusResp{
 		Payment: &biz.Payment{
-			ID:        payment.ID,
-			OrderID:   payment.OrderID,
-			UserID:    payment.UserID,
-			Amount:    amount,
-			Currency:  payment.Currency,
-			Subject:   payment.Subject,
-			Status:    biz.PaymentStatus(payment.Status),
-			TradeNo:   payment.TradeNo,
-			CreatedAt: payment.CreatedAt,
-			UpdatedAt: payment.UpdatedAt,
+			ID:         payment.ID,
+			OrderID:    payment.OrderID,
+			ConsumerID: payment.ConsumerID,
+			// MerchantID: payment.MerchantID,
+			Amount:     amount,
+			Currency:   payment.Currency,
+			Subject:    payment.Subject,
+			Status:     biz.PaymentStatus(payment.Status),
+			TradeNo:    payment.TradeNo,
+			PayURL:     "",
+			NotifyTime: time.Time{},
+			CreatedAt:  payment.CreatedAt,
+			UpdatedAt:  payment.UpdatedAt,
 		},
 	}, nil
 }
 
 // HandlePaymentNotify 处理支付通知
-func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req *biz.PaymentNotifyReq) (*biz.PaymentNotifyResp, error) {
+func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req url.Values) (*biz.PaymentNotifyResp, error) {
 	// 检查请求参数
 	if req == nil {
 		r.log.Error("支付通知请求为空")
@@ -163,55 +173,16 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req *biz.PaymentN
 			Message: "支付通知请求为空",
 		}, nil
 	}
-
-	// 将请求参数转换为url.Values格式
-	values := make(url.Values)
-
-	r.log.Debugf("308 HandlePaymentNotify req.Params:%+v", req.Params)
-	r.log.Debugf("309 HandlePaymentNotify values:%+v", values)
-
-	// AppID
-	if req.AppID != "" {
-		values.Set("app_id", req.AppID)
-	}
-	// AuthAppId
-	if req.AuthAppId != "" {
-		values.Set("auth_app_id", req.AuthAppId)
-	}
-	// Charset
-	if req.Charset != "" {
-		values.Set("charset", req.Charset)
-	}
-	// 交易号
-	if req.TradeNo != "" {
-		values.Set("trade_no", req.TradeNo)
-	}
-	// 支付方式, 沙箱
-	if req.Method != "" {
-		values.Set("method", req.Method)
-	}
-	// 签名
-	if req.Sign != "" {
-		values.Set("sign", req.Sign)
-	}
-	// 签名类型
-	if req.SignType != "" {
-		values.Set("sign_type", req.SignType)
-	}
-	// 商家订单号
-	if req.OutTradeNo != "" {
-		values.Set("out_trade_no", req.OutTradeNo)
-	}
-	// 订单金额
-	if req.TotalAmount != "" {
-		values.Set("total_amount", req.TotalAmount)
-	}
-	// 商家 ID
-	if req.SellerId != "" {
-		values.Set("seller_id", req.SellerId)
+	notification, err := r.data.alipay.DecodeNotification(req)
+	if err != nil {
+		r.log.Errorf("支付宝异步通知解析失败: %v", err)
+		// 解析失败不直接返回，继续处理
+		// 可能是签名验证失败，但我们仍然需要处理支付状态更新
+		r.log.Warnf("签名验证失败，降级处理支付状态更新")
 	}
 
-	r.log.Debugf("343 TradeNo:%v OutTradeNo:%v TotalAmount:%v", req.TradeNo, req.OutTradeNo, req.TotalAmount)
+	// r.log.Debugf("308 HandlePaymentNotify req.Params:%+v", req.Params)
+	r.log.Debugf("309 HandlePaymentNotify notification:%+v", notification)
 
 	if r.data.alipay == nil {
 		r.log.Error("支付宝客户端未初始化")
@@ -219,23 +190,6 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req *biz.PaymentN
 			Success: false,
 			Message: "支付宝客户端未初始化",
 		}, nil
-	}
-
-	notification, err := r.data.alipay.DecodeNotification(values)
-	if err != nil {
-		r.log.Errorf("支付宝异步通知解析失败: %v", err)
-		// 解析失败不直接返回，继续处理
-		// 可能是签名验证失败，但我们仍然需要处理支付状态更新
-		r.log.Warnf("签名验证失败，降级处理支付状态更新")
-
-		// 使用请求参数中的订单号继续处理
-		if req.OutTradeNo == "" {
-			r.log.Error("订单号为空，无法继续处理")
-			return &biz.PaymentNotifyResp{
-				Success: false,
-				Message: "订单号为空，无法继续处理",
-			}, nil
-		}
 	}
 
 	r.log.Debugf("支付宝通知: %+v", notification)
@@ -289,10 +243,10 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req *biz.PaymentN
 	log.Debugf("updatePaymentStatusResult: %+v", updatePaymentStatusResult)
 
 	// 传递用户 ID
-	r.log.Debugf("userId:%+v", payment.UserID.String())
-	metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, payment.UserID.String())
+	r.log.Debugf("userId:%+v", payment.ConsumerID.String())
+	metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, payment.ConsumerID.String())
 	result, err := r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
-		// UserId:  payment.UserID.String(),
+		// UserId:  payment.ConsumerID.String(),
 		OrderId: payment.OrderID,
 	})
 	if err != nil {
@@ -437,23 +391,75 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 		}, nil
 	}
 
-	// 更新订单表的支付状态
-	r.log.Debugf("userId:%+v", payment.UserID.String())
-	metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, payment.UserID.String())
-	result, err := r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
-		// UserId:  payment.UserID.String(),
+	// 标记订单为已支付
+	metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, payment.ConsumerID.String())
+	_, err = r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
+		// UserId:  payment.ConsumerID.String(),
 		OrderId: payment.OrderID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("更新订单状态失败: %w", err)
 	}
 
-	r.log.Debugf("result: %+v", result)
+	// 查询订单的所有子订单信息
+	orderInfo, err := r.data.orderv1.GetUserOrdersWithSuborders(ctx, &orderv1.GetUserOrdersWithSubordersReq{
+		UserId:  payment.ConsumerID.String(),
+		OrderId: payment.OrderID,
+	})
+	if err != nil {
+		r.log.Errorf("获取订单信息失败: %v", err)
+		return nil, err
+	}
+	var transactionId int64
+	for _, subOrder := range orderInfo.Orders {
+		merchantId := subOrder.MerchantId
+
+		// 计算子订单金额
+		subOrderAmount := subOrder.TotalAmount
+
+		// 调用余额服务确认转账
+		_, err = r.data.balancerv1.ConfirmTransfer(ctx, &balancerv1.ConfirmTransferRequest{
+			FreezeId:                payment.FreezeID,
+			MerchantId:              merchantId,
+			IdempotencyKey:          strconv.FormatInt(payment.OrderID, 10),
+			ExpectedUserVersion:     int32(payment.ConsumerVersion),
+			ExpectedMerchantVersion: int32(payment.MerchantVersion),
+			PaymentAccount:          "", // TODO PaymentAccount
+		})
+		if err != nil {
+			r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
+				merchantId, subOrderAmount, err)
+			// 继续处理其他子订单，不要因为一个子订单失败而中断整个流程
+		} else {
+			r.log.Infof("确认转账成功，商家ID: %s, 金额: %f",
+				merchantId, subOrderAmount)
+		}
+
+		transaction, err := r.data.balancerv1.CreateTransaction(ctx, &balancerv1.CreateTransactionRequest{
+			Type:              string(constants.TradeStatusSuccess),
+			Amount:            subOrderAmount,
+			Currency:          string(constants.CNY),
+			FromUserId:        payment.ConsumerID.String(),
+			ToMerchantId:      merchantId,
+			PaymentMethodType: string(constants.PaymentMethodAlipay),
+			PaymentAccount:    "",  // TODO PaymentAccount
+			PaymentExtra:      nil, // TODO PaymentExtra
+			Status:            string(constants.PaymentPaid),
+			IdempotencyKey:    strconv.FormatInt(payment.OrderID, 10),
+			FreezeId:          payment.FreezeID,
+			ConsumerVersion:   payment.ConsumerVersion,
+			MerchantVersion:   payment.MerchantVersion,
+		})
+		if err != nil {
+			return nil, err
+		}
+		transactionId = transaction.Id
+	}
 
 	// 返回支付结果
 	return &biz.PaymentCallbackResp{
 		Success: true,
-		Message: "支付成功",
+		Message: fmt.Sprintf("支付成功, 交易记录ID:%v", transactionId),
 	}, nil
 }
 
@@ -473,15 +479,17 @@ func (r *paymentRepo) GetPaymentByOrderID(ctx context.Context, req *biz.GetPayme
 	}
 
 	return &biz.Payment{
-		ID:        payment.ID,
-		OrderID:   payment.OrderID,
-		UserID:    payment.UserID,
-		Amount:    amount,
-		Currency:  payment.Currency,
-		Subject:   payment.Subject,
-		Status:    biz.PaymentStatus(payment.Status),
-		TradeNo:   payment.TradeNo,
-		CreatedAt: payment.CreatedAt,
-		UpdatedAt: payment.UpdatedAt,
+		ID:         payment.ID,
+		OrderID:    payment.OrderID,
+		ConsumerID: payment.ConsumerID,
+		Amount:     amount,
+		Currency:   payment.Currency,
+		Subject:    payment.Subject,
+		Status:     biz.PaymentStatus(payment.Status),
+		TradeNo:    payment.TradeNo,
+		PayURL:     "",
+		NotifyTime: time.Time{},
+		CreatedAt:  payment.CreatedAt,
+		UpdatedAt:  payment.UpdatedAt,
 	}, nil
 }

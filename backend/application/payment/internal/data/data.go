@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	balancerv1 "backend/api/balancer/v1"
+
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
@@ -31,16 +33,17 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewPaymentRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewBalancerServiceClient, NewPaymentRepo)
 
 type Data struct {
-	db      *models.Queries
-	pgx     *pgxpool.Pool
-	rdb     *redis.Client
-	logger  *log.Helper
-	alipay  *alipay.Client
-	conf    *conf.Pay
-	orderv1 orderv1.OrderServiceClient
+	db         *models.Queries
+	pgx        *pgxpool.Pool
+	rdb        *redis.Client
+	logger     *log.Helper
+	alipay     *alipay.Client
+	conf       *conf.Pay
+	orderv1    orderv1.OrderServiceClient
+	balancerv1 balancerv1.BalanceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -54,18 +57,20 @@ func NewData(
 	alipay *alipay.Client,
 	conf *conf.Pay,
 	orderv1 orderv1.OrderServiceClient,
+	balancerv1 balancerv1.BalanceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:      models.New(db),        // 数据库
-		pgx:     db,                    // 数据库事务
-		rdb:     rdb,                   // 缓存
-		logger:  log.NewHelper(logger), // 注入日志
-		alipay:  alipay,
-		conf:    conf,
-		orderv1: orderv1,
+		db:         models.New(db),        // 数据库
+		pgx:        db,                    // 数据库事务
+		rdb:        rdb,                   // 缓存
+		logger:     log.NewHelper(logger), // 注入日志
+		alipay:     alipay,
+		conf:       conf,
+		orderv1:    orderv1,
+		balancerv1: balancerv1, // 余额服务
 	}, cleanup, nil
 }
 
@@ -94,18 +99,18 @@ func NewAlipay(c *conf.Pay) *alipay.Client {
 
 	// 证书方式
 	// 加载应用公钥证书
-	// if err := client.LoadAppCertPublicKeyFromFile("/app/appPublicCert.crt"); err != nil {
-	if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
+	if err := client.LoadAppCertPublicKeyFromFile("/app/appPublicCert.crt"); err != nil {
+		// if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load app public cert failed: %v", err))
 	}
 	// 加载支付宝根证书
-	// if err := client.LoadAliPayRootCertFromFile("/app/alipayRootCert.crt"); err != nil {
-	if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
+	if err := client.LoadAliPayRootCertFromFile("/app/alipayRootCert.crt"); err != nil {
+		// if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay root cert failed: %v", err))
 	}
 	// 加载支付宝公钥证书
-	// if err := client.LoadAlipayCertPublicKeyFromFile("/app/alipayPublicCert.crt"); err != nil {
-	if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
+	if err := client.LoadAlipayCertPublicKeyFromFile("/app/alipayPublicCert.crt"); err != nil {
+		// if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay public cert failed: %v", err))
 	}
 
@@ -144,6 +149,24 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	}
 	r := consul.New(cli, consul.WithHealthCheck(false))
 	return r, nil
+}
+
+// NewBalancerServiceClient 余额微服务
+func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancerv1.BalanceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.BalancerServicev1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return balancerv1.NewBalanceClient(conn), nil
 }
 
 // NewOrderServiceClient 订单微服务

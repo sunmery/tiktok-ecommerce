@@ -65,6 +65,14 @@ service Balance {
     };
   }
 
+  // 创建订单流水
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionReply) {
+    option (google.api.http) = {
+      put: "/v1/balances/transactions",
+      body: "*"
+    };
+  }
+
   // 获取商家或者用户订单流水
   rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsReply) {
     option (google.api.http) = {
@@ -122,6 +130,26 @@ message CreateConsumerBalanceReply {
 message GetUserBalanceRequest {
   string user_id = 1;       // UUID as string
   string currency = 2;    // 指定币种
+}
+
+message CreateTransactionRequest {
+  string type = 2; // 交易类型: 充值|支付|退款|提现
+  double amount = 3;
+  string currency = 4;
+  string from_user_id = 5;
+  string to_merchant_id = 6;
+  string payment_method_type = 7; // 支付方式: ALIPAY|WECHAT|BALANCE|BANK_CARD
+  string payment_account = 8 ; // 支付账号, 对应的第三方支付方式的账号
+  google.protobuf.Struct payment_extra = 9; // 交易号等额外信息
+  string status = 10; // 支付状态: 等待支付|已支付|取消支付|支付异常
+  string idempotency_key = 12; // 关联冻结记录
+  int64 freeze_id = 11; // 幂等键
+  int64 consumer_version = 13; // 用户乐观锁版本
+  int64 merchant_version = 14; // 商家乐观锁版本
+}
+
+message CreateTransactionReply {
+  int64 id = 1;
 }
 
 message GetTransactionsRequest {

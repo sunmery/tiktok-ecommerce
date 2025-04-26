@@ -10,6 +10,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -83,15 +84,18 @@ func (PaymentStatus) EnumDescriptor() ([]byte, []int) {
 
 // 创建支付订单请求
 type CreatePaymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Amount        string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Subject       string                 `protobuf:"bytes,5,opt,name=subject,proto3" json:"subject,omitempty"`
-	ReturnUrl     string                 `protobuf:"bytes,6,opt,name=return_url,json=returnUrl,proto3" json:"return_url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	OrderId         int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ConsumerId      string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	Amount          string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Currency        string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	Subject         string                 `protobuf:"bytes,5,opt,name=subject,proto3" json:"subject,omitempty"`
+	ReturnUrl       string                 `protobuf:"bytes,6,opt,name=return_url,json=returnUrl,proto3" json:"return_url,omitempty"`
+	FreezeId        int64                  `protobuf:"varint,8,opt,name=freeze_id,json=freezeId,proto3" json:"freeze_id,omitempty"`
+	ConsumerVersion int64                  `protobuf:"varint,9,opt,name=consumer_version,json=consumerVersion,proto3" json:"consumer_version,omitempty"`
+	MerchantVersion int64                  `protobuf:"varint,10,opt,name=merchant_version,json=merchantVersion,proto3" json:"merchant_version,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *CreatePaymentRequest) Reset() {
@@ -131,9 +135,9 @@ func (x *CreatePaymentRequest) GetOrderId() int64 {
 	return 0
 }
 
-func (x *CreatePaymentRequest) GetUserId() string {
+func (x *CreatePaymentRequest) GetConsumerId() string {
 	if x != nil {
-		return x.UserId
+		return x.ConsumerId
 	}
 	return ""
 }
@@ -164,6 +168,27 @@ func (x *CreatePaymentRequest) GetReturnUrl() string {
 		return x.ReturnUrl
 	}
 	return ""
+}
+
+func (x *CreatePaymentRequest) GetFreezeId() int64 {
+	if x != nil {
+		return x.FreezeId
+	}
+	return 0
+}
+
+func (x *CreatePaymentRequest) GetConsumerVersion() int64 {
+	if x != nil {
+		return x.ConsumerVersion
+	}
+	return 0
+}
+
+func (x *CreatePaymentRequest) GetMerchantVersion() int64 {
+	if x != nil {
+		return x.MerchantVersion
+	}
+	return 0
 }
 
 // 创建支付订单响应
@@ -333,38 +358,28 @@ func (x *GetPaymentStatusResponse) GetTradeNo() string {
 	return ""
 }
 
-// 支付通知请求
-type HandlePaymentNotifyRequest struct {
+type KeyValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Charset       string                 `protobuf:"bytes,6,opt,name=charset,proto3" json:"charset,omitempty"` // 字符集
-	AppId         string                 `protobuf:"bytes,1,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	AuthAppId     string                 `protobuf:"bytes,12,opt,name=auth_app_id,json=authAppId,proto3" json:"auth_app_id,omitempty"` // 授权应用ID
-	TradeNo       string                 `protobuf:"bytes,2,opt,name=trade_no,json=tradeNo,proto3" json:"trade_no,omitempty"`
-	Method        string                 `protobuf:"bytes,7,opt,name=method,proto3" json:"method,omitempty"`                     // 支付方式
-	Sign          string                 `protobuf:"bytes,8,opt,name=sign,proto3" json:"sign,omitempty"`                         // 签名
-	SignType      string                 `protobuf:"bytes,9,opt,name=sign_type,json=signType,proto3" json:"sign_type,omitempty"` // 签名类型 RSA2
-	OutTradeNo    string                 `protobuf:"bytes,3,opt,name=out_trade_no,json=outTradeNo,proto3" json:"out_trade_no,omitempty"`
-	TotalAmount   string                 `protobuf:"bytes,4,opt,name=total_amount,json=totalAmount,proto3" json:"total_amount,omitempty"`
-	SellerId      string                 `protobuf:"bytes,14,opt,name=seller_id,json=sellerId,proto3" json:"seller_id,omitempty"`                                                       // 卖家ID
-	Params        map[string]string      `protobuf:"bytes,11,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // 存储所有回调参数
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Values        []string               `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HandlePaymentNotifyRequest) Reset() {
-	*x = HandlePaymentNotifyRequest{}
+func (x *KeyValue) Reset() {
+	*x = KeyValue{}
 	mi := &file_v1_payment_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HandlePaymentNotifyRequest) String() string {
+func (x *KeyValue) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HandlePaymentNotifyRequest) ProtoMessage() {}
+func (*KeyValue) ProtoMessage() {}
 
-func (x *HandlePaymentNotifyRequest) ProtoReflect() protoreflect.Message {
+func (x *KeyValue) ProtoReflect() protoreflect.Message {
 	mi := &file_v1_payment_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -376,84 +391,65 @@ func (x *HandlePaymentNotifyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HandlePaymentNotifyRequest.ProtoReflect.Descriptor instead.
-func (*HandlePaymentNotifyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyValue.ProtoReflect.Descriptor instead.
+func (*KeyValue) Descriptor() ([]byte, []int) {
 	return file_v1_payment_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *HandlePaymentNotifyRequest) GetCharset() string {
+func (x *KeyValue) GetKey() string {
 	if x != nil {
-		return x.Charset
+		return x.Key
 	}
 	return ""
 }
 
-func (x *HandlePaymentNotifyRequest) GetAppId() string {
+func (x *KeyValue) GetValues() []string {
 	if x != nil {
-		return x.AppId
+		return x.Values
 	}
-	return ""
+	return nil
 }
 
-func (x *HandlePaymentNotifyRequest) GetAuthAppId() string {
-	if x != nil {
-		return x.AuthAppId
-	}
-	return ""
+type UrlValues struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pairs         []*KeyValue            `protobuf:"bytes,1,rep,name=pairs,proto3" json:"pairs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HandlePaymentNotifyRequest) GetTradeNo() string {
-	if x != nil {
-		return x.TradeNo
-	}
-	return ""
+func (x *UrlValues) Reset() {
+	*x = UrlValues{}
+	mi := &file_v1_payment_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
-func (x *HandlePaymentNotifyRequest) GetMethod() string {
-	if x != nil {
-		return x.Method
-	}
-	return ""
+func (x *UrlValues) String() string {
+	return protoimpl.X.MessageStringOf(x)
 }
 
-func (x *HandlePaymentNotifyRequest) GetSign() string {
+func (*UrlValues) ProtoMessage() {}
+
+func (x *UrlValues) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_payment_proto_msgTypes[5]
 	if x != nil {
-		return x.Sign
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
 	}
-	return ""
+	return mi.MessageOf(x)
 }
 
-func (x *HandlePaymentNotifyRequest) GetSignType() string {
-	if x != nil {
-		return x.SignType
-	}
-	return ""
+// Deprecated: Use UrlValues.ProtoReflect.Descriptor instead.
+func (*UrlValues) Descriptor() ([]byte, []int) {
+	return file_v1_payment_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *HandlePaymentNotifyRequest) GetOutTradeNo() string {
+func (x *UrlValues) GetPairs() []*KeyValue {
 	if x != nil {
-		return x.OutTradeNo
-	}
-	return ""
-}
-
-func (x *HandlePaymentNotifyRequest) GetTotalAmount() string {
-	if x != nil {
-		return x.TotalAmount
-	}
-	return ""
-}
-
-func (x *HandlePaymentNotifyRequest) GetSellerId() string {
-	if x != nil {
-		return x.SellerId
-	}
-	return ""
-}
-
-func (x *HandlePaymentNotifyRequest) GetParams() map[string]string {
-	if x != nil {
-		return x.Params
+		return x.Pairs
 	}
 	return nil
 }
@@ -469,7 +465,7 @@ type HandlePaymentNotifyResponse struct {
 
 func (x *HandlePaymentNotifyResponse) Reset() {
 	*x = HandlePaymentNotifyResponse{}
-	mi := &file_v1_payment_proto_msgTypes[5]
+	mi := &file_v1_payment_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -481,7 +477,7 @@ func (x *HandlePaymentNotifyResponse) String() string {
 func (*HandlePaymentNotifyResponse) ProtoMessage() {}
 
 func (x *HandlePaymentNotifyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_payment_proto_msgTypes[5]
+	mi := &file_v1_payment_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -494,7 +490,7 @@ func (x *HandlePaymentNotifyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlePaymentNotifyResponse.ProtoReflect.Descriptor instead.
 func (*HandlePaymentNotifyResponse) Descriptor() ([]byte, []int) {
-	return file_v1_payment_proto_rawDescGZIP(), []int{5}
+	return file_v1_payment_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *HandlePaymentNotifyResponse) GetSuccess() bool {
@@ -535,7 +531,7 @@ type HandlePaymentCallbackRequest struct {
 
 func (x *HandlePaymentCallbackRequest) Reset() {
 	*x = HandlePaymentCallbackRequest{}
-	mi := &file_v1_payment_proto_msgTypes[6]
+	mi := &file_v1_payment_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -547,7 +543,7 @@ func (x *HandlePaymentCallbackRequest) String() string {
 func (*HandlePaymentCallbackRequest) ProtoMessage() {}
 
 func (x *HandlePaymentCallbackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_payment_proto_msgTypes[6]
+	mi := &file_v1_payment_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -560,7 +556,7 @@ func (x *HandlePaymentCallbackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlePaymentCallbackRequest.ProtoReflect.Descriptor instead.
 func (*HandlePaymentCallbackRequest) Descriptor() ([]byte, []int) {
-	return file_v1_payment_proto_rawDescGZIP(), []int{6}
+	return file_v1_payment_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *HandlePaymentCallbackRequest) GetOutTradeNo() string {
@@ -679,7 +675,7 @@ type HandlePaymentCallbackResponse struct {
 
 func (x *HandlePaymentCallbackResponse) Reset() {
 	*x = HandlePaymentCallbackResponse{}
-	mi := &file_v1_payment_proto_msgTypes[7]
+	mi := &file_v1_payment_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -691,7 +687,7 @@ func (x *HandlePaymentCallbackResponse) String() string {
 func (*HandlePaymentCallbackResponse) ProtoMessage() {}
 
 func (x *HandlePaymentCallbackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_payment_proto_msgTypes[7]
+	mi := &file_v1_payment_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -704,7 +700,7 @@ func (x *HandlePaymentCallbackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlePaymentCallbackResponse.ProtoReflect.Descriptor instead.
 func (*HandlePaymentCallbackResponse) Descriptor() ([]byte, []int) {
-	return file_v1_payment_proto_rawDescGZIP(), []int{7}
+	return file_v1_payment_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *HandlePaymentCallbackResponse) GetSuccess() bool {
@@ -726,15 +722,20 @@ var File_v1_payment_proto protoreflect.FileDescriptor
 const file_v1_payment_proto_rawDesc = "" +
 	"\n" +
 	"\x10v1/payment.proto\x12\n" +
-	"payment.v1\x1a\x1cgoogle/api/annotations.proto\"\xb7\x01\n" +
+	"payment.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xb2\x02\n" +
 	"\x14CreatePaymentRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x16\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1f\n" +
+	"\vconsumer_id\x18\x02 \x01(\tR\n" +
+	"consumerId\x12\x16\n" +
 	"\x06amount\x18\x03 \x01(\tR\x06amount\x12\x1a\n" +
 	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12\x18\n" +
 	"\asubject\x18\x05 \x01(\tR\asubject\x12\x1d\n" +
 	"\n" +
-	"return_url\x18\x06 \x01(\tR\treturnUrl\"O\n" +
+	"return_url\x18\x06 \x01(\tR\treturnUrl\x12\x1b\n" +
+	"\tfreeze_id\x18\b \x01(\x03R\bfreezeId\x12)\n" +
+	"\x10consumer_version\x18\t \x01(\x03R\x0fconsumerVersion\x12)\n" +
+	"\x10merchant_version\x18\n" +
+	" \x01(\x03R\x0fmerchantVersion\"O\n" +
 	"\x15CreatePaymentResponse\x12\x1d\n" +
 	"\n" +
 	"payment_id\x18\x01 \x01(\x03R\tpaymentId\x12\x17\n" +
@@ -747,23 +748,12 @@ const file_v1_payment_proto_rawDesc = "" +
 	"payment_id\x18\x01 \x01(\x03R\tpaymentId\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\x03R\aorderId\x121\n" +
 	"\x06status\x18\x03 \x01(\x0e2\x19.payment.v1.PaymentStatusR\x06status\x12\x19\n" +
-	"\btrade_no\x18\x04 \x01(\tR\atradeNo\"\xba\x03\n" +
-	"\x1aHandlePaymentNotifyRequest\x12\x18\n" +
-	"\acharset\x18\x06 \x01(\tR\acharset\x12\x15\n" +
-	"\x06app_id\x18\x01 \x01(\tR\x05appId\x12\x1e\n" +
-	"\vauth_app_id\x18\f \x01(\tR\tauthAppId\x12\x19\n" +
-	"\btrade_no\x18\x02 \x01(\tR\atradeNo\x12\x16\n" +
-	"\x06method\x18\a \x01(\tR\x06method\x12\x12\n" +
-	"\x04sign\x18\b \x01(\tR\x04sign\x12\x1b\n" +
-	"\tsign_type\x18\t \x01(\tR\bsignType\x12 \n" +
-	"\fout_trade_no\x18\x03 \x01(\tR\n" +
-	"outTradeNo\x12!\n" +
-	"\ftotal_amount\x18\x04 \x01(\tR\vtotalAmount\x12\x1b\n" +
-	"\tseller_id\x18\x0e \x01(\tR\bsellerId\x12J\n" +
-	"\x06params\x18\v \x03(\v22.payment.v1.HandlePaymentNotifyRequest.ParamsEntryR\x06params\x1a9\n" +
-	"\vParamsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Q\n" +
+	"\btrade_no\x18\x04 \x01(\tR\atradeNo\"4\n" +
+	"\bKeyValue\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x16\n" +
+	"\x06values\x18\x02 \x03(\tR\x06values\"7\n" +
+	"\tUrlValues\x12*\n" +
+	"\x05pairs\x18\x01 \x03(\v2\x14.payment.v1.KeyValueR\x05pairs\"Q\n" +
 	"\x1bHandlePaymentNotifyResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\xb3\x04\n" +
@@ -797,11 +787,11 @@ const file_v1_payment_proto_rawDesc = "" +
 	"\x19PAYMENT_STATUS_PROCESSING\x10\x02\x12\x1a\n" +
 	"\x16PAYMENT_STATUS_SUCCESS\x10\x03\x12\x19\n" +
 	"\x15PAYMENT_STATUS_FAILED\x10\x04\x12\x19\n" +
-	"\x15PAYMENT_STATUS_CLOSED\x10\x052\xa0\x04\n" +
+	"\x15PAYMENT_STATUS_CLOSED\x10\x052\x8e\x04\n" +
 	"\x0ePaymentService\x12m\n" +
 	"\rCreatePayment\x12 .payment.v1.CreatePaymentRequest\x1a!.payment.v1.CreatePaymentResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/payments\x12\x87\x01\n" +
-	"\x10GetPaymentStatus\x12#.payment.v1.GetPaymentStatusRequest\x1a$.payment.v1.GetPaymentStatusResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/payments/{payment_id}/status\x12\x86\x01\n" +
-	"\x13HandlePaymentNotify\x12&.payment.v1.HandlePaymentNotifyRequest\x1a'.payment.v1.HandlePaymentNotifyResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/payments/notify\x12\x8b\x01\n" +
+	"\x10GetPaymentStatus\x12#.payment.v1.GetPaymentStatusRequest\x1a$.payment.v1.GetPaymentStatusResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/payments/{payment_id}/status\x12u\n" +
+	"\x13HandlePaymentNotify\x12\x15.payment.v1.UrlValues\x1a'.payment.v1.HandlePaymentNotifyResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/payments/notify\x12\x8b\x01\n" +
 	"\x15HandlePaymentCallback\x12(.payment.v1.HandlePaymentCallbackRequest\x1a).payment.v1.HandlePaymentCallbackResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/payments/callbackB\"Z backend/api/payment/v1;paymentv1b\x06proto3"
 
 var (
@@ -824,25 +814,25 @@ var file_v1_payment_proto_goTypes = []any{
 	(*CreatePaymentResponse)(nil),         // 2: payment.v1.CreatePaymentResponse
 	(*GetPaymentStatusRequest)(nil),       // 3: payment.v1.GetPaymentStatusRequest
 	(*GetPaymentStatusResponse)(nil),      // 4: payment.v1.GetPaymentStatusResponse
-	(*HandlePaymentNotifyRequest)(nil),    // 5: payment.v1.HandlePaymentNotifyRequest
-	(*HandlePaymentNotifyResponse)(nil),   // 6: payment.v1.HandlePaymentNotifyResponse
-	(*HandlePaymentCallbackRequest)(nil),  // 7: payment.v1.HandlePaymentCallbackRequest
-	(*HandlePaymentCallbackResponse)(nil), // 8: payment.v1.HandlePaymentCallbackResponse
-	nil,                                   // 9: payment.v1.HandlePaymentNotifyRequest.ParamsEntry
+	(*KeyValue)(nil),                      // 5: payment.v1.KeyValue
+	(*UrlValues)(nil),                     // 6: payment.v1.UrlValues
+	(*HandlePaymentNotifyResponse)(nil),   // 7: payment.v1.HandlePaymentNotifyResponse
+	(*HandlePaymentCallbackRequest)(nil),  // 8: payment.v1.HandlePaymentCallbackRequest
+	(*HandlePaymentCallbackResponse)(nil), // 9: payment.v1.HandlePaymentCallbackResponse
 	nil,                                   // 10: payment.v1.HandlePaymentCallbackRequest.ParamsEntry
 }
 var file_v1_payment_proto_depIdxs = []int32{
 	0,  // 0: payment.v1.GetPaymentStatusResponse.status:type_name -> payment.v1.PaymentStatus
-	9,  // 1: payment.v1.HandlePaymentNotifyRequest.params:type_name -> payment.v1.HandlePaymentNotifyRequest.ParamsEntry
+	5,  // 1: payment.v1.UrlValues.pairs:type_name -> payment.v1.KeyValue
 	10, // 2: payment.v1.HandlePaymentCallbackRequest.params:type_name -> payment.v1.HandlePaymentCallbackRequest.ParamsEntry
 	1,  // 3: payment.v1.PaymentService.CreatePayment:input_type -> payment.v1.CreatePaymentRequest
 	3,  // 4: payment.v1.PaymentService.GetPaymentStatus:input_type -> payment.v1.GetPaymentStatusRequest
-	5,  // 5: payment.v1.PaymentService.HandlePaymentNotify:input_type -> payment.v1.HandlePaymentNotifyRequest
-	7,  // 6: payment.v1.PaymentService.HandlePaymentCallback:input_type -> payment.v1.HandlePaymentCallbackRequest
+	6,  // 5: payment.v1.PaymentService.HandlePaymentNotify:input_type -> payment.v1.UrlValues
+	8,  // 6: payment.v1.PaymentService.HandlePaymentCallback:input_type -> payment.v1.HandlePaymentCallbackRequest
 	2,  // 7: payment.v1.PaymentService.CreatePayment:output_type -> payment.v1.CreatePaymentResponse
 	4,  // 8: payment.v1.PaymentService.GetPaymentStatus:output_type -> payment.v1.GetPaymentStatusResponse
-	6,  // 9: payment.v1.PaymentService.HandlePaymentNotify:output_type -> payment.v1.HandlePaymentNotifyResponse
-	8,  // 10: payment.v1.PaymentService.HandlePaymentCallback:output_type -> payment.v1.HandlePaymentCallbackResponse
+	7,  // 9: payment.v1.PaymentService.HandlePaymentNotify:output_type -> payment.v1.HandlePaymentNotifyResponse
+	9,  // 10: payment.v1.PaymentService.HandlePaymentCallback:output_type -> payment.v1.HandlePaymentCallbackResponse
 	7,  // [7:11] is the sub-list for method output_type
 	3,  // [3:7] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name

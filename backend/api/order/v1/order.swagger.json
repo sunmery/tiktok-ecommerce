@@ -136,6 +136,46 @@
         ]
       }
     },
+    "/v1/orders/users/{orderId}": {
+      "get": {
+        "summary": "根据用户主订单查询子订单",
+        "operationId": "OrderService_GetUserOrdersWithSuborders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserOrdersWithSubordersReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "userId",
+            "description": "用户 ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
     "/v1/orders/{id}": {
       "get": {
         "summary": "根据订单ID查询",
@@ -157,7 +197,7 @@
         "parameters": [
           {
             "name": "id",
-            "description": "用户 ID",
+            "description": "订单 ID",
             "in": "path",
             "required": true,
             "type": "string",
@@ -243,47 +283,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/OrderServiceConfirmReceivedBody"
-            }
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      }
-    },
-    "/v1/orders/{orderId}/status": {
-      "put": {
-        "summary": "更新订单状态",
-        "operationId": "OrderService_UpdateOrderStatus",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateOrderStatusResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "orderId",
-            "description": "订单 ID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/OrderServiceUpdateOrderStatusBody"
             }
           }
         ],
@@ -409,16 +408,6 @@
     "OrderServiceMarkOrderPaidBody": {
       "type": "object",
       "title": "标记订单为已支付请求的消息结构"
-    },
-    "OrderServiceUpdateOrderStatusBody": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "title": "新的订单状态"
-        }
-      },
-      "title": "更新订单状态请求的消息结构"
     },
     "googleprotobufAny": {
       "type": "object",
@@ -568,6 +557,19 @@
       },
       "title": "查询订单状态响应的消息结构"
     },
+    "v1GetUserOrdersWithSubordersReply": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Suborders"
+          },
+          "title": "订单列表"
+        }
+      }
+    },
     "v1MarkOrderPaidResp": {
       "type": "object",
       "title": "标记订单为已支付响应的消息结构"
@@ -646,6 +648,21 @@
           "type": "string",
           "format": "int64",
           "title": "订单 ID"
+        },
+        "freezeId": {
+          "type": "string",
+          "format": "int64",
+          "title": "冻结 ID"
+        },
+        "consumerVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "消费者乐观锁版本"
+        },
+        "merchantVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "商家乐观锁版本"
         }
       },
       "title": "创建订单响应的消息结构"
@@ -728,9 +745,67 @@
       "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
       "title": "货运状态的枚举类型"
     },
-    "v1UpdateOrderStatusResp": {
+    "v1Suborders": {
       "type": "object",
-      "title": "更新订单状态响应的消息结构"
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "streetAddress": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "paymentStatus": {
+          "type": "string"
+        },
+        "shippingStatus": {
+          "type": "string"
+        },
+        "totalAmount": {
+          "type": "number",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     }
   }
 }

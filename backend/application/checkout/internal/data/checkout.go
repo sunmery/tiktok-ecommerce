@@ -149,20 +149,28 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	}
 
 	// 调用支付微服务生成支付URL
+	log.Debugf("req.UserId.String(): %+v", req.UserId.String())
 	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentRequest{
-		OrderId:  order.Order.OrderId,
-		UserId:   req.UserId.String(),
-		Amount:   fmt.Sprintf("%.2f", amount),
-		Currency: creditCard.Currency,
-		Subject:  "支付测试",
-		// ReturnUrl: "",
+		OrderId:         order.Order.OrderId,
+		ConsumerId:      req.UserId.String(),
+		Amount:          fmt.Sprintf("%.2f", amount),
+		Currency:        creditCard.Currency,
+		Subject:         "支付测试",
+		ReturnUrl:       "",
+		FreezeId:        order.Order.FreezeId,
+		ConsumerVersion: order.Order.ConsumerVersion,
+		MerchantVersion: order.Order.MerchantVersion,
 	})
-	if paymentErr != nil || payment == nil {
+	if paymentErr != nil {
 		// 订单回滚
 		// _, _ = c.data.orderv1.CancelOrder(ctx, &v1.CancelOrderReq{
 		// 	OrderId: orderResp.Order.OrderId,
 		// })
-		return nil, kerrors.New(500, "payment", fmt.Sprintf("创建支付失败: %v", paymentErr))
+		return nil, kerrors.New(500, "CREATE_PAYMENT_ERR", fmt.Sprintf("创建支付失败: %v", paymentErr))
+	}
+
+	if payment == nil || payment.PaymentId == 0 {
+		return nil, kerrors.New(500, "PAYMENT_NULL", fmt.Sprintf("payment 为空: %+v", payment))
 	}
 
 	return &biz.CheckoutReply{

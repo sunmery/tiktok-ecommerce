@@ -32,7 +32,8 @@ type PaymentServiceHTTPServer interface {
 	// HandlePaymentCallback 支付成功后的回调处理
 	HandlePaymentCallback(context.Context, *HandlePaymentCallbackRequest) (*HandlePaymentCallbackResponse, error)
 	// HandlePaymentNotify 处理支付回调通知
-	HandlePaymentNotify(context.Context, *HandlePaymentNotifyRequest) (*HandlePaymentNotifyResponse, error)
+	//  rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {
+	HandlePaymentNotify(context.Context, *UrlValues) (*HandlePaymentNotifyResponse, error)
 }
 
 func RegisterPaymentServiceHTTPServer(s *http.Server, srv PaymentServiceHTTPServer) {
@@ -89,7 +90,7 @@ func _PaymentService_GetPaymentStatus0_HTTP_Handler(srv PaymentServiceHTTPServer
 
 func _PaymentService_HandlePaymentNotify0_HTTP_Handler(srv PaymentServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in HandlePaymentNotifyRequest
+		var in UrlValues
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -98,7 +99,7 @@ func _PaymentService_HandlePaymentNotify0_HTTP_Handler(srv PaymentServiceHTTPSer
 		}
 		http.SetOperation(ctx, OperationPaymentServiceHandlePaymentNotify)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.HandlePaymentNotify(ctx, req.(*HandlePaymentNotifyRequest))
+			return srv.HandlePaymentNotify(ctx, req.(*UrlValues))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -132,7 +133,7 @@ type PaymentServiceHTTPClient interface {
 	CreatePayment(ctx context.Context, req *CreatePaymentRequest, opts ...http.CallOption) (rsp *CreatePaymentResponse, err error)
 	GetPaymentStatus(ctx context.Context, req *GetPaymentStatusRequest, opts ...http.CallOption) (rsp *GetPaymentStatusResponse, err error)
 	HandlePaymentCallback(ctx context.Context, req *HandlePaymentCallbackRequest, opts ...http.CallOption) (rsp *HandlePaymentCallbackResponse, err error)
-	HandlePaymentNotify(ctx context.Context, req *HandlePaymentNotifyRequest, opts ...http.CallOption) (rsp *HandlePaymentNotifyResponse, err error)
+	HandlePaymentNotify(ctx context.Context, req *UrlValues, opts ...http.CallOption) (rsp *HandlePaymentNotifyResponse, err error)
 }
 
 type PaymentServiceHTTPClientImpl struct {
@@ -182,7 +183,7 @@ func (c *PaymentServiceHTTPClientImpl) HandlePaymentCallback(ctx context.Context
 	return &out, nil
 }
 
-func (c *PaymentServiceHTTPClientImpl) HandlePaymentNotify(ctx context.Context, in *HandlePaymentNotifyRequest, opts ...http.CallOption) (*HandlePaymentNotifyResponse, error) {
+func (c *PaymentServiceHTTPClientImpl) HandlePaymentNotify(ctx context.Context, in *UrlValues, opts ...http.CallOption) (*HandlePaymentNotifyResponse, error) {
 	var out HandlePaymentNotifyResponse
 	pattern := "/v1/payments/notify"
 	path := binding.EncodeURL(pattern, in, false)

@@ -91,23 +91,19 @@ SELECT o.id,
        o.email,
        o.payment_status,
        os.shipping_status,
-       o.created_at AS order_created,
-       jsonb_agg(
-               jsonb_build_object(
-                       'sub_order_id', os.id,
-                       'merchant_id', os.merchant_id,
-                       'total_amount', os.total_amount,
-                       'currency', os.currency,
-                       'status', os.status,
-                       'items', os.items,
-                       'created_at', os.created_at,
-                       'updated_at', os.updated_at
-               ) ORDER BY os.created_at
-       )            AS suborders
+       os.merchant_id,
+       os.id AS sub_order_id,
+       os.total_amount,
+       os.currency,
+       os.items,
+       o.created_at,
+       o.updated_at
 FROM orders.orders o
          LEFT JOIN orders.sub_orders os ON o.id = os.order_id
-WHERE o.user_id = @user_id::uuid
-GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at,
+WHERE o.user_id = @user_id
+  AND o.id = @order_id
+GROUP BY o.id, os.id, o.currency, os.merchant_id, o.street_address, o.city, o.state, o.country, o.zip_code, o.email,
+         o.created_at,
          os.shipping_status
 ORDER BY o.created_at DESC;
 

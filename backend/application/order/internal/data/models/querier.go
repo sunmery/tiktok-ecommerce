@@ -18,12 +18,7 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	//  RETURNING id, user_id, currency, street_address, city, state, country, zip_code, email, payment_status, created_at, updated_at
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (OrdersOrders, error)
-	// -- name: UpdateOrderPaymentStatus :exec
-	// UPDATE orders.orders
-	// SET payment_status = @payment_status,
-	//     updated_at     = now()
-	// WHERE id = @id;
-	//
+	//CreateOrderShipping
 	//
 	//  INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
 	//                                   shipping_address, receiver_address, shipping_fee)
@@ -126,26 +121,22 @@ type Querier interface {
 	//         o.email,
 	//         o.payment_status,
 	//         os.shipping_status,
-	//         o.created_at AS order_created,
-	//         jsonb_agg(
-	//                 jsonb_build_object(
-	//                         'sub_order_id', os.id,
-	//                         'merchant_id', os.merchant_id,
-	//                         'total_amount', os.total_amount,
-	//                         'currency', os.currency,
-	//                         'status', os.status,
-	//                         'items', os.items,
-	//                         'created_at', os.created_at,
-	//                         'updated_at', os.updated_at
-	//                 ) ORDER BY os.created_at
-	//         )            AS suborders
+	//         os.merchant_id,
+	//         os.id AS sub_order_id,
+	//         os.total_amount,
+	//         os.currency,
+	//         os.items,
+	//         o.created_at,
+	//         o.updated_at
 	//  FROM orders.orders o
 	//           LEFT JOIN orders.sub_orders os ON o.id = os.order_id
-	//  WHERE o.user_id = $1::uuid
-	//  GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at,
+	//  WHERE o.user_id = $1
+	//    AND o.id = $2
+	//  GROUP BY o.id, os.id, o.currency, os.merchant_id, o.street_address, o.city, o.state, o.country, o.zip_code, o.email,
+	//           o.created_at,
 	//           os.shipping_status
 	//  ORDER BY o.created_at DESC
-	GetUserOrdersWithSuborders(ctx context.Context, userID uuid.UUID) ([]GetUserOrdersWithSubordersRow, error)
+	GetUserOrdersWithSuborders(ctx context.Context, arg GetUserOrdersWithSubordersParams) ([]GetUserOrdersWithSubordersRow, error)
 	//ListOrders
 	//
 	//  SELECT os.id,

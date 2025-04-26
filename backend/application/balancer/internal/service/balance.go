@@ -179,10 +179,14 @@ func (s *BalanceService) CancelFreeze(ctx context.Context, req *pb.CancelFreezeR
 }
 
 func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerchantBalanceRequest) (*pb.BalanceReply, error) {
-	var err error
 	var userId uuid.UUID
-	userId, err = globalPkg.GetMetadataUesrID(ctx)
-	if err != nil {
+	var err error
+	if req.MerchantId == "" {
+		userId, err = globalPkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
 		userId, err = uuid.Parse(req.MerchantId)
 		if err != nil {
 			return nil, err
@@ -319,5 +323,39 @@ func (s *BalanceService) WithdrawBalance(ctx context.Context, req *pb.WithdrawBa
 		Success:       result.Success,
 		TransactionId: result.TransactionId,
 		NewVersion:    result.NewVersion,
+	}, nil
+}
+
+func (s *BalanceService) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionReply, error) {
+	consumerId, err := uuid.Parse(req.FromUserId)
+	if err != nil {
+		return nil, err
+	}
+	merchantId, err := uuid.Parse(req.ToMerchantId)
+	if err != nil {
+		return nil, err
+	}
+
+	reply, err := s.uc.CreateTransaction(ctx, &biz.CreateTransactionRequest{
+		Type:              constants.TransactionType(req.Type),
+		Amount:            req.Amount,
+		Currency:          constants.Currency(req.Currency),
+		FromUserId:        consumerId,
+		ToMerchantId:      merchantId,
+		PaymentMethodType: constants.PaymentMethod(req.PaymentMethodType),
+		PaymentAccount:    req.PaymentAccount,
+		PaymentExtra:      nil,
+		Status:            constants.PaymentStatus(req.Status),
+		IdempotencyKey:    req.IdempotencyKey,
+		FreezeId:          req.FreezeId,
+		ConsumerVersion:   req.ConsumerVersion,
+		MerchantVersion:   req.MerchantVersion,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CreateTransactionReply{
+		Id: reply.Id,
 	}, nil
 }

@@ -3,6 +3,7 @@ package constants
 type (
 	RoleType        string // 角色类型
 	PaymentStatus   string // 支付状态
+	TradeStatus     string // 支付宝交易状态
 	ShippingStatus  string // 发货状态
 	FreezeStatus    string // 余额冻结状态
 	PaymentMethod   string // 支付方式
@@ -14,6 +15,13 @@ const (
 	Merchant RoleType = "Merchant" // 商家
 	Admin    RoleType = "Admin"    // 管理员
 	Guest    RoleType = "Guest"    // 管理员
+)
+
+const (
+	TradeStatusWaitBuyerPay TradeStatus = "WAIT_BUYER_PAY" // （交易创建，等待买家付款）
+	TradeStatusClosed       TradeStatus = "TRADE_CLOSED"   // （未付款交易超时关闭，或支付完成后全额退款）
+	TradeStatusSuccess      TradeStatus = "TRADE_SUCCESS"  // （交易支付成功）
+	TradeStatusFinished     TradeStatus = "TRADE_FINISHED" // （交易结束，不可退款）
 )
 
 const (

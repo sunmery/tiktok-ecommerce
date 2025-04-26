@@ -21,7 +21,7 @@ type Querier interface {
 	//    AND currency = $2
 	//    AND frozen >= $3 -- 确保冻结余额充足
 	//    AND version = $4
-	ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezeParams) (int64, error)
+	ConfirmUserFreeze(ctx context.Context, arg ConfirmUserFreezeParams) error
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	//
 	//  INSERT INTO balances.user_balances (user_id, currency, available, frozen, version)
@@ -54,14 +54,11 @@ type Querier interface {
 	//
 	//  INSERT INTO balances.transactions (id,
 	//                                     type, amount, currency, from_user_id, to_merchant_id,
-	//                                     payment_method_type, payment_account, payment_extra, status,
-	//                                     created_at, updated_at
-	//      -- freeze_id 可以在创建支付流水时关联
-	//      -- , freeze_id
-	//  )
-	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()
-	//             -- , $10
-	//         )
+	//                                     payment_method_type, payment_account, payment_extra, status, freeze_id,
+	//                                     idempotency_key,
+	//                                     consumer_version,
+	//                                     merchant_version)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	//  RETURNING id
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
 	// 乐观锁检查
@@ -93,7 +90,7 @@ type Querier interface {
 	FreezeUserBalance(ctx context.Context, arg FreezeUserBalanceParams) (int64, error)
 	// 根据 用户ID 获取交易流水记录
 	//
-	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 	//  FROM balances.transactions
 	//  WHERE from_user_id = $1
 	//    AND currency = COALESCE($2, currency)
@@ -138,7 +135,7 @@ type Querier interface {
 	GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantPaymentMethodParams) (BalancesMerchantPaymentMethods, error)
 	// 根据 商家ID 获取交易流水记录
 	//
-	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, created_at, updated_at
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 	//  FROM balances.transactions
 	//  WHERE to_merchant_id = $1
 	//    AND currency = COALESCE($2, currency)

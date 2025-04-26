@@ -2,14 +2,11 @@
 -- 创建交易流水记录
 INSERT INTO balances.transactions (id,
                                    type, amount, currency, from_user_id, to_merchant_id,
-                                   payment_method_type, payment_account, payment_extra, status,
-                                   created_at, updated_at
-    -- freeze_id 可以在创建支付流水时关联
-    -- , freeze_id
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()
-           -- , $10
-       )
+                                   payment_method_type, payment_account, payment_extra, status, freeze_id,
+                                   idempotency_key,
+                                   consumer_version,
+                                   merchant_version)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 RETURNING id;
 -- 返回交易记录的 ID
 

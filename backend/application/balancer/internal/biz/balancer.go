@@ -176,6 +176,27 @@ type (
 	}
 )
 
+type (
+	CreateTransactionRequest struct {
+		Type              constants.TransactionType
+		Amount            float64
+		Currency          constants.Currency
+		FromUserId        uuid.UUID
+		ToMerchantId      uuid.UUID
+		PaymentMethodType constants.PaymentMethod
+		PaymentAccount    string
+		PaymentExtra      json.RawMessage
+		Status            constants.PaymentStatus
+		IdempotencyKey    string
+		FreezeId          int64
+		ConsumerVersion   int64
+		MerchantVersion   int64
+	}
+	CreateTransactionReply struct {
+		Id int64
+	}
+)
+
 type BalancerRepo interface {
 	// CreateConsumerBalance 创建用户余额
 	CreateConsumerBalance(ctx context.Context, req *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error)
@@ -197,6 +218,8 @@ type BalancerRepo interface {
 	RechargeBalance(ctx context.Context, req *RechargeBalanceRequest) (*RechargeBalanceReply, error)
 	// WithdrawBalance 用户提现
 	WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error)
+	// CreateTransaction 创建交易记录
+	CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*CreateTransactionReply, error)
 }
 
 type BalancerUsecase struct {
@@ -254,6 +277,11 @@ func (cc *BalancerUsecase) RechargeBalance(ctx context.Context, req *RechargeBal
 func (cc *BalancerUsecase) WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("WithdrawBalance request: %+v", req)
 	return cc.repo.WithdrawBalance(ctx, req)
+}
+
+func (cc *BalancerUsecase) CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*CreateTransactionReply, error) {
+	cc.log.WithContext(ctx).Debugf("CreateTransaction request: %+v", req)
+	return cc.repo.CreateTransaction(ctx, req)
 }
 
 func (cc *BalancerUsecase) GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error) {
