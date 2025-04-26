@@ -83,7 +83,7 @@ WHERE user_id = $1
   AND version = sqlc.arg(expected_version);
 -- 乐观锁检查
 
--- name: ConfirmUserFreeze :execrows
+-- name: ConfirmUserFreeze :exec
 -- 确认冻结 (仅减少冻结金额，资金将流向商家) - 使用乐观锁
 UPDATE balances.user_balances
 SET frozen     = frozen - sqlc.arg(amount), -- 金额参数 (分)

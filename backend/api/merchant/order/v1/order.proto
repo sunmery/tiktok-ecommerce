@@ -10,10 +10,18 @@ import "google/protobuf/timestamp.proto";
 import "backend/api/order/v1/order.proto";
 
 service Order {
-  // 查询商家订单列表(商家侧)
+
+  // 查询商家订单列表
   rpc GetMerchantOrders(GetMerchantOrdersReq) returns (GetMerchantOrdersReply) {
     option (google.api.http) = {
       get: "/v1/merchants/orders"
+    };
+  }
+
+  // 根据订单ID查找商家
+  rpc GetMerchantByOrderId(GetMerchantByOrderIdReq) returns (GetMerchantByOrderIdReply) {
+    option (google.api.http) = {
+      get: "/v1/merchants/orders/{order_id}"
     };
   }
 
@@ -25,7 +33,7 @@ service Order {
     };
   }
 
-   // 更新订单货运状态
+  // 更新订单货运状态
   rpc UpdateOrderShippingStatus(UpdateOrderShippingStatusReq) returns (UpdateOrderShippingStatusReply) {
     option (google.api.http) = {
       put: "/v1/merchants/orders/ship/{sub_order_id}/status"
@@ -33,6 +41,14 @@ service Order {
     };
   }
 
+}
+
+message GetMerchantByOrderIdReq {
+  int64 order_id = 1; // 订单 ID
+}
+
+message GetMerchantByOrderIdReply {
+  string merchant_id = 1;
 }
 
 // 查询商家订单列表请求的消息结构
@@ -45,6 +61,7 @@ message GetMerchantOrdersReq {
 message GetMerchantOrdersReply {
   repeated order.v1.Order orders = 1; // 订单列表
 }
+
 
 message ReceiverAddress {
   string name = 1; // 收件人姓名

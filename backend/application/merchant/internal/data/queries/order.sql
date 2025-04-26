@@ -12,6 +12,11 @@ SET shipping_status = @shipping_status,
     updated_at      = now()
 WHERE id = @sub_order_id;
 
+-- name: GetMerchantByOrderId :one
+SELECT merchant_id
+FROM orders.sub_orders
+WHERE id = @id;
+
 -- name: GetMerchantOrders :many
 SELECT oo.id,
        oo.payment_status,

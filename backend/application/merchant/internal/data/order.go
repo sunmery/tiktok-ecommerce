@@ -79,6 +79,17 @@ func (o *orderRepo) ShipOrder(ctx context.Context, req *biz.ShipOrderReq) (*biz.
 	}, nil
 }
 
+// GetMerchantByOrderId 根据订单 id 查询商家
+func (o *orderRepo) GetMerchantByOrderId(ctx context.Context, req *biz.GetMerchantByOrderIdReq) (*biz.GetMerchantByOrderIdReply, error) {
+	merchantId, err := o.data.db.GetMerchantByOrderId(ctx, &req.OrderId)
+	if err != nil {
+		return nil, fmt.Errorf("获取商家失败: %w", err)
+	}
+	return &biz.GetMerchantByOrderIdReply{
+		MerchantId: merchantId,
+	}, nil
+}
+
 func (o *orderRepo) GetMerchantOrders(ctx context.Context, req *biz.GetMerchantOrdersReq) (*biz.GetMerchantOrdersReply, error) {
 	// 设置默认分页参数
 	if req.Page == 0 {

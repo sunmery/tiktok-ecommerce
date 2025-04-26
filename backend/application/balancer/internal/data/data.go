@@ -4,6 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	merchantOrderv1 "backend/api/merchant/order/v1"
+
+	"backend/constants"
+
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
+	consulAPI "github.com/hashicorp/consul/api"
+
 	"backend/application/balancer/internal/data/models"
 
 	"backend/application/balancer/internal/conf"
@@ -17,13 +29,14 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewBalancerRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewDiscovery, NewOrderServiceClient, NewBalancerRepo)
 
 type Data struct {
-	db     *models.Queries
-	pgx    *pgxpool.Pool
-	rdb    *redis.Client
-	logger *log.Helper
+	db              *models.Queries
+	pgx             *pgxpool.Pool
+	rdb             *redis.Client
+	logger          *log.Helper
+	merchantOrderv1 merchantOrderv1.OrderClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -34,16 +47,50 @@ func NewData(
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	logger log.Logger,
+	merchantOrderv1 merchantOrderv1.OrderClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:     models.New(db),        // 数据库
-		pgx:    db,                    // 数据库事务
-		rdb:    rdb,                   // 缓存
-		logger: log.NewHelper(logger), // 注入日志
+		db:              models.New(db),        // 数据库
+		pgx:             db,                    // 数据库事务
+		rdb:             rdb,                   // 缓存
+		logger:          log.NewHelper(logger), // 注入日志
+		merchantOrderv1: merchantOrderv1,       // 订单服务
 	}, cleanup, nil
+}
+
+// NewDiscovery 配置服务发现功能
+func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.RegistryCenter.Address
+	c.Scheme = conf.RegistryCenter.Scheme
+	c.Token = conf.RegistryCenter.AclToken
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		return nil, err
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r, nil
+}
+
+// NewOrderServiceClient 订单微服务
+func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (merchantOrderv1.OrderClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.MerchantServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return merchantOrderv1.NewOrderClient(conn), nil
 }
 
 // NewCache 缓存

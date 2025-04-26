@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	merchantorderv1 "backend/api/merchant/order/v1"
+
 	globalPkg "backend/pkg"
 
 	"github.com/google/uuid"
@@ -52,7 +54,7 @@ func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransacti
 		return nil, err
 	}
 
-	var transactions []models.BalancesTransactions
+	transactions := make([]models.BalancesTransactions, 0, pageSize)
 	switch role {
 	case constants.Consumer:
 		transactions, err = b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
@@ -75,19 +77,19 @@ func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransacti
 		})
 	}
 
-	var bizTransactions []*biz.Transactions
+	bizTransactions := make([]*biz.Transactions, 0, len(transactions))
 	for _, t := range transactions {
 		amount, err := types.NumericToFloat(t.Amount)
 		if err != nil {
 			return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to float64 failed")
 		}
 
-		fromUserId, err := uuid.Parse(t.FromUserID.String())
+		fromUserID, err := uuid.Parse(t.FromUserID.String())
 		if err != nil {
 			return nil, kerrors.New(500, "PARSE_USER_ID_FAILED", "parse user id failed")
 		}
 
-		toMerchantId, err := uuid.Parse(t.ToMerchantID.String())
+		toMerchantID, err := uuid.Parse(t.ToMerchantID.String())
 		if err != nil {
 			return nil, kerrors.New(500, "PARSE_MERCHANT_ID_FAILED", "parse merchant id failed")
 		}
@@ -97,8 +99,8 @@ func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransacti
 			Type:              constants.TransactionType(t.Type),
 			Amount:            amount,
 			Currency:          t.Currency,
-			FromUserId:        fromUserId,
-			ToMerchantId:      toMerchantId,
+			FromUserId:        fromUserID,
+			ToMerchantId:      toMerchantID,
 			PaymentMethodType: constants.PaymentMethod(t.PaymentMethodType),
 			PaymentAccount:    t.PaymentAccount,
 			PaymentExtra:      t.PaymentExtra,
@@ -562,12 +564,17 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 6. 获取商家ID（从订单ID）
-	// orderId := freeze.OrderID
-	// merchantId, err := b.getMerchantIDFromOrder(ctx, orderId)
+	merchantId, err := b.getMerchantIDFromOrder(ctx, freeze.OrderID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "MERCHANT_NOT_FOUND", "merchant not found for order")
+		}
+		return nil, kerrors.New(500, "GET_MERCHANT_ID_FAILED", fmt.Sprintf("get merchant id from order failed:%v", err))
+	}
 
 	// 7. 增加商家可用余额
 	rows, err = tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
-		MerchantID:      req.MerchantId,
+		MerchantID:      merchantId,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,
 		ExpectedVersion: req.ExpectedMerchantVersion,
@@ -614,4 +621,20 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 		NewUserVersion:     req.ExpectedUserVersion + 1,     // 用户余额版本号+1
 		NewMerchantVersion: req.ExpectedMerchantVersion + 1, // 商家余额版本号+1
 	}, nil
+}
+
+// getMerchantIDFromOrder 从订单ID获取商家ID
+func (b balancerRepo) getMerchantIDFromOrder(ctx context.Context, orderId int64) (uuid.UUID, error) {
+	// 这里可以根据订单ID查询数据库获取商家ID
+	reply, err := b.data.merchantOrderv1.GetMerchantByOrderId(ctx, &merchantorderv1.GetMerchantByOrderIdReq{
+		OrderId: orderId,
+	})
+	if err != nil {
+		return uuid.Nil, err
+	}
+	merchantId, err := uuid.Parse(reply.MerchantId)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return merchantId, nil
 }

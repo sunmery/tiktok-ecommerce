@@ -79,6 +79,15 @@ type (
 )
 
 type (
+	GetMerchantByOrderIdReq struct {
+		OrderId int64
+	}
+	GetMerchantByOrderIdReply struct {
+		MerchantId uuid.UUID
+	}
+)
+
+type (
 	GetMerchantOrdersReq struct {
 		UserID   uuid.UUID
 		Page     uint32 // 分页页码，从1开始
@@ -114,9 +123,15 @@ func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 
 // OrderRepo 订单域方法
 type OrderRepo interface {
+	GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
 	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error)
 	UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error)
+}
+
+func (oc *OrderUsecase) GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetMerchantOrder:%+v", req)
+	return oc.repo.GetMerchantByOrderId(ctx, req)
 }
 
 func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error) {

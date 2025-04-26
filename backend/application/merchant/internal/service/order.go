@@ -37,6 +37,21 @@ func NewOrderService(oc *biz.OrderUsecase) *OrderService {
 	return &OrderService{oc: oc}
 }
 
+// GetMerchantByOrderId 根据订单ID查找商家
+func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *orderv1.GetMerchantByOrderIdReq) (*orderv1.GetMerchantByOrderIdReply, error) {
+	// 调用业务层获取订单列表
+	resp, err := s.oc.GetMerchantByOrderId(ctx, &biz.GetMerchantByOrderIdReq{
+		OrderId: req.OrderId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &orderv1.GetMerchantByOrderIdReply{
+		MerchantId: resp.MerchantId.String(),
+	}, nil
+}
+
 // GetMerchantOrders 获取商家订单列表
 func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*orderv1.GetMerchantOrdersReply, error) {
 	// 从网关获取用户ID

@@ -134,6 +134,24 @@ func (q *Queries) GetConsumerAddress(ctx context.Context, id *int64) (GetConsume
 	return i, err
 }
 
+const GetMerchantByOrderId = `-- name: GetMerchantByOrderId :one
+SELECT merchant_id
+FROM orders.sub_orders
+WHERE id = $1
+`
+
+// GetMerchantByOrderId
+//
+//	SELECT merchant_id
+//	FROM orders.sub_orders
+//	WHERE id = $1
+func (q *Queries) GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, GetMerchantByOrderId, id)
+	var merchant_id uuid.UUID
+	err := row.Scan(&merchant_id)
+	return merchant_id, err
+}
+
 const GetMerchantOrders = `-- name: GetMerchantOrders :many
 SELECT oo.id,
        oo.payment_status,
@@ -236,83 +254,6 @@ func (q *Queries) GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersPa
 			&i.ShippingStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const QuerySubOrders = `-- name: QuerySubOrders :many
-SELECT os.id AS sub_order_id,
-       merchant_id,
-       total_amount,
-       oo.currency,
-       status,
-       items,
-       oo.created_at,
-       oo.updated_at,
-       oo.payment_status,
-       os.shipping_status
-FROM orders.sub_orders os
-         Join orders.orders oo on os.order_id = oo.id
-WHERE order_id = $1
-ORDER BY created_at
-`
-
-type QuerySubOrdersRow struct {
-	SubOrderID     int64
-	MerchantID     uuid.UUID
-	TotalAmount    interface{}
-	Currency       string
-	Status         string
-	Items          []byte
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	PaymentStatus  string
-	ShippingStatus string
-}
-
-// QuerySubOrders
-//
-//	SELECT os.id AS sub_order_id,
-//	       merchant_id,
-//	       total_amount,
-//	       oo.currency,
-//	       status,
-//	       items,
-//	       oo.created_at,
-//	       oo.updated_at,
-//	       oo.payment_status,
-//	       os.shipping_status
-//	FROM orders.sub_orders os
-//	         Join orders.orders oo on os.order_id = oo.id
-//	WHERE order_id = $1
-//	ORDER BY created_at
-func (q *Queries) QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySubOrdersRow, error) {
-	rows, err := q.db.Query(ctx, QuerySubOrders, orderID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []QuerySubOrdersRow
-	for rows.Next() {
-		var i QuerySubOrdersRow
-		if err := rows.Scan(
-			&i.SubOrderID,
-			&i.MerchantID,
-			&i.TotalAmount,
-			&i.Currency,
-			&i.Status,
-			&i.Items,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.PaymentStatus,
-			&i.ShippingStatus,
 		); err != nil {
 			return nil, err
 		}

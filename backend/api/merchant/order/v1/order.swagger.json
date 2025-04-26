@@ -18,7 +18,7 @@
   "paths": {
     "/v1/merchants/orders": {
       "get": {
-        "summary": "查询商家订单列表(商家侧)",
+        "summary": "查询商家订单列表",
         "operationId": "Order_GetMerchantOrders",
         "responses": {
           "200": {
@@ -139,6 +139,39 @@
             "schema": {
               "$ref": "#/definitions/OrderUpdateOrderShippingStatusBody"
             }
+          }
+        ],
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/v1/merchants/orders/{orderId}": {
+      "get": {
+        "summary": "根据订单ID查找商家",
+        "operationId": "Order_GetMerchantByOrderId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMerchantByOrderIdReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -285,6 +318,14 @@
         "zipCode",
         "streetAddress"
       ]
+    },
+    "v1GetMerchantByOrderIdReply": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string"
+        }
+      }
     },
     "v1GetMerchantOrdersReply": {
       "type": "object",

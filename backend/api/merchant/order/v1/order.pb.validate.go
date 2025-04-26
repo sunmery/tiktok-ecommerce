@@ -35,6 +35,214 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GetMerchantByOrderIdReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMerchantByOrderIdReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMerchantByOrderIdReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMerchantByOrderIdReqMultiError, or nil if none found.
+func (m *GetMerchantByOrderIdReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMerchantByOrderIdReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for OrderId
+
+	if len(errors) > 0 {
+		return GetMerchantByOrderIdReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMerchantByOrderIdReqMultiError is an error wrapping multiple validation
+// errors returned by GetMerchantByOrderIdReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetMerchantByOrderIdReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMerchantByOrderIdReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMerchantByOrderIdReqMultiError) AllErrors() []error { return m }
+
+// GetMerchantByOrderIdReqValidationError is the validation error returned by
+// GetMerchantByOrderIdReq.Validate if the designated constraints aren't met.
+type GetMerchantByOrderIdReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMerchantByOrderIdReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMerchantByOrderIdReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMerchantByOrderIdReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMerchantByOrderIdReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMerchantByOrderIdReqValidationError) ErrorName() string {
+	return "GetMerchantByOrderIdReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMerchantByOrderIdReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMerchantByOrderIdReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMerchantByOrderIdReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMerchantByOrderIdReqValidationError{}
+
+// Validate checks the field values on GetMerchantByOrderIdReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMerchantByOrderIdReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMerchantByOrderIdReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMerchantByOrderIdReplyMultiError, or nil if none found.
+func (m *GetMerchantByOrderIdReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMerchantByOrderIdReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	if len(errors) > 0 {
+		return GetMerchantByOrderIdReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMerchantByOrderIdReplyMultiError is an error wrapping multiple validation
+// errors returned by GetMerchantByOrderIdReply.ValidateAll() if the
+// designated constraints aren't met.
+type GetMerchantByOrderIdReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMerchantByOrderIdReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMerchantByOrderIdReplyMultiError) AllErrors() []error { return m }
+
+// GetMerchantByOrderIdReplyValidationError is the validation error returned by
+// GetMerchantByOrderIdReply.Validate if the designated constraints aren't met.
+type GetMerchantByOrderIdReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMerchantByOrderIdReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMerchantByOrderIdReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMerchantByOrderIdReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMerchantByOrderIdReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMerchantByOrderIdReplyValidationError) ErrorName() string {
+	return "GetMerchantByOrderIdReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMerchantByOrderIdReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMerchantByOrderIdReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMerchantByOrderIdReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMerchantByOrderIdReplyValidationError{}
+
 // Validate checks the field values on GetMerchantOrdersReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

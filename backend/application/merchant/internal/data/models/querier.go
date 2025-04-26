@@ -155,6 +155,12 @@ type Querier interface {
 	//  ORDER BY (i.stock * 1.0 / COALESCE(sa.threshold, 10))
 	//  LIMIT $3 OFFSET $2
 	GetLowStockProducts(ctx context.Context, arg GetLowStockProductsParams) ([]GetLowStockProductsRow, error)
+	//GetMerchantByOrderId
+	//
+	//  SELECT merchant_id
+	//  FROM orders.sub_orders
+	//  WHERE id = $1
+	GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUID, error)
 	//GetMerchantOrders
 	//
 	//  SELECT oo.id,
@@ -283,23 +289,6 @@ type Querier interface {
 	//  ORDER BY id
 	//  LIMIT $4 OFFSET $5
 	ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error)
-	//QuerySubOrders
-	//
-	//  SELECT os.id AS sub_order_id,
-	//         merchant_id,
-	//         total_amount,
-	//         oo.currency,
-	//         status,
-	//         items,
-	//         oo.created_at,
-	//         oo.updated_at,
-	//         oo.payment_status,
-	//         os.shipping_status
-	//  FROM orders.sub_orders os
-	//           Join orders.orders oo on os.order_id = oo.id
-	//  WHERE order_id = $1
-	//  ORDER BY created_at
-	QuerySubOrders(ctx context.Context, orderID *int64) ([]QuerySubOrdersRow, error)
 	// 记录库存调整
 	//
 	//  INSERT INTO merchant.stock_adjustments (product_id, merchant_id, quantity, reason, operator_id)
