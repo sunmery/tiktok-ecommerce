@@ -13,9 +13,10 @@ SET shipping_status = @shipping_status,
 WHERE id = @sub_order_id;
 
 -- name: GetMerchantByOrderId :one
-SELECT merchant_id
-FROM orders.sub_orders
-WHERE id = @id;
+SELECT os.merchant_id
+FROM orders.sub_orders os
+         JOIN orders.orders o on os.order_id = o.id
+WHERE o.id = @id;
 
 -- name: GetMerchantOrders :many
 SELECT oo.id,

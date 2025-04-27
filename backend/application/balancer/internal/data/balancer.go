@@ -657,7 +657,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 		Amount:            freeze.Amount,
 		Currency:          freeze.Currency,
 		FromUserID:        freeze.UserID,
-		ToMerchantID:      req.MerchantId,
+		ToMerchantID:      merchantId,
 		PaymentMethodType: string(constants.PaymentMethodBalancer), // 使用余额支付
 		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,
@@ -676,10 +676,9 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 }
 
 // getMerchantIDFromOrder 从订单ID获取商家ID
-func (b balancerRepo) getMerchantIDFromOrder(ctx context.Context, orderId int64) (uuid.UUID, error) {
-	// 这里可以根据订单ID查询数据库获取商家ID
+func (b balancerRepo) getMerchantIDFromOrder(ctx context.Context, subOrderId int64) (uuid.UUID, error) {
 	reply, err := b.data.merchantOrderv1.GetMerchantByOrderId(ctx, &merchantorderv1.GetMerchantByOrderIdReq{
-		OrderId: orderId,
+		OrderId: subOrderId,
 	})
 	if err != nil {
 		return uuid.Nil, err

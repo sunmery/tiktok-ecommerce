@@ -157,9 +157,10 @@ type Querier interface {
 	GetLowStockProducts(ctx context.Context, arg GetLowStockProductsParams) ([]GetLowStockProductsRow, error)
 	//GetMerchantByOrderId
 	//
-	//  SELECT merchant_id
-	//  FROM orders.sub_orders
-	//  WHERE id = $1
+	//  SELECT os.merchant_id
+	//  FROM orders.sub_orders os
+	//           JOIN orders.orders o on os.order_id = o.id
+	//  WHERE o.id = $1
 	GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUID, error)
 	//GetMerchantOrders
 	//

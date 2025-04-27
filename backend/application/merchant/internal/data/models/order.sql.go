@@ -135,16 +135,18 @@ func (q *Queries) GetConsumerAddress(ctx context.Context, id *int64) (GetConsume
 }
 
 const GetMerchantByOrderId = `-- name: GetMerchantByOrderId :one
-SELECT merchant_id
-FROM orders.sub_orders
-WHERE id = $1
+SELECT os.merchant_id
+FROM orders.sub_orders os
+         JOIN orders.orders o on os.order_id = o.id
+WHERE o.id = $1
 `
 
 // GetMerchantByOrderId
 //
-//	SELECT merchant_id
-//	FROM orders.sub_orders
-//	WHERE id = $1
+//	SELECT os.merchant_id
+//	FROM orders.sub_orders os
+//	         JOIN orders.orders o on os.order_id = o.id
+//	WHERE o.id = $1
 func (q *Queries) GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, GetMerchantByOrderId, id)
 	var merchant_id uuid.UUID

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/google/uuid"
+
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 
 	"backend/application/merchant/internal/pkg"
@@ -54,12 +56,27 @@ func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *orderv1.Ge
 
 // GetMerchantOrders 获取商家订单列表
 func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*orderv1.GetMerchantOrdersReply, error) {
-	// 从网关获取用户ID
-	userId, err := globalPkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		log.Errorf("获取用户ID失败: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
+	var userId uuid.UUID
+	var err error
+	log.Debugf("GetMerchantOrders service req.MerchantId: %v", req.MerchantId)
+	if req.MerchantId == "" {
+		// 从网关获取用户ID
+		userId, err = globalPkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			log.Errorf("获取用户ID失败: %v", err)
+			return nil, status.Error(codes.Unauthenticated, "无效的商家ID")
+
+		}
+	} else {
+		// 解析商家ID
+		userId, err = uuid.Parse(req.MerchantId)
+		if err != nil {
+			log.Errorf("解析商家ID失败: %v", err)
+			return nil, status.Error(codes.InvalidArgument, "无效的用户ID")
+		}
 	}
+
+	log.Debugf("GetMerchantOrders service userId: %v", userId)
 
 	// 调用业务层获取订单列表
 	resp, err := s.oc.GetMerchantOrders(ctx, &biz.GetMerchantOrdersReq{
