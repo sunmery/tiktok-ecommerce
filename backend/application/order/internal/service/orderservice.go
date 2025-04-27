@@ -80,7 +80,10 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 
 	return &v1.PlaceOrderResp{
 		Order: &v1.OrderResult{
-			OrderId: order.Order.OrderId,
+			OrderId:         order.Order.OrderId,
+			FreezeId:        order.Order.FreezeId,
+			ConsumerVersion: order.Order.ConsumerVersion,
+			MerchantVersion: order.Order.MerchantVersion,
 		},
 		// Url: order.URL,
 	}, nil

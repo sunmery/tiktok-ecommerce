@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"backend/constants"
 
 	v1 "backend/api/order/v1"
 
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 )
 
@@ -88,7 +89,7 @@ type OrderResult struct {
 	OrderId         int64
 	FreezeId        int64
 	ConsumerVersion int64
-	MerchantVersion int64
+	MerchantVersion []int64
 }
 
 type PlaceOrderReq struct {
@@ -183,18 +184,6 @@ type (
 	}
 )
 
-type OrderUsecase struct {
-	repo OrderRepo
-	log  *log.Helper
-}
-
-func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
-	return &OrderUsecase{
-		repo: repo,
-		log:  log.NewHelper(logger),
-	}
-}
-
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
 	GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error)
@@ -205,6 +194,17 @@ type OrderRepo interface {
 	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
 	GetShipOrderStatus(ctx context.Context, req *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
 	ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
+}
+type OrderUsecase struct {
+	repo OrderRepo
+	log  *log.Helper
+}
+
+func NewUserUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
+	return &OrderUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
 }
 
 func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error) {

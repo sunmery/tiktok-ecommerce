@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Balance_CreateConsumerBalance_FullMethodName = "/ecommerce.balancer.v1.Balance/CreateConsumerBalance"
 	Balance_CreateMerchantBalance_FullMethodName = "/ecommerce.balancer.v1.Balance/CreateMerchantBalance"
+	Balance_GetMerchantVersion_FullMethodName    = "/ecommerce.balancer.v1.Balance/GetMerchantVersion"
 	Balance_GetUserBalance_FullMethodName        = "/ecommerce.balancer.v1.Balance/GetUserBalance"
 	Balance_FreezeBalance_FullMethodName         = "/ecommerce.balancer.v1.Balance/FreezeBalance"
 	Balance_ConfirmTransfer_FullMethodName       = "/ecommerce.balancer.v1.Balance/ConfirmTransfer"
@@ -42,6 +43,8 @@ type BalanceClient interface {
 	// 创建商家余额
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	CreateMerchantBalance(ctx context.Context, in *CreateMerchantBalanceRequest, opts ...grpc.CallOption) (*CreateMerchantBalanceReply, error)
+	// 获取商家版本号
+	GetMerchantVersion(ctx context.Context, in *GetMerchantVersionRequest, opts ...grpc.CallOption) (*GetMerchantVersionReply, error)
 	// 获取用户余额
 	GetUserBalance(ctx context.Context, in *GetUserBalanceRequest, opts ...grpc.CallOption) (*BalanceReply, error)
 	// 冻结用户余额
@@ -84,6 +87,16 @@ func (c *balanceClient) CreateMerchantBalance(ctx context.Context, in *CreateMer
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateMerchantBalanceReply)
 	err := c.cc.Invoke(ctx, Balance_CreateMerchantBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *balanceClient) GetMerchantVersion(ctx context.Context, in *GetMerchantVersionRequest, opts ...grpc.CallOption) (*GetMerchantVersionReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMerchantVersionReply)
+	err := c.cc.Invoke(ctx, Balance_GetMerchantVersion_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +203,8 @@ type BalanceServer interface {
 	// 创建商家余额
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	CreateMerchantBalance(context.Context, *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error)
+	// 获取商家版本号
+	GetMerchantVersion(context.Context, *GetMerchantVersionRequest) (*GetMerchantVersionReply, error)
 	// 获取用户余额
 	GetUserBalance(context.Context, *GetUserBalanceRequest) (*BalanceReply, error)
 	// 冻结用户余额
@@ -223,6 +238,9 @@ func (UnimplementedBalanceServer) CreateConsumerBalance(context.Context, *Create
 }
 func (UnimplementedBalanceServer) CreateMerchantBalance(context.Context, *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMerchantBalance not implemented")
+}
+func (UnimplementedBalanceServer) GetMerchantVersion(context.Context, *GetMerchantVersionRequest) (*GetMerchantVersionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantVersion not implemented")
 }
 func (UnimplementedBalanceServer) GetUserBalance(context.Context, *GetUserBalanceRequest) (*BalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserBalance not implemented")
@@ -304,6 +322,24 @@ func _Balance_CreateMerchantBalance_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BalanceServer).CreateMerchantBalance(ctx, req.(*CreateMerchantBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Balance_GetMerchantVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMerchantVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalanceServer).GetMerchantVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Balance_GetMerchantVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalanceServer).GetMerchantVersion(ctx, req.(*GetMerchantVersionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -484,6 +520,10 @@ var Balance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateMerchantBalance",
 			Handler:    _Balance_CreateMerchantBalance_Handler,
+		},
+		{
+			MethodName: "GetMerchantVersion",
+			Handler:    _Balance_GetMerchantVersion_Handler,
 		},
 		{
 			MethodName: "GetUserBalance",

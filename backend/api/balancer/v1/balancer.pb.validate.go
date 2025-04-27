@@ -35,6 +35,210 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GetMerchantVersionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMerchantVersionRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMerchantVersionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMerchantVersionRequestMultiError, or nil if none found.
+func (m *GetMerchantVersionRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMerchantVersionRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetMerchantVersionRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMerchantVersionRequestMultiError is an error wrapping multiple validation
+// errors returned by GetMerchantVersionRequest.ValidateAll() if the
+// designated constraints aren't met.
+type GetMerchantVersionRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMerchantVersionRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMerchantVersionRequestMultiError) AllErrors() []error { return m }
+
+// GetMerchantVersionRequestValidationError is the validation error returned by
+// GetMerchantVersionRequest.Validate if the designated constraints aren't met.
+type GetMerchantVersionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMerchantVersionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMerchantVersionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMerchantVersionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMerchantVersionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMerchantVersionRequestValidationError) ErrorName() string {
+	return "GetMerchantVersionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMerchantVersionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMerchantVersionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMerchantVersionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMerchantVersionRequestValidationError{}
+
+// Validate checks the field values on GetMerchantVersionReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMerchantVersionReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMerchantVersionReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMerchantVersionReplyMultiError, or nil if none found.
+func (m *GetMerchantVersionReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMerchantVersionReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetMerchantVersionReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMerchantVersionReplyMultiError is an error wrapping multiple validation
+// errors returned by GetMerchantVersionReply.ValidateAll() if the designated
+// constraints aren't met.
+type GetMerchantVersionReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMerchantVersionReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMerchantVersionReplyMultiError) AllErrors() []error { return m }
+
+// GetMerchantVersionReplyValidationError is the validation error returned by
+// GetMerchantVersionReply.Validate if the designated constraints aren't met.
+type GetMerchantVersionReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMerchantVersionReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMerchantVersionReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMerchantVersionReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMerchantVersionReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMerchantVersionReplyValidationError) ErrorName() string {
+	return "GetMerchantVersionReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMerchantVersionReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMerchantVersionReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMerchantVersionReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMerchantVersionReplyValidationError{}
+
 // Validate checks the field values on CreateMerchantBalanceRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

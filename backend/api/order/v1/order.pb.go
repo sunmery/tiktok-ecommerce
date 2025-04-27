@@ -567,10 +567,10 @@ func (x *OrderItem) GetCost() float64 {
 // 创建订单响应的消息结构
 type OrderResult struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	OrderId         int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                         // 订单 ID
-	FreezeId        int64                  `protobuf:"varint,2,opt,name=freeze_id,json=freezeId,proto3" json:"freeze_id,omitempty"`                      // 冻结 ID
-	ConsumerVersion int64                  `protobuf:"varint,3,opt,name=consumer_version,json=consumerVersion,proto3" json:"consumer_version,omitempty"` // 消费者乐观锁版本
-	MerchantVersion int64                  `protobuf:"varint,4,opt,name=merchant_version,json=merchantVersion,proto3" json:"merchant_version,omitempty"` // 商家乐观锁版本
+	OrderId         int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                                // 订单 ID
+	FreezeId        int64                  `protobuf:"varint,2,opt,name=freeze_id,json=freezeId,proto3" json:"freeze_id,omitempty"`                             // 冻结 ID
+	ConsumerVersion int64                  `protobuf:"varint,3,opt,name=consumer_version,json=consumerVersion,proto3" json:"consumer_version,omitempty"`        // 消费者乐观锁版本
+	MerchantVersion []int64                `protobuf:"varint,4,rep,packed,name=merchant_version,json=merchantVersion,proto3" json:"merchant_version,omitempty"` // 商家乐观锁版本
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -626,11 +626,11 @@ func (x *OrderResult) GetConsumerVersion() int64 {
 	return 0
 }
 
-func (x *OrderResult) GetMerchantVersion() int64 {
+func (x *OrderResult) GetMerchantVersion() []int64 {
 	if x != nil {
 		return x.MerchantVersion
 	}
-	return 0
+	return nil
 }
 
 // 创建订单响应的消息结构
@@ -1470,7 +1470,7 @@ const file_v1_order_proto_rawDesc = "" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1b\n" +
 	"\tfreeze_id\x18\x02 \x01(\x03R\bfreezeId\x12)\n" +
 	"\x10consumer_version\x18\x03 \x01(\x03R\x0fconsumerVersion\x12)\n" +
-	"\x10merchant_version\x18\x04 \x01(\x03R\x0fmerchantVersion\"G\n" +
+	"\x10merchant_version\x18\x04 \x03(\x03R\x0fmerchantVersion\"G\n" +
 	"\x0ePlaceOrderResp\x125\n" +
 	"\x05order\x18\x01 \x01(\v2\x1f.ecommerce.order.v1.OrderResultR\x05order\"\x81\x04\n" +
 	"\x05Order\x123\n" +

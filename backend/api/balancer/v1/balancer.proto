@@ -27,6 +27,14 @@ service Balance {
     };
   }
 
+  // 获取商家版本号
+  rpc GetMerchantVersion(GetMerchantVersionRequest) returns (GetMerchantVersionReply) {
+    option (google.api.http) = {
+      get: "/v1/orders/merchant/version"
+    };
+  }
+
+
   // 获取用户余额
   rpc GetUserBalance(GetUserBalanceRequest) returns (BalanceReply) {
     option (google.api.http) = {
@@ -95,6 +103,15 @@ service Balance {
       body: "*"
     };
   }
+}
+
+message GetMerchantVersionRequest {
+  repeated string merchant_ids = 1; // 商家 ID
+}
+
+message GetMerchantVersionReply {
+  repeated int64 merchant_version = 1; // 商家乐观锁版本
+  repeated string merchant_ids = 2; // 商家ID
 }
 
 message CreateMerchantBalanceRequest {

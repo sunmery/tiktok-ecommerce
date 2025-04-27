@@ -10,7 +10,6 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -84,18 +83,18 @@ func (PaymentStatus) EnumDescriptor() ([]byte, []int) {
 
 // 创建支付订单请求
 type CreatePaymentRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	OrderId         int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	ConsumerId      string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
-	Amount          string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Currency        string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Subject         string                 `protobuf:"bytes,5,opt,name=subject,proto3" json:"subject,omitempty"`
-	ReturnUrl       string                 `protobuf:"bytes,6,opt,name=return_url,json=returnUrl,proto3" json:"return_url,omitempty"`
-	FreezeId        int64                  `protobuf:"varint,8,opt,name=freeze_id,json=freezeId,proto3" json:"freeze_id,omitempty"`
-	ConsumerVersion int64                  `protobuf:"varint,9,opt,name=consumer_version,json=consumerVersion,proto3" json:"consumer_version,omitempty"`
-	MerchantVersion int64                  `protobuf:"varint,10,opt,name=merchant_version,json=merchantVersion,proto3" json:"merchant_version,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	OrderId          int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ConsumerId       string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	Amount           string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Currency         string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	Subject          string                 `protobuf:"bytes,5,opt,name=subject,proto3" json:"subject,omitempty"`
+	ReturnUrl        string                 `protobuf:"bytes,6,opt,name=return_url,json=returnUrl,proto3" json:"return_url,omitempty"`
+	FreezeId         int64                  `protobuf:"varint,8,opt,name=freeze_id,json=freezeId,proto3" json:"freeze_id,omitempty"`
+	ConsumerVersion  int64                  `protobuf:"varint,9,opt,name=consumer_version,json=consumerVersion,proto3" json:"consumer_version,omitempty"`
+	MerchantVersions []int64                `protobuf:"varint,10,rep,packed,name=merchant_versions,json=merchantVersions,proto3" json:"merchant_versions,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *CreatePaymentRequest) Reset() {
@@ -184,11 +183,11 @@ func (x *CreatePaymentRequest) GetConsumerVersion() int64 {
 	return 0
 }
 
-func (x *CreatePaymentRequest) GetMerchantVersion() int64 {
+func (x *CreatePaymentRequest) GetMerchantVersions() []int64 {
 	if x != nil {
-		return x.MerchantVersion
+		return x.MerchantVersions
 	}
-	return 0
+	return nil
 }
 
 // 创建支付订单响应
@@ -722,7 +721,7 @@ var File_v1_payment_proto protoreflect.FileDescriptor
 const file_v1_payment_proto_rawDesc = "" +
 	"\n" +
 	"\x10v1/payment.proto\x12\n" +
-	"payment.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xb2\x02\n" +
+	"payment.v1\x1a\x1cgoogle/api/annotations.proto\"\xb4\x02\n" +
 	"\x14CreatePaymentRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1f\n" +
 	"\vconsumer_id\x18\x02 \x01(\tR\n" +
@@ -733,9 +732,9 @@ const file_v1_payment_proto_rawDesc = "" +
 	"\n" +
 	"return_url\x18\x06 \x01(\tR\treturnUrl\x12\x1b\n" +
 	"\tfreeze_id\x18\b \x01(\x03R\bfreezeId\x12)\n" +
-	"\x10consumer_version\x18\t \x01(\x03R\x0fconsumerVersion\x12)\n" +
-	"\x10merchant_version\x18\n" +
-	" \x01(\x03R\x0fmerchantVersion\"O\n" +
+	"\x10consumer_version\x18\t \x01(\x03R\x0fconsumerVersion\x12+\n" +
+	"\x11merchant_versions\x18\n" +
+	" \x03(\x03R\x10merchantVersions\"O\n" +
 	"\x15CreatePaymentResponse\x12\x1d\n" +
 	"\n" +
 	"payment_id\x18\x01 \x01(\x03R\tpaymentId\x12\x17\n" +

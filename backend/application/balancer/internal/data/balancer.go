@@ -50,6 +50,7 @@ func (b balancerRepo) CreateTransaction(ctx context.Context, req *biz.CreateTran
 	if err != nil {
 		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
 	}
+
 	transactionId, err := b.data.db.CreateTransaction(ctx, models.CreateTransactionParams{
 		ID:                id.SnowflakeID(),
 		Type:              string(req.Type),
@@ -71,6 +72,26 @@ func (b balancerRepo) CreateTransaction(ctx context.Context, req *biz.CreateTran
 	}
 	return &biz.CreateTransactionReply{
 		Id: transactionId,
+	}, nil
+}
+
+func (b balancerRepo) GetMerchantVersion(ctx context.Context, req *biz.GetMerchantVersionRequest) (*biz.GetMerchantVersionReply, error) {
+	result, err := b.data.db.GetMerchantVersions(ctx, req.MerchantIds)
+	if err != nil {
+		b.log.WithContext(ctx).Errorf("Failed to get merchant version: %v", err)
+		return nil, fmt.Errorf("failed to get merchant version: %w", err)
+	}
+
+	versions := make([]int64, 0, len(result))
+	merchantIds := make([]uuid.UUID, 0, len(result))
+	for _, v := range result {
+		versions = append(versions, int64(v.Version))
+		merchantIds = append(merchantIds, v.MerchantID)
+	}
+
+	return &biz.GetMerchantVersionReply{
+		Versions:    versions,
+		MerchantIds: merchantIds,
 	}, nil
 }
 
@@ -440,7 +461,7 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 		PaymentMethodType: req.PaymentMethodType,
 		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,
-		Status:            "PAID", // 充值通常是已支付状态
+		Status:            string(constants.PaymentPaid), // 充值通常是已支付状态
 	})
 	if err != nil {
 		return nil, kerrors.New(500, "CREATE_TRANSACTION_FAILED", fmt.Sprintf("create transaction failed: %v", err))
@@ -602,12 +623,14 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 	}
 
 	// 7. 增加商家可用余额
-	rows, err := tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
+	params := models.UpdateMerchantAvailableBalanceParams{
 		MerchantID:      merchantId,
 		Currency:        freeze.Currency,
 		Amount:          freeze.Amount,
 		ExpectedVersion: req.ExpectedMerchantVersion,
-	})
+	}
+	log.Debugf("UpdateMerchantAvailableBalanceParams:%+v", params)
+	rows, err := tx.UpdateMerchantAvailableBalance(ctx, params)
 	if err != nil {
 		return nil, kerrors.New(500, "INCREASE_MERCHANT_BALANCE_FAILED", "increase merchant balance failed")
 	}

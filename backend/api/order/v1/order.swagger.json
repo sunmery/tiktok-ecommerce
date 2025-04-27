@@ -660,8 +660,11 @@
           "title": "消费者乐观锁版本"
         },
         "merchantVersion": {
-          "type": "string",
-          "format": "int64",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          },
           "title": "商家乐观锁版本"
         }
       },

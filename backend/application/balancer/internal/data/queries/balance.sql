@@ -95,8 +95,8 @@ WHERE user_id = $1
   AND version = sqlc.arg(expected_version);
 -- 乐观锁检查
 
--- name: IncreaseMerchantAvailableBalance :execrows
--- 增加商家可用余额 (用于确认转账成功) - 使用乐观锁
+-- name: UpdateMerchantAvailableBalance :execrows
+-- 增加商家可用余额 (订单交易收入) - 使用乐观锁
 UPDATE balances.merchant_balances
 SET available  = available + sqlc.arg(amount), -- 金额参数 (分)
     version    = version + 1,
@@ -104,3 +104,16 @@ SET available  = available + sqlc.arg(amount), -- 金额参数 (分)
 WHERE merchant_id = $1
   AND currency = $2
   AND version = sqlc.arg(expected_version); -- 乐观锁检查
+
+
+-- name: GetMerchantVersions :many
+-- 获取指定商家的版本号
+SELECT merchant_id, version
+FROM balances.merchant_balances
+WHERE merchant_id = ANY($1::uuid[]);
+
+-- name: GetMerchantVersionByID :one
+-- 获取指定商家的版本号
+SELECT merchant_id, version
+FROM balances.merchant_balances
+WHERE merchant_id = $1;

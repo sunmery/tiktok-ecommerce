@@ -454,6 +454,42 @@
           "Balance"
         ]
       }
+    },
+    "/v1/orders/merchant/version": {
+      "get": {
+        "summary": "获取商家版本号",
+        "operationId": "Balance_GetMerchantVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMerchantVersionReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "merchantIds",
+            "description": "商家 ID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
     }
   },
   "definitions": {
@@ -861,6 +897,26 @@
           "type": "integer",
           "format": "int32",
           "title": "期望的用户余额版本号 (用于乐观锁)"
+        }
+      }
+    },
+    "v1GetMerchantVersionReply": {
+      "type": "object",
+      "properties": {
+        "merchantVersion": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          },
+          "title": "商家乐观锁版本"
+        },
+        "merchantIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "商家ID"
         }
       }
     },

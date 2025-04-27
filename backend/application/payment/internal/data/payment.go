@@ -85,18 +85,18 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	// 创建支付记录
 	log.Debugf("req.ConsumerID: %v", req.ConsumerID)
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
-		ID:              id.SnowflakeID(),
-		OrderID:         req.OrderID,
-		ConsumerID:      req.ConsumerID,
-		Amount:          amount,
-		Currency:        req.Currency,
-		Method:          string(constants.PaymentMethodAlipay),
-		Status:          string(biz.PaymentStatusPending),
-		Subject:         req.Subject,
-		TradeNo:         tradeNo,
-		FreezeID:        req.FreezeId,
-		ConsumerVersion: req.ConsumerVersion,
-		MerchantVersion: req.MerchanVersion,
+		ID:               id.SnowflakeID(),
+		OrderID:          req.OrderID,
+		ConsumerID:       req.ConsumerID,
+		Amount:           amount,
+		Currency:         req.Currency,
+		Method:           string(constants.PaymentMethodAlipay),
+		Status:           string(biz.PaymentStatusPending),
+		Subject:          req.Subject,
+		TradeNo:          tradeNo,
+		FreezeID:         req.FreezeId,
+		ConsumerVersion:  req.ConsumerVersion,
+		MerchantVersions: req.MerchanVersions,
 	})
 	if paymentsErr != nil {
 		return nil, fmt.Errorf("failed to create payment: %v", paymentsErr)
@@ -417,43 +417,46 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 		// 计算子订单金额
 		subOrderAmount := subOrder.TotalAmount
 
-		// 调用余额服务确认转账
-		_, err = r.data.balancerv1.ConfirmTransfer(ctx, &balancerv1.ConfirmTransferRequest{
-			FreezeId:                payment.FreezeID,
-			MerchantId:              merchantId,
-			IdempotencyKey:          strconv.FormatInt(payment.OrderID, 10),
-			ExpectedUserVersion:     int32(payment.ConsumerVersion),
-			ExpectedMerchantVersion: int32(payment.MerchantVersion),
-			PaymentAccount:          "", // TODO PaymentAccount
-		})
-		if err != nil {
-			r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
-				merchantId, subOrderAmount, err)
-			// 继续处理其他子订单，不要因为一个子订单失败而中断整个流程
-		} else {
-			r.log.Infof("确认转账成功，商家ID: %s, 金额: %f",
-				merchantId, subOrderAmount)
-		}
+		// 根据商家ID和子订单金额，调用余额服务进行转账
+		for _, v := range payment.MerchantVersions {
+			// 调用余额服务确认转账
+			_, err = r.data.balancerv1.ConfirmTransfer(ctx, &balancerv1.ConfirmTransferRequest{
+				FreezeId:                payment.FreezeID,
+				MerchantId:              merchantId,
+				IdempotencyKey:          strconv.FormatInt(payment.OrderID, 10),
+				ExpectedUserVersion:     int32(payment.ConsumerVersion),
+				ExpectedMerchantVersion: int32(v),
+				PaymentAccount:          "", // TODO PaymentAccount
+			})
+			if err != nil {
+				r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
+					merchantId, subOrderAmount, err)
+				// 继续处理其他子订单，不要因为一个子订单失败而中断整个流程
+			} else {
+				r.log.Infof("确认转账成功，商家ID: %s, 金额: %f",
+					merchantId, subOrderAmount)
+			}
 
-		transaction, err := r.data.balancerv1.CreateTransaction(ctx, &balancerv1.CreateTransactionRequest{
-			Type:              string(constants.TradeStatusSuccess),
-			Amount:            subOrderAmount,
-			Currency:          string(constants.CNY),
-			FromUserId:        payment.ConsumerID.String(),
-			ToMerchantId:      merchantId,
-			PaymentMethodType: string(constants.PaymentMethodAlipay),
-			PaymentAccount:    "",  // TODO PaymentAccount
-			PaymentExtra:      nil, // TODO PaymentExtra
-			Status:            string(constants.PaymentPaid),
-			IdempotencyKey:    strconv.FormatInt(payment.OrderID, 10),
-			FreezeId:          payment.FreezeID,
-			ConsumerVersion:   payment.ConsumerVersion,
-			MerchantVersion:   payment.MerchantVersion,
-		})
-		if err != nil {
-			return nil, err
+			transaction, err := r.data.balancerv1.CreateTransaction(ctx, &balancerv1.CreateTransactionRequest{
+				Type:              string(constants.TransactionPayment),
+				Amount:            subOrderAmount,
+				Currency:          string(constants.CNY),
+				FromUserId:        payment.ConsumerID.String(),
+				ToMerchantId:      merchantId,
+				PaymentMethodType: string(constants.PaymentMethodAlipay),
+				PaymentAccount:    "",  // TODO PaymentAccount
+				PaymentExtra:      nil, // TODO PaymentExtra
+				Status:            string(constants.PaymentPaid),
+				IdempotencyKey:    strconv.FormatInt(payment.OrderID, 10),
+				FreezeId:          payment.FreezeID,
+				ConsumerVersion:   payment.ConsumerVersion,
+				MerchantVersion:   v,
+			})
+			if err != nil {
+				return nil, err
+			}
+			transactionId = transaction.Id
 		}
-		transactionId = transaction.Id
 	}
 
 	// 返回支付结果

@@ -177,6 +177,25 @@ type (
 )
 
 type (
+	GetMerchantVersionRequest struct {
+		MerchantIds []uuid.UUID
+	}
+	GetMerchantVersionReply struct {
+		Versions    []int64
+		MerchantIds []uuid.UUID
+	}
+)
+
+type (
+	GetMerchantVersionByIDRequest struct {
+		Version int64
+	}
+	GetMerchantVersionByIDReply struct {
+		MerchantId uuid.UUID
+	}
+)
+
+type (
 	CreateTransactionRequest struct {
 		Type              constants.TransactionType
 		Amount            float64
@@ -220,6 +239,8 @@ type BalancerRepo interface {
 	WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error)
 	// CreateTransaction 创建交易记录
 	CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*CreateTransactionReply, error)
+	// GetMerchantVersion 获取商家版本号
+	GetMerchantVersion(ctx context.Context, req *GetMerchantVersionRequest) (*GetMerchantVersionReply, error)
 }
 
 type BalancerUsecase struct {
@@ -287,4 +308,9 @@ func (cc *BalancerUsecase) CreateTransaction(ctx context.Context, req *CreateTra
 func (cc *BalancerUsecase) GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetTransactions request: %+v", req)
 	return cc.repo.GetTransactions(ctx, req)
+}
+
+func (cc *BalancerUsecase) GetMerchantVersion(ctx context.Context, req *GetMerchantVersionRequest) (*GetMerchantVersionReply, error) {
+	cc.log.WithContext(ctx).Debugf("biz/order GetMerchantVersion req:%+v", req)
+	return cc.repo.GetMerchantVersion(ctx, req)
 }

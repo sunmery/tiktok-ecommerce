@@ -73,8 +73,6 @@ func (m *CreatePaymentRequest) validate(all bool) error {
 
 	// no validation rules for ConsumerVersion
 
-	// no validation rules for MerchantVersion
-
 	if len(errors) > 0 {
 		return CreatePaymentRequestMultiError(errors)
 	}

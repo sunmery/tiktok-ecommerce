@@ -12,37 +12,37 @@ type Querier interface {
 	//CreatePaymentQuery
 	//
 	//  INSERT INTO payments.payments (id, order_id, consumer_id, amount, currency, method, status,
-	//                                 subject, trade_no, freeze_id,consumer_version, merchant_version)
+	//                                 subject, trade_no, freeze_id,consumer_version, merchant_versions)
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	CreatePaymentQuery(ctx context.Context, arg CreatePaymentQueryParams) (PaymentsPayments, error)
 	//GetByIDQuery
 	//
-	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE id = $1
 	GetByIDQuery(ctx context.Context, id int64) (PaymentsPayments, error)
 	//GetByOrderIDQuery
 	//
-	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE order_id = $1
 	GetByOrderIDQuery(ctx context.Context, orderID int64) (PaymentsPayments, error)
 	//GetPayment
 	//
-	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE id = $1
 	GetPayment(ctx context.Context, id int64) (PaymentsPayments, error)
 	//GetPaymentByOrderID
 	//
-	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE order_id = $1
 	GetPaymentByOrderID(ctx context.Context, orderID int64) (PaymentsPayments, error)
 	// 根据商户订单号查询支付记录
 	//
-	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  SELECT id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	//  FROM payments.payments
 	//  WHERE trade_no = $1
 	GetPaymentByTradeNo(ctx context.Context, tradeNo string) (PaymentsPayments, error)
@@ -53,7 +53,7 @@ type Querier interface {
 	//      updated_at = now()
 	//  WHERE (id = $2 AND $2 != 0)
 	//     OR (order_id = $3 AND $3 != 0)
-	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (PaymentsPayments, error)
 	//UpdateStatusQuery
 	//
@@ -62,7 +62,7 @@ type Querier interface {
 	//      id         = $3,
 	//      updated_at = now()
 	//  WHERE id = $1
-	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_version, created_at, updated_at
+	//  RETURNING id, order_id, consumer_id, amount, currency, method, status, subject, trade_no, freeze_id, consumer_version, merchant_versions, created_at, updated_at
 	UpdateStatusQuery(ctx context.Context, arg UpdateStatusQueryParams) (PaymentsPayments, error)
 }
 

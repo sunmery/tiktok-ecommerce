@@ -131,7 +131,7 @@ message OrderResult {
   int64 order_id = 1; // 订单 ID
   int64 freeze_id = 2; // 冻结 ID
   int64 consumer_version = 3; // 消费者乐观锁版本
-  int64 merchant_version = 4; // 商家乐观锁版本
+  repeated int64 merchant_version = 4; // 商家乐观锁版本
 }
 
 // 创建订单响应的消息结构

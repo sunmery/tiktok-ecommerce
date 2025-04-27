@@ -74,7 +74,7 @@ type CreatePaymentReq struct {
 	ReturnURL       string
 	FreezeId        int64
 	ConsumerVersion int64
-	MerchanVersion  int64
+	MerchanVersions []int64
 }
 
 // CreatePaymentResp 创建支付响应

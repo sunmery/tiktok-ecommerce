@@ -1,7 +1,6 @@
 -- name: CreateTransaction :one
 -- 创建交易流水记录
-INSERT INTO balances.transactions (id,
-                                   type, amount, currency, from_user_id, to_merchant_id,
+INSERT INTO balances.transactions (id, type, amount, currency, from_user_id, to_merchant_id,
                                    payment_method_type, payment_account, payment_extra, status, freeze_id,
                                    idempotency_key,
                                    consumer_version,

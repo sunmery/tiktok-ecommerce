@@ -384,13 +384,27 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	}
 	log.Debugf("params: %+v", params)
 	order, _ := o.data.db.CreateOrder(ctx, params)
-	var freezeBalance *balancerv1.FreezeBalanceReply
-	var merchantBalance *balancerv1.BalanceReply
-	// 分单
+
+	// 计算订单总金额
+	var totalOrderAmount float64
+	var subOrders []struct {
+		merchantId uuid.UUID
+		amount     float64
+		item       biz.OrderItem
+	}
+
+	// 第一步：计算总金额并收集子订单信息
 	for _, item := range req.OrderItems {
-		// 序列化订单项
-		items := []biz.OrderItem{
-			{
+		totalOrderAmount += item.Cost
+
+		subOrders = append(subOrders, struct {
+			merchantId uuid.UUID
+			amount     float64
+			item       biz.OrderItem
+		}{
+			merchantId: item.Item.MerchantId,
+			amount:     item.Cost,
+			item: biz.OrderItem{
 				Item: &biz.CartItem{
 					MerchantId: item.Item.MerchantId,
 					ProductId:  item.Item.ProductId,
@@ -400,14 +414,47 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 				},
 				Cost: item.Cost,
 			},
-		}
+		})
+	}
+
+	// 第二步：获取用户余额并一次性冻结总金额
+	userBalance, err := o.data.balancerv1.GetUserBalance(ctx, &balancerv1.GetUserBalanceRequest{
+		UserId:   req.UserId.String(),
+		Currency: req.Currency,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if userBalance.Available < totalOrderAmount {
+		return nil, kerrors.New(400, "INSUFFICIENT_BALANCE", "可用余额不足")
+	}
+
+	// 一次性冻结总金额
+	freezeBalance, freezeBalanceErr := o.data.balancerv1.FreezeBalance(ctx, &balancerv1.FreezeBalanceRequest{
+		UserId:          req.UserId.String(),
+		OrderId:         order.ID,
+		Amount:          totalOrderAmount,
+		Currency:        req.Currency,
+		IdempotencyKey:  strconv.FormatInt(order.ID, 10),
+		ExpectedVersion: userBalance.Version,
+	})
+	if freezeBalanceErr != nil {
+		return nil, kerrors.New(500, "FREEZE_BALANCE_FAILED", fmt.Sprintf("冻结余额失败: %v", freezeBalanceErr))
+	}
+
+	// 第三步：创建子订单并预扣库存
+	merchantVersions := make(map[string]int64)
+	for _, subOrder := range subOrders {
+		// 序列化订单项
+		items := []biz.OrderItem{subOrder.item}
 		itemsJSON, marshalErr := json.Marshal(items)
 		if marshalErr != nil {
 			return nil, kerrors.New(400, "INVALID_ORDER_ITEM", fmt.Sprintf("序列化订单项失败: %v", marshalErr))
 		}
 
 		// 转换价格到pgtype.Numeric
-		totalAmount, totalAmountErr := types.Float64ToNumeric(item.Cost)
+		totalAmount, totalAmountErr := types.Float64ToNumeric(subOrder.amount)
 		if totalAmountErr != nil {
 			return nil, fmt.Errorf("invalid price format: %w", totalAmountErr)
 		}
@@ -416,7 +463,7 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 		params := models.CreateSubOrderParams{
 			ID:          id.SnowflakeID(),
 			OrderID:     order.ID,
-			MerchantID:  item.Item.MerchantId,
+			MerchantID:  subOrder.merchantId,
 			TotalAmount: totalAmount,
 			Currency:    req.Currency,
 			Status:      string(constants.PaymentPending),
@@ -430,67 +477,46 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 
 		// 预扣库存
 		_, updateInventoryErr := o.data.productv1.UpdateInventory(ctx, &productv1.UpdateInventoryRequest{
-			ProductId:  item.Item.ProductId.String(),
-			MerchantId: item.Item.MerchantId.String(),
-			Stock:      -int32(item.Item.Quantity),
+			ProductId:  subOrder.item.Item.ProductId.String(),
+			MerchantId: subOrder.item.Item.MerchantId.String(),
+			Stock:      -int32(subOrder.item.Item.Quantity),
 		})
 		if updateInventoryErr != nil {
 			if errors.Is(updateInventoryErr, pgx.ErrNoRows) {
-				return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("查找该商家 id:%v的商品 id%v, 失败%v", item.Item.MerchantId.String(), item.Item.ProductId.String(), updateInventoryErr))
+				return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("查找该商家 id:%v的商品 id%v, 失败%v", subOrder.item.Item.MerchantId.String(), subOrder.item.Item.ProductId.String(), updateInventoryErr))
 			}
-			log.Errorf("商家%v 商品id%v 数量%v", item.Item.ProductId.String(), item.Item.MerchantId.String(), item.Item.Quantity)
+			log.Errorf("商家%v 商品id%v 数量%v", subOrder.item.Item.ProductId.String(), subOrder.item.Item.MerchantId.String(), subOrder.item.Item.Quantity)
 			return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("更新库存失败: %v", updateInventoryErr))
 		}
 
-		// 获取余额
-		userBalance, err := o.data.balancerv1.GetUserBalance(ctx, &balancerv1.GetUserBalanceRequest{
-			UserId:   req.UserId.String(),
-			Currency: req.Currency,
-		})
-		if err != nil {
-			return nil, err
+		// 获取商家余额信息（仅用于返回版本号）
+		merchantId := subOrder.merchantId.String()
+		if _, exists := merchantVersions[merchantId]; !exists {
+			merchantBalance, merchantBalanceErr := o.data.balancerv1.GetMerchantBalance(ctx, &balancerv1.GetMerchantBalanceRequest{
+				MerchantId: merchantId,
+				Currency:   req.Currency,
+			})
+			if merchantBalanceErr != nil {
+				return nil, kerrors.New(500, "GET_MERCHANT_BALANCE_NOT_FOUND", fmt.Sprintf("查询商家余额失败: %v", merchantBalanceErr))
+			}
+			merchantVersions[merchantId] = int64(merchantBalance.Version)
 		}
+	}
 
-		if userBalance.Available < item.Cost {
-			return nil, kerrors.New(400, "INSUFFICIENT_BALANCE", "可用余额不足")
-		}
+	// 返回订单结果
+	var merchantVersion []int64
+	for _, version := range merchantVersions {
+		merchantVersion = append(merchantVersion, version)
+	}
 
-		// 冻结余额
-		var FreezeBalanceErr error
-		freezeBalance, FreezeBalanceErr = o.data.balancerv1.FreezeBalance(ctx, &balancerv1.FreezeBalanceRequest{
-			UserId:          req.UserId.String(),
+	return &biz.PlaceOrderResp{
+		Order: &biz.OrderResult{
 			OrderId:         order.ID,
-			Amount:          item.Cost,
-			Currency:        req.Currency,
-			IdempotencyKey:  strconv.FormatInt(order.ID, 10),
-			ExpectedVersion: userBalance.Version,
-		})
-		if FreezeBalanceErr != nil {
-			return nil, kerrors.New(500, "FREEZE_BALANCE_FAILED", fmt.Sprintf("冻结余额失败: %v", FreezeBalanceErr))
-		}
-		log.Debugf("item.Item.MerchantId.String(): %+v", item.Item.MerchantId.String())
-		var merchantBalanceErr error
-		merchantBalance, merchantBalanceErr = o.data.balancerv1.GetMerchantBalance(ctx, &balancerv1.GetMerchantBalanceRequest{
-			MerchantId: item.Item.MerchantId.String(),
-			Currency:   req.Currency,
-		})
-		if merchantBalanceErr != nil {
-			return nil, kerrors.New(500, "GET_MERCHANT_BALANCE_NOT_FOUND", fmt.Sprintf("查询商家余额失败: %v", merchantBalanceErr))
-		}
-
-	}
-
-	if freezeBalance != nil && merchantBalance != nil {
-		return &biz.PlaceOrderResp{
-			Order: &biz.OrderResult{
-				OrderId:         order.ID,
-				FreezeId:        freezeBalance.FreezeId,
-				ConsumerVersion: int64(freezeBalance.NewVersion),
-				MerchantVersion: int64(merchantBalance.Version),
-			},
-		}, nil
-	}
-	return nil, nil
+			FreezeId:        freezeBalance.FreezeId,
+			ConsumerVersion: int64(freezeBalance.NewVersion),
+			MerchantVersion: merchantVersion,
+		},
+	}, nil
 }
 
 func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) (*biz.GetAllOrdersReply, error) {

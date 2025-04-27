@@ -287,6 +287,68 @@ func (q *Queries) GetMerchantBalance(ctx context.Context, arg GetMerchantBalance
 	return i, err
 }
 
+const GetMerchantVersionByID = `-- name: GetMerchantVersionByID :one
+SELECT merchant_id, version
+FROM balances.merchant_balances
+WHERE merchant_id = $1
+`
+
+type GetMerchantVersionByIDRow struct {
+	MerchantID uuid.UUID `json:"merchantID"`
+	Version    int32     `json:"version"`
+}
+
+// 获取指定商家的版本号
+//
+//	SELECT merchant_id, version
+//	FROM balances.merchant_balances
+//	WHERE merchant_id = $1
+func (q *Queries) GetMerchantVersionByID(ctx context.Context, merchantID uuid.UUID) (GetMerchantVersionByIDRow, error) {
+	row := q.db.QueryRow(ctx, GetMerchantVersionByID, merchantID)
+	var i GetMerchantVersionByIDRow
+	err := row.Scan(&i.MerchantID, &i.Version)
+	return i, err
+}
+
+const GetMerchantVersions = `-- name: GetMerchantVersions :many
+
+
+SELECT merchant_id, version
+FROM balances.merchant_balances
+WHERE merchant_id = ANY($1::uuid[])
+`
+
+type GetMerchantVersionsRow struct {
+	MerchantID uuid.UUID `json:"merchantID"`
+	Version    int32     `json:"version"`
+}
+
+// 乐观锁检查
+// 获取指定商家的版本号
+//
+//	SELECT merchant_id, version
+//	FROM balances.merchant_balances
+//	WHERE merchant_id = ANY($1::uuid[])
+func (q *Queries) GetMerchantVersions(ctx context.Context, dollar_1 []uuid.UUID) ([]GetMerchantVersionsRow, error) {
+	rows, err := q.db.Query(ctx, GetMerchantVersions, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMerchantVersionsRow
+	for rows.Next() {
+		var i GetMerchantVersionsRow
+		if err := rows.Scan(&i.MerchantID, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetUserBalance = `-- name: GetUserBalance :one
 SELECT available, frozen, version, currency
 FROM balances.user_balances
@@ -322,47 +384,6 @@ func (q *Queries) GetUserBalance(ctx context.Context, arg GetUserBalanceParams) 
 		&i.Currency,
 	)
 	return i, err
-}
-
-const IncreaseMerchantAvailableBalance = `-- name: IncreaseMerchantAvailableBalance :execrows
-
-UPDATE balances.merchant_balances
-SET available  = available + $3, -- 金额参数 (分)
-    version    = version + 1,
-    updated_at = NOW()
-WHERE merchant_id = $1
-  AND currency = $2
-  AND version = $4
-`
-
-type IncreaseMerchantAvailableBalanceParams struct {
-	MerchantID      uuid.UUID      `json:"merchantID"`
-	Currency        string         `json:"currency"`
-	Amount          pgtype.Numeric `json:"amount"`
-	ExpectedVersion int32          `json:"expectedVersion"`
-}
-
-// 乐观锁检查
-// 增加商家可用余额 (用于确认转账成功) - 使用乐观锁
-//
-//	UPDATE balances.merchant_balances
-//	SET available  = available + $3, -- 金额参数 (分)
-//	    version    = version + 1,
-//	    updated_at = NOW()
-//	WHERE merchant_id = $1
-//	  AND currency = $2
-//	  AND version = $4
-func (q *Queries) IncreaseMerchantAvailableBalance(ctx context.Context, arg IncreaseMerchantAvailableBalanceParams) (int64, error) {
-	result, err := q.db.Exec(ctx, IncreaseMerchantAvailableBalance,
-		arg.MerchantID,
-		arg.Currency,
-		arg.Amount,
-		arg.ExpectedVersion,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
 }
 
 const IncreaseUserAvailableBalance = `-- name: IncreaseUserAvailableBalance :execrows
@@ -439,6 +460,47 @@ type UnfreezeUserBalanceParams struct {
 func (q *Queries) UnfreezeUserBalance(ctx context.Context, arg UnfreezeUserBalanceParams) (int64, error) {
 	result, err := q.db.Exec(ctx, UnfreezeUserBalance,
 		arg.UserID,
+		arg.Currency,
+		arg.Amount,
+		arg.ExpectedVersion,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const UpdateMerchantAvailableBalance = `-- name: UpdateMerchantAvailableBalance :execrows
+
+UPDATE balances.merchant_balances
+SET available  = available + $3, -- 金额参数 (分)
+    version    = version + 1,
+    updated_at = NOW()
+WHERE merchant_id = $1
+  AND currency = $2
+  AND version = $4
+`
+
+type UpdateMerchantAvailableBalanceParams struct {
+	MerchantID      uuid.UUID      `json:"merchantID"`
+	Currency        string         `json:"currency"`
+	Amount          pgtype.Numeric `json:"amount"`
+	ExpectedVersion int32          `json:"expectedVersion"`
+}
+
+// 乐观锁检查
+// 增加商家可用余额 (订单交易收入) - 使用乐观锁
+//
+//	UPDATE balances.merchant_balances
+//	SET available  = available + $3, -- 金额参数 (分)
+//	    version    = version + 1,
+//	    updated_at = NOW()
+//	WHERE merchant_id = $1
+//	  AND currency = $2
+//	  AND version = $4
+func (q *Queries) UpdateMerchantAvailableBalance(ctx context.Context, arg UpdateMerchantAvailableBalanceParams) (int64, error) {
+	result, err := q.db.Exec(ctx, UpdateMerchantAvailableBalance,
+		arg.MerchantID,
 		arg.Currency,
 		arg.Amount,
 		arg.ExpectedVersion,

@@ -6,6 +6,8 @@ package models
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -52,8 +54,7 @@ type Querier interface {
 	CreateMerchantPaymentMethods(ctx context.Context, arg CreateMerchantPaymentMethodsParams) error
 	// 创建交易流水记录
 	//
-	//  INSERT INTO balances.transactions (id,
-	//                                     type, amount, currency, from_user_id, to_merchant_id,
+	//  INSERT INTO balances.transactions (id, type, amount, currency, from_user_id, to_merchant_id,
 	//                                     payment_method_type, payment_account, payment_extra, status, freeze_id,
 	//                                     idempotency_key,
 	//                                     consumer_version,
@@ -142,6 +143,21 @@ type Querier interface {
 	//    AND status = COALESCE($3, status)
 	//  LIMIT $5 OFFSET $4
 	GetMerchantTransactions(ctx context.Context, arg GetMerchantTransactionsParams) ([]BalancesTransactions, error)
+	// 获取指定商家的版本号
+	//
+	//  SELECT merchant_id, version
+	//  FROM balances.merchant_balances
+	//  WHERE merchant_id = $1
+	GetMerchantVersionByID(ctx context.Context, merchantID uuid.UUID) (GetMerchantVersionByIDRow, error)
+	// 乐观锁检查
+	// 获取指定商家的版本号
+	//
+	//
+	//
+	//  SELECT merchant_id, version
+	//  FROM balances.merchant_balances
+	//  WHERE merchant_id = ANY($1::uuid[])
+	GetMerchantVersions(ctx context.Context, dollar_1 []uuid.UUID) ([]GetMerchantVersionsRow, error)
 	// 获取指定用户和币种的余额信息
 	//
 	//  SELECT available, frozen, version, currency
@@ -156,18 +172,6 @@ type Querier interface {
 	//  WHERE id = $1
 	//    AND user_id = $2
 	GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMethodParams) (BalancesUserPaymentMethods, error)
-	// 乐观锁检查
-	// 增加商家可用余额 (用于确认转账成功) - 使用乐观锁
-	//
-	//
-	//  UPDATE balances.merchant_balances
-	//  SET available  = available + $3, -- 金额参数 (分)
-	//      version    = version + 1,
-	//      updated_at = NOW()
-	//  WHERE merchant_id = $1
-	//    AND currency = $2
-	//    AND version = $4
-	IncreaseMerchantAvailableBalance(ctx context.Context, arg IncreaseMerchantAvailableBalanceParams) (int64, error)
 	// 增加用户可用余额 (用于充值成功, 取消提现, 取消冻结成功后资金退回) - 使用乐观锁
 	//
 	//  UPDATE balances.user_balances
@@ -200,6 +204,18 @@ type Querier interface {
 	//  WHERE id = $2
 	//    AND status = $3
 	UpdateFreezeStatus(ctx context.Context, arg UpdateFreezeStatusParams) (int64, error)
+	// 乐观锁检查
+	// 增加商家可用余额 (订单交易收入) - 使用乐观锁
+	//
+	//
+	//  UPDATE balances.merchant_balances
+	//  SET available  = available + $3, -- 金额参数 (分)
+	//      version    = version + 1,
+	//      updated_at = NOW()
+	//  WHERE merchant_id = $1
+	//    AND currency = $2
+	//    AND version = $4
+	UpdateMerchantAvailableBalance(ctx context.Context, arg UpdateMerchantAvailableBalanceParams) (int64, error)
 	// 返回交易记录的 ID
 	// 更新交易流水状态
 	//

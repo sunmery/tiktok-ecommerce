@@ -1,6 +1,6 @@
 -- name: CreatePaymentQuery :one
 INSERT INTO payments.payments (id, order_id, consumer_id, amount, currency, method, status,
-                               subject, trade_no, freeze_id,consumer_version, merchant_version)
+                               subject, trade_no, freeze_id,consumer_version, merchant_versions)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 

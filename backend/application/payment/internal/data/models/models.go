@@ -12,18 +12,18 @@ import (
 )
 
 type PaymentsPayments struct {
-	ID              int64          `json:"id"`
-	OrderID         int64          `json:"orderID"`
-	ConsumerID      uuid.UUID      `json:"consumerID"`
-	Amount          pgtype.Numeric `json:"amount"`
-	Currency        string         `json:"currency"`
-	Method          string         `json:"method"`
-	Status          string         `json:"status"`
-	Subject         string         `json:"subject"`
-	TradeNo         string         `json:"tradeNo"`
-	FreezeID        int64          `json:"freezeID"`
-	ConsumerVersion int64          `json:"consumerVersion"`
-	MerchantVersion int64          `json:"merchantVersion"`
-	CreatedAt       time.Time      `json:"createdAt"`
-	UpdatedAt       time.Time      `json:"updatedAt"`
+	ID               int64          `json:"id"`
+	OrderID          int64          `json:"orderID"`
+	ConsumerID       uuid.UUID      `json:"consumerID"`
+	Amount           pgtype.Numeric `json:"amount"`
+	Currency         string         `json:"currency"`
+	Method           string         `json:"method"`
+	Status           string         `json:"status"`
+	Subject          string         `json:"subject"`
+	TradeNo          string         `json:"tradeNo"`
+	FreezeID         int64          `json:"freezeID"`
+	ConsumerVersion  int64          `json:"consumerVersion"`
+	MerchantVersions []int64        `json:"merchantVersions"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	UpdatedAt        time.Time      `json:"updatedAt"`
 }

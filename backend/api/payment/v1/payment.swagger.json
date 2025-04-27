@@ -299,9 +299,12 @@
           "type": "string",
           "format": "int64"
         },
-        "merchantVersion": {
-          "type": "string",
-          "format": "int64"
+        "merchantVersions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          }
         }
       },
       "title": "创建支付订单请求"

@@ -58,6 +58,7 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req *pb.CreatePaymen
 	}
 
 	// 创建支付请求
+	// merchanVersions := make([]int64, 0, len(req.MerchanVersion))
 	createReq := &biz.CreatePaymentReq{
 		OrderID:    orderID,
 		ConsumerID: consumerId,
@@ -68,7 +69,7 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req *pb.CreatePaymen
 		ReturnURL:       req.ReturnUrl,
 		FreezeId:        req.FreezeId,
 		ConsumerVersion: req.ConsumerVersion,
-		MerchanVersion:  req.MerchantVersion,
+		MerchanVersions: req.MerchantVersions,
 	}
 
 	// 调用业务逻辑

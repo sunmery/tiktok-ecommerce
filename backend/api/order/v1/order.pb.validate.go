@@ -956,8 +956,6 @@ func (m *OrderResult) validate(all bool) error {
 
 	// no validation rules for ConsumerVersion
 
-	// no validation rules for MerchantVersion
-
 	if len(errors) > 0 {
 		return OrderResultMultiError(errors)
 	}

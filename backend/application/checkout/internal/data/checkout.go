@@ -151,15 +151,15 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	// 调用支付微服务生成支付URL
 	log.Debugf("req.UserId.String(): %+v", req.UserId.String())
 	payment, paymentErr := c.data.paymentv1.CreatePayment(ctx, &paymentv1.CreatePaymentRequest{
-		OrderId:         order.Order.OrderId,
-		ConsumerId:      req.UserId.String(),
-		Amount:          fmt.Sprintf("%.2f", amount),
-		Currency:        creditCard.Currency,
-		Subject:         "支付测试",
-		ReturnUrl:       "",
-		FreezeId:        order.Order.FreezeId,
-		ConsumerVersion: order.Order.ConsumerVersion,
-		MerchantVersion: order.Order.MerchantVersion,
+		OrderId:          order.Order.OrderId,
+		ConsumerId:       req.UserId.String(),
+		Amount:           fmt.Sprintf("%.2f", amount),
+		Currency:         creditCard.Currency,
+		Subject:          "支付测试",
+		ReturnUrl:        "",
+		FreezeId:         order.Order.FreezeId,
+		ConsumerVersion:  order.Order.ConsumerVersion,
+		MerchantVersions: order.Order.MerchantVersion,
 	})
 	if paymentErr != nil {
 		// 订单回滚

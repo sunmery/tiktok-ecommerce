@@ -4,7 +4,6 @@ package payment.v1; // 定义包名，用于命名空间隔离
 
 // 导入外部依赖
 import "google/api/annotations.proto";
-import "google/protobuf/struct.proto";
 
 // Go 语言生成代码的选项
 option go_package = "backend/api/payment/v1;paymentv1";
@@ -53,7 +52,7 @@ message CreatePaymentRequest {
   string return_url = 6;
   int64 freeze_id = 8;
   int64 consumer_version = 9;
-  int64 merchant_version = 10;
+  repeated int64 merchant_versions = 10;
 }
 
 // 创建支付订单响应

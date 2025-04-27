@@ -5,6 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/go-kratos/kratos/v2/log"
+
 	structpb "github.com/golang/protobuf/ptypes/struct"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -16,11 +21,11 @@ import (
 	"backend/application/balancer/internal/biz"
 	globalPkg "backend/pkg"
 
-	pb "backend/api/balancer/v1"
+	v1 "backend/api/balancer/v1"
 )
 
 type BalanceService struct {
-	pb.UnimplementedBalanceServer
+	v1.UnimplementedBalanceServer
 	uc *biz.BalancerUsecase
 }
 
@@ -28,7 +33,7 @@ func NewBalancerService(uc *biz.BalancerUsecase) *BalanceService {
 	return &BalanceService{uc: uc}
 }
 
-func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *pb.CreateConsumerBalanceRequest) (*pb.CreateConsumerBalanceReply, error) {
+func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.CreateConsumerBalanceRequest) (*v1.CreateConsumerBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err
@@ -51,14 +56,14 @@ func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *pb.Crea
 		return nil, err
 	}
 
-	return &pb.CreateConsumerBalanceReply{
+	return &v1.CreateConsumerBalanceReply{
 		UserId:    reply.UserId.String(),
 		Currency:  string(reply.Currency),
 		Available: reply.Available,
 	}, nil
 }
 
-func (s *BalanceService) CreateMerchantBalance(ctx context.Context, req *pb.CreateMerchantBalanceRequest) (*pb.CreateMerchantBalanceReply, error) {
+func (s *BalanceService) CreateMerchantBalance(ctx context.Context, req *v1.CreateMerchantBalanceRequest) (*v1.CreateMerchantBalanceReply, error) {
 	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
 		return nil, err
@@ -81,14 +86,14 @@ func (s *BalanceService) CreateMerchantBalance(ctx context.Context, req *pb.Crea
 		return nil, err
 	}
 
-	return &pb.CreateMerchantBalanceReply{
+	return &v1.CreateMerchantBalanceReply{
 		UserId:    reply.UserId.String(),
 		Currency:  string(reply.Currency),
 		Available: reply.Available,
 	}, nil
 }
 
-func (s *BalanceService) GetUserBalance(ctx context.Context, req *pb.GetUserBalanceRequest) (*pb.BalanceReply, error) {
+func (s *BalanceService) GetUserBalance(ctx context.Context, req *v1.GetUserBalanceRequest) (*v1.BalanceReply, error) {
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, err
@@ -100,7 +105,7 @@ func (s *BalanceService) GetUserBalance(ctx context.Context, req *pb.GetUserBala
 	if err != nil {
 		return nil, err
 	}
-	return &pb.BalanceReply{
+	return &v1.BalanceReply{
 		Available: balance.Available,
 		Frozen:    balance.Frozen,
 		Currency:  string(balance.Currency),
@@ -108,7 +113,7 @@ func (s *BalanceService) GetUserBalance(ctx context.Context, req *pb.GetUserBala
 	}, nil
 }
 
-func (s *BalanceService) FreezeBalance(ctx context.Context, req *pb.FreezeBalanceRequest) (*pb.FreezeBalanceReply, error) {
+func (s *BalanceService) FreezeBalance(ctx context.Context, req *v1.FreezeBalanceRequest) (*v1.FreezeBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err
@@ -130,13 +135,13 @@ func (s *BalanceService) FreezeBalance(ctx context.Context, req *pb.FreezeBalanc
 		return nil, err
 	}
 
-	return &pb.FreezeBalanceReply{
+	return &v1.FreezeBalanceReply{
 		FreezeId:   result.FreezeId,
 		NewVersion: result.NewVersion,
 	}, nil
 }
 
-func (s *BalanceService) ConfirmTransfer(ctx context.Context, req *pb.ConfirmTransferRequest) (*pb.ConfirmTransferReply, error) {
+func (s *BalanceService) ConfirmTransfer(ctx context.Context, req *v1.ConfirmTransferRequest) (*v1.ConfirmTransferReply, error) {
 	merchantId, err := uuid.Parse(req.MerchantId)
 	if err != nil {
 		return nil, err
@@ -153,7 +158,7 @@ func (s *BalanceService) ConfirmTransfer(ctx context.Context, req *pb.ConfirmTra
 		return nil, err
 	}
 
-	return &pb.ConfirmTransferReply{
+	return &v1.ConfirmTransferReply{
 		Success:            result.Success,
 		TransactionId:      result.TransactionId,
 		NewUserVersion:     result.NewUserVersion,
@@ -161,7 +166,7 @@ func (s *BalanceService) ConfirmTransfer(ctx context.Context, req *pb.ConfirmTra
 	}, nil
 }
 
-func (s *BalanceService) CancelFreeze(ctx context.Context, req *pb.CancelFreezeRequest) (*pb.CancelFreezeReply, error) {
+func (s *BalanceService) CancelFreeze(ctx context.Context, req *v1.CancelFreezeRequest) (*v1.CancelFreezeReply, error) {
 	result, err := s.uc.CancelFreeze(ctx, &biz.CancelFreezeRequest{
 		FreezeId:        req.FreezeId,
 		Reason:          req.Reason,
@@ -172,13 +177,13 @@ func (s *BalanceService) CancelFreeze(ctx context.Context, req *pb.CancelFreezeR
 		return nil, err
 	}
 
-	return &pb.CancelFreezeReply{
+	return &v1.CancelFreezeReply{
 		Success:    result.Success,
 		NewVersion: result.NewVersion,
 	}, nil
 }
 
-func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerchantBalanceRequest) (*pb.BalanceReply, error) {
+func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *v1.GetMerchantBalanceRequest) (*v1.BalanceReply, error) {
 	var userId uuid.UUID
 	var err error
 	if req.MerchantId == "" {
@@ -201,7 +206,7 @@ func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerc
 		return nil, err
 	}
 
-	return &pb.BalanceReply{
+	return &v1.BalanceReply{
 		Available: balance.Available,
 		Frozen:    balance.Frozen,
 		Currency:  string(balance.Currency),
@@ -209,7 +214,7 @@ func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *pb.GetMerc
 	}, nil
 }
 
-func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransactionsRequest) (*pb.GetTransactionsReply, error) {
+func (s *BalanceService) GetTransactions(ctx context.Context, req *v1.GetTransactionsRequest) (*v1.GetTransactionsReply, error) {
 	var err error
 	var userId uuid.UUID
 	if req.UserId == "" {
@@ -231,9 +236,9 @@ func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransac
 		return nil, err
 	}
 
-	var pbTransactions []*pb.Transactions
+	var pbTransactions []*v1.Transactions
 	for _, t := range transactions.Transactions {
-		pbTransaction := &pb.Transactions{
+		pbTransaction := &v1.Transactions{
 			Id:                t.Id,
 			Type:              string(t.Type),
 			Amount:            t.Amount,
@@ -251,6 +256,7 @@ func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransac
 				return nil, err
 			}
 		}
+		log.Debugf("pbTransaction.PaymentExtra: %+v", pbTransaction.PaymentExtra)
 
 		pbTransaction.CreatedAt = timestamppb.New(t.CreatedAt)
 		pbTransaction.UpdatedAt = timestamppb.New(t.UpdatedAt)
@@ -258,12 +264,12 @@ func (s *BalanceService) GetTransactions(ctx context.Context, req *pb.GetTransac
 		pbTransactions = append(pbTransactions, pbTransaction)
 	}
 
-	return &pb.GetTransactionsReply{
+	return &v1.GetTransactionsReply{
 		Transactions: pbTransactions,
 	}, nil
 }
 
-func (s *BalanceService) RechargeBalance(ctx context.Context, req *pb.RechargeBalanceRequest) (*pb.RechargeBalanceReply, error) {
+func (s *BalanceService) RechargeBalance(ctx context.Context, req *v1.RechargeBalanceRequest) (*v1.RechargeBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err
@@ -289,14 +295,14 @@ func (s *BalanceService) RechargeBalance(ctx context.Context, req *pb.RechargeBa
 		return nil, err
 	}
 
-	return &pb.RechargeBalanceReply{
+	return &v1.RechargeBalanceReply{
 		Success:       result.Success,
 		TransactionId: result.TransactionId,
 		NewVersion:    result.NewVersion,
 	}, nil
 }
 
-func (s *BalanceService) WithdrawBalance(ctx context.Context, req *pb.WithdrawBalanceRequest) (*pb.WithdrawBalanceReply, error) {
+func (s *BalanceService) WithdrawBalance(ctx context.Context, req *v1.WithdrawBalanceRequest) (*v1.WithdrawBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err
@@ -319,19 +325,23 @@ func (s *BalanceService) WithdrawBalance(ctx context.Context, req *pb.WithdrawBa
 		return nil, err
 	}
 
-	return &pb.WithdrawBalanceReply{
+	return &v1.WithdrawBalanceReply{
 		Success:       result.Success,
 		TransactionId: result.TransactionId,
 		NewVersion:    result.NewVersion,
 	}, nil
 }
 
-func (s *BalanceService) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionReply, error) {
+func (s *BalanceService) CreateTransaction(ctx context.Context, req *v1.CreateTransactionRequest) (*v1.CreateTransactionReply, error) {
 	consumerId, err := uuid.Parse(req.FromUserId)
 	if err != nil {
 		return nil, err
 	}
 	merchantId, err := uuid.Parse(req.ToMerchantId)
+	if err != nil {
+		return nil, err
+	}
+	paymentExtra, err := json.Marshal(req.PaymentExtra.AsMap())
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +354,7 @@ func (s *BalanceService) CreateTransaction(ctx context.Context, req *pb.CreateTr
 		ToMerchantId:      merchantId,
 		PaymentMethodType: constants.PaymentMethod(req.PaymentMethodType),
 		PaymentAccount:    req.PaymentAccount,
-		PaymentExtra:      nil,
+		PaymentExtra:      paymentExtra,
 		Status:            constants.PaymentStatus(req.Status),
 		IdempotencyKey:    req.IdempotencyKey,
 		FreezeId:          req.FreezeId,
@@ -355,7 +365,39 @@ func (s *BalanceService) CreateTransaction(ctx context.Context, req *pb.CreateTr
 		return nil, err
 	}
 
-	return &pb.CreateTransactionReply{
+	return &v1.CreateTransactionReply{
 		Id: reply.Id,
+	}, nil
+}
+
+// GetMerchantVersion 获取商家版本号
+func (s *BalanceService) GetMerchantVersion(ctx context.Context, req *v1.GetMerchantVersionRequest) (*v1.GetMerchantVersionReply, error) {
+	merchantIds := make([]uuid.UUID, 0, len(req.MerchantIds))
+	for _, id := range req.MerchantIds {
+		merchantIds = append(merchantIds, uuid.MustParse(id))
+	}
+
+	reply, err := s.uc.GetMerchantVersion(ctx, &biz.GetMerchantVersionRequest{
+		MerchantIds: merchantIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if reply == nil {
+		return nil, status.Error(codes.NotFound, "merchant version not found")
+	}
+	versions := make([]int64, 0, len(reply.Versions))
+	for _, v := range reply.Versions {
+		versions = append(versions, v)
+	}
+	merchantPbIds := make([]string, 0, len(reply.MerchantIds))
+	for _, v := range reply.MerchantIds {
+		log.Debugf("MerchantId: %+v", v)
+		merchantIds = append(merchantIds, v)
+	}
+
+	return &v1.GetMerchantVersionReply{
+		MerchantVersion: versions,
+		MerchantIds:     merchantPbIds,
 	}, nil
 }
