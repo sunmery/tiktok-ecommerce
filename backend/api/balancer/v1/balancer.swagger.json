@@ -298,7 +298,7 @@
         ]
       }
     },
-    "/v1/balances/users/{userId}/balance": {
+    "/v1/balances/users/balancer": {
       "get": {
         "summary": "获取用户余额",
         "operationId": "Balance_GetUserBalance",
@@ -320,8 +320,8 @@
           {
             "name": "userId",
             "description": "UUID as string",
-            "in": "path",
-            "required": true,
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -335,7 +335,75 @@
         "tags": [
           "Balance"
         ]
-      },
+      }
+    },
+    "/v1/balances/users/recharge": {
+      "post": {
+        "summary": "用户充值",
+        "operationId": "Balance_RechargeBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RechargeBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RechargeBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/users/withdraw": {
+      "post": {
+        "summary": "用户提现",
+        "operationId": "Balance_WithdrawBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1WithdrawBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1WithdrawBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/users/{userId}/balance": {
       "put": {
         "summary": "创建消费者余额\n为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)",
         "operationId": "Balance_CreateConsumerBalance",
@@ -367,86 +435,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/BalanceCreateConsumerBalanceBody"
-            }
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
-    "/v1/balances/users/{userId}/recharge": {
-      "post": {
-        "summary": "用户充值",
-        "operationId": "Balance_RechargeBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1RechargeBalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "用户 UUID (string)",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/BalanceRechargeBalanceBody"
-            }
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
-    "/v1/balances/users/{userId}/withdraw": {
-      "post": {
-        "summary": "用户提现",
-        "operationId": "Balance_WithdrawBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1WithdrawBalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "用户 UUID (string)",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/BalanceWithdrawBalanceBody"
             }
           }
         ],
@@ -587,76 +575,6 @@
         "accountDetails": {
           "type": "object",
           "title": "账户详情 (JSON 格式)"
-        }
-      }
-    },
-    "BalanceRechargeBalanceBody": {
-      "type": "object",
-      "properties": {
-        "merchantId": {
-          "type": "string",
-          "title": "商家 ID (string)"
-        },
-        "amount": {
-          "type": "number",
-          "format": "double",
-          "title": "充值金额"
-        },
-        "currency": {
-          "type": "string",
-          "title": "充值币种"
-        },
-        "externalTransactionId": {
-          "type": "string",
-          "format": "int64",
-          "title": "外部支付流水号 (如支付宝/微信订单号)"
-        },
-        "paymentMethodType": {
-          "type": "string",
-          "title": "支付方式类型 (e.g., \"ALIPAY\", \"WECHAT\")"
-        },
-        "paymentAccount": {
-          "type": "string",
-          "title": "支付账号快照"
-        },
-        "idempotencyKey": {
-          "type": "string",
-          "title": "幂等键"
-        },
-        "expectedVersion": {
-          "type": "integer",
-          "format": "int32",
-          "title": "期望的用户余额版本号"
-        }
-      }
-    },
-    "BalanceWithdrawBalanceBody": {
-      "type": "object",
-      "properties": {
-        "merchantId": {
-          "type": "string"
-        },
-        "amount": {
-          "type": "number",
-          "format": "double",
-          "title": "提现金额"
-        },
-        "currency": {
-          "type": "string",
-          "title": "提现币种"
-        },
-        "paymentMethodId": {
-          "type": "string",
-          "title": "用户选择的提现方式ID (BIGINT as string from user_payment_methods)"
-        },
-        "idempotencyKey": {
-          "type": "string",
-          "title": "幂等键"
-        },
-        "expectedVersion": {
-          "type": "integer",
-          "format": "int32",
-          "title": "期望的用户余额版本号"
         }
       }
     },
@@ -950,6 +868,46 @@
         }
       }
     },
+    "v1RechargeBalanceRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "title": "用户 UUID (string)"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "充值金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "充值币种"
+        },
+        "externalTransactionId": {
+          "type": "string",
+          "format": "int64",
+          "title": "外部支付流水号 (如支付宝/微信订单号)"
+        },
+        "paymentMethodType": {
+          "type": "string",
+          "title": "支付方式类型 (e.g., \"ALIPAY\", \"WECHAT\")"
+        },
+        "paymentAccount": {
+          "type": "string",
+          "title": "支付账号快照"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
+        }
+      }
+    },
     "v1Transactions": {
       "type": "object",
       "properties": {
@@ -1010,6 +968,40 @@
           "type": "integer",
           "format": "int32",
           "title": "用户余额新版本号"
+        }
+      }
+    },
+    "v1WithdrawBalanceRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "title": "用户 UUID (string)"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "提现金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "提现币种"
+        },
+        "paymentMethodId": {
+          "type": "string",
+          "title": "用户选择的提现方式ID (BIGINT as string from user_payment_methods)"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的用户余额版本号"
         }
       }
     }

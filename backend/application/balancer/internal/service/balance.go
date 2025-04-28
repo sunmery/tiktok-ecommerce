@@ -94,10 +94,20 @@ func (s *BalanceService) CreateMerchantBalance(ctx context.Context, req *v1.Crea
 }
 
 func (s *BalanceService) GetUserBalance(ctx context.Context, req *v1.GetUserBalanceRequest) (*v1.BalanceReply, error) {
-	userId, err := globalPkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, err
+	var userId uuid.UUID
+	var err error
+	if req.UserId != "" {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		userId, err = globalPkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
+	log.Debugf("userId: %v", userId)
 	balance, err := s.uc.GetUserBalance(ctx, &biz.GetUserBalanceRequest{
 		UserId:   userId,
 		Currency: constants.Currency(req.Currency),
@@ -275,14 +285,8 @@ func (s *BalanceService) RechargeBalance(ctx context.Context, req *v1.RechargeBa
 		return nil, err
 	}
 
-	merchantId, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, err
-	}
-
 	result, err := s.uc.RechargeBalance(ctx, &biz.RechargeBalanceRequest{
 		UserId:                userId,
-		MerchantId:            merchantId,
 		Amount:                req.Amount,
 		Currency:              constants.Currency(req.Currency),
 		ExternalTransactionId: req.ExternalTransactionId,

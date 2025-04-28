@@ -116,7 +116,6 @@ type (
 type (
 	RechargeBalanceRequest struct {
 		UserId                uuid.UUID
-		MerchantId            uuid.UUID
 		Amount                float64
 		Currency              constants.Currency
 		ExternalTransactionId int64

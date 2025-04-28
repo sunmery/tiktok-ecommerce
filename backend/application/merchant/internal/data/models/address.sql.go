@@ -14,17 +14,17 @@ import (
 
 const BatchCreateAddresses = `-- name: BatchCreateAddresses :many
 INSERT INTO merchant.addresses (id,
-                                 merchant_id,
-                                 address_type,
-                                 contact_person,
-                                 contact_phone,
-                                 street_address,
-                                 city,
-                                 state,
-                                 country,
-                                 zip_code,
-                                 is_default,
-                                 remarks)
+                                merchant_id,
+                                address_type,
+                                contact_person,
+                                contact_phone,
+                                street_address,
+                                city,
+                                state,
+                                country,
+                                zip_code,
+                                is_default,
+                                remarks)
 VALUES (UNNEST($1::bigint[]),
         UNNEST($2::uuid[]),
         UNNEST($3::merchant.address_type[]),
@@ -58,17 +58,17 @@ type BatchCreateAddressesParams struct {
 // 批量创建地址（需要服务层处理）
 //
 //	INSERT INTO merchant.addresses (id,
-//	                                 merchant_id,
-//	                                 address_type,
-//	                                 contact_person,
-//	                                 contact_phone,
-//	                                 street_address,
-//	                                 city,
-//	                                 state,
-//	                                 country,
-//	                                 zip_code,
-//	                                 is_default,
-//	                                 remarks)
+//	                                merchant_id,
+//	                                address_type,
+//	                                contact_person,
+//	                                contact_phone,
+//	                                street_address,
+//	                                city,
+//	                                state,
+//	                                country,
+//	                                zip_code,
+//	                                is_default,
+//	                                remarks)
 //	VALUES (UNNEST($1::bigint[]),
 //	        UNNEST($2::uuid[]),
 //	        UNNEST($3::merchant.address_type[]),
@@ -132,17 +132,17 @@ func (q *Queries) BatchCreateAddresses(ctx context.Context, arg BatchCreateAddre
 
 const CreateAddress = `-- name: CreateAddress :one
 INSERT INTO merchant.addresses (id,
-                                 merchant_id,
-                                 address_type,
-                                 contact_person,
-                                 contact_phone,
-                                 street_address,
-                                 city,
-                                 state,
-                                 country,
-                                 zip_code,
-                                 is_default,
-                                 remarks)
+                                merchant_id,
+                                address_type,
+                                contact_person,
+                                contact_phone,
+                                street_address,
+                                city,
+                                state,
+                                country,
+                                zip_code,
+                                is_default,
+                                remarks)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 `
@@ -166,17 +166,17 @@ type CreateAddressParams struct {
 // 创建商家地址
 //
 //	INSERT INTO merchant.addresses (id,
-//	                                 merchant_id,
-//	                                 address_type,
-//	                                 contact_person,
-//	                                 contact_phone,
-//	                                 street_address,
-//	                                 city,
-//	                                 state,
-//	                                 country,
-//	                                 zip_code,
-//	                                 is_default,
-//	                                 remarks)
+//	                                merchant_id,
+//	                                address_type,
+//	                                contact_person,
+//	                                contact_phone,
+//	                                street_address,
+//	                                city,
+//	                                state,
+//	                                country,
+//	                                zip_code,
+//	                                is_default,
+//	                                remarks)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 //	RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (MerchantAddresses, error) {
@@ -277,20 +277,164 @@ func (q *Queries) GetAddress(ctx context.Context, arg GetAddressParams) (Merchan
 	return i, err
 }
 
+const GetDefaultAddress = `-- name: GetDefaultAddress :one
+SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+FROM merchant.addresses
+WHERE merchant_id = $1
+  AND address_type = $2
+  AND is_default = true
+`
+
+type GetDefaultAddressParams struct {
+	MerchantID  uuid.UUID
+	AddressType string
+}
+
+// 根据地址类型查询默认地址
+//
+//	SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+//	FROM merchant.addresses
+//	WHERE merchant_id = $1
+//	  AND address_type = $2
+//	  AND is_default = true
+func (q *Queries) GetDefaultAddress(ctx context.Context, arg GetDefaultAddressParams) (MerchantAddresses, error) {
+	row := q.db.QueryRow(ctx, GetDefaultAddress, arg.MerchantID, arg.AddressType)
+	var i MerchantAddresses
+	err := row.Scan(
+		&i.ID,
+		&i.MerchantID,
+		&i.AddressType,
+		&i.ContactPerson,
+		&i.ContactPhone,
+		&i.StreetAddress,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.ZipCode,
+		&i.IsDefault,
+		&i.Remarks,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const GetDefaultAddresses = `-- name: GetDefaultAddresses :many
+SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+FROM merchant.addresses
+WHERE merchant_id = $1
+  AND is_default = true
+`
+
+// 获取全部地址的默认值列表
+//
+//	SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+//	FROM merchant.addresses
+//	WHERE merchant_id = $1
+//	  AND is_default = true
+func (q *Queries) GetDefaultAddresses(ctx context.Context, merchantID uuid.UUID) ([]MerchantAddresses, error) {
+	rows, err := q.db.Query(ctx, GetDefaultAddresses, merchantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MerchantAddresses
+	for rows.Next() {
+		var i MerchantAddresses
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.AddressType,
+			&i.ContactPerson,
+			&i.ContactPhone,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.IsDefault,
+			&i.Remarks,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const ListAddresses = `-- name: ListAddresses :many
 SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 FROM merchant.addresses
 WHERE merchant_id = $1
-  AND (address_type = $2 OR $2 IS NULL)
-  AND (is_default = $3 OR $3 IS NULL)
 ORDER BY id
-LIMIT $4 OFFSET $5
+LIMIT $2 OFFSET $3
 `
 
 type ListAddressesParams struct {
+	MerchantID uuid.UUID
+	Limit      int64
+	Offset     int64
+}
+
+// 查询全部地址（带分页）
+//
+//	SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+//	FROM merchant.addresses
+//	WHERE merchant_id = $1
+//	ORDER BY id
+//	LIMIT $2 OFFSET $3
+func (q *Queries) ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error) {
+	rows, err := q.db.Query(ctx, ListAddresses, arg.MerchantID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MerchantAddresses
+	for rows.Next() {
+		var i MerchantAddresses
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.AddressType,
+			&i.ContactPerson,
+			&i.ContactPhone,
+			&i.StreetAddress,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.ZipCode,
+			&i.IsDefault,
+			&i.Remarks,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListFilterAddresses = `-- name: ListFilterAddresses :many
+SELECT id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
+FROM merchant.addresses
+WHERE merchant_id = $1
+  AND (address_type = $2 OR $2 IS NULL)
+ORDER BY id
+LIMIT $3 OFFSET $4
+`
+
+type ListFilterAddressesParams struct {
 	MerchantID  uuid.UUID
 	AddressType string
-	IsDefault   bool
 	Limit       int64
 	Offset      int64
 }
@@ -301,14 +445,12 @@ type ListAddressesParams struct {
 //	FROM merchant.addresses
 //	WHERE merchant_id = $1
 //	  AND (address_type = $2 OR $2 IS NULL)
-//	  AND (is_default = $3 OR $3 IS NULL)
 //	ORDER BY id
-//	LIMIT $4 OFFSET $5
-func (q *Queries) ListAddresses(ctx context.Context, arg ListAddressesParams) ([]MerchantAddresses, error) {
-	rows, err := q.db.Query(ctx, ListAddresses,
+//	LIMIT $3 OFFSET $4
+func (q *Queries) ListFilterAddresses(ctx context.Context, arg ListFilterAddressesParams) ([]MerchantAddresses, error) {
+	rows, err := q.db.Query(ctx, ListFilterAddresses,
 		arg.MerchantID,
 		arg.AddressType,
-		arg.IsDefault,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -346,23 +488,20 @@ func (q *Queries) ListAddresses(ctx context.Context, arg ListAddressesParams) ([
 }
 
 const SetDefaultAddress = `-- name: SetDefaultAddress :one
-WITH get_address_type AS (
-    SELECT address_type
-    FROM merchant.addresses
-    WHERE id = $1
-    AND merchant_id = $2
-),
-update_old_default AS (
-    UPDATE merchant.addresses
-    SET is_default = false
-    WHERE merchant_id = $2
-    AND address_type = (SELECT address_type FROM get_address_type)
-    AND is_default = true
-)
+WITH get_address_type AS (SELECT address_type
+                          FROM merchant.addresses
+                          WHERE id = $1
+                            AND merchant_id = $2),
+     update_old_default AS (
+         UPDATE merchant.addresses
+             SET is_default = false
+             WHERE merchant_id = $2
+                 AND address_type = (SELECT address_type FROM get_address_type)
+                 AND is_default = true)
 UPDATE merchant.addresses
 SET is_default = true
 WHERE id = $1
-AND merchant_id = $2
+  AND merchant_id = $2
 RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 `
 
@@ -373,23 +512,20 @@ type SetDefaultAddressParams struct {
 
 // 设置默认地址（带事务处理）
 //
-//	WITH get_address_type AS (
-//	    SELECT address_type
-//	    FROM merchant.addresses
-//	    WHERE id = $1
-//	    AND merchant_id = $2
-//	),
-//	update_old_default AS (
-//	    UPDATE merchant.addresses
-//	    SET is_default = false
-//	    WHERE merchant_id = $2
-//	    AND address_type = (SELECT address_type FROM get_address_type)
-//	    AND is_default = true
-//	)
+//	WITH get_address_type AS (SELECT address_type
+//	                          FROM merchant.addresses
+//	                          WHERE id = $1
+//	                            AND merchant_id = $2),
+//	     update_old_default AS (
+//	         UPDATE merchant.addresses
+//	             SET is_default = false
+//	             WHERE merchant_id = $2
+//	                 AND address_type = (SELECT address_type FROM get_address_type)
+//	                 AND is_default = true)
 //	UPDATE merchant.addresses
 //	SET is_default = true
 //	WHERE id = $1
-//	AND merchant_id = $2
+//	  AND merchant_id = $2
 //	RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 func (q *Queries) SetDefaultAddress(ctx context.Context, arg SetDefaultAddressParams) (MerchantAddresses, error) {
 	row := q.db.QueryRow(ctx, SetDefaultAddress, arg.ID, arg.MerchantID)

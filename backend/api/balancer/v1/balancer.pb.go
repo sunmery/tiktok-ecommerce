@@ -1429,7 +1429,6 @@ func (x *CancelFreezeReply) GetNewVersion() int32 {
 type RechargeBalanceRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	UserId                string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                 // 用户 UUID (string)
-	MerchantId            string                 `protobuf:"bytes,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`                                     // 商家 ID (string)
 	Amount                float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`                                                             // 充值金额
 	Currency              string                 `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`                                                           // 充值币种
 	ExternalTransactionId int64                  `protobuf:"varint,4,opt,name=external_transaction_id,json=externalTransactionId,proto3" json:"external_transaction_id,omitempty"` // 外部支付流水号 (如支付宝/微信订单号)
@@ -1474,13 +1473,6 @@ func (*RechargeBalanceRequest) Descriptor() ([]byte, []int) {
 func (x *RechargeBalanceRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
-	}
-	return ""
-}
-
-func (x *RechargeBalanceRequest) GetMerchantId() string {
-	if x != nil {
-		return x.MerchantId
 	}
 	return ""
 }
@@ -1868,11 +1860,9 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\x11CancelFreezeReply\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1f\n" +
 	"\vnew_version\x18\x02 \x01(\x05R\n" +
-	"newVersion\"\xeb\x02\n" +
+	"newVersion\"\xca\x02\n" +
 	"\x16RechargeBalanceRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vmerchant_id\x18\t \x01(\tR\n" +
-	"merchantId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x01R\x06amount\x12\x1a\n" +
 	"\bcurrency\x18\x03 \x01(\tR\bcurrency\x126\n" +
 	"\x17external_transaction_id\x18\x04 \x01(\x03R\x15externalTransactionId\x12.\n" +
@@ -1898,20 +1888,20 @@ const file_v1_balancer_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\x12\x1f\n" +
 	"\vnew_version\x18\x03 \x01(\x05R\n" +
-	"newVersion2\x8a\x0f\n" +
-	"\aBalance\x12\xb0\x01\n" +
-	"\x15CreateConsumerBalance\x123.ecommerce.balancer.v1.CreateConsumerBalanceRequest\x1a1.ecommerce.balancer.v1.CreateConsumerBalanceReply\"/\x82\xd3\xe4\x93\x02):\x01*\x1a$/v1/balances/users/{user_id}/balance\x12\xb8\x01\n" +
+	"newVersion2\xed\x0e\n" +
+	"\aBalance\x12\xb8\x01\n" +
 	"\x15CreateMerchantBalance\x123.ecommerce.balancer.v1.CreateMerchantBalanceRequest\x1a1.ecommerce.balancer.v1.CreateMerchantBalanceReply\"7\x82\xd3\xe4\x93\x021:\x01*\x1a,/v1/balances/merchants/{merchant_id}/balance\x12\x9b\x01\n" +
-	"\x12GetMerchantVersion\x120.ecommerce.balancer.v1.GetMerchantVersionRequest\x1a..ecommerce.balancer.v1.GetMerchantVersionReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/merchant/version\x12\x91\x01\n" +
-	"\x0eGetUserBalance\x12,.ecommerce.balancer.v1.GetUserBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\",\x82\xd3\xe4\x93\x02&\x12$/v1/balances/users/{user_id}/balance\x12\x87\x01\n" +
-	"\rFreezeBalance\x12+.ecommerce.balancer.v1.FreezeBalanceRequest\x1a).ecommerce.balancer.v1.FreezeBalanceReply\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/balances/freeze\x12\xa2\x01\n" +
+	"\x12GetMerchantVersion\x120.ecommerce.balancer.v1.GetMerchantVersionRequest\x1a..ecommerce.balancer.v1.GetMerchantVersionReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/merchant/version\x12\x88\x01\n" +
+	"\x0eGetUserBalance\x12,.ecommerce.balancer.v1.GetUserBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/balances/users/balancer\x12\x87\x01\n" +
+	"\rFreezeBalance\x12+.ecommerce.balancer.v1.FreezeBalanceRequest\x1a).ecommerce.balancer.v1.FreezeBalanceReply\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/balances/freeze\x12\x99\x01\n" +
+	"\x11CreateTransaction\x12/.ecommerce.balancer.v1.CreateTransactionRequest\x1a-.ecommerce.balancer.v1.CreateTransactionReply\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\x1a\x19/v1/balances/transactions\x12\x90\x01\n" +
+	"\x0fGetTransactions\x12-.ecommerce.balancer.v1.GetTransactionsRequest\x1a+.ecommerce.balancer.v1.GetTransactionsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/balances/transactions\x12\xb0\x01\n" +
+	"\x15CreateConsumerBalance\x123.ecommerce.balancer.v1.CreateConsumerBalanceRequest\x1a1.ecommerce.balancer.v1.CreateConsumerBalanceReply\"/\x82\xd3\xe4\x93\x02):\x01*\x1a$/v1/balances/users/{user_id}/balance\x12\xa2\x01\n" +
 	"\x0fConfirmTransfer\x12-.ecommerce.balancer.v1.ConfirmTransferRequest\x1a+.ecommerce.balancer.v1.ConfirmTransferReply\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/balances/freezes/{freeze_id}/confirm\x12\x98\x01\n" +
 	"\fCancelFreeze\x12*.ecommerce.balancer.v1.CancelFreezeRequest\x1a(.ecommerce.balancer.v1.CancelFreezeReply\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/balances/freezes/{freeze_id}/cancel\x12\xa1\x01\n" +
-	"\x12GetMerchantBalance\x120.ecommerce.balancer.v1.GetMerchantBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\"4\x82\xd3\xe4\x93\x02.\x12,/v1/balances/merchants/{merchant_id}/balance\x12\x99\x01\n" +
-	"\x11CreateTransaction\x12/.ecommerce.balancer.v1.CreateTransactionRequest\x1a-.ecommerce.balancer.v1.CreateTransactionReply\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\x1a\x19/v1/balances/transactions\x12\x90\x01\n" +
-	"\x0fGetTransactions\x12-.ecommerce.balancer.v1.GetTransactionsRequest\x1a+.ecommerce.balancer.v1.GetTransactionsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/balances/transactions\x12\x9f\x01\n" +
-	"\x0fRechargeBalance\x12-.ecommerce.balancer.v1.RechargeBalanceRequest\x1a+.ecommerce.balancer.v1.RechargeBalanceReply\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/balances/users/{user_id}/recharge\x12\x9f\x01\n" +
-	"\x0fWithdrawBalance\x12-.ecommerce.balancer.v1.WithdrawBalanceRequest\x1a+.ecommerce.balancer.v1.WithdrawBalanceReply\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/balances/users/{user_id}/withdrawB$Z\"backend/api/balancer/v1;balancerv1b\x06proto3"
+	"\x12GetMerchantBalance\x120.ecommerce.balancer.v1.GetMerchantBalanceRequest\x1a#.ecommerce.balancer.v1.BalanceReply\"4\x82\xd3\xe4\x93\x02.\x12,/v1/balances/merchants/{merchant_id}/balance\x12\x95\x01\n" +
+	"\x0fRechargeBalance\x12-.ecommerce.balancer.v1.RechargeBalanceRequest\x1a+.ecommerce.balancer.v1.RechargeBalanceReply\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/balances/users/recharge\x12\x95\x01\n" +
+	"\x0fWithdrawBalance\x12-.ecommerce.balancer.v1.WithdrawBalanceRequest\x1a+.ecommerce.balancer.v1.WithdrawBalanceReply\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/balances/users/withdrawB$Z\"backend/api/balancer/v1;balancerv1b\x06proto3"
 
 var (
 	file_v1_balancer_proto_rawDescOnce sync.Once
@@ -1962,28 +1952,28 @@ var file_v1_balancer_proto_depIdxs = []int32{
 	25, // 4: ecommerce.balancer.v1.Transactions.created_at:type_name -> google.protobuf.Timestamp
 	25, // 5: ecommerce.balancer.v1.Transactions.updated_at:type_name -> google.protobuf.Timestamp
 	10, // 6: ecommerce.balancer.v1.GetTransactionsReply.transactions:type_name -> ecommerce.balancer.v1.Transactions
-	4,  // 7: ecommerce.balancer.v1.Balance.CreateConsumerBalance:input_type -> ecommerce.balancer.v1.CreateConsumerBalanceRequest
-	2,  // 8: ecommerce.balancer.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balancer.v1.CreateMerchantBalanceRequest
-	0,  // 9: ecommerce.balancer.v1.Balance.GetMerchantVersion:input_type -> ecommerce.balancer.v1.GetMerchantVersionRequest
-	6,  // 10: ecommerce.balancer.v1.Balance.GetUserBalance:input_type -> ecommerce.balancer.v1.GetUserBalanceRequest
-	14, // 11: ecommerce.balancer.v1.Balance.FreezeBalance:input_type -> ecommerce.balancer.v1.FreezeBalanceRequest
-	16, // 12: ecommerce.balancer.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balancer.v1.ConfirmTransferRequest
-	18, // 13: ecommerce.balancer.v1.Balance.CancelFreeze:input_type -> ecommerce.balancer.v1.CancelFreezeRequest
-	12, // 14: ecommerce.balancer.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balancer.v1.GetMerchantBalanceRequest
-	7,  // 15: ecommerce.balancer.v1.Balance.CreateTransaction:input_type -> ecommerce.balancer.v1.CreateTransactionRequest
-	9,  // 16: ecommerce.balancer.v1.Balance.GetTransactions:input_type -> ecommerce.balancer.v1.GetTransactionsRequest
+	2,  // 7: ecommerce.balancer.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balancer.v1.CreateMerchantBalanceRequest
+	0,  // 8: ecommerce.balancer.v1.Balance.GetMerchantVersion:input_type -> ecommerce.balancer.v1.GetMerchantVersionRequest
+	6,  // 9: ecommerce.balancer.v1.Balance.GetUserBalance:input_type -> ecommerce.balancer.v1.GetUserBalanceRequest
+	14, // 10: ecommerce.balancer.v1.Balance.FreezeBalance:input_type -> ecommerce.balancer.v1.FreezeBalanceRequest
+	7,  // 11: ecommerce.balancer.v1.Balance.CreateTransaction:input_type -> ecommerce.balancer.v1.CreateTransactionRequest
+	9,  // 12: ecommerce.balancer.v1.Balance.GetTransactions:input_type -> ecommerce.balancer.v1.GetTransactionsRequest
+	4,  // 13: ecommerce.balancer.v1.Balance.CreateConsumerBalance:input_type -> ecommerce.balancer.v1.CreateConsumerBalanceRequest
+	16, // 14: ecommerce.balancer.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balancer.v1.ConfirmTransferRequest
+	18, // 15: ecommerce.balancer.v1.Balance.CancelFreeze:input_type -> ecommerce.balancer.v1.CancelFreezeRequest
+	12, // 16: ecommerce.balancer.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balancer.v1.GetMerchantBalanceRequest
 	20, // 17: ecommerce.balancer.v1.Balance.RechargeBalance:input_type -> ecommerce.balancer.v1.RechargeBalanceRequest
 	22, // 18: ecommerce.balancer.v1.Balance.WithdrawBalance:input_type -> ecommerce.balancer.v1.WithdrawBalanceRequest
-	5,  // 19: ecommerce.balancer.v1.Balance.CreateConsumerBalance:output_type -> ecommerce.balancer.v1.CreateConsumerBalanceReply
-	3,  // 20: ecommerce.balancer.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balancer.v1.CreateMerchantBalanceReply
-	1,  // 21: ecommerce.balancer.v1.Balance.GetMerchantVersion:output_type -> ecommerce.balancer.v1.GetMerchantVersionReply
-	13, // 22: ecommerce.balancer.v1.Balance.GetUserBalance:output_type -> ecommerce.balancer.v1.BalanceReply
-	15, // 23: ecommerce.balancer.v1.Balance.FreezeBalance:output_type -> ecommerce.balancer.v1.FreezeBalanceReply
-	17, // 24: ecommerce.balancer.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balancer.v1.ConfirmTransferReply
-	19, // 25: ecommerce.balancer.v1.Balance.CancelFreeze:output_type -> ecommerce.balancer.v1.CancelFreezeReply
-	13, // 26: ecommerce.balancer.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balancer.v1.BalanceReply
-	8,  // 27: ecommerce.balancer.v1.Balance.CreateTransaction:output_type -> ecommerce.balancer.v1.CreateTransactionReply
-	11, // 28: ecommerce.balancer.v1.Balance.GetTransactions:output_type -> ecommerce.balancer.v1.GetTransactionsReply
+	3,  // 19: ecommerce.balancer.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balancer.v1.CreateMerchantBalanceReply
+	1,  // 20: ecommerce.balancer.v1.Balance.GetMerchantVersion:output_type -> ecommerce.balancer.v1.GetMerchantVersionReply
+	13, // 21: ecommerce.balancer.v1.Balance.GetUserBalance:output_type -> ecommerce.balancer.v1.BalanceReply
+	15, // 22: ecommerce.balancer.v1.Balance.FreezeBalance:output_type -> ecommerce.balancer.v1.FreezeBalanceReply
+	8,  // 23: ecommerce.balancer.v1.Balance.CreateTransaction:output_type -> ecommerce.balancer.v1.CreateTransactionReply
+	11, // 24: ecommerce.balancer.v1.Balance.GetTransactions:output_type -> ecommerce.balancer.v1.GetTransactionsReply
+	5,  // 25: ecommerce.balancer.v1.Balance.CreateConsumerBalance:output_type -> ecommerce.balancer.v1.CreateConsumerBalanceReply
+	17, // 26: ecommerce.balancer.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balancer.v1.ConfirmTransferReply
+	19, // 27: ecommerce.balancer.v1.Balance.CancelFreeze:output_type -> ecommerce.balancer.v1.CancelFreezeReply
+	13, // 28: ecommerce.balancer.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balancer.v1.BalanceReply
 	21, // 29: ecommerce.balancer.v1.Balance.RechargeBalance:output_type -> ecommerce.balancer.v1.RechargeBalanceReply
 	23, // 30: ecommerce.balancer.v1.Balance.WithdrawBalance:output_type -> ecommerce.balancer.v1.WithdrawBalanceReply
 	19, // [19:31] is the sub-list for method output_type

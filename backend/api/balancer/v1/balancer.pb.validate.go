@@ -2453,8 +2453,6 @@ func (m *RechargeBalanceRequest) validate(all bool) error {
 
 	// no validation rules for UserId
 
-	// no validation rules for MerchantId
-
 	// no validation rules for Amount
 
 	// no validation rules for Currency

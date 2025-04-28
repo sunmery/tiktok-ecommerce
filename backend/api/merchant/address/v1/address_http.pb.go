@@ -23,8 +23,11 @@ const _ = http.SupportPackageIsVersion1
 const OperationMerchantAddressesBatchCreateMerchantAddresses = "/ecommerce.merchantaddress.v1.MerchantAddresses/BatchCreateMerchantAddresses"
 const OperationMerchantAddressesCreateMerchantAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/CreateMerchantAddress"
 const OperationMerchantAddressesDeletMerchanteAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/DeletMerchanteAddress"
+const OperationMerchantAddressesGetDefaultAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetDefaultAddress"
+const OperationMerchantAddressesGetDefaultAddresses = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetDefaultAddresses"
 const OperationMerchantAddressesGetMerchantAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetMerchantAddress"
-const OperationMerchantAddressesListMerchantAddresses = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListMerchantAddresses"
+const OperationMerchantAddressesListAddresses = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListAddresses"
+const OperationMerchantAddressesListFilterAddresses = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListFilterAddresses"
 const OperationMerchantAddressesSetDefaultMerchantAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/SetDefaultMerchantAddress"
 const OperationMerchantAddressesUpdateMerchantAddress = "/ecommerce.merchantaddress.v1.MerchantAddresses/UpdateMerchantAddress"
 
@@ -35,10 +38,16 @@ type MerchantAddressesHTTPServer interface {
 	CreateMerchantAddress(context.Context, *MerchantAddress) (*MerchantAddress, error)
 	// DeletMerchanteAddress 删除商家地址
 	DeletMerchanteAddress(context.Context, *DeletMerchanteAddressRequest) (*emptypb.Empty, error)
+	// GetDefaultAddress 按照地址类型列出商家默认地址
+	GetDefaultAddress(context.Context, *GetDefaultAddressRequest) (*MerchantAddress, error)
+	// GetDefaultAddresses 列出商家所有默认地址
+	GetDefaultAddresses(context.Context, *GetDefaultAddressesRequest) (*ListAddressesReply, error)
 	// GetMerchantAddress 获取单个地址详情
 	GetMerchantAddress(context.Context, *GetMerchantAddressRequest) (*MerchantAddress, error)
-	// ListMerchantAddresses 列出商家所有地址（支持按类型过滤）
-	ListMerchantAddresses(context.Context, *ListMerchantAddressesRequest) (*ListMerchantAddressesReply, error)
+	// ListAddresses 列出商家全部地址
+	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesReply, error)
+	// ListFilterAddresses 列出商家地址（按地址类型过滤）
+	ListFilterAddresses(context.Context, *ListFilterAddressesRequest) (*ListAddressesReply, error)
 	// SetDefaultMerchantAddress 设置默认地址（按地址类型）
 	SetDefaultMerchantAddress(context.Context, *SetDefaultMerchantAddressRequest) (*MerchantAddress, error)
 	// UpdateMerchantAddress 更新商家地址（支持部分更新）
@@ -49,10 +58,13 @@ func RegisterMerchantAddressesHTTPServer(s *http.Server, srv MerchantAddressesHT
 	r := s.Route("/")
 	r.POST("/v1/merchants/addresses", _MerchantAddresses_CreateMerchantAddress0_HTTP_Handler(srv))
 	r.POST("/v1/merchants/addresses/batch", _MerchantAddresses_BatchCreateMerchantAddresses0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/addresses", _MerchantAddresses_ListAddresses0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/addresses/fileter", _MerchantAddresses_ListFilterAddresses0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/addresses/default/{address_type}", _MerchantAddresses_GetDefaultAddress0_HTTP_Handler(srv))
+	r.GET("/v1/merchants/addresses/default/all", _MerchantAddresses_GetDefaultAddresses0_HTTP_Handler(srv))
 	r.PATCH("/v1/merchants/addresses/{id}", _MerchantAddresses_UpdateMerchantAddress0_HTTP_Handler(srv))
 	r.DELETE("/v1/merchants/addresses/{id}", _MerchantAddresses_DeletMerchanteAddress0_HTTP_Handler(srv))
 	r.GET("/v1/merchants/addresses/{id}", _MerchantAddresses_GetMerchantAddress0_HTTP_Handler(srv))
-	r.GET("/v1/merchants/addresses", _MerchantAddresses_ListMerchantAddresses0_HTTP_Handler(srv))
 	r.PUT("/v1/merchants/addresses/{id}/default", _MerchantAddresses_SetDefaultMerchantAddress0_HTTP_Handler(srv))
 }
 
@@ -96,6 +108,85 @@ func _MerchantAddresses_BatchCreateMerchantAddresses0_HTTP_Handler(srv MerchantA
 			return err
 		}
 		reply := out.(*BatchCreateMerchantAddressesReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _MerchantAddresses_ListAddresses0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListAddressesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationMerchantAddressesListAddresses)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListAddresses(ctx, req.(*ListAddressesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListAddressesReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _MerchantAddresses_ListFilterAddresses0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListFilterAddressesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationMerchantAddressesListFilterAddresses)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListFilterAddresses(ctx, req.(*ListFilterAddressesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListAddressesReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _MerchantAddresses_GetDefaultAddress0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetDefaultAddressRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationMerchantAddressesGetDefaultAddress)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetDefaultAddress(ctx, req.(*GetDefaultAddressRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*MerchantAddress)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _MerchantAddresses_GetDefaultAddresses0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetDefaultAddressesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationMerchantAddressesGetDefaultAddresses)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetDefaultAddresses(ctx, req.(*GetDefaultAddressesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListAddressesReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -169,25 +260,6 @@ func _MerchantAddresses_GetMerchantAddress0_HTTP_Handler(srv MerchantAddressesHT
 	}
 }
 
-func _MerchantAddresses_ListMerchantAddresses0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ListMerchantAddressesRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationMerchantAddressesListMerchantAddresses)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ListMerchantAddresses(ctx, req.(*ListMerchantAddressesRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ListMerchantAddressesReply)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _MerchantAddresses_SetDefaultMerchantAddress0_HTTP_Handler(srv MerchantAddressesHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in SetDefaultMerchantAddressRequest
@@ -217,8 +289,11 @@ type MerchantAddressesHTTPClient interface {
 	BatchCreateMerchantAddresses(ctx context.Context, req *BatchCreateMerchantAddressesRequest, opts ...http.CallOption) (rsp *BatchCreateMerchantAddressesReply, err error)
 	CreateMerchantAddress(ctx context.Context, req *MerchantAddress, opts ...http.CallOption) (rsp *MerchantAddress, err error)
 	DeletMerchanteAddress(ctx context.Context, req *DeletMerchanteAddressRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	GetDefaultAddress(ctx context.Context, req *GetDefaultAddressRequest, opts ...http.CallOption) (rsp *MerchantAddress, err error)
+	GetDefaultAddresses(ctx context.Context, req *GetDefaultAddressesRequest, opts ...http.CallOption) (rsp *ListAddressesReply, err error)
 	GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequest, opts ...http.CallOption) (rsp *MerchantAddress, err error)
-	ListMerchantAddresses(ctx context.Context, req *ListMerchantAddressesRequest, opts ...http.CallOption) (rsp *ListMerchantAddressesReply, err error)
+	ListAddresses(ctx context.Context, req *ListAddressesRequest, opts ...http.CallOption) (rsp *ListAddressesReply, err error)
+	ListFilterAddresses(ctx context.Context, req *ListFilterAddressesRequest, opts ...http.CallOption) (rsp *ListAddressesReply, err error)
 	SetDefaultMerchantAddress(ctx context.Context, req *SetDefaultMerchantAddressRequest, opts ...http.CallOption) (rsp *MerchantAddress, err error)
 	UpdateMerchantAddress(ctx context.Context, req *MerchantAddress, opts ...http.CallOption) (rsp *MerchantAddress, err error)
 }
@@ -270,6 +345,32 @@ func (c *MerchantAddressesHTTPClientImpl) DeletMerchanteAddress(ctx context.Cont
 	return &out, nil
 }
 
+func (c *MerchantAddressesHTTPClientImpl) GetDefaultAddress(ctx context.Context, in *GetDefaultAddressRequest, opts ...http.CallOption) (*MerchantAddress, error) {
+	var out MerchantAddress
+	pattern := "/v1/merchants/addresses/default/{address_type}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationMerchantAddressesGetDefaultAddress))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *MerchantAddressesHTTPClientImpl) GetDefaultAddresses(ctx context.Context, in *GetDefaultAddressesRequest, opts ...http.CallOption) (*ListAddressesReply, error) {
+	var out ListAddressesReply
+	pattern := "/v1/merchants/addresses/default/all"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationMerchantAddressesGetDefaultAddresses))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *MerchantAddressesHTTPClientImpl) GetMerchantAddress(ctx context.Context, in *GetMerchantAddressRequest, opts ...http.CallOption) (*MerchantAddress, error) {
 	var out MerchantAddress
 	pattern := "/v1/merchants/addresses/{id}"
@@ -283,11 +384,24 @@ func (c *MerchantAddressesHTTPClientImpl) GetMerchantAddress(ctx context.Context
 	return &out, nil
 }
 
-func (c *MerchantAddressesHTTPClientImpl) ListMerchantAddresses(ctx context.Context, in *ListMerchantAddressesRequest, opts ...http.CallOption) (*ListMerchantAddressesReply, error) {
-	var out ListMerchantAddressesReply
+func (c *MerchantAddressesHTTPClientImpl) ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...http.CallOption) (*ListAddressesReply, error) {
+	var out ListAddressesReply
 	pattern := "/v1/merchants/addresses"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationMerchantAddressesListMerchantAddresses))
+	opts = append(opts, http.Operation(OperationMerchantAddressesListAddresses))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *MerchantAddressesHTTPClientImpl) ListFilterAddresses(ctx context.Context, in *ListFilterAddressesRequest, opts ...http.CallOption) (*ListAddressesReply, error) {
+	var out ListAddressesReply
+	pattern := "/v1/merchants/addresses/fileter"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationMerchantAddressesListFilterAddresses))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

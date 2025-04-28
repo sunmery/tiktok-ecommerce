@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS orders.shipping_info;
+DROP TABLE orders.shipping_info;

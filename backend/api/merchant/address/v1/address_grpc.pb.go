@@ -22,10 +22,13 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	MerchantAddresses_CreateMerchantAddress_FullMethodName        = "/ecommerce.merchantaddress.v1.MerchantAddresses/CreateMerchantAddress"
 	MerchantAddresses_BatchCreateMerchantAddresses_FullMethodName = "/ecommerce.merchantaddress.v1.MerchantAddresses/BatchCreateMerchantAddresses"
+	MerchantAddresses_ListAddresses_FullMethodName                = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListAddresses"
+	MerchantAddresses_ListFilterAddresses_FullMethodName          = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListFilterAddresses"
+	MerchantAddresses_GetDefaultAddress_FullMethodName            = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetDefaultAddress"
+	MerchantAddresses_GetDefaultAddresses_FullMethodName          = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetDefaultAddresses"
 	MerchantAddresses_UpdateMerchantAddress_FullMethodName        = "/ecommerce.merchantaddress.v1.MerchantAddresses/UpdateMerchantAddress"
 	MerchantAddresses_DeletMerchanteAddress_FullMethodName        = "/ecommerce.merchantaddress.v1.MerchantAddresses/DeletMerchanteAddress"
 	MerchantAddresses_GetMerchantAddress_FullMethodName           = "/ecommerce.merchantaddress.v1.MerchantAddresses/GetMerchantAddress"
-	MerchantAddresses_ListMerchantAddresses_FullMethodName        = "/ecommerce.merchantaddress.v1.MerchantAddresses/ListMerchantAddresses"
 	MerchantAddresses_SetDefaultMerchantAddress_FullMethodName    = "/ecommerce.merchantaddress.v1.MerchantAddresses/SetDefaultMerchantAddress"
 )
 
@@ -39,14 +42,20 @@ type MerchantAddressesClient interface {
 	CreateMerchantAddress(ctx context.Context, in *MerchantAddress, opts ...grpc.CallOption) (*MerchantAddress, error)
 	// 批量导入商家地址（CSV/JSON格式）
 	BatchCreateMerchantAddresses(ctx context.Context, in *BatchCreateMerchantAddressesRequest, opts ...grpc.CallOption) (*BatchCreateMerchantAddressesReply, error)
+	// 列出商家全部地址
+	ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error)
+	// 列出商家地址（按地址类型过滤）
+	ListFilterAddresses(ctx context.Context, in *ListFilterAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error)
+	// 按照地址类型列出商家默认地址
+	GetDefaultAddress(ctx context.Context, in *GetDefaultAddressRequest, opts ...grpc.CallOption) (*MerchantAddress, error)
+	// 列出商家所有默认地址
+	GetDefaultAddresses(ctx context.Context, in *GetDefaultAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error)
 	// 更新商家地址（支持部分更新）
 	UpdateMerchantAddress(ctx context.Context, in *MerchantAddress, opts ...grpc.CallOption) (*MerchantAddress, error)
 	// 删除商家地址
 	DeletMerchanteAddress(ctx context.Context, in *DeletMerchanteAddressRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取单个地址详情
 	GetMerchantAddress(ctx context.Context, in *GetMerchantAddressRequest, opts ...grpc.CallOption) (*MerchantAddress, error)
-	// 列出商家所有地址（支持按类型过滤）
-	ListMerchantAddresses(ctx context.Context, in *ListMerchantAddressesRequest, opts ...grpc.CallOption) (*ListMerchantAddressesReply, error)
 	// 设置默认地址（按地址类型）
 	SetDefaultMerchantAddress(ctx context.Context, in *SetDefaultMerchantAddressRequest, opts ...grpc.CallOption) (*MerchantAddress, error)
 }
@@ -73,6 +82,46 @@ func (c *merchantAddressesClient) BatchCreateMerchantAddresses(ctx context.Conte
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BatchCreateMerchantAddressesReply)
 	err := c.cc.Invoke(ctx, MerchantAddresses_BatchCreateMerchantAddresses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *merchantAddressesClient) ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAddressesReply)
+	err := c.cc.Invoke(ctx, MerchantAddresses_ListAddresses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *merchantAddressesClient) ListFilterAddresses(ctx context.Context, in *ListFilterAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAddressesReply)
+	err := c.cc.Invoke(ctx, MerchantAddresses_ListFilterAddresses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *merchantAddressesClient) GetDefaultAddress(ctx context.Context, in *GetDefaultAddressRequest, opts ...grpc.CallOption) (*MerchantAddress, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MerchantAddress)
+	err := c.cc.Invoke(ctx, MerchantAddresses_GetDefaultAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *merchantAddressesClient) GetDefaultAddresses(ctx context.Context, in *GetDefaultAddressesRequest, opts ...grpc.CallOption) (*ListAddressesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAddressesReply)
+	err := c.cc.Invoke(ctx, MerchantAddresses_GetDefaultAddresses_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,16 +158,6 @@ func (c *merchantAddressesClient) GetMerchantAddress(ctx context.Context, in *Ge
 	return out, nil
 }
 
-func (c *merchantAddressesClient) ListMerchantAddresses(ctx context.Context, in *ListMerchantAddressesRequest, opts ...grpc.CallOption) (*ListMerchantAddressesReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListMerchantAddressesReply)
-	err := c.cc.Invoke(ctx, MerchantAddresses_ListMerchantAddresses_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *merchantAddressesClient) SetDefaultMerchantAddress(ctx context.Context, in *SetDefaultMerchantAddressRequest, opts ...grpc.CallOption) (*MerchantAddress, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MerchantAddress)
@@ -139,14 +178,20 @@ type MerchantAddressesServer interface {
 	CreateMerchantAddress(context.Context, *MerchantAddress) (*MerchantAddress, error)
 	// 批量导入商家地址（CSV/JSON格式）
 	BatchCreateMerchantAddresses(context.Context, *BatchCreateMerchantAddressesRequest) (*BatchCreateMerchantAddressesReply, error)
+	// 列出商家全部地址
+	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesReply, error)
+	// 列出商家地址（按地址类型过滤）
+	ListFilterAddresses(context.Context, *ListFilterAddressesRequest) (*ListAddressesReply, error)
+	// 按照地址类型列出商家默认地址
+	GetDefaultAddress(context.Context, *GetDefaultAddressRequest) (*MerchantAddress, error)
+	// 列出商家所有默认地址
+	GetDefaultAddresses(context.Context, *GetDefaultAddressesRequest) (*ListAddressesReply, error)
 	// 更新商家地址（支持部分更新）
 	UpdateMerchantAddress(context.Context, *MerchantAddress) (*MerchantAddress, error)
 	// 删除商家地址
 	DeletMerchanteAddress(context.Context, *DeletMerchanteAddressRequest) (*emptypb.Empty, error)
 	// 获取单个地址详情
 	GetMerchantAddress(context.Context, *GetMerchantAddressRequest) (*MerchantAddress, error)
-	// 列出商家所有地址（支持按类型过滤）
-	ListMerchantAddresses(context.Context, *ListMerchantAddressesRequest) (*ListMerchantAddressesReply, error)
 	// 设置默认地址（按地址类型）
 	SetDefaultMerchantAddress(context.Context, *SetDefaultMerchantAddressRequest) (*MerchantAddress, error)
 	mustEmbedUnimplementedMerchantAddressesServer()
@@ -165,6 +210,18 @@ func (UnimplementedMerchantAddressesServer) CreateMerchantAddress(context.Contex
 func (UnimplementedMerchantAddressesServer) BatchCreateMerchantAddresses(context.Context, *BatchCreateMerchantAddressesRequest) (*BatchCreateMerchantAddressesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchCreateMerchantAddresses not implemented")
 }
+func (UnimplementedMerchantAddressesServer) ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAddresses not implemented")
+}
+func (UnimplementedMerchantAddressesServer) ListFilterAddresses(context.Context, *ListFilterAddressesRequest) (*ListAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFilterAddresses not implemented")
+}
+func (UnimplementedMerchantAddressesServer) GetDefaultAddress(context.Context, *GetDefaultAddressRequest) (*MerchantAddress, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultAddress not implemented")
+}
+func (UnimplementedMerchantAddressesServer) GetDefaultAddresses(context.Context, *GetDefaultAddressesRequest) (*ListAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultAddresses not implemented")
+}
 func (UnimplementedMerchantAddressesServer) UpdateMerchantAddress(context.Context, *MerchantAddress) (*MerchantAddress, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMerchantAddress not implemented")
 }
@@ -173,9 +230,6 @@ func (UnimplementedMerchantAddressesServer) DeletMerchanteAddress(context.Contex
 }
 func (UnimplementedMerchantAddressesServer) GetMerchantAddress(context.Context, *GetMerchantAddressRequest) (*MerchantAddress, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantAddress not implemented")
-}
-func (UnimplementedMerchantAddressesServer) ListMerchantAddresses(context.Context, *ListMerchantAddressesRequest) (*ListMerchantAddressesReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListMerchantAddresses not implemented")
 }
 func (UnimplementedMerchantAddressesServer) SetDefaultMerchantAddress(context.Context, *SetDefaultMerchantAddressRequest) (*MerchantAddress, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDefaultMerchantAddress not implemented")
@@ -237,6 +291,78 @@ func _MerchantAddresses_BatchCreateMerchantAddresses_Handler(srv interface{}, ct
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MerchantAddresses_ListAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAddressesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MerchantAddressesServer).ListAddresses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MerchantAddresses_ListAddresses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MerchantAddressesServer).ListAddresses(ctx, req.(*ListAddressesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MerchantAddresses_ListFilterAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFilterAddressesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MerchantAddressesServer).ListFilterAddresses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MerchantAddresses_ListFilterAddresses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MerchantAddressesServer).ListFilterAddresses(ctx, req.(*ListFilterAddressesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MerchantAddresses_GetDefaultAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDefaultAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MerchantAddressesServer).GetDefaultAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MerchantAddresses_GetDefaultAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MerchantAddressesServer).GetDefaultAddress(ctx, req.(*GetDefaultAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MerchantAddresses_GetDefaultAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDefaultAddressesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MerchantAddressesServer).GetDefaultAddresses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MerchantAddresses_GetDefaultAddresses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MerchantAddressesServer).GetDefaultAddresses(ctx, req.(*GetDefaultAddressesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MerchantAddresses_UpdateMerchantAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MerchantAddress)
 	if err := dec(in); err != nil {
@@ -291,24 +417,6 @@ func _MerchantAddresses_GetMerchantAddress_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MerchantAddresses_ListMerchantAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListMerchantAddressesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MerchantAddressesServer).ListMerchantAddresses(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MerchantAddresses_ListMerchantAddresses_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MerchantAddressesServer).ListMerchantAddresses(ctx, req.(*ListMerchantAddressesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _MerchantAddresses_SetDefaultMerchantAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetDefaultMerchantAddressRequest)
 	if err := dec(in); err != nil {
@@ -343,6 +451,22 @@ var MerchantAddresses_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MerchantAddresses_BatchCreateMerchantAddresses_Handler,
 		},
 		{
+			MethodName: "ListAddresses",
+			Handler:    _MerchantAddresses_ListAddresses_Handler,
+		},
+		{
+			MethodName: "ListFilterAddresses",
+			Handler:    _MerchantAddresses_ListFilterAddresses_Handler,
+		},
+		{
+			MethodName: "GetDefaultAddress",
+			Handler:    _MerchantAddresses_GetDefaultAddress_Handler,
+		},
+		{
+			MethodName: "GetDefaultAddresses",
+			Handler:    _MerchantAddresses_GetDefaultAddresses_Handler,
+		},
+		{
 			MethodName: "UpdateMerchantAddress",
 			Handler:    _MerchantAddresses_UpdateMerchantAddress_Handler,
 		},
@@ -353,10 +477,6 @@ var MerchantAddresses_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMerchantAddress",
 			Handler:    _MerchantAddresses_GetMerchantAddress_Handler,
-		},
-		{
-			MethodName: "ListMerchantAddresses",
-			Handler:    _MerchantAddresses_ListMerchantAddresses_Handler,
 		},
 		{
 			MethodName: "SetDefaultMerchantAddress",

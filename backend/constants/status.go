@@ -8,6 +8,15 @@ type (
 	FreezeStatus    string // 余额冻结状态
 	PaymentMethod   string // 支付方式
 	TransactionType string // 交易类型
+	AddressType     string // 地址类型
+)
+
+const (
+	WAREHOUSE    AddressType = "WAREHOUSE"    // 仓库地址
+	RETURN       AddressType = "RETURN"       // 退货地址
+	STORE        AddressType = "STORE"        // 门店地址
+	BILLING      AddressType = "BILLING"      // 财务地址
+	HEADQUARTERS AddressType = "HEADQUARTERS" // 总部地址
 )
 
 const (

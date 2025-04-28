@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"backend/constants"
+
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/google/uuid"
@@ -11,21 +13,11 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-const (
-	WAREHOUSE    AddressType = "WAREHOUSE"    // 仓库地址
-	RETURN       AddressType = "RETURN"       // 退货地址
-	STORE        AddressType = "STORE"        // 门店地址
-	BILLING      AddressType = "BILLING"      // 财务地址
-	HEADQUARTERS AddressType = "HEADQUARTERS" // 总部地址
-)
-
 type (
-	AddressType string
-
 	MerchantAddressn struct {
 		Id            int64
 		MerchantId    uuid.UUID
-		AddressType   AddressType
+		AddressType   constants.AddressType
 		ContactPerson string
 		ContactPhone  string
 
@@ -44,7 +36,7 @@ type (
 	MerchantAddress struct {
 		Id            int64
 		MerchantId    string
-		AddressType   AddressType
+		AddressType   constants.AddressType
 		ContactPerson string
 		ContactPhone  string
 
@@ -76,21 +68,36 @@ type (
 		Id         int64
 		MerchantId uuid.UUID
 	}
-
-	GetMerchantAddressRequestn struct {
+	GetMerchantAddressRequest struct {
 		Id         int64
 		MerchantId uuid.UUID
 	}
 
-	ListMerchantAddressesRequestn struct {
+	ListFilterAddressesRequestn struct {
 		MerchantId  uuid.UUID
-		AddressType AddressType
-		OnlyDefault bool
+		AddressType constants.AddressType
+
+		Page     uint32
+		PageSize uint32
+	}
+	GetDefaultAddressesRequest struct {
+		MerchantId uuid.UUID
+		Page       uint32
+		PageSize   uint32
+	}
+	GetDefaultAddressRequest struct {
+		MerchantId  uuid.UUID
+		AddressType constants.AddressType
 		Page        uint32
 		PageSize    uint32
 	}
+	ListAddressesRequest struct {
+		MerchantId uuid.UUID
+		Page       uint32
+		PageSize   uint32
+	}
 
-	ListMerchantAddressesResponse struct {
+	ListAddressesResponse struct {
 		Addresses []*MerchantAddress
 		Total     int64
 	}
@@ -127,12 +134,18 @@ type AddressRepo interface {
 	UpdateMerchantAddress(ctx context.Context, req *MerchantAddressn) (*MerchantAddress, error)
 	// DeleteMerchantAddress 删除商家地址
 	DeleteMerchantAddress(ctx context.Context, req *DeleteMerchantAddressRequestn) (*emptypb.Empty, error)
-	// GetMerchantAddress 获取单个地址详情
-	GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequestn) (*MerchantAddress, error)
-	// ListMerchantAddresses 列出商家所有地址（支持按类型过滤）
-	ListMerchantAddresses(ctx context.Context, req *ListMerchantAddressesRequestn) (*ListMerchantAddressesResponse, error)
+	// ListFilterAddresses 获取单个地址详情
+	ListFilterAddresses(ctx context.Context, req *ListFilterAddressesRequestn) (*ListAddressesResponse, error)
+	// ListAddresses 列出全部商家地址
+	ListAddresses(ctx context.Context, req *ListAddressesRequest) (*ListAddressesResponse, error)
 	// SetDefaultAddress 设置默认地址（按地址类型）
 	SetDefaultAddress(ctx context.Context, req *SetDefaultAddressRequestn) (*MerchantAddress, error)
+	// GetDefaultAddress 获取默认地址（按地址类型）
+	GetDefaultAddress(ctx context.Context, req *GetDefaultAddressRequest) (*MerchantAddress, error)
+	// GetDefaultAddresses 获取全部地址类型的默认地址
+	GetDefaultAddresses(ctx context.Context, req *GetDefaultAddressesRequest) (*ListAddressesResponse, error)
+	// GetMerchantAddress 获取单个地址详情
+	GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequest) (*MerchantAddress, error)
 }
 
 func (uc *AddressUsecase) CreateMerchantAddress(ctx context.Context, req *MerchantAddressn) (*MerchantAddress, error) {
@@ -155,14 +168,29 @@ func (uc *AddressUsecase) DeleteMerchantAddress(ctx context.Context, req *Delete
 	return uc.repo.DeleteMerchantAddress(ctx, req)
 }
 
-func (uc *AddressUsecase) GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequestn) (*MerchantAddress, error) {
-	uc.log.WithContext(ctx).Debugf("GetMerchantAddress: %+v", req)
-	return uc.repo.GetMerchantAddress(ctx, req)
+func (uc *AddressUsecase) ListFilterAddresses(ctx context.Context, req *ListFilterAddressesRequestn) (*ListAddressesResponse, error) {
+	uc.log.WithContext(ctx).Debugf("ListFilterAddresses: %+v", req)
+	return uc.repo.ListFilterAddresses(ctx, req)
 }
 
-func (uc *AddressUsecase) ListMerchantAddresses(ctx context.Context, req *ListMerchantAddressesRequestn) (*ListMerchantAddressesResponse, error) {
-	uc.log.WithContext(ctx).Debugf("ListMerchantAddresses: %+v", req)
-	return uc.repo.ListMerchantAddresses(ctx, req)
+func (uc *AddressUsecase) ListAddresses(ctx context.Context, req *ListAddressesRequest) (*ListAddressesResponse, error) {
+	uc.log.WithContext(ctx).Debugf("ListFilterAddresses: %+v", req)
+	return uc.repo.ListAddresses(ctx, req)
+}
+
+func (uc *AddressUsecase) GetDefaultAddress(ctx context.Context, req *GetDefaultAddressRequest) (*MerchantAddress, error) {
+	uc.log.WithContext(ctx).Debugf("GetDefaultAddress: %+v", req)
+	return uc.repo.GetDefaultAddress(ctx, req)
+}
+
+func (uc *AddressUsecase) GetDefaultAddresses(ctx context.Context, req *GetDefaultAddressesRequest) (*ListAddressesResponse, error) {
+	uc.log.WithContext(ctx).Debugf("GetDefaultAddresses: %+v", req)
+	return uc.repo.GetDefaultAddresses(ctx, req)
+}
+
+func (uc *AddressUsecase) GetMerchantAddress(ctx context.Context, req *GetMerchantAddressRequest) (*MerchantAddress, error) {
+	uc.log.WithContext(ctx).Debugf("GetMerchantAddress: %+v", req)
+	return uc.repo.GetMerchantAddress(ctx, req)
 }
 
 func (uc *AddressUsecase) SetDefaultAddress(ctx context.Context, req *SetDefaultAddressRequestn) (*MerchantAddress, error) {

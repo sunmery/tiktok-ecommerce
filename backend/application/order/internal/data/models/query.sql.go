@@ -428,17 +428,17 @@ WHERE sub_order_id = $1
 `
 
 type GetShipOrderStatusRow struct {
-	ID              int64          `json:"id"`
-	SubOrderID      int64          `json:"subOrderID"`
-	TrackingNumber  string         `json:"trackingNumber"`
-	Carrier         string         `json:"carrier"`
-	ShippingStatus  string         `json:"shippingStatus"`
-	Delivery        time.Time      `json:"delivery"`
-	ShippingAddress []byte         `json:"shippingAddress"`
-	ReceiverAddress []byte         `json:"receiverAddress"`
-	ShippingFee     pgtype.Numeric `json:"shippingFee"`
-	CreatedAt       time.Time      `json:"createdAt"`
-	UpdatedAt       time.Time      `json:"updatedAt"`
+	ID              int64              `json:"id"`
+	SubOrderID      int64              `json:"subOrderID"`
+	TrackingNumber  string             `json:"trackingNumber"`
+	Carrier         string             `json:"carrier"`
+	ShippingStatus  string             `json:"shippingStatus"`
+	Delivery        pgtype.Timestamptz `json:"delivery"`
+	ShippingAddress []byte             `json:"shippingAddress"`
+	ReceiverAddress []byte             `json:"receiverAddress"`
+	ShippingFee     pgtype.Numeric     `json:"shippingFee"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	UpdatedAt       time.Time          `json:"updatedAt"`
 }
 
 // GetShipOrderStatus

@@ -10,8 +10,6 @@ import (
 
 	merchantorderv1 "backend/api/merchant/order/v1"
 
-	globalPkg "backend/pkg"
-
 	"github.com/google/uuid"
 
 	"backend/application/balancer/internal/pkg/id"
@@ -99,32 +97,17 @@ func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransacti
 	page := (req.Page - 1) * req.PageSize
 	pageSize := req.PageSize
 
-	role, err := globalPkg.GetMetadataRole(ctx)
+	transactions := make([]models.BalancesTransactions, 0, pageSize)
+
+	transactions, err := b.data.db.GetTransactions(ctx, models.GetTransactionsParams{
+		UserID:   req.UserId,
+		Currency: req.Currency,
+		Status:   string(req.PaymentStatus),
+		Page:     page,
+		PageSize: pageSize,
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	transactions := make([]models.BalancesTransactions, 0, pageSize)
-	switch role {
-	case constants.Consumer:
-		transactions, err = b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
-			UserID:   req.UserId,
-			Currency: req.Currency,
-			Status:   string(req.PaymentStatus),
-			Page:     page,
-			PageSize: pageSize,
-		})
-		if err != nil {
-			return nil, err
-		}
-	case constants.Merchant:
-		transactions, err = b.data.db.GetMerchantTransactions(ctx, models.GetMerchantTransactionsParams{
-			MerchantID: req.UserId,
-			Currency:   req.Currency,
-			Status:     string(req.PaymentStatus),
-			Page:       page,
-			PageSize:   pageSize,
-		})
 	}
 
 	bizTransactions := make([]*biz.Transactions, 0, len(transactions))
@@ -392,6 +375,9 @@ func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanc
 		Currency: string(req.Currency),
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
+		}
 		return nil, err
 	}
 	available, err := types.NumericToFloat(balance.Available)
@@ -437,9 +423,6 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", "balance version mismatch")
 	}
 
-	// 3. 创建交易记录
-	merchantId := req.MerchantId
-
 	// 构建额外信息JSON
 	paymentExtra := map[string]interface{}{
 		"external_transaction_id": req.ExternalTransactionId,
@@ -452,12 +435,12 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 
 	// 创建交易记录
 	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
-		ID:                id.SnowflakeID(),
-		Type:              string(constants.TransactionRecharge),
-		Amount:            amount,
-		Currency:          string(req.Currency),
-		FromUserID:        req.UserId,
-		ToMerchantID:      merchantId,
+		ID:         id.SnowflakeID(),
+		Type:       string(constants.TransactionRecharge),
+		Amount:     amount,
+		Currency:   string(req.Currency),
+		FromUserID: req.UserId,
+		// ToMerchantID:      merchantId,
 		PaymentMethodType: req.PaymentMethodType,
 		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,

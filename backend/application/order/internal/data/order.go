@@ -164,17 +164,6 @@ func (o *orderRepo) MarkOrderPaid(ctx context.Context, req *biz.MarkOrderPaidReq
 		return nil, fmt.Errorf("failed to update sub orders payment status: %w", markSubOrderAsPaidErr)
 	}
 
-	// 更新货运状态为等待操作
-	shippingWaitCommand := string(constants.ShippingWaitCommand)
-	updateOrderShippingStatusErr := tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
-		ShippingStatus: &shippingWaitCommand,
-		SubOrderID:     &req.OrderId,
-	})
-	if updateOrderShippingStatusErr != nil {
-		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", updateOrderShippingStatusErr)
-		return nil, fmt.Errorf("failed to update order shipping status: %w", updateOrderShippingStatusErr)
-	}
-
 	o.log.WithContext(ctx).Infof("Successfully marked order %d as paid for user %s", req.OrderId, req.UserId)
 	return &biz.MarkOrderPaidResp{}, nil
 }
@@ -470,7 +459,8 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			Items:       itemsJSON,
 		}
 		log.Debugf("params: %+v", params)
-		_, subOrderErr := o.data.db.CreateSubOrder(ctx, params)
+
+		createSubOrderResult, subOrderErr := o.data.db.CreateSubOrder(ctx, params)
 		if subOrderErr != nil {
 			return nil, fmt.Errorf("创建子订单失败: %w", subOrderErr)
 		}
@@ -487,6 +477,39 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			}
 			log.Errorf("商家%v 商品id%v 数量%v", subOrder.item.Item.ProductId.String(), subOrder.item.Item.MerchantId.String(), subOrder.item.Item.Quantity)
 			return nil, kerrors.New(500, "INVENTORY_UPDATE_FAILED", fmt.Sprintf("更新库存失败: %v", updateInventoryErr))
+		}
+
+		// 创建物流信息为等待操作
+		shippingAddress := map[string]any{}
+		ShippingAddressJSON, err := json.Marshal(shippingAddress)
+		if err != nil {
+			return nil, kerrors.New(400, "INVALID_SHIPPING_ADDRESS", fmt.Sprintf("序列化物流地址失败: %v", err))
+		}
+
+		receiverAddress := map[string]any{}
+		receiverAddressJSON, err := json.Marshal(receiverAddress)
+		if err != nil {
+			return nil, kerrors.New(400, "INVALID_SHIPPING_ADDRESS", fmt.Sprintf("序列化物流地址失败: %v", err))
+		}
+		shippingFee, err := types.Float64ToNumeric(0)
+		if err != nil {
+			return nil, fmt.Errorf("invalid price format: %w", err)
+		}
+		createOrderShippingParams := models.CreateOrderShippingParams{
+			ID:              id.SnowflakeID(),
+			MerchantID:      createSubOrderResult.MerchantID,
+			SubOrderID:      createSubOrderResult.ID,
+			ShippingStatus:  string(constants.ShippingWaitCommand),
+			TrackingNumber:  "0",                  // 默认值, 等待商家发货时更新
+			Carrier:         "unknown",            // 默认值, 等待商家发货时更新
+			Delivery:        pgtype.Timestamptz{}, // 默认值, 等待用户确认收货触发送达时间
+			ShippingAddress: ShippingAddressJSON,  // 默认值, 等待商家发货时更新
+			ReceiverAddress: receiverAddressJSON,  // 默认值, 等待商家发货时更新
+			ShippingFee:     shippingFee,          // 默认值, 等待商家发货时更新
+		}
+		createOrderShippingErr := o.data.db.CreateOrderShipping(ctx, createOrderShippingParams)
+		if createOrderShippingErr != nil {
+			return nil, kerrors.New(500, "CREATE_ORDER_SHIPPING_FAILED", fmt.Sprintf("创建物流信息失败: %v", createOrderShippingErr))
 		}
 
 		// 获取商家余额信息（仅用于返回版本号）
@@ -622,7 +645,7 @@ func (o *orderRepo) GetShipOrderStatus(ctx context.Context, req *biz.GetShipOrde
 		TrackingNumber:  orderStatus.TrackingNumber,
 		Carrier:         orderStatus.Carrier,
 		ShippingStatus:  constants.ShippingStatus(orderStatus.ShippingStatus),
-		Delivery:        orderStatus.Delivery,
+		Delivery:        orderStatus.Delivery.Time,
 		ShippingFee:     shippingFee,
 		ReceiverAddress: receiverAddress,
 		ShippingAddress: shippingAddress,

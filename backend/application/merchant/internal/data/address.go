@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"backend/constants"
+
 	"backend/application/merchant/internal/pkg/id"
 
 	kerrors "github.com/go-kratos/kratos/v2/errors"
@@ -25,6 +27,38 @@ import (
 type addressRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (a addressRepo) ListAddresses(ctx context.Context, req *biz.ListAddressesRequest) (*biz.ListAddressesResponse, error) {
+	addresses, err := a.data.db.ListAddresses(ctx, models.ListAddressesParams{
+		MerchantID: req.MerchantId,
+		Limit:      int64(req.PageSize),
+		Offset:     int64((req.Page - 1) * req.PageSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*biz.MerchantAddress, len(addresses))
+	for i, addr := range addresses {
+		result[i] = &biz.MerchantAddress{
+			Id:            addr.ID,
+			MerchantId:    addr.MerchantID.String(),
+			AddressType:   constants.AddressType(addr.AddressType),
+			ContactPerson: addr.ContactPerson,
+			ContactPhone:  addr.ContactPhone,
+			StreetAddress: addr.StreetAddress,
+			City:          addr.City,
+			State:         addr.State,
+			Country:       addr.Country,
+			ZipCode:       addr.ZipCode,
+			IsDefault:     addr.IsDefault,
+			CreatedAt:     addr.CreatedAt.Time,
+			UpdatedAt:     addr.UpdatedAt.Time,
+		}
+	}
+
+	return &biz.ListAddressesResponse{Addresses: result}, nil
 }
 
 func (a addressRepo) BatchCreateAddresses(ctx context.Context, req *biz.BatchCreateAddressesRequestn) (*biz.BatchCreateAddressesResponse, error) {
@@ -87,7 +121,7 @@ func (a addressRepo) BatchCreateAddresses(ctx context.Context, req *biz.BatchCre
 		result[i] = &biz.MerchantAddress{
 			Id:            addr.ID,
 			MerchantId:    addr.MerchantID.String(),
-			AddressType:   biz.AddressType(addr.AddressType),
+			AddressType:   constants.AddressType(addr.AddressType),
 			ContactPerson: addr.ContactPerson,
 			ContactPhone:  addr.ContactPhone,
 			StreetAddress: addr.StreetAddress,
@@ -125,7 +159,7 @@ func (a addressRepo) UpdateMerchantAddress(ctx context.Context, req *biz.Merchan
 	return &biz.MerchantAddress{
 		Id:            address.ID,
 		MerchantId:    address.MerchantID.String(),
-		AddressType:   biz.AddressType(address.AddressType),
+		AddressType:   constants.AddressType(address.AddressType),
 		ContactPerson: address.ContactPerson,
 		ContactPhone:  address.ContactPhone,
 		StreetAddress: address.StreetAddress,
@@ -150,40 +184,77 @@ func (a addressRepo) DeleteMerchantAddress(ctx context.Context, req *biz.DeleteM
 	return &emptypb.Empty{}, nil
 }
 
-func (a addressRepo) GetMerchantAddress(ctx context.Context, req *biz.GetMerchantAddressRequestn) (*biz.MerchantAddress, error) {
-	address, err := a.data.db.GetAddress(ctx, models.GetAddressParams{
-		ID:         req.Id,
-		MerchantID: req.MerchantId,
+func (a addressRepo) GetDefaultAddress(ctx context.Context, req *biz.GetDefaultAddressRequest) (*biz.MerchantAddress, error) {
+	address, err := a.data.db.GetDefaultAddress(ctx, models.GetDefaultAddressParams{
+		MerchantID:  req.MerchantId,
+		AddressType: string(req.AddressType),
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "ADDRESS_NOT_FOUND", "address not found")
+			return nil, kerrors.New(404, "ADDRESS_NOT_FOUND", "default address not found")
 		}
 		return nil, kerrors.New(500, "INTERNAL_ERROR", "database internal error")
 	}
 
-	return &biz.MerchantAddress{
-		Id:            address.ID,
-		MerchantId:    address.MerchantID.String(),
-		AddressType:   biz.AddressType(address.AddressType),
-		ContactPerson: address.ContactPerson,
-		ContactPhone:  address.ContactPhone,
-		StreetAddress: address.StreetAddress,
-		City:          address.City,
-		State:         address.State,
-		Country:       address.Country,
-		ZipCode:       address.ZipCode,
-		IsDefault:     address.IsDefault,
-		CreatedAt:     address.CreatedAt.Time,
-		UpdatedAt:     address.UpdatedAt.Time,
+	return convertToMerchantAddress(&address), nil
+}
+
+func (a addressRepo) GetMerchantAddress(ctx context.Context, req *biz.GetMerchantAddressRequest) (*biz.MerchantAddress, error) {
+	address, err := a.data.db.GetAddress(ctx, models.GetAddressParams{
+		MerchantID: req.MerchantId,
+		ID:         req.Id,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.New(404, "ADDRESS_NOT_FOUND", "default address not found")
+		}
+		return nil, kerrors.New(500, "INTERNAL_ERROR", "database internal error")
+	}
+
+	return convertToMerchantAddress(&address), nil
+}
+
+func (a addressRepo) GetDefaultAddresses(ctx context.Context, req *biz.GetDefaultAddressesRequest) (*biz.ListAddressesResponse, error) {
+	addresses, err := a.data.db.GetDefaultAddresses(ctx, req.MerchantId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*biz.MerchantAddress, len(addresses))
+	for i, addr := range addresses {
+		result[i] = convertToMerchantAddress(&addr)
+	}
+
+	return &biz.ListAddressesResponse{
+		Addresses: result,
+		Total:     int64(len(addresses)),
 	}, nil
 }
 
-func (a addressRepo) ListMerchantAddresses(ctx context.Context, req *biz.ListMerchantAddressesRequestn) (*biz.ListMerchantAddressesResponse, error) {
-	addresses, err := a.data.db.ListAddresses(ctx, models.ListAddressesParams{
+// 辅助函数用于转换数据模型
+func convertToMerchantAddress(addr *models.MerchantAddresses) *biz.MerchantAddress {
+	return &biz.MerchantAddress{
+		Id:            addr.ID,
+		MerchantId:    addr.MerchantID.String(),
+		AddressType:   constants.AddressType(addr.AddressType),
+		ContactPerson: addr.ContactPerson,
+		ContactPhone:  addr.ContactPhone,
+		StreetAddress: addr.StreetAddress,
+		City:          addr.City,
+		State:         addr.State,
+		Country:       addr.Country,
+		ZipCode:       addr.ZipCode,
+		IsDefault:     addr.IsDefault,
+		CreatedAt:     addr.CreatedAt.Time,
+		UpdatedAt:     addr.UpdatedAt.Time,
+		Remarks:       addr.Remarks,
+	}
+}
+
+func (a addressRepo) ListFilterAddresses(ctx context.Context, req *biz.ListFilterAddressesRequestn) (*biz.ListAddressesResponse, error) {
+	addresses, err := a.data.db.ListFilterAddresses(ctx, models.ListFilterAddressesParams{
 		MerchantID:  req.MerchantId,
 		AddressType: string(req.AddressType),
-		IsDefault:   req.OnlyDefault,
 		Limit:       int64(req.PageSize),
 		Offset:      int64((req.Page - 1) * req.PageSize),
 	})
@@ -196,7 +267,7 @@ func (a addressRepo) ListMerchantAddresses(ctx context.Context, req *biz.ListMer
 		result[i] = &biz.MerchantAddress{
 			Id:            addr.ID,
 			MerchantId:    addr.MerchantID.String(),
-			AddressType:   biz.AddressType(addr.AddressType),
+			AddressType:   constants.AddressType(addr.AddressType),
 			ContactPerson: addr.ContactPerson,
 			ContactPhone:  addr.ContactPhone,
 			StreetAddress: addr.StreetAddress,
@@ -210,7 +281,7 @@ func (a addressRepo) ListMerchantAddresses(ctx context.Context, req *biz.ListMer
 		}
 	}
 
-	return &biz.ListMerchantAddressesResponse{Addresses: result}, nil
+	return &biz.ListAddressesResponse{Addresses: result}, nil
 }
 
 func (a addressRepo) SetDefaultAddress(ctx context.Context, req *biz.SetDefaultAddressRequestn) (*biz.MerchantAddress, error) {
@@ -226,7 +297,7 @@ func (a addressRepo) SetDefaultAddress(ctx context.Context, req *biz.SetDefaultA
 	return &biz.MerchantAddress{
 		Id:            address.ID,
 		MerchantId:    address.MerchantID.String(),
-		AddressType:   biz.AddressType(address.AddressType),
+		AddressType:   constants.AddressType(address.AddressType),
 		ContactPerson: address.ContactPerson,
 		ContactPhone:  address.ContactPhone,
 		StreetAddress: address.StreetAddress,
@@ -265,7 +336,7 @@ func (a addressRepo) CreateMerchantAddress(ctx context.Context, req *biz.Merchan
 	return &biz.MerchantAddress{
 		Id:            address.ID,
 		MerchantId:    address.MerchantID.String(),
-		AddressType:   biz.AddressType(address.AddressType),
+		AddressType:   constants.AddressType(address.AddressType),
 		ContactPerson: address.ContactPerson,
 		ContactPhone:  address.ContactPhone,
 		StreetAddress: address.StreetAddress,

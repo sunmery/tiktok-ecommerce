@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Balance_CreateConsumerBalance_FullMethodName = "/ecommerce.balancer.v1.Balance/CreateConsumerBalance"
 	Balance_CreateMerchantBalance_FullMethodName = "/ecommerce.balancer.v1.Balance/CreateMerchantBalance"
 	Balance_GetMerchantVersion_FullMethodName    = "/ecommerce.balancer.v1.Balance/GetMerchantVersion"
 	Balance_GetUserBalance_FullMethodName        = "/ecommerce.balancer.v1.Balance/GetUserBalance"
 	Balance_FreezeBalance_FullMethodName         = "/ecommerce.balancer.v1.Balance/FreezeBalance"
+	Balance_CreateTransaction_FullMethodName     = "/ecommerce.balancer.v1.Balance/CreateTransaction"
+	Balance_GetTransactions_FullMethodName       = "/ecommerce.balancer.v1.Balance/GetTransactions"
+	Balance_CreateConsumerBalance_FullMethodName = "/ecommerce.balancer.v1.Balance/CreateConsumerBalance"
 	Balance_ConfirmTransfer_FullMethodName       = "/ecommerce.balancer.v1.Balance/ConfirmTransfer"
 	Balance_CancelFreeze_FullMethodName          = "/ecommerce.balancer.v1.Balance/CancelFreeze"
 	Balance_GetMerchantBalance_FullMethodName    = "/ecommerce.balancer.v1.Balance/GetMerchantBalance"
-	Balance_CreateTransaction_FullMethodName     = "/ecommerce.balancer.v1.Balance/CreateTransaction"
-	Balance_GetTransactions_FullMethodName       = "/ecommerce.balancer.v1.Balance/GetTransactions"
 	Balance_RechargeBalance_FullMethodName       = "/ecommerce.balancer.v1.Balance/RechargeBalance"
 	Balance_WithdrawBalance_FullMethodName       = "/ecommerce.balancer.v1.Balance/WithdrawBalance"
 )
@@ -37,9 +37,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BalanceClient interface {
-	// 创建消费者余额
-	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
-	CreateConsumerBalance(ctx context.Context, in *CreateConsumerBalanceRequest, opts ...grpc.CallOption) (*CreateConsumerBalanceReply, error)
 	// 创建商家余额
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	CreateMerchantBalance(ctx context.Context, in *CreateMerchantBalanceRequest, opts ...grpc.CallOption) (*CreateMerchantBalanceReply, error)
@@ -49,16 +46,19 @@ type BalanceClient interface {
 	GetUserBalance(ctx context.Context, in *GetUserBalanceRequest, opts ...grpc.CallOption) (*BalanceReply, error)
 	// 冻结用户余额
 	FreezeBalance(ctx context.Context, in *FreezeBalanceRequest, opts ...grpc.CallOption) (*FreezeBalanceReply, error)
+	// 创建订单流水
+	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionReply, error)
+	// 获取商家或者用户订单流水
+	GetTransactions(ctx context.Context, in *GetTransactionsRequest, opts ...grpc.CallOption) (*GetTransactionsReply, error)
+	// 创建消费者余额
+	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+	CreateConsumerBalance(ctx context.Context, in *CreateConsumerBalanceRequest, opts ...grpc.CallOption) (*CreateConsumerBalanceReply, error)
 	// 确认转账（解冻并转给商家）
 	ConfirmTransfer(ctx context.Context, in *ConfirmTransferRequest, opts ...grpc.CallOption) (*ConfirmTransferReply, error)
 	// 取消冻结
 	CancelFreeze(ctx context.Context, in *CancelFreezeRequest, opts ...grpc.CallOption) (*CancelFreezeReply, error)
 	// 获取商家余额
 	GetMerchantBalance(ctx context.Context, in *GetMerchantBalanceRequest, opts ...grpc.CallOption) (*BalanceReply, error)
-	// 创建订单流水
-	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionReply, error)
-	// 获取商家或者用户订单流水
-	GetTransactions(ctx context.Context, in *GetTransactionsRequest, opts ...grpc.CallOption) (*GetTransactionsReply, error)
 	// 用户充值
 	RechargeBalance(ctx context.Context, in *RechargeBalanceRequest, opts ...grpc.CallOption) (*RechargeBalanceReply, error)
 	// 用户提现
@@ -71,16 +71,6 @@ type balanceClient struct {
 
 func NewBalanceClient(cc grpc.ClientConnInterface) BalanceClient {
 	return &balanceClient{cc}
-}
-
-func (c *balanceClient) CreateConsumerBalance(ctx context.Context, in *CreateConsumerBalanceRequest, opts ...grpc.CallOption) (*CreateConsumerBalanceReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateConsumerBalanceReply)
-	err := c.cc.Invoke(ctx, Balance_CreateConsumerBalance_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *balanceClient) CreateMerchantBalance(ctx context.Context, in *CreateMerchantBalanceRequest, opts ...grpc.CallOption) (*CreateMerchantBalanceReply, error) {
@@ -123,6 +113,36 @@ func (c *balanceClient) FreezeBalance(ctx context.Context, in *FreezeBalanceRequ
 	return out, nil
 }
 
+func (c *balanceClient) CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateTransactionReply)
+	err := c.cc.Invoke(ctx, Balance_CreateTransaction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *balanceClient) GetTransactions(ctx context.Context, in *GetTransactionsRequest, opts ...grpc.CallOption) (*GetTransactionsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTransactionsReply)
+	err := c.cc.Invoke(ctx, Balance_GetTransactions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *balanceClient) CreateConsumerBalance(ctx context.Context, in *CreateConsumerBalanceRequest, opts ...grpc.CallOption) (*CreateConsumerBalanceReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateConsumerBalanceReply)
+	err := c.cc.Invoke(ctx, Balance_CreateConsumerBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *balanceClient) ConfirmTransfer(ctx context.Context, in *ConfirmTransferRequest, opts ...grpc.CallOption) (*ConfirmTransferReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ConfirmTransferReply)
@@ -153,26 +173,6 @@ func (c *balanceClient) GetMerchantBalance(ctx context.Context, in *GetMerchantB
 	return out, nil
 }
 
-func (c *balanceClient) CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateTransactionReply)
-	err := c.cc.Invoke(ctx, Balance_CreateTransaction_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *balanceClient) GetTransactions(ctx context.Context, in *GetTransactionsRequest, opts ...grpc.CallOption) (*GetTransactionsReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetTransactionsReply)
-	err := c.cc.Invoke(ctx, Balance_GetTransactions_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *balanceClient) RechargeBalance(ctx context.Context, in *RechargeBalanceRequest, opts ...grpc.CallOption) (*RechargeBalanceReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RechargeBalanceReply)
@@ -197,9 +197,6 @@ func (c *balanceClient) WithdrawBalance(ctx context.Context, in *WithdrawBalance
 // All implementations must embed UnimplementedBalanceServer
 // for forward compatibility.
 type BalanceServer interface {
-	// 创建消费者余额
-	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
-	CreateConsumerBalance(context.Context, *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error)
 	// 创建商家余额
 	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
 	CreateMerchantBalance(context.Context, *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error)
@@ -209,16 +206,19 @@ type BalanceServer interface {
 	GetUserBalance(context.Context, *GetUserBalanceRequest) (*BalanceReply, error)
 	// 冻结用户余额
 	FreezeBalance(context.Context, *FreezeBalanceRequest) (*FreezeBalanceReply, error)
+	// 创建订单流水
+	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionReply, error)
+	// 获取商家或者用户订单流水
+	GetTransactions(context.Context, *GetTransactionsRequest) (*GetTransactionsReply, error)
+	// 创建消费者余额
+	// 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+	CreateConsumerBalance(context.Context, *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error)
 	// 确认转账（解冻并转给商家）
 	ConfirmTransfer(context.Context, *ConfirmTransferRequest) (*ConfirmTransferReply, error)
 	// 取消冻结
 	CancelFreeze(context.Context, *CancelFreezeRequest) (*CancelFreezeReply, error)
 	// 获取商家余额
 	GetMerchantBalance(context.Context, *GetMerchantBalanceRequest) (*BalanceReply, error)
-	// 创建订单流水
-	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionReply, error)
-	// 获取商家或者用户订单流水
-	GetTransactions(context.Context, *GetTransactionsRequest) (*GetTransactionsReply, error)
 	// 用户充值
 	RechargeBalance(context.Context, *RechargeBalanceRequest) (*RechargeBalanceReply, error)
 	// 用户提现
@@ -233,9 +233,6 @@ type BalanceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBalanceServer struct{}
 
-func (UnimplementedBalanceServer) CreateConsumerBalance(context.Context, *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateConsumerBalance not implemented")
-}
 func (UnimplementedBalanceServer) CreateMerchantBalance(context.Context, *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMerchantBalance not implemented")
 }
@@ -248,6 +245,15 @@ func (UnimplementedBalanceServer) GetUserBalance(context.Context, *GetUserBalanc
 func (UnimplementedBalanceServer) FreezeBalance(context.Context, *FreezeBalanceRequest) (*FreezeBalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FreezeBalance not implemented")
 }
+func (UnimplementedBalanceServer) CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTransaction not implemented")
+}
+func (UnimplementedBalanceServer) GetTransactions(context.Context, *GetTransactionsRequest) (*GetTransactionsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransactions not implemented")
+}
+func (UnimplementedBalanceServer) CreateConsumerBalance(context.Context, *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateConsumerBalance not implemented")
+}
 func (UnimplementedBalanceServer) ConfirmTransfer(context.Context, *ConfirmTransferRequest) (*ConfirmTransferReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmTransfer not implemented")
 }
@@ -256,12 +262,6 @@ func (UnimplementedBalanceServer) CancelFreeze(context.Context, *CancelFreezeReq
 }
 func (UnimplementedBalanceServer) GetMerchantBalance(context.Context, *GetMerchantBalanceRequest) (*BalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantBalance not implemented")
-}
-func (UnimplementedBalanceServer) CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTransaction not implemented")
-}
-func (UnimplementedBalanceServer) GetTransactions(context.Context, *GetTransactionsRequest) (*GetTransactionsReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTransactions not implemented")
 }
 func (UnimplementedBalanceServer) RechargeBalance(context.Context, *RechargeBalanceRequest) (*RechargeBalanceReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RechargeBalance not implemented")
@@ -288,24 +288,6 @@ func RegisterBalanceServer(s grpc.ServiceRegistrar, srv BalanceServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&Balance_ServiceDesc, srv)
-}
-
-func _Balance_CreateConsumerBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConsumerBalanceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BalanceServer).CreateConsumerBalance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Balance_CreateConsumerBalance_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BalanceServer).CreateConsumerBalance(ctx, req.(*CreateConsumerBalanceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Balance_CreateMerchantBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -380,6 +362,60 @@ func _Balance_FreezeBalance_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Balance_CreateTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalanceServer).CreateTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Balance_CreateTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalanceServer).CreateTransaction(ctx, req.(*CreateTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Balance_GetTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalanceServer).GetTransactions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Balance_GetTransactions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalanceServer).GetTransactions(ctx, req.(*GetTransactionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Balance_CreateConsumerBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConsumerBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalanceServer).CreateConsumerBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Balance_CreateConsumerBalance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalanceServer).CreateConsumerBalance(ctx, req.(*CreateConsumerBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Balance_ConfirmTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConfirmTransferRequest)
 	if err := dec(in); err != nil {
@@ -434,42 +470,6 @@ func _Balance_GetMerchantBalance_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Balance_CreateTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTransactionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BalanceServer).CreateTransaction(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Balance_CreateTransaction_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BalanceServer).CreateTransaction(ctx, req.(*CreateTransactionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Balance_GetTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTransactionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BalanceServer).GetTransactions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Balance_GetTransactions_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BalanceServer).GetTransactions(ctx, req.(*GetTransactionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Balance_RechargeBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RechargeBalanceRequest)
 	if err := dec(in); err != nil {
@@ -514,10 +514,6 @@ var Balance_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BalanceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateConsumerBalance",
-			Handler:    _Balance_CreateConsumerBalance_Handler,
-		},
-		{
 			MethodName: "CreateMerchantBalance",
 			Handler:    _Balance_CreateMerchantBalance_Handler,
 		},
@@ -534,6 +530,18 @@ var Balance_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Balance_FreezeBalance_Handler,
 		},
 		{
+			MethodName: "CreateTransaction",
+			Handler:    _Balance_CreateTransaction_Handler,
+		},
+		{
+			MethodName: "GetTransactions",
+			Handler:    _Balance_GetTransactions_Handler,
+		},
+		{
+			MethodName: "CreateConsumerBalance",
+			Handler:    _Balance_CreateConsumerBalance_Handler,
+		},
+		{
 			MethodName: "ConfirmTransfer",
 			Handler:    _Balance_ConfirmTransfer_Handler,
 		},
@@ -544,14 +552,6 @@ var Balance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMerchantBalance",
 			Handler:    _Balance_GetMerchantBalance_Handler,
-		},
-		{
-			MethodName: "CreateTransaction",
-			Handler:    _Balance_CreateTransaction_Handler,
-		},
-		{
-			MethodName: "GetTransactions",
-			Handler:    _Balance_GetTransactions_Handler,
 		},
 		{
 			MethodName: "RechargeBalance",

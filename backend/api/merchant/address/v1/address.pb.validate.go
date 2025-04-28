@@ -704,6 +704,10 @@ func (m *GetMerchantAddressRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
+	if m.MerchantId != nil {
+		// no validation rules for MerchantId
+	}
+
 	if len(errors) > 0 {
 		return GetMerchantAddressRequestMultiError(errors)
 	}
@@ -784,68 +788,50 @@ var _ interface {
 	ErrorName() string
 } = GetMerchantAddressRequestValidationError{}
 
-// Validate checks the field values on ListMerchantAddressesRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// Validate checks the field values on ListAddressesRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListMerchantAddressesRequest) Validate() error {
+func (m *ListAddressesRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListMerchantAddressesRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on ListAddressesRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListMerchantAddressesRequestMultiError, or nil if none found.
-func (m *ListMerchantAddressesRequest) ValidateAll() error {
+// ListAddressesRequestMultiError, or nil if none found.
+func (m *ListAddressesRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListMerchantAddressesRequest) validate(all bool) error {
+func (m *ListAddressesRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for AddressType
+	// no validation rules for Page
 
-	// no validation rules for OnlyDefault
+	// no validation rules for PageSize
 
-	if m.GetPage() < 1 {
-		err := ListMerchantAddressesRequestValidationError{
-			field:  "Page",
-			reason: "value must be greater than or equal to 1",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if val := m.GetPageSize(); val < 5 || val > 100 {
-		err := ListMerchantAddressesRequestValidationError{
-			field:  "PageSize",
-			reason: "value must be inside range [5, 100]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+	if m.MerchantId != nil {
+		// no validation rules for MerchantId
 	}
 
 	if len(errors) > 0 {
-		return ListMerchantAddressesRequestMultiError(errors)
+		return ListAddressesRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListMerchantAddressesRequestMultiError is an error wrapping multiple
-// validation errors returned by ListMerchantAddressesRequest.ValidateAll() if
-// the designated constraints aren't met.
-type ListMerchantAddressesRequestMultiError []error
+// ListAddressesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListAddressesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListAddressesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListMerchantAddressesRequestMultiError) Error() string {
+func (m ListAddressesRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -854,12 +840,11 @@ func (m ListMerchantAddressesRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListMerchantAddressesRequestMultiError) AllErrors() []error { return m }
+func (m ListAddressesRequestMultiError) AllErrors() []error { return m }
 
-// ListMerchantAddressesRequestValidationError is the validation error returned
-// by ListMerchantAddressesRequest.Validate if the designated constraints
-// aren't met.
-type ListMerchantAddressesRequestValidationError struct {
+// ListAddressesRequestValidationError is the validation error returned by
+// ListAddressesRequest.Validate if the designated constraints aren't met.
+type ListAddressesRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -867,24 +852,24 @@ type ListMerchantAddressesRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListMerchantAddressesRequestValidationError) Field() string { return e.field }
+func (e ListAddressesRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListMerchantAddressesRequestValidationError) Reason() string { return e.reason }
+func (e ListAddressesRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListMerchantAddressesRequestValidationError) Cause() error { return e.cause }
+func (e ListAddressesRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListMerchantAddressesRequestValidationError) Key() bool { return e.key }
+func (e ListAddressesRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListMerchantAddressesRequestValidationError) ErrorName() string {
-	return "ListMerchantAddressesRequestValidationError"
+func (e ListAddressesRequestValidationError) ErrorName() string {
+	return "ListAddressesRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListMerchantAddressesRequestValidationError) Error() string {
+func (e ListAddressesRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -896,14 +881,14 @@ func (e ListMerchantAddressesRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListMerchantAddressesRequest.%s: %s%s",
+		"invalid %sListAddressesRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListMerchantAddressesRequestValidationError{}
+var _ error = ListAddressesRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -911,24 +896,364 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListMerchantAddressesRequestValidationError{}
+} = ListAddressesRequestValidationError{}
 
-// Validate checks the field values on ListMerchantAddressesReply with the
+// Validate checks the field values on ListFilterAddressesRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListMerchantAddressesReply) Validate() error {
+func (m *ListFilterAddressesRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListMerchantAddressesReply with the
+// ValidateAll checks the field values on ListFilterAddressesRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListMerchantAddressesReplyMultiError, or nil if none found.
-func (m *ListMerchantAddressesReply) ValidateAll() error {
+// ListFilterAddressesRequestMultiError, or nil if none found.
+func (m *ListFilterAddressesRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListMerchantAddressesReply) validate(all bool) error {
+func (m *ListFilterAddressesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	if m.GetPage() < 1 {
+		err := ListFilterAddressesRequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetPageSize(); val < 5 || val > 100 {
+		err := ListFilterAddressesRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be inside range [5, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.AddressType != nil {
+		// no validation rules for AddressType
+	}
+
+	if len(errors) > 0 {
+		return ListFilterAddressesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListFilterAddressesRequestMultiError is an error wrapping multiple
+// validation errors returned by ListFilterAddressesRequest.ValidateAll() if
+// the designated constraints aren't met.
+type ListFilterAddressesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListFilterAddressesRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListFilterAddressesRequestMultiError) AllErrors() []error { return m }
+
+// ListFilterAddressesRequestValidationError is the validation error returned
+// by ListFilterAddressesRequest.Validate if the designated constraints aren't met.
+type ListFilterAddressesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListFilterAddressesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListFilterAddressesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListFilterAddressesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListFilterAddressesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListFilterAddressesRequestValidationError) ErrorName() string {
+	return "ListFilterAddressesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListFilterAddressesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListFilterAddressesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListFilterAddressesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListFilterAddressesRequestValidationError{}
+
+// Validate checks the field values on GetDefaultAddressRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetDefaultAddressRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetDefaultAddressRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetDefaultAddressRequestMultiError, or nil if none found.
+func (m *GetDefaultAddressRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetDefaultAddressRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	// no validation rules for AddressType
+
+	if len(errors) > 0 {
+		return GetDefaultAddressRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetDefaultAddressRequestMultiError is an error wrapping multiple validation
+// errors returned by GetDefaultAddressRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetDefaultAddressRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetDefaultAddressRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetDefaultAddressRequestMultiError) AllErrors() []error { return m }
+
+// GetDefaultAddressRequestValidationError is the validation error returned by
+// GetDefaultAddressRequest.Validate if the designated constraints aren't met.
+type GetDefaultAddressRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetDefaultAddressRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetDefaultAddressRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetDefaultAddressRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetDefaultAddressRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetDefaultAddressRequestValidationError) ErrorName() string {
+	return "GetDefaultAddressRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetDefaultAddressRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetDefaultAddressRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetDefaultAddressRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetDefaultAddressRequestValidationError{}
+
+// Validate checks the field values on GetDefaultAddressesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetDefaultAddressesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetDefaultAddressesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetDefaultAddressesRequestMultiError, or nil if none found.
+func (m *GetDefaultAddressesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetDefaultAddressesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MerchantId
+
+	if len(errors) > 0 {
+		return GetDefaultAddressesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetDefaultAddressesRequestMultiError is an error wrapping multiple
+// validation errors returned by GetDefaultAddressesRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetDefaultAddressesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetDefaultAddressesRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetDefaultAddressesRequestMultiError) AllErrors() []error { return m }
+
+// GetDefaultAddressesRequestValidationError is the validation error returned
+// by GetDefaultAddressesRequest.Validate if the designated constraints aren't met.
+type GetDefaultAddressesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetDefaultAddressesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetDefaultAddressesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetDefaultAddressesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetDefaultAddressesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetDefaultAddressesRequestValidationError) ErrorName() string {
+	return "GetDefaultAddressesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetDefaultAddressesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetDefaultAddressesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetDefaultAddressesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetDefaultAddressesRequestValidationError{}
+
+// Validate checks the field values on ListAddressesReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListAddressesReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAddressesReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListAddressesReplyMultiError, or nil if none found.
+func (m *ListAddressesReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAddressesReply) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -942,7 +1267,7 @@ func (m *ListMerchantAddressesReply) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListMerchantAddressesReplyValidationError{
+					errors = append(errors, ListAddressesReplyValidationError{
 						field:  fmt.Sprintf("Addresses[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -950,7 +1275,7 @@ func (m *ListMerchantAddressesReply) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, ListMerchantAddressesReplyValidationError{
+					errors = append(errors, ListAddressesReplyValidationError{
 						field:  fmt.Sprintf("Addresses[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -959,7 +1284,7 @@ func (m *ListMerchantAddressesReply) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return ListMerchantAddressesReplyValidationError{
+				return ListAddressesReplyValidationError{
 					field:  fmt.Sprintf("Addresses[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -972,19 +1297,19 @@ func (m *ListMerchantAddressesReply) validate(all bool) error {
 	// no validation rules for TotalCount
 
 	if len(errors) > 0 {
-		return ListMerchantAddressesReplyMultiError(errors)
+		return ListAddressesReplyMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListMerchantAddressesReplyMultiError is an error wrapping multiple
-// validation errors returned by ListMerchantAddressesReply.ValidateAll() if
-// the designated constraints aren't met.
-type ListMerchantAddressesReplyMultiError []error
+// ListAddressesReplyMultiError is an error wrapping multiple validation errors
+// returned by ListAddressesReply.ValidateAll() if the designated constraints
+// aren't met.
+type ListAddressesReplyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListMerchantAddressesReplyMultiError) Error() string {
+func (m ListAddressesReplyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -993,11 +1318,11 @@ func (m ListMerchantAddressesReplyMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListMerchantAddressesReplyMultiError) AllErrors() []error { return m }
+func (m ListAddressesReplyMultiError) AllErrors() []error { return m }
 
-// ListMerchantAddressesReplyValidationError is the validation error returned
-// by ListMerchantAddressesReply.Validate if the designated constraints aren't met.
-type ListMerchantAddressesReplyValidationError struct {
+// ListAddressesReplyValidationError is the validation error returned by
+// ListAddressesReply.Validate if the designated constraints aren't met.
+type ListAddressesReplyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1005,24 +1330,24 @@ type ListMerchantAddressesReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListMerchantAddressesReplyValidationError) Field() string { return e.field }
+func (e ListAddressesReplyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListMerchantAddressesReplyValidationError) Reason() string { return e.reason }
+func (e ListAddressesReplyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListMerchantAddressesReplyValidationError) Cause() error { return e.cause }
+func (e ListAddressesReplyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListMerchantAddressesReplyValidationError) Key() bool { return e.key }
+func (e ListAddressesReplyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListMerchantAddressesReplyValidationError) ErrorName() string {
-	return "ListMerchantAddressesReplyValidationError"
+func (e ListAddressesReplyValidationError) ErrorName() string {
+	return "ListAddressesReplyValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListMerchantAddressesReplyValidationError) Error() string {
+func (e ListAddressesReplyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1034,14 +1359,14 @@ func (e ListMerchantAddressesReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListMerchantAddressesReply.%s: %s%s",
+		"invalid %sListAddressesReply.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListMerchantAddressesReplyValidationError{}
+var _ error = ListAddressesReplyValidationError{}
 
 var _ interface {
 	Field() string
@@ -1049,7 +1374,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListMerchantAddressesReplyValidationError{}
+} = ListAddressesReplyValidationError{}
 
 // Validate checks the field values on SetDefaultMerchantAddressRequest with
 // the rules defined in the proto definition for this message. If any rules
