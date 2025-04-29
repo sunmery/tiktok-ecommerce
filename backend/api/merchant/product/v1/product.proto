@@ -19,7 +19,7 @@ service Product {
   // 更新商品信息
   rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductReply) {
     option (google.api.http) = {
-      put: "/v1/merchants/products/{id}"
+      patch: "/v1/merchants/products/{id}"
       body: "*"
     };
   }
@@ -40,6 +40,7 @@ message UpdateProductRequest {
   int32 stock = 6;
   string url = 7;
   google.protobuf.Value attributes = 8;
+  uint32 status = 9;
 }
 
 message UpdateProductReply {

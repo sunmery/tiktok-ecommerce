@@ -33,7 +33,7 @@ type ProductHTTPServer interface {
 func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/merchants/products", _Product_GetMerchantProducts0_HTTP_Handler(srv))
-	r.PUT("/v1/merchants/products/{id}", _Product_UpdateProduct0_HTTP_Handler(srv))
+	r.PATCH("/v1/merchants/products/{id}", _Product_UpdateProduct0_HTTP_Handler(srv))
 }
 
 func _Product_GetMerchantProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -112,7 +112,7 @@ func (c *ProductHTTPClientImpl) UpdateProduct(ctx context.Context, in *UpdatePro
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationProductUpdateProduct))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

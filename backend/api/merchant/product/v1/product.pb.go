@@ -87,6 +87,7 @@ type UpdateProductRequest struct {
 	Stock         int32                  `protobuf:"varint,6,opt,name=stock,proto3" json:"stock,omitempty"`
 	Url           string                 `protobuf:"bytes,7,opt,name=url,proto3" json:"url,omitempty"`
 	Attributes    *structpb.Value        `protobuf:"bytes,8,opt,name=attributes,proto3" json:"attributes,omitempty"`
+	Status        uint32                 `protobuf:"varint,9,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -177,6 +178,13 @@ func (x *UpdateProductRequest) GetAttributes() *structpb.Value {
 	return nil
 }
 
+func (x *UpdateProductRequest) GetStatus() uint32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
 type UpdateProductReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
@@ -236,7 +244,7 @@ const file_product_v1_product_proto_rawDesc = "" +
 	"\x18product/v1/product.proto\x12\x15ecommerce.merchant.v1\x1a\x1cgoogle/api/annotations.proto\x1a$backend/api/product/v1/product.proto\x1a\x1cgoogle/protobuf/struct.proto\"L\n" +
 	"\x19GetMerchantProductRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"\xf3\x01\n" +
+	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"\x8b\x02\n" +
 	"\x14UpdateProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vmerchant_id\x18\x02 \x01(\tR\n" +
@@ -248,13 +256,14 @@ const file_product_v1_product_proto_rawDesc = "" +
 	"\x03url\x18\a \x01(\tR\x03url\x126\n" +
 	"\n" +
 	"attributes\x18\b \x01(\v2\x16.google.protobuf.ValueR\n" +
-	"attributes\"B\n" +
+	"attributes\x12\x16\n" +
+	"\x06status\x18\t \x01(\rR\x06status\"B\n" +
 	"\x12UpdateProductReply\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\x05R\x04code2\xa5\x02\n" +
 	"\aProduct\x12\x87\x01\n" +
 	"\x13GetMerchantProducts\x120.ecommerce.merchant.v1.GetMerchantProductRequest\x1a\x1e.ecommerce.product.v1.Products\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/merchants/products\x12\x8f\x01\n" +
-	"\rUpdateProduct\x12+.ecommerce.merchant.v1.UpdateProductRequest\x1a).ecommerce.merchant.v1.UpdateProductReply\"&\x82\xd3\xe4\x93\x02 :\x01*\x1a\x1b/v1/merchants/products/{id}B+Z)backend/api/merchant/product/v1;productv1b\x06proto3"
+	"\rUpdateProduct\x12+.ecommerce.merchant.v1.UpdateProductRequest\x1a).ecommerce.merchant.v1.UpdateProductReply\"&\x82\xd3\xe4\x93\x02 :\x01*2\x1b/v1/merchants/products/{id}B+Z)backend/api/merchant/product/v1;productv1b\x06proto3"
 
 var (
 	file_product_v1_product_proto_rawDescOnce sync.Once
