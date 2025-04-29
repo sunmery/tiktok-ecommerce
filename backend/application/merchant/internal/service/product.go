@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	productv1 "backend/api/product/v1"
@@ -71,6 +73,7 @@ func (uc *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProdu
 		Name:        &req.Name,
 		Price:       &req.Price,
 		Description: &req.Description,
+		Status:      constants.ProductStatus(req.Status),
 	}
 
 	result, err := uc.pc.UpdateProduct(ctx, &updateReq)

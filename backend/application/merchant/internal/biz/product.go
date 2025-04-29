@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	"github.com/google/uuid"
@@ -18,8 +20,6 @@ type GetMerchantProducts struct {
 
 // Product 商品实体
 type (
-	ProductStatus uint
-
 	ProductImage struct {
 		URL       string
 		IsPrimary bool
@@ -51,7 +51,7 @@ type (
 		Price       float64
 		Description string
 		Images      []*ProductImage
-		Status      ProductStatus
+		Status      constants.ProductStatus
 		Category    CategoryInfo
 		CreatedAt   time.Time
 		UpdatedAt   time.Time
@@ -76,6 +76,7 @@ type (
 		Name        *string
 		Price       *float64
 		Description *string
+		Status      constants.ProductStatus // 更新商品状态
 	}
 	UpdateProductReply struct {
 		Code    uint

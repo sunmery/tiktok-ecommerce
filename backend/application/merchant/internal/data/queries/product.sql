@@ -45,6 +45,7 @@ WITH update_product AS (
         SET name = coalesce(sqlc.narg(name), name),
             description = coalesce(sqlc.narg(description), description),
             price = coalesce(sqlc.narg(price), price),
+            status = @status,
             updated_at = now()
         WHERE id = @product_id
             AND merchant_id = @merchant_id

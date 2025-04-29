@@ -148,7 +148,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 			Price:       price,
 			Description: *product.Description,
 			Images:      images,
-			Status:      biz.ProductStatus(product.Status),
+			Status:      constants.ProductStatus(product.Status),
 			Category:    categoryInfo,
 			CreatedAt:   product.CreatedAt,
 			UpdatedAt:   product.UpdatedAt,
@@ -190,11 +190,13 @@ func (p *productRepo) UpdateProduct(ctx context.Context, req *biz.UpdateProductR
 	if err != nil {
 		return nil, fmt.Errorf("invalid attributes: %w", err)
 	}
+	status := int16(req.Status)
 	params := models.UpdateProductParams{
 		Stock:       &req.Stock,
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       price,
+		Status:      &status,
 		ProductID:   productId,
 		MerchantID:  merchantId,
 		Attributes:  attributes,

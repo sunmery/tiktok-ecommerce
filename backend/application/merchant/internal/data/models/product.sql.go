@@ -154,22 +154,23 @@ WITH update_product AS (
         SET name = coalesce($2, name),
             description = coalesce($3, description),
             price = coalesce($4, price),
+            status = $5,
             updated_at = now()
-        WHERE id = $5
-            AND merchant_id = $6
+        WHERE id = $6
+            AND merchant_id = $7
         RETURNING merchant_id,id),
      update_attr AS (
          UPDATE products.product_attributes
-             SET attributes = $7,
+             SET attributes = $8,
                  updated_at = NOW()
-             WHERE merchant_id = $6
-                 AND product_id = $5
+             WHERE merchant_id = $7
+                 AND product_id = $6
              RETURNING updated_at),
      update_image AS (
          UPDATE products.product_images
-             SET url = $8
-             WHERE merchant_id = $6
-                 AND product_id = $5)
+             SET url = $9
+             WHERE merchant_id = $7
+                 AND product_id = $6)
 UPDATE products.inventory pi
 SET stock      = $1,
     updated_at = now()
@@ -183,6 +184,7 @@ type UpdateProductParams struct {
 	Name        *string
 	Description *string
 	Price       pgtype.Numeric
+	Status      *int16
 	ProductID   pgtype.UUID
 	MerchantID  pgtype.UUID
 	Attributes  []byte
@@ -196,22 +198,23 @@ type UpdateProductParams struct {
 //	        SET name = coalesce($2, name),
 //	            description = coalesce($3, description),
 //	            price = coalesce($4, price),
+//	            status = $5,
 //	            updated_at = now()
-//	        WHERE id = $5
-//	            AND merchant_id = $6
+//	        WHERE id = $6
+//	            AND merchant_id = $7
 //	        RETURNING merchant_id,id),
 //	     update_attr AS (
 //	         UPDATE products.product_attributes
-//	             SET attributes = $7,
+//	             SET attributes = $8,
 //	                 updated_at = NOW()
-//	             WHERE merchant_id = $6
-//	                 AND product_id = $5
+//	             WHERE merchant_id = $7
+//	                 AND product_id = $6
 //	             RETURNING updated_at),
 //	     update_image AS (
 //	         UPDATE products.product_images
-//	             SET url = $8
-//	             WHERE merchant_id = $6
-//	                 AND product_id = $5)
+//	             SET url = $9
+//	             WHERE merchant_id = $7
+//	                 AND product_id = $6)
 //	UPDATE products.inventory pi
 //	SET stock      = $1,
 //	    updated_at = now()
@@ -224,6 +227,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.Name,
 		arg.Description,
 		arg.Price,
+		arg.Status,
 		arg.ProductID,
 		arg.MerchantID,
 		arg.Attributes,

@@ -218,5 +218,6 @@ func (uc *InventoryUsecase) RecordStockAdjustment(ctx context.Context, req *Reco
 
 // GetStockAdjustmentHistory 获取库存调整历史
 func (uc *InventoryUsecase) GetStockAdjustmentHistory(ctx context.Context, req *GetStockAdjustmentHistoryRequest) (*GetStockAdjustmentHistoryResponse, error) {
+	uc.log.WithContext(ctx).Debugf("获取库存调整历史: %+v", req)
 	return uc.repo.GetStockAdjustmentHistory(ctx, req)
 }

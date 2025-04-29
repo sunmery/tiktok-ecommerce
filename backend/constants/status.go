@@ -1,7 +1,9 @@
 package constants
 
 type (
-	RoleType        string // 角色类型
+	RoleType string // 角色类型
+	// ProductStatus   string // 商品状态
+	ProductStatus   int16  // 商品状态, TODO 临时方案, 涉及到数据库的字段类型和其他引用了该状态的代码, 暂时不做修改
 	PaymentStatus   string // 支付状态
 	TradeStatus     string // 支付宝交易状态
 	ShippingStatus  string // 发货状态
@@ -31,6 +33,24 @@ const (
 	TradeStatusClosed       TradeStatus = "TRADE_CLOSED"   // （未付款交易超时关闭，或支付完成后全额退款）
 	TradeStatusSuccess      TradeStatus = "TRADE_SUCCESS"  // （交易支付成功）
 	TradeStatusFinished     TradeStatus = "TRADE_FINISHED" // （交易结束，不可退款）
+)
+
+// const (
+//
+//	ProductDraft    ProductStatus = "DRAFT"    // 草稿
+//	ProductPending  ProductStatus = "PENDING"  // 待审核
+//	ProductApproved ProductStatus = "APPROVED" // 已审核
+//	ProductRejected ProductStatus = "REJECTED" // 驳回
+//	ProductSold     ProductStatus = "SOLD"     // 已售罄
+//	ProductDeleted  ProductStatus = "DELETED"  // 已下架
+//
+// )
+const (
+	ProductDraft    ProductStatus = 0 // 草稿
+	ProductPending  ProductStatus = 1 // 待审核
+	ProductApproved ProductStatus = 2 // 已审核
+	ProductRejected ProductStatus = 3 // 已拒绝
+	ProductDeleted  ProductStatus = 4 // 已下架
 )
 
 const (
