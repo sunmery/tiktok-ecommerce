@@ -82,10 +82,10 @@ func (u *userRepo) GetUsers(ctx context.Context, _ *biz.GetUsersRequest) (*biz.G
 		g.Go(func() error {
 			fullUserProfile, err := u.data.cs.GetUser(user.Id)
 			if err != nil {
-				return fmt.Errorf("failed to get user %s: %w", user.Id, err)
+				return fmt.Errorf("failed to get user '%s': %w", user.Id, err)
 			}
 			if fullUserProfile == nil {
-				return fmt.Errorf("user %s not found", user.Id)
+				return fmt.Errorf("user '%s' not found", user.Id)
 			}
 
 			users, err := convertUserToProfile(fullUserProfile)
