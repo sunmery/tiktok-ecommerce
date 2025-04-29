@@ -212,13 +212,6 @@ func (s *OrderServiceService) GetOrders(ctx context.Context, req *v1.GetOrdersRe
 }
 
 func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOrdersReq) (*v1.Orders, error) {
-	// 从网关获取用户ID
-	userId, err := globalpkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		log.Errorf("获取用户ID失败: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
-	}
-
 	// 使用请求中的merchant_id覆盖，如果有指定的话
 
 	// 构建业务层请求
@@ -236,7 +229,7 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 
 	// 检查是否有订单
 	if len(resp.Orders) == 0 {
-		log.Infof("用户 %s 没有订单记录", userId)
+		log.Info("没有订单记录")
 		return &v1.Orders{Orders: []*v1.Order{}}, nil
 	}
 
