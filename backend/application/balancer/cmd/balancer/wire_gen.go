@@ -38,9 +38,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	if err != nil {
 		return nil, nil, err
 	}
-	balancerRepo := data.NewBalancerRepo(dataData, logger)
-	balancerUsecase := biz.NewBalancerUsecase(balancerRepo, logger)
-	balanceService := service.NewBalancerService(balancerUsecase)
+	balanceRepo := data.NewBalanceRepo(dataData, logger)
+	balanceUsecase := biz.NewBalanceUsecase(balanceRepo, logger)
+	balanceService := service.NewBalanceService(balanceUsecase)
 	grpcServer := server.NewGRPCServer(confServer, observability, logger, balanceService)
 	httpServer := server.NewHTTPServer(confServer, observability, logger, balanceService)
 	registrar := server.NewRegistrar(consul)

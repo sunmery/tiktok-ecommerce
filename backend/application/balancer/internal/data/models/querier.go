@@ -163,6 +163,18 @@ type Querier interface {
 	//  WHERE id = $1
 	//    AND user_id = $2
 	GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMethodParams) (BalancesUserPaymentMethods, error)
+	// 乐观锁检查
+	// 增加商家可用余额 (用于充值成功) - 使用乐观锁
+	//
+	//
+	//  UPDATE balances.merchant_balances
+	//  SET available  = available + $3, -- 金额参数 (分)
+	//      version    = version + 1,
+	//      updated_at = NOW()
+	//  WHERE merchant_id = $1
+	//    AND currency = $2
+	//    AND version = $4
+	IncreaseMerchantAvailableBalance(ctx context.Context, arg IncreaseMerchantAvailableBalanceParams) (int64, error)
 	// 增加用户可用余额 (用于充值成功, 取消提现, 取消冻结成功后资金退回) - 使用乐观锁
 	//
 	//  UPDATE balances.user_balances

@@ -1,17 +1,15 @@
 syntax = "proto3";
 
-package ecommerce.balancer.v1;
+package ecommerce.balance.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "backend/api/balancer/v1;balancerv1";
+option go_package = "backend/api/balance/v1;balancev1";
 
 service Balance {
-
-  // 创建商家余额
-  // 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
+  // 创建商家账号指定币种的初始余额记录
   rpc CreateMerchantBalance(CreateMerchantBalanceRequest) returns (CreateMerchantBalanceReply) {
     option (google.api.http) = {
       put: "/v1/balances/merchants/{merchant_id}/balance",
@@ -26,30 +24,6 @@ service Balance {
     };
   }
 
-
-  // 获取用户余额
-  rpc GetUserBalance(GetUserBalanceRequest) returns (BalanceReply) {
-    option (google.api.http) = {
-      get: "/v1/balances/users/balancer"
-    };
-  }
-
-  // 冻结用户余额
-  rpc FreezeBalance(FreezeBalanceRequest) returns (FreezeBalanceReply) {
-    option (google.api.http) = {
-      post: "/v1/balances/freeze"
-      body: "*"
-    };
-  }
-
-  // 创建订单流水
-  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionReply) {
-    option (google.api.http) = {
-      put: "/v1/balances/transactions",
-      body: "*"
-    };
-  }
-
   // 获取商家或者用户订单流水
   rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsReply) {
     option (google.api.http) = {
@@ -57,19 +31,48 @@ service Balance {
     };
   }
 
-  // 创建消费者余额
-  // 为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)
-  rpc CreateConsumerBalance(CreateConsumerBalanceRequest) returns (CreateConsumerBalanceReply) {
+  // 商家余额充值
+  rpc RechargeMerchantBalance(RechargeMerchantBalanceRequest) returns (RechargeMerchantBalanceReply) {
     option (google.api.http) = {
-      put: "/v1/balances/users/{user_id}/balance",
+      post: "/v1/balances/merchants/recharge"
       body: "*"
     };
   }
 
-  // 确认转账（解冻并转给商家）
-  rpc ConfirmTransfer(ConfirmTransferRequest) returns (ConfirmTransferReply) {
+  // 获取商家余额
+  rpc GetMerchantBalance(GetMerchantBalanceRequest) returns (BalanceReply) {
     option (google.api.http) = {
-      post: "/v1/balances/freezes/{freeze_id}/confirm"
+      get: "/v1/balances/merchants/{merchant_id}/balance"
+    };
+  }
+
+  // 创建消费者账号指定币种的初始余额记录
+  rpc CreateConsumersBalance(CreateConsumersBalanceRequest) returns (CreateConsumersBalanceReply) {
+    option (google.api.http) = {
+      put: "/v1/balances/consumers/{user_id}/balance",
+      body: "*"
+    };
+  }
+
+  // 用户余额充值
+  rpc RechargeBalance(RechargeBalanceRequest) returns (RechargeBalanceReply) {
+    option (google.api.http) = {
+      post: "/v1/balances/consumers/recharge"
+      body: "*"
+    };
+  }
+
+  // 获取用户余额
+  rpc GetUserBalance(GetUserBalanceRequest) returns (BalanceReply) {
+    option (google.api.http) = {
+      get: "/v1/balances/consumers/balance"
+    };
+  }
+
+  // 冻结用户余额
+  rpc FreezeBalance(FreezeBalanceRequest) returns (FreezeBalanceReply) {
+    option (google.api.http) = {
+      post: "/v1/balances/freeze"
       body: "*"
     };
   }
@@ -82,17 +85,10 @@ service Balance {
     };
   }
 
-  // 获取商家余额
-  rpc GetMerchantBalance(GetMerchantBalanceRequest) returns (BalanceReply) {
+  // 确认转账（解冻并转给商家）
+  rpc ConfirmTransfer(ConfirmTransferRequest) returns (ConfirmTransferReply) {
     option (google.api.http) = {
-      get: "/v1/balances/merchants/{merchant_id}/balance"
-    };
-  }
-
-  // 用户余额充值
-  rpc RechargeBalance(RechargeBalanceRequest) returns (RechargeBalanceReply) {
-    option (google.api.http) = {
-      post: "/v1/balances/users/recharge"
+      post: "/v1/balances/freezes/{freeze_id}/confirm"
       body: "*"
     };
   }
@@ -100,7 +96,15 @@ service Balance {
   // 用户提现
   rpc WithdrawBalance(WithdrawBalanceRequest) returns (WithdrawBalanceReply) {
     option (google.api.http) = {
-      post: "/v1/balances/users/withdraw"
+      post: "/v1/balances/consumers/withdraw"
+      body: "*"
+    };
+  }
+
+  // 创建订单流水
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionReply) {
+    option (google.api.http) = {
+      put: "/v1/balances/transactions",
       body: "*"
     };
   }
@@ -119,7 +123,7 @@ message CreateMerchantBalanceRequest {
   string merchant_id = 1;       // UUID as string
   string currency = 2;    // 指定币种
   double initial_balance = 3; // 初始余额
-  string balancer_type = 4;        // 余额类型
+  string balance_type = 4;        // 余额类型
   bool is_default = 5;      // 是否默认余额
   google.protobuf.Struct account_details = 6; // 账户详情 (JSON 格式)
 }
@@ -130,16 +134,16 @@ message CreateMerchantBalanceReply {
   double available = 3;
 }
 
-message CreateConsumerBalanceRequest {
+message CreateConsumersBalanceRequest {
   string user_id = 1;       // UUID as string
   string currency = 2;    // 指定币种
   double initial_balance = 3; // 初始余额
-  string balancer_type = 4;        // 余额类型
+  string balance_type = 4;        // 余额类型
   bool is_default = 5;      // 是否默认余额
   google.protobuf.Struct account_details = 6; // 账户详情 (JSON 格式)
 }
 
-message CreateConsumerBalanceReply {
+message CreateConsumersBalanceReply {
   string user_id = 1;
   string currency = 2;
   double available = 3;
@@ -284,4 +288,20 @@ message WithdrawBalanceReply {
   bool success = 1;
   int64 transaction_id = 2;      // 内部交易流水ID  - 初始状态可能是 PENDING
   int32 new_version = 3;          // 用户余额新版本号
+}
+
+message RechargeMerchantBalanceRequest {
+  string merchant_id = 1;       // UUID as string
+  double amount = 2;          // 充值金额
+  string currency = 3;        // 币种
+  string payment_method = 4;  // 支付方式
+  string payment_account = 5; // 支付账号
+  google.protobuf.Struct payment_extra = 6; // 支付额外信息
+  int32 expected_version = 7; // 期望的版本号
+  string idempotency_key = 8; // 幂等键
+}
+
+message RechargeMerchantBalanceReply {
+  int64 transaction_id = 1; // 交易ID
+  int32 new_version = 2;    // 新版本号
 }

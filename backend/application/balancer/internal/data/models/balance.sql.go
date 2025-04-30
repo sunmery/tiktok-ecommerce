@@ -386,6 +386,47 @@ func (q *Queries) GetUserBalance(ctx context.Context, arg GetUserBalanceParams) 
 	return i, err
 }
 
+const IncreaseMerchantAvailableBalance = `-- name: IncreaseMerchantAvailableBalance :execrows
+
+UPDATE balances.merchant_balances
+SET available  = available + $3, -- 金额参数 (分)
+    version    = version + 1,
+    updated_at = NOW()
+WHERE merchant_id = $1
+  AND currency = $2
+  AND version = $4
+`
+
+type IncreaseMerchantAvailableBalanceParams struct {
+	MerchantID      uuid.UUID      `json:"merchantID"`
+	Currency        string         `json:"currency"`
+	Amount          pgtype.Numeric `json:"amount"`
+	ExpectedVersion int32          `json:"expectedVersion"`
+}
+
+// 乐观锁检查
+// 增加商家可用余额 (用于充值成功) - 使用乐观锁
+//
+//	UPDATE balances.merchant_balances
+//	SET available  = available + $3, -- 金额参数 (分)
+//	    version    = version + 1,
+//	    updated_at = NOW()
+//	WHERE merchant_id = $1
+//	  AND currency = $2
+//	  AND version = $4
+func (q *Queries) IncreaseMerchantAvailableBalance(ctx context.Context, arg IncreaseMerchantAvailableBalanceParams) (int64, error) {
+	result, err := q.db.Exec(ctx, IncreaseMerchantAvailableBalance,
+		arg.MerchantID,
+		arg.Currency,
+		arg.Amount,
+		arg.ExpectedVersion,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const IncreaseUserAvailableBalance = `-- name: IncreaseUserAvailableBalance :execrows
 UPDATE balances.user_balances
 SET available  = available + $3, -- 金额参数 (分)

@@ -26,14 +26,14 @@ import (
 
 type BalanceService struct {
 	v1.UnimplementedBalanceServer
-	uc *biz.BalancerUsecase
+	uc *biz.BalanceUsecase
 }
 
-func NewBalancerService(uc *biz.BalancerUsecase) *BalanceService {
+func NewBalanceService(uc *biz.BalanceUsecase) *BalanceService {
 	return &BalanceService{uc: uc}
 }
 
-func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.CreateConsumerBalanceRequest) (*v1.CreateConsumerBalanceReply, error) {
+func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.CreateConsumersBalanceRequest) (*v1.CreateConsumersBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.Crea
 		UserId:         userId,
 		Currency:       constants.Currency(req.Currency),
 		InitialBalance: req.InitialBalance,
-		BalancerType:   req.BalancerType,
+		BalanceType:    req.BalanceType,
 		IsDefault:      req.IsDefault,
 		AccountDetails: accountDetails,
 	})
@@ -56,7 +56,7 @@ func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.Crea
 		return nil, err
 	}
 
-	return &v1.CreateConsumerBalanceReply{
+	return &v1.CreateConsumersBalanceReply{
 		UserId:    reply.UserId.String(),
 		Currency:  string(reply.Currency),
 		Available: reply.Available,
@@ -78,7 +78,7 @@ func (s *BalanceService) CreateMerchantBalance(ctx context.Context, req *v1.Crea
 		MerchantId:     merchantId,
 		Currency:       constants.Currency(req.Currency),
 		InitialBalance: req.InitialBalance,
-		BalancerType:   req.BalancerType,
+		BalanceType:    req.BalanceType,
 		IsDefault:      req.IsDefault,
 		AccountDetails: accountDetails,
 	})
@@ -289,7 +289,7 @@ func (s *BalanceService) RechargeBalance(ctx context.Context, req *v1.RechargeBa
 		UserId:                userId,
 		Amount:                req.Amount,
 		Currency:              constants.Currency(req.Currency),
-		ExternalTransactionId: req.ExternalTransactionId,
+		ExternalTransactionId: *req.ExternalTransactionId,
 		PaymentMethodType:     req.PaymentMethodType,
 		PaymentAccount:        req.PaymentAccount,
 		IdempotencyKey:        req.IdempotencyKey,
@@ -390,10 +390,6 @@ func (s *BalanceService) GetMerchantVersion(ctx context.Context, req *v1.GetMerc
 	if reply == nil {
 		return nil, status.Error(codes.NotFound, "merchant version not found")
 	}
-	versions := make([]int64, 0, len(reply.Versions))
-	for _, v := range reply.Versions {
-		versions = append(versions, v)
-	}
 	merchantPbIds := make([]string, 0, len(reply.MerchantIds))
 	for _, v := range reply.MerchantIds {
 		log.Debugf("MerchantId: %+v", v)
@@ -401,7 +397,41 @@ func (s *BalanceService) GetMerchantVersion(ctx context.Context, req *v1.GetMerc
 	}
 
 	return &v1.GetMerchantVersionReply{
-		MerchantVersion: versions,
+		MerchantVersion: reply.Versions,
 		MerchantIds:     merchantPbIds,
+	}, nil
+}
+
+func (s *BalanceService) RechargeMerchantBalance(ctx context.Context, req *v1.RechargeMerchantBalanceRequest) (*v1.RechargeMerchantBalanceReply, error) {
+	merchantId, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return nil, err
+	}
+
+	var paymentExtra json.RawMessage
+	if req.PaymentExtra != nil {
+		paymentExtra, err = json.Marshal(req.PaymentExtra)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reply, err := s.uc.RechargeMerchantBalance(ctx, &biz.RechargeMerchantBalanceRequest{
+		MerchantId:      merchantId,
+		Amount:          req.Amount,
+		Currency:        constants.Currency(req.Currency),
+		PaymentMethod:   constants.PaymentMethod(req.PaymentMethod),
+		PaymentAccount:  req.PaymentAccount,
+		PaymentExtra:    paymentExtra,
+		ExpectedVersion: req.ExpectedVersion,
+		IdempotencyKey:  req.IdempotencyKey,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.RechargeMerchantBalanceReply{
+		TransactionId: reply.TransactionId,
+		NewVersion:    reply.NewVersion,
 	}, nil
 }

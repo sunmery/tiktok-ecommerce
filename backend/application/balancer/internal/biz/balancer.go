@@ -17,7 +17,7 @@ type (
 		UserId         uuid.UUID
 		Currency       constants.Currency
 		InitialBalance float64
-		BalancerType   string
+		BalanceType    string
 		IsDefault      bool
 		AccountDetails json.RawMessage
 	}
@@ -33,7 +33,7 @@ type (
 		MerchantId     uuid.UUID
 		Currency       constants.Currency
 		InitialBalance float64
-		BalancerType   string
+		BalanceType    string
 		IsDefault      bool
 		AccountDetails json.RawMessage
 	}
@@ -215,7 +215,25 @@ type (
 	}
 )
 
-type BalancerRepo interface {
+type (
+	RechargeMerchantBalanceRequest struct {
+		MerchantId        uuid.UUID
+		Amount            float64
+		Currency          constants.Currency
+		PaymentMethodType string
+		PaymentMethod     constants.PaymentMethod
+		PaymentAccount    string
+		PaymentExtra      json.RawMessage
+		IdempotencyKey    string
+		ExpectedVersion   int32
+	}
+	RechargeMerchantBalanceReply struct {
+		TransactionId int64
+		NewVersion    int32
+	}
+)
+
+type BalanceRepo interface {
 	// CreateConsumerBalance 创建用户余额
 	CreateConsumerBalance(ctx context.Context, req *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error)
 	// CreateMerchantBalance 创建商家余额
@@ -234,6 +252,8 @@ type BalancerRepo interface {
 	GetUserBalance(ctx context.Context, req *GetUserBalanceRequest) (*BalanceReply, error)
 	// RechargeBalance 用户充值
 	RechargeBalance(ctx context.Context, req *RechargeBalanceRequest) (*RechargeBalanceReply, error)
+	// RechargeMerchantBalance 商家余额充值
+	RechargeMerchantBalance(ctx context.Context, req *RechargeMerchantBalanceRequest) (*RechargeMerchantBalanceReply, error)
 	// WithdrawBalance 用户提现
 	WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error)
 	// CreateTransaction 创建交易记录
@@ -242,74 +262,79 @@ type BalancerRepo interface {
 	GetMerchantVersion(ctx context.Context, req *GetMerchantVersionRequest) (*GetMerchantVersionReply, error)
 }
 
-type BalancerUsecase struct {
-	repo BalancerRepo
+type BalanceUsecase struct {
+	repo BalanceRepo
 	log  *log.Helper
 }
 
-func NewBalancerUsecase(repo BalancerRepo, logger log.Logger) *BalancerUsecase {
-	return &BalancerUsecase{
+func NewBalanceUsecase(repo BalanceRepo, logger log.Logger) *BalanceUsecase {
+	return &BalanceUsecase{
 		repo: repo,
 		log:  log.NewHelper(logger),
 	}
 }
 
-func (cc *BalancerUsecase) CreateConsumerBalance(ctx context.Context, req *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error) {
+func (cc *BalanceUsecase) CreateConsumerBalance(ctx context.Context, req *CreateConsumerBalanceRequest) (*CreateConsumerBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("CreateConsumerBalance request: %+v", req)
 	return cc.repo.CreateConsumerBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) CreateMerchantBalance(ctx context.Context, req *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error) {
+func (cc *BalanceUsecase) CreateMerchantBalance(ctx context.Context, req *CreateMerchantBalanceRequest) (*CreateMerchantBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("CreateMerchantBalance request: %+v", req)
 	return cc.repo.CreateMerchantBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) CancelFreeze(ctx context.Context, req *CancelFreezeRequest) (*CancelFreezeReply, error) {
+func (cc *BalanceUsecase) CancelFreeze(ctx context.Context, req *CancelFreezeRequest) (*CancelFreezeReply, error) {
 	cc.log.WithContext(ctx).Debugf("CancelFreeze request: %+v", req)
 	return cc.repo.CancelFreeze(ctx, req)
 }
 
-func (cc *BalancerUsecase) ConfirmTransfer(ctx context.Context, req *ConfirmTransferRequest) (*ConfirmTransferReply, error) {
+func (cc *BalanceUsecase) ConfirmTransfer(ctx context.Context, req *ConfirmTransferRequest) (*ConfirmTransferReply, error) {
 	cc.log.WithContext(ctx).Debugf("ConfirmTransfer request: %+v", req)
 	return cc.repo.ConfirmTransfer(ctx, req)
 }
 
-func (cc *BalancerUsecase) FreezeBalance(ctx context.Context, req *FreezeBalanceRequest) (*FreezeBalanceReply, error) {
+func (cc *BalanceUsecase) FreezeBalance(ctx context.Context, req *FreezeBalanceRequest) (*FreezeBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("FreezeBalance request: %+v", req)
 	return cc.repo.FreezeBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) GetMerchantBalance(ctx context.Context, req *GetMerchantBalanceRequest) (*BalanceReply, error) {
+func (cc *BalanceUsecase) GetMerchantBalance(ctx context.Context, req *GetMerchantBalanceRequest) (*BalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetMerchantBalance request: %+v", req)
 	return cc.repo.GetMerchantBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) GetUserBalance(ctx context.Context, req *GetUserBalanceRequest) (*BalanceReply, error) {
+func (cc *BalanceUsecase) GetUserBalance(ctx context.Context, req *GetUserBalanceRequest) (*BalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetUserBalance request: %+v", req)
 	return cc.repo.GetUserBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) RechargeBalance(ctx context.Context, req *RechargeBalanceRequest) (*RechargeBalanceReply, error) {
+func (cc *BalanceUsecase) RechargeBalance(ctx context.Context, req *RechargeBalanceRequest) (*RechargeBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("RechargeBalance request: %+v", req)
 	return cc.repo.RechargeBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error) {
+func (cc *BalanceUsecase) RechargeMerchantBalance(ctx context.Context, req *RechargeMerchantBalanceRequest) (*RechargeMerchantBalanceReply, error) {
+	cc.log.WithContext(ctx).Debugf("RechargeMerchantBalance request: %+v", req)
+	return cc.repo.RechargeMerchantBalance(ctx, req)
+}
+
+func (cc *BalanceUsecase) WithdrawBalance(ctx context.Context, req *WithdrawBalanceRequest) (*WithdrawBalanceReply, error) {
 	cc.log.WithContext(ctx).Debugf("WithdrawBalance request: %+v", req)
 	return cc.repo.WithdrawBalance(ctx, req)
 }
 
-func (cc *BalancerUsecase) CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*CreateTransactionReply, error) {
+func (cc *BalanceUsecase) CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*CreateTransactionReply, error) {
 	cc.log.WithContext(ctx).Debugf("CreateTransaction request: %+v", req)
 	return cc.repo.CreateTransaction(ctx, req)
 }
 
-func (cc *BalancerUsecase) GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error) {
+func (cc *BalanceUsecase) GetTransactions(ctx context.Context, req *GetTransactionsRequest) (*GetTransactionsReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetTransactions request: %+v", req)
 	return cc.repo.GetTransactions(ctx, req)
 }
 
-func (cc *BalancerUsecase) GetMerchantVersion(ctx context.Context, req *GetMerchantVersionRequest) (*GetMerchantVersionReply, error) {
+func (cc *BalanceUsecase) GetMerchantVersion(ctx context.Context, req *GetMerchantVersionRequest) (*GetMerchantVersionReply, error) {
 	cc.log.WithContext(ctx).Debugf("biz/order GetMerchantVersion req:%+v", req)
 	return cc.repo.GetMerchantVersion(ctx, req)
 }

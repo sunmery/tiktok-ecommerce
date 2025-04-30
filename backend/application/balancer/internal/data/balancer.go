@@ -31,19 +31,19 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-type balancerRepo struct {
+type balanceRepo struct {
 	data *Data
 	log  *log.Helper
 }
 
-func NewBalancerRepo(data *Data, logger log.Logger) biz.BalancerRepo {
-	return &balancerRepo{
+func NewBalanceRepo(data *Data, logger log.Logger) biz.BalanceRepo {
+	return &balanceRepo{
 		data: data,
 		log:  log.NewHelper(logger),
 	}
 }
 
-func (b balancerRepo) CreateTransaction(ctx context.Context, req *biz.CreateTransactionRequest) (*biz.CreateTransactionReply, error) {
+func (b balanceRepo) CreateTransaction(ctx context.Context, req *biz.CreateTransactionRequest) (*biz.CreateTransactionReply, error) {
 	amount, err := types.Float64ToNumeric(req.Amount)
 	if err != nil {
 		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
@@ -73,7 +73,7 @@ func (b balancerRepo) CreateTransaction(ctx context.Context, req *biz.CreateTran
 	}, nil
 }
 
-func (b balancerRepo) GetMerchantVersion(ctx context.Context, req *biz.GetMerchantVersionRequest) (*biz.GetMerchantVersionReply, error) {
+func (b balanceRepo) GetMerchantVersion(ctx context.Context, req *biz.GetMerchantVersionRequest) (*biz.GetMerchantVersionReply, error) {
 	result, err := b.data.db.GetMerchantVersions(ctx, req.MerchantIds)
 	if err != nil {
 		b.log.WithContext(ctx).Errorf("Failed to get merchant version: %v", err)
@@ -93,11 +93,9 @@ func (b balancerRepo) GetMerchantVersion(ctx context.Context, req *biz.GetMercha
 	}, nil
 }
 
-func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransactionsRequest) (*biz.GetTransactionsReply, error) {
+func (b balanceRepo) GetTransactions(ctx context.Context, req *biz.GetTransactionsRequest) (*biz.GetTransactionsReply, error) {
 	page := (req.Page - 1) * req.PageSize
 	pageSize := req.PageSize
-
-	transactions := make([]models.BalancesTransactions, 0, pageSize)
 
 	transactions, err := b.data.db.GetTransactions(ctx, models.GetTransactionsParams{
 		UserID:   req.UserId,
@@ -151,7 +149,7 @@ func (b balancerRepo) GetTransactions(ctx context.Context, req *biz.GetTransacti
 }
 
 // FreezeBalance 冻结余额
-func (b balancerRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceRequest) (*biz.FreezeBalanceReply, error) {
+func (b balanceRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceRequest) (*biz.FreezeBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -214,7 +212,7 @@ func (b balancerRepo) FreezeBalance(ctx context.Context, req *biz.FreezeBalanceR
 }
 
 // CancelFreeze 取消冻结余额
-func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeRequest) (*biz.CancelFreezeReply, error) {
+func (b balanceRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeRequest) (*biz.CancelFreezeReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -265,7 +263,7 @@ func (b balancerRepo) CancelFreeze(ctx context.Context, req *biz.CancelFreezeReq
 	}, nil
 }
 
-func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMerchantBalanceRequest) (*biz.BalanceReply, error) {
+func (b balanceRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMerchantBalanceRequest) (*biz.BalanceReply, error) {
 	balance, err := b.data.db.GetMerchantBalance(ctx, models.GetMerchantBalanceParams{
 		MerchantID: req.MerchantId,
 		Currency:   string(req.Currency),
@@ -289,23 +287,35 @@ func (b balancerRepo) GetMerchantBalance(ctx context.Context, req *biz.GetMercha
 	}, nil
 }
 
-func (b balancerRepo) CreateConsumerBalance(ctx context.Context, req *biz.CreateConsumerBalanceRequest) (*biz.CreateConsumerBalanceReply, error) {
+func (b balanceRepo) CreateConsumerBalance(ctx context.Context, req *biz.CreateConsumerBalanceRequest) (*biz.CreateConsumerBalanceReply, error) {
 	tx := b.data.DB(ctx)
 
+	// 首先检查用户余额是否已存在
+	_, err := tx.GetUserBalance(ctx, models.GetUserBalanceParams{
+		UserID:   req.UserId,
+		Currency: string(req.Currency),
+	})
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		b.log.WithContext(ctx).Errorf("Failed to check existing consumer balance: %v", err)
+		return nil, fmt.Errorf("failed to check existing consumer balance: %w", err)
+	}
+
+	// 创建用户余额
 	initialBalance, err := types.Float64ToNumeric(req.InitialBalance)
 	if err != nil {
 		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
 	}
 
-	CreateUserPaymentMethodsErr := tx.CreateConsumerPaymentMethods(ctx, models.CreateConsumerPaymentMethodsParams{
+	err = tx.CreateConsumerPaymentMethods(ctx, models.CreateConsumerPaymentMethodsParams{
 		ID:             id.SnowflakeID(),
 		UserID:         req.UserId,
-		Type:           req.BalancerType,
+		Type:           req.BalanceType,
 		IsDefault:      req.IsDefault,
 		AccountDetails: req.AccountDetails,
 	})
-	if CreateUserPaymentMethodsErr != nil {
-		return nil, err
+	if err != nil {
+		b.log.WithContext(ctx).Errorf("Failed to create consumer payment method: %v", err)
+		return nil, fmt.Errorf("failed to create consumer payment method: %w", err)
 	}
 
 	reply, err := tx.CreateConsumerBalance(ctx, models.CreateConsumerBalanceParams{
@@ -314,7 +324,8 @@ func (b balancerRepo) CreateConsumerBalance(ctx context.Context, req *biz.Create
 		Available: initialBalance,
 	})
 	if err != nil {
-		return nil, err
+		b.log.WithContext(ctx).Errorf("Failed to create consumer balance: %v", err)
+		return nil, fmt.Errorf("failed to create consumer balance: %w", err)
 	}
 
 	available, err := types.NumericToFloat(reply.Available)
@@ -329,47 +340,59 @@ func (b balancerRepo) CreateConsumerBalance(ctx context.Context, req *biz.Create
 	}, nil
 }
 
-func (b balancerRepo) CreateMerchantBalance(ctx context.Context, req *biz.CreateMerchantBalanceRequest) (*biz.CreateMerchantBalanceReply, error) {
-	tx := b.data.DB(ctx)
+func (b balanceRepo) CreateMerchantBalance(ctx context.Context, req *biz.CreateMerchantBalanceRequest) (*biz.CreateMerchantBalanceReply, error) {
+	tx := b.data.db
 
-	initialBalance, err := types.Float64ToNumeric(req.InitialBalance)
+	// 首先检查商家余额是否已存在
+	_, err := tx.GetMerchantBalance(ctx, models.GetMerchantBalanceParams{
+		MerchantID: req.MerchantId,
+		Currency:   string(req.Currency),
+	})
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		b.log.WithContext(ctx).Errorf("Failed to check existing merchant balance: %v", err)
+		return nil, fmt.Errorf("failed to check existing merchant balance: %w", err)
+	}
+
+	// 创建商家余额
+	amount, err := types.Float64ToNumeric(req.InitialBalance)
 	if err != nil {
 		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
 	}
 
-	CreateUserPaymentMethodsErr := tx.CreateMerchantPaymentMethods(ctx, models.CreateMerchantPaymentMethodsParams{
+	err = tx.CreateMerchantPaymentMethods(ctx, models.CreateMerchantPaymentMethodsParams{
 		ID:             id.SnowflakeID(),
 		MerchantID:     req.MerchantId,
-		Type:           req.BalancerType,
+		Type:           req.BalanceType,
 		IsDefault:      req.IsDefault,
 		AccountDetails: req.AccountDetails,
 	})
-	if CreateUserPaymentMethodsErr != nil {
-		return nil, err
+	if err != nil {
+		b.log.WithContext(ctx).Errorf("Failed to create merchant payment method: %v", err)
+		return nil, fmt.Errorf("failed to create merchant payment method: %w", err)
 	}
 
-	reply, err := tx.CreateMerchantBalance(ctx, models.CreateMerchantBalanceParams{
+	merchantBalance, err := tx.CreateMerchantBalance(ctx, models.CreateMerchantBalanceParams{
 		MerchantID: req.MerchantId,
 		Currency:   string(req.Currency),
-		Available:  initialBalance,
+		Available:  amount,
 	})
 	if err != nil {
-		return nil, err
+		b.log.WithContext(ctx).Errorf("Failed to create merchant balance: %v", err)
+		return nil, fmt.Errorf("failed to create merchant balance: %w", err)
 	}
 
-	available, err := types.NumericToFloat(reply.Available)
+	available, err := types.NumericToFloat(merchantBalance.Available)
 	if err != nil {
 		return nil, kerrors.New(500, "CONVERT_AVAILABLE_FAILED", "convert available to float64 failed")
 	}
-
 	return &biz.CreateMerchantBalanceReply{
-		UserId:    reply.MerchantID,
-		Currency:  constants.Currency(reply.Currency),
+		UserId:    merchantBalance.MerchantID,
+		Currency:  constants.Currency(merchantBalance.Currency),
 		Available: available,
 	}, nil
 }
 
-func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanceRequest) (*biz.BalanceReply, error) {
+func (b balanceRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanceRequest) (*biz.BalanceReply, error) {
 	balance, err := b.data.db.GetUserBalance(ctx, models.GetUserBalanceParams{
 		UserID:   req.UserId,
 		Currency: string(req.Currency),
@@ -400,7 +423,7 @@ func (b balancerRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalanc
 	}, nil
 }
 
-func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBalanceRequest) (*biz.RechargeBalanceReply, error) {
+func (b balanceRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBalanceRequest) (*biz.RechargeBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -457,8 +480,64 @@ func (b balancerRepo) RechargeBalance(ctx context.Context, req *biz.RechargeBala
 	}, nil
 }
 
+func (b balanceRepo) RechargeMerchantBalance(ctx context.Context, req *biz.RechargeMerchantBalanceRequest) (*biz.RechargeMerchantBalanceReply, error) {
+	tx := b.data.db
+
+	// 转换金额为数据库格式
+	amount, err := types.Float64ToNumeric(req.Amount)
+	if err != nil {
+		return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to numeric failed")
+	}
+
+	// 增加商家余额
+	rowsAffected, err := tx.IncreaseMerchantAvailableBalance(ctx, models.IncreaseMerchantAvailableBalanceParams{
+		MerchantID:      req.MerchantId,
+		Currency:        string(req.Currency),
+		Amount:          amount,
+		ExpectedVersion: req.ExpectedVersion,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected == 0 {
+		// 提供更详细的错误信息
+		return nil, kerrors.New(409, "OPTIMISTIC_LOCK_FAILED", "数据已被修改，请刷新后重试")
+	}
+
+	// 创建交易记录
+	paymentExtra, err := json.Marshal(req.PaymentExtra)
+	if err != nil {
+		return nil, kerrors.New(500, "MARSHAL_PAYMENT_EXTRA_FAILED", "marshal payment extra failed")
+	}
+
+	transactionId, err := tx.CreateTransaction(ctx, models.CreateTransactionParams{
+		ID:                id.SnowflakeID(),
+		Type:              string(constants.TransactionRecharge),
+		Amount:            amount,
+		Currency:          string(req.Currency),
+		FromUserID:        uuid.Nil, // 充值没有来源用户
+		ToMerchantID:      req.MerchantId,
+		PaymentMethodType: string(req.PaymentMethod),
+		PaymentAccount:    req.PaymentAccount,
+		PaymentExtra:      paymentExtra,
+		Status:            string(constants.PaymentPaid), // 修改为正确的状态值
+		FreezeID:          0,
+		IdempotencyKey:    req.IdempotencyKey,
+		ConsumerVersion:   0,
+		MerchantVersion:   int64(req.ExpectedVersion + 1),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.RechargeMerchantBalanceReply{
+		TransactionId: transactionId,
+		NewVersion:    req.ExpectedVersion + 1,
+	}, nil
+}
+
 // WithdrawBalance 用户提现
-func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBalanceRequest) (*biz.WithdrawBalanceReply, error) {
+func (b balanceRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBalanceRequest) (*biz.WithdrawBalanceReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -544,7 +623,7 @@ func (b balancerRepo) WithdrawBalance(ctx context.Context, req *biz.WithdrawBala
 }
 
 // ConfirmTransfer 确认转账
-func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransferRequest) (*biz.ConfirmTransferReply, error) {
+func (b balanceRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransferRequest) (*biz.ConfirmTransferReply, error) {
 	// 1. 开始事务
 	tx := b.data.DB(ctx)
 
@@ -659,7 +738,7 @@ func (b balancerRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTrans
 }
 
 // getMerchantIDFromOrder 从订单ID获取商家ID
-func (b balancerRepo) getMerchantIDFromOrder(ctx context.Context, subOrderId int64) (uuid.UUID, error) {
+func (b balanceRepo) getMerchantIDFromOrder(ctx context.Context, subOrderId int64) (uuid.UUID, error) {
 	reply, err := b.data.merchantOrderv1.GetMerchantByOrderId(ctx, &merchantorderv1.GetMerchantByOrderIdReq{
 		OrderId: subOrderId,
 	})

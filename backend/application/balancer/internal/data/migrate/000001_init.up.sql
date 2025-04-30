@@ -45,7 +45,7 @@ CREATE TABLE balances.balance_freezes
 CREATE TABLE balances.merchant_payment_methods
 (
     id              BIGINT PRIMARY KEY,
-    merchant_id     UUID        NOT NULL,
+    merchant_id     UUID NOT NULL,
     type            VARCHAR(15) NOT NULL  -- 支付方式
         CHECK ( type IN ('ALIPAY', 'WECHAT', 'BANK_ACCOUNT', 'BALANCER')),
     is_default      BOOLEAN     NOT NULL DEFAULT FALSE,
@@ -102,7 +102,7 @@ CREATE INDEX idx_balance_freezes_user_order ON balances.balance_freezes (user_id
 CREATE INDEX idx_balance_freezes_status_expires ON balances.balance_freezes (status, expires_at); -- 用于清理任务
 CREATE INDEX idx_balance_freezes_user_currency ON balances.balance_freezes (user_id, currency);
 CREATE INDEX idx_transactions_status ON balances.transactions (status); -- 状态查询优化
-CREATE UNIQUE INDEX udx_user_payment ON balances.user_payment_methods (user_id, type, (account_details ->> 'account')); -- 用户支付方式表添加唯一约束
-CREATE UNIQUE INDEX udx_merchant_payment ON balances.merchant_payment_methods (merchant_id, type, (account_details ->> 'account')); -- 商家支付方式表添加唯一约束
+CREATE UNIQUE INDEX udx_user_payment ON balances.user_payment_methods (user_id, type, (account_details ->> 'account')); -- 用户支付方式表添加唯一约束. 确保同一消费者的同类型支付账号唯一
+CREATE UNIQUE INDEX udx_merchant_payment ON balances.merchant_payment_methods (merchant_id, type, (account_details ->> 'account')); -- 商家支付方式表添加唯一约束, 确保同一商家的同类型支付账号唯一
 CREATE INDEX idx_transactions_user ON balances.transactions (from_user_id);
 CREATE INDEX idx_transactions_merchant ON balances.transactions (to_merchant_id);

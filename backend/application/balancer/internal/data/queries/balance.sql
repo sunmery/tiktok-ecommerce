@@ -43,7 +43,16 @@ SET available  = available + sqlc.arg(amount), -- 金额参数 (分)
 WHERE user_id = $1
   AND currency = $2
   AND version = sqlc.arg(expected_version);
--- 乐观锁检查
+
+-- name: IncreaseMerchantAvailableBalance :execrows
+-- 增加商家可用余额 (用于充值成功) - 使用乐观锁
+UPDATE balances.merchant_balances
+SET available  = available + sqlc.arg(amount), -- 金额参数 (分)
+    version    = version + 1,
+    updated_at = NOW()
+WHERE merchant_id = $1
+  AND currency = $2
+  AND version = sqlc.arg(expected_version);
 
 -- name: DecreaseUserAvailableBalance :execrows
 -- 减少用户可用余额 (用于发起提现) - 使用乐观锁

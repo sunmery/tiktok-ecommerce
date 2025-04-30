@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "v1/balancer.proto",
+    "title": "v1/balance.proto",
     "version": "version not set"
   },
   "tags": [
@@ -16,6 +16,151 @@
     "application/json"
   ],
   "paths": {
+    "/v1/balances/consumers/balance": {
+      "get": {
+        "summary": "获取用户余额",
+        "operationId": "Balance_GetUserBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "UUID as string",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "currency",
+            "description": "指定币种",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/consumers/recharge": {
+      "post": {
+        "summary": "用户余额充值",
+        "operationId": "Balance_RechargeBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RechargeBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RechargeBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/consumers/withdraw": {
+      "post": {
+        "summary": "用户提现",
+        "operationId": "Balance_WithdrawBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1WithdrawBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1WithdrawBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
+    "/v1/balances/consumers/{userId}/balance": {
+      "put": {
+        "summary": "创建消费者账号指定币种的初始余额记录",
+        "operationId": "Balance_CreateConsumersBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateConsumersBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "UUID as string",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BalanceCreateConsumersBalanceBody"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
     "/v1/balances/freeze": {
       "post": {
         "summary": "冻结用户余额",
@@ -131,6 +276,39 @@
         ]
       }
     },
+    "/v1/balances/merchants/recharge": {
+      "post": {
+        "summary": "商家余额充值",
+        "operationId": "Balance_RechargeMerchantBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RechargeMerchantBalanceReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RechargeMerchantBalanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Balance"
+        ]
+      }
+    },
     "/v1/balances/merchants/{merchantId}/balance": {
       "get": {
         "summary": "获取商家余额",
@@ -170,7 +348,7 @@
         ]
       },
       "put": {
-        "summary": "创建商家余额\n为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)",
+        "summary": "创建商家账号指定币种的初始余额记录",
         "operationId": "Balance_CreateMerchantBalance",
         "responses": {
           "200": {
@@ -298,151 +476,6 @@
         ]
       }
     },
-    "/v1/balances/users/balancer": {
-      "get": {
-        "summary": "获取用户余额",
-        "operationId": "Balance_GetUserBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1BalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "UUID as string",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "currency",
-            "description": "指定币种",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
-    "/v1/balances/users/recharge": {
-      "post": {
-        "summary": "用户充值",
-        "operationId": "Balance_RechargeBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1RechargeBalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1RechargeBalanceRequest"
-            }
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
-    "/v1/balances/users/withdraw": {
-      "post": {
-        "summary": "用户提现",
-        "operationId": "Balance_WithdrawBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1WithdrawBalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1WithdrawBalanceRequest"
-            }
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
-    "/v1/balances/users/{userId}/balance": {
-      "put": {
-        "summary": "创建消费者余额\n为用户创建指定币种的初始余额记录 (通常在用户注册或首次涉及该币种时调用)",
-        "operationId": "Balance_CreateConsumerBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateConsumerBalanceReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "UUID as string",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/BalanceCreateConsumerBalanceBody"
-            }
-          }
-        ],
-        "tags": [
-          "Balance"
-        ]
-      }
-    },
     "/v1/orders/merchant/version": {
       "get": {
         "summary": "获取商家版本号",
@@ -526,7 +559,7 @@
         }
       }
     },
-    "BalanceCreateConsumerBalanceBody": {
+    "BalanceCreateConsumersBalanceBody": {
       "type": "object",
       "properties": {
         "currency": {
@@ -538,7 +571,7 @@
           "format": "double",
           "title": "初始余额"
         },
-        "balancerType": {
+        "balanceType": {
           "type": "string",
           "title": "余额类型"
         },
@@ -564,7 +597,7 @@
           "format": "double",
           "title": "初始余额"
         },
-        "balancerType": {
+        "balanceType": {
           "type": "string",
           "title": "余额类型"
         },
@@ -674,7 +707,7 @@
         }
       }
     },
-    "v1CreateConsumerBalanceReply": {
+    "v1CreateConsumersBalanceReply": {
       "type": "object",
       "properties": {
         "userId": {
@@ -905,6 +938,60 @@
           "type": "integer",
           "format": "int32",
           "title": "期望的用户余额版本号"
+        }
+      }
+    },
+    "v1RechargeMerchantBalanceReply": {
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string",
+          "format": "int64",
+          "title": "交易ID"
+        },
+        "newVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "新版本号"
+        }
+      }
+    },
+    "v1RechargeMerchantBalanceRequest": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "UUID as string"
+        },
+        "amount": {
+          "type": "number",
+          "format": "double",
+          "title": "充值金额"
+        },
+        "currency": {
+          "type": "string",
+          "title": "币种"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "title": "支付方式"
+        },
+        "paymentAccount": {
+          "type": "string",
+          "title": "支付账号"
+        },
+        "paymentExtra": {
+          "type": "object",
+          "title": "支付额外信息"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "format": "int32",
+          "title": "期望的版本号"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "title": "幂等键"
         }
       }
     },

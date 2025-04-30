@@ -99,18 +99,18 @@ func NewAlipay(c *conf.Pay) *alipay.Client {
 
 	// 证书方式
 	// 加载应用公钥证书
-	if err := client.LoadAppCertPublicKeyFromFile("/app/appPublicCert.crt"); err != nil {
-		// if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
+	// if err := client.LoadAppCertPublicKeyFromFile("/app/appPublicCert.crt"); err != nil {
+	if err := client.LoadAppCertPublicKeyFromFile("./appPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load app public cert failed: %v", err))
 	}
 	// 加载支付宝根证书
-	if err := client.LoadAliPayRootCertFromFile("/app/alipayRootCert.crt"); err != nil {
-		// if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
+	// if err := client.LoadAliPayRootCertFromFile("/app/alipayRootCert.crt"); err != nil {
+	if err := client.LoadAliPayRootCertFromFile("./alipayRootCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay root cert failed: %v", err))
 	}
 	// 加载支付宝公钥证书
-	if err := client.LoadAlipayCertPublicKeyFromFile("/app/alipayPublicCert.crt"); err != nil {
-		// if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
+	// if err := client.LoadAlipayCertPublicKeyFromFile("/app/alipayPublicCert.crt"); err != nil {
+	if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
 		panic(fmt.Errorf("load alipay public cert failed: %v", err))
 	}
 
