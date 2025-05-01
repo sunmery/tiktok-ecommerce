@@ -1129,6 +1129,8 @@ func (m *GetTransactionsRequest) validate(all bool) error {
 
 	// no validation rules for UserId
 
+	// no validation rules for UserType
+
 	// no validation rules for Currency
 
 	// no validation rules for Page

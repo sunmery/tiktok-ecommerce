@@ -174,8 +174,14 @@ message CreateTransactionReply {
   int64 id = 1;
 }
 
+enum TransactionsUserType {
+  CONSUMER = 0;
+  MERCHANT = 1;
+}
+
 message GetTransactionsRequest {
-  string user_id = 1;       // UUID as string
+  string user_id = 1;       // 用户ID
+  TransactionsUserType user_type = 6;       // 用户类型: 消费者|商家
   string currency = 2;    // 指定币种
   int64 page = 3;
   int64 page_size = 4;

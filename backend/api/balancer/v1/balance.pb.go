@@ -24,6 +24,52 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TransactionsUserType int32
+
+const (
+	TransactionsUserType_CONSUMER TransactionsUserType = 0
+	TransactionsUserType_MERCHANT TransactionsUserType = 1
+)
+
+// Enum value maps for TransactionsUserType.
+var (
+	TransactionsUserType_name = map[int32]string{
+		0: "CONSUMER",
+		1: "MERCHANT",
+	}
+	TransactionsUserType_value = map[string]int32{
+		"CONSUMER": 0,
+		"MERCHANT": 1,
+	}
+)
+
+func (x TransactionsUserType) Enum() *TransactionsUserType {
+	p := new(TransactionsUserType)
+	*p = x
+	return p
+}
+
+func (x TransactionsUserType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TransactionsUserType) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_balance_proto_enumTypes[0].Descriptor()
+}
+
+func (TransactionsUserType) Type() protoreflect.EnumType {
+	return &file_v1_balance_proto_enumTypes[0]
+}
+
+func (x TransactionsUserType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TransactionsUserType.Descriptor instead.
+func (TransactionsUserType) EnumDescriptor() ([]byte, []int) {
+	return file_v1_balance_proto_rawDescGZIP(), []int{0}
+}
+
 type GetMerchantVersionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MerchantIds   []string               `protobuf:"bytes,1,rep,name=merchant_ids,json=merchantIds,proto3" json:"merchant_ids,omitempty"` // 商家 ID
@@ -646,8 +692,9 @@ func (x *CreateTransactionReply) GetId() int64 {
 
 type GetTransactionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
-	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`           // 指定币种
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                       // 用户ID
+	UserType      TransactionsUserType   `protobuf:"varint,6,opt,name=user_type,json=userType,proto3,enum=ecommerce.balance.v1.TransactionsUserType" json:"user_type,omitempty"` // 用户类型: 消费者|商家
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`                                                                 // 指定币种
 	Page          int64                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      int64                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	PaymentStatus string                 `protobuf:"bytes,5,opt,name=payment_status,json=paymentStatus,proto3" json:"payment_status,omitempty"`
@@ -690,6 +737,13 @@ func (x *GetTransactionsRequest) GetUserId() string {
 		return x.UserId
 	}
 	return ""
+}
+
+func (x *GetTransactionsRequest) GetUserType() TransactionsUserType {
+	if x != nil {
+		return x.UserType
+	}
+	return TransactionsUserType_CONSUMER
 }
 
 func (x *GetTransactionsRequest) GetCurrency() string {
@@ -1945,9 +1999,10 @@ const file_v1_balance_proto_rawDesc = "" +
 	"\x10consumer_version\x18\r \x01(\x03R\x0fconsumerVersion\x12)\n" +
 	"\x10merchant_version\x18\x0e \x01(\x03R\x0fmerchantVersion\"(\n" +
 	"\x16CreateTransactionReply\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"\xa5\x01\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"\xee\x01\n" +
 	"\x16GetTransactionsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12G\n" +
+	"\tuser_type\x18\x06 \x01(\x0e2*.ecommerce.balance.v1.TransactionsUserTypeR\buserType\x12\x1a\n" +
 	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12\x12\n" +
 	"\x04page\x18\x03 \x01(\x03R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x04 \x01(\x03R\bpageSize\x12%\n" +
@@ -2055,11 +2110,15 @@ const file_v1_balance_proto_rawDesc = "" +
 	"\x1cRechargeMerchantBalanceReply\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\x03R\rtransactionId\x12\x1f\n" +
 	"\vnew_version\x18\x02 \x01(\x05R\n" +
-	"newVersion2\x99\x10\n" +
+	"newVersion*2\n" +
+	"\x14TransactionsUserType\x12\f\n" +
+	"\bCONSUMER\x10\x00\x12\f\n" +
+	"\bMERCHANT\x10\x012\x99\x10\n" +
 	"\aBalance\x12\xb6\x01\n" +
 	"\x15CreateMerchantBalance\x122.ecommerce.balance.v1.CreateMerchantBalanceRequest\x1a0.ecommerce.balance.v1.CreateMerchantBalanceReply\"7\x82\xd3\xe4\x93\x021:\x01*\x1a,/v1/balances/merchants/{merchant_id}/balance\x12\x99\x01\n" +
 	"\x12GetMerchantVersion\x12/.ecommerce.balance.v1.GetMerchantVersionRequest\x1a-.ecommerce.balance.v1.GetMerchantVersionReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/merchant/version\x12\x8e\x01\n" +
-	"\x0fGetTransactions\x12,.ecommerce.balance.v1.GetTransactionsRequest\x1a*.ecommerce.balance.v1.GetTransactionsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/balances/transactions\x12\x9f\x01\n" +
+	"\x0fGetTransactions\x12,.ecommerce.balance.v1.GetTransactionsRequest\x1a*.ecommerce.balance.v1.GetTransactionsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/balances/transactions\x12\xaf\x01\n" +
+	"\x17RechargeMerchantBalance\x124.ecommerce.balance.v1.RechargeMerchantBalanceRequest\x1a2.ecommerce.balance.v1.RechargeMerchantBalanceReply\"*\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/balances/merchants/recharge\x12\x9f\x01\n" +
 	"\x12GetMerchantBalance\x12/.ecommerce.balance.v1.GetMerchantBalanceRequest\x1a\".ecommerce.balance.v1.BalanceReply\"4\x82\xd3\xe4\x93\x02.\x12,/v1/balances/merchants/{merchant_id}/balance\x12\xb5\x01\n" +
 	"\x16CreateConsumersBalance\x123.ecommerce.balance.v1.CreateConsumersBalanceRequest\x1a1.ecommerce.balance.v1.CreateConsumersBalanceReply\"3\x82\xd3\xe4\x93\x02-:\x01*\x1a(/v1/balances/consumers/{user_id}/balance\x12\x97\x01\n" +
 	"\x0fRechargeBalance\x12,.ecommerce.balance.v1.RechargeBalanceRequest\x1a*.ecommerce.balance.v1.RechargeBalanceReply\"*\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/balances/consumers/recharge\x12\x89\x01\n" +
@@ -2068,8 +2127,7 @@ const file_v1_balance_proto_rawDesc = "" +
 	"\fCancelFreeze\x12).ecommerce.balance.v1.CancelFreezeRequest\x1a'.ecommerce.balance.v1.CancelFreezeReply\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/balances/freezes/{freeze_id}/cancel\x12\xa0\x01\n" +
 	"\x0fConfirmTransfer\x12,.ecommerce.balance.v1.ConfirmTransferRequest\x1a*.ecommerce.balance.v1.ConfirmTransferReply\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/balances/freezes/{freeze_id}/confirm\x12\x97\x01\n" +
 	"\x0fWithdrawBalance\x12,.ecommerce.balance.v1.WithdrawBalanceRequest\x1a*.ecommerce.balance.v1.WithdrawBalanceReply\"*\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/balances/consumers/withdraw\x12\x97\x01\n" +
-	"\x11CreateTransaction\x12..ecommerce.balance.v1.CreateTransactionRequest\x1a,.ecommerce.balance.v1.CreateTransactionReply\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\x1a\x19/v1/balances/transactions\x12\xaf\x01\n" +
-	"\x17RechargeMerchantBalance\x124.ecommerce.balance.v1.RechargeMerchantBalanceRequest\x1a2.ecommerce.balance.v1.RechargeMerchantBalanceReply\"*\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/balances/merchants/rechargeB\"Z backend/api/balance/v1;balancev1b\x06proto3"
+	"\x11CreateTransaction\x12..ecommerce.balance.v1.CreateTransactionRequest\x1a,.ecommerce.balance.v1.CreateTransactionReply\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\x1a\x19/v1/balances/transactionsB\"Z backend/api/balance/v1;balancev1b\x06proto3"
 
 var (
 	file_v1_balance_proto_rawDescOnce sync.Once
@@ -2083,77 +2141,80 @@ func file_v1_balance_proto_rawDescGZIP() []byte {
 	return file_v1_balance_proto_rawDescData
 }
 
+var file_v1_balance_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_v1_balance_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_v1_balance_proto_goTypes = []any{
-	(*GetMerchantVersionRequest)(nil),      // 0: ecommerce.balance.v1.GetMerchantVersionRequest
-	(*GetMerchantVersionReply)(nil),        // 1: ecommerce.balance.v1.GetMerchantVersionReply
-	(*CreateMerchantBalanceRequest)(nil),   // 2: ecommerce.balance.v1.CreateMerchantBalanceRequest
-	(*CreateMerchantBalanceReply)(nil),     // 3: ecommerce.balance.v1.CreateMerchantBalanceReply
-	(*CreateConsumersBalanceRequest)(nil),  // 4: ecommerce.balance.v1.CreateConsumersBalanceRequest
-	(*CreateConsumersBalanceReply)(nil),    // 5: ecommerce.balance.v1.CreateConsumersBalanceReply
-	(*GetUserBalanceRequest)(nil),          // 6: ecommerce.balance.v1.GetUserBalanceRequest
-	(*CreateTransactionRequest)(nil),       // 7: ecommerce.balance.v1.CreateTransactionRequest
-	(*CreateTransactionReply)(nil),         // 8: ecommerce.balance.v1.CreateTransactionReply
-	(*GetTransactionsRequest)(nil),         // 9: ecommerce.balance.v1.GetTransactionsRequest
-	(*Transactions)(nil),                   // 10: ecommerce.balance.v1.Transactions
-	(*GetTransactionsReply)(nil),           // 11: ecommerce.balance.v1.GetTransactionsReply
-	(*GetMerchantBalanceRequest)(nil),      // 12: ecommerce.balance.v1.GetMerchantBalanceRequest
-	(*BalanceReply)(nil),                   // 13: ecommerce.balance.v1.BalanceReply
-	(*FreezeBalanceRequest)(nil),           // 14: ecommerce.balance.v1.FreezeBalanceRequest
-	(*FreezeBalanceReply)(nil),             // 15: ecommerce.balance.v1.FreezeBalanceReply
-	(*ConfirmTransferRequest)(nil),         // 16: ecommerce.balance.v1.ConfirmTransferRequest
-	(*ConfirmTransferReply)(nil),           // 17: ecommerce.balance.v1.ConfirmTransferReply
-	(*CancelFreezeRequest)(nil),            // 18: ecommerce.balance.v1.CancelFreezeRequest
-	(*CancelFreezeReply)(nil),              // 19: ecommerce.balance.v1.CancelFreezeReply
-	(*RechargeBalanceRequest)(nil),         // 20: ecommerce.balance.v1.RechargeBalanceRequest
-	(*RechargeBalanceReply)(nil),           // 21: ecommerce.balance.v1.RechargeBalanceReply
-	(*WithdrawBalanceRequest)(nil),         // 22: ecommerce.balance.v1.WithdrawBalanceRequest
-	(*WithdrawBalanceReply)(nil),           // 23: ecommerce.balance.v1.WithdrawBalanceReply
-	(*RechargeMerchantBalanceRequest)(nil), // 24: ecommerce.balance.v1.RechargeMerchantBalanceRequest
-	(*RechargeMerchantBalanceReply)(nil),   // 25: ecommerce.balance.v1.RechargeMerchantBalanceReply
-	(*structpb.Struct)(nil),                // 26: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),          // 27: google.protobuf.Timestamp
+	(TransactionsUserType)(0),              // 0: ecommerce.balance.v1.TransactionsUserType
+	(*GetMerchantVersionRequest)(nil),      // 1: ecommerce.balance.v1.GetMerchantVersionRequest
+	(*GetMerchantVersionReply)(nil),        // 2: ecommerce.balance.v1.GetMerchantVersionReply
+	(*CreateMerchantBalanceRequest)(nil),   // 3: ecommerce.balance.v1.CreateMerchantBalanceRequest
+	(*CreateMerchantBalanceReply)(nil),     // 4: ecommerce.balance.v1.CreateMerchantBalanceReply
+	(*CreateConsumersBalanceRequest)(nil),  // 5: ecommerce.balance.v1.CreateConsumersBalanceRequest
+	(*CreateConsumersBalanceReply)(nil),    // 6: ecommerce.balance.v1.CreateConsumersBalanceReply
+	(*GetUserBalanceRequest)(nil),          // 7: ecommerce.balance.v1.GetUserBalanceRequest
+	(*CreateTransactionRequest)(nil),       // 8: ecommerce.balance.v1.CreateTransactionRequest
+	(*CreateTransactionReply)(nil),         // 9: ecommerce.balance.v1.CreateTransactionReply
+	(*GetTransactionsRequest)(nil),         // 10: ecommerce.balance.v1.GetTransactionsRequest
+	(*Transactions)(nil),                   // 11: ecommerce.balance.v1.Transactions
+	(*GetTransactionsReply)(nil),           // 12: ecommerce.balance.v1.GetTransactionsReply
+	(*GetMerchantBalanceRequest)(nil),      // 13: ecommerce.balance.v1.GetMerchantBalanceRequest
+	(*BalanceReply)(nil),                   // 14: ecommerce.balance.v1.BalanceReply
+	(*FreezeBalanceRequest)(nil),           // 15: ecommerce.balance.v1.FreezeBalanceRequest
+	(*FreezeBalanceReply)(nil),             // 16: ecommerce.balance.v1.FreezeBalanceReply
+	(*ConfirmTransferRequest)(nil),         // 17: ecommerce.balance.v1.ConfirmTransferRequest
+	(*ConfirmTransferReply)(nil),           // 18: ecommerce.balance.v1.ConfirmTransferReply
+	(*CancelFreezeRequest)(nil),            // 19: ecommerce.balance.v1.CancelFreezeRequest
+	(*CancelFreezeReply)(nil),              // 20: ecommerce.balance.v1.CancelFreezeReply
+	(*RechargeBalanceRequest)(nil),         // 21: ecommerce.balance.v1.RechargeBalanceRequest
+	(*RechargeBalanceReply)(nil),           // 22: ecommerce.balance.v1.RechargeBalanceReply
+	(*WithdrawBalanceRequest)(nil),         // 23: ecommerce.balance.v1.WithdrawBalanceRequest
+	(*WithdrawBalanceReply)(nil),           // 24: ecommerce.balance.v1.WithdrawBalanceReply
+	(*RechargeMerchantBalanceRequest)(nil), // 25: ecommerce.balance.v1.RechargeMerchantBalanceRequest
+	(*RechargeMerchantBalanceReply)(nil),   // 26: ecommerce.balance.v1.RechargeMerchantBalanceReply
+	(*structpb.Struct)(nil),                // 27: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),          // 28: google.protobuf.Timestamp
 }
 var file_v1_balance_proto_depIdxs = []int32{
-	26, // 0: ecommerce.balance.v1.CreateMerchantBalanceRequest.account_details:type_name -> google.protobuf.Struct
-	26, // 1: ecommerce.balance.v1.CreateConsumersBalanceRequest.account_details:type_name -> google.protobuf.Struct
-	26, // 2: ecommerce.balance.v1.CreateTransactionRequest.payment_extra:type_name -> google.protobuf.Struct
-	26, // 3: ecommerce.balance.v1.Transactions.payment_extra:type_name -> google.protobuf.Struct
-	27, // 4: ecommerce.balance.v1.Transactions.created_at:type_name -> google.protobuf.Timestamp
-	27, // 5: ecommerce.balance.v1.Transactions.updated_at:type_name -> google.protobuf.Timestamp
-	10, // 6: ecommerce.balance.v1.GetTransactionsReply.transactions:type_name -> ecommerce.balance.v1.Transactions
-	26, // 7: ecommerce.balance.v1.RechargeMerchantBalanceRequest.payment_extra:type_name -> google.protobuf.Struct
-	2,  // 8: ecommerce.balance.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balance.v1.CreateMerchantBalanceRequest
-	0,  // 9: ecommerce.balance.v1.Balance.GetMerchantVersion:input_type -> ecommerce.balance.v1.GetMerchantVersionRequest
-	9,  // 10: ecommerce.balance.v1.Balance.GetTransactions:input_type -> ecommerce.balance.v1.GetTransactionsRequest
-	12, // 11: ecommerce.balance.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balance.v1.GetMerchantBalanceRequest
-	4,  // 12: ecommerce.balance.v1.Balance.CreateConsumersBalance:input_type -> ecommerce.balance.v1.CreateConsumersBalanceRequest
-	20, // 13: ecommerce.balance.v1.Balance.RechargeBalance:input_type -> ecommerce.balance.v1.RechargeBalanceRequest
-	6,  // 14: ecommerce.balance.v1.Balance.GetUserBalance:input_type -> ecommerce.balance.v1.GetUserBalanceRequest
-	14, // 15: ecommerce.balance.v1.Balance.FreezeBalance:input_type -> ecommerce.balance.v1.FreezeBalanceRequest
-	18, // 16: ecommerce.balance.v1.Balance.CancelFreeze:input_type -> ecommerce.balance.v1.CancelFreezeRequest
-	16, // 17: ecommerce.balance.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balance.v1.ConfirmTransferRequest
-	22, // 18: ecommerce.balance.v1.Balance.WithdrawBalance:input_type -> ecommerce.balance.v1.WithdrawBalanceRequest
-	7,  // 19: ecommerce.balance.v1.Balance.CreateTransaction:input_type -> ecommerce.balance.v1.CreateTransactionRequest
-	24, // 20: ecommerce.balance.v1.Balance.RechargeMerchantBalance:input_type -> ecommerce.balance.v1.RechargeMerchantBalanceRequest
-	3,  // 21: ecommerce.balance.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balance.v1.CreateMerchantBalanceReply
-	1,  // 22: ecommerce.balance.v1.Balance.GetMerchantVersion:output_type -> ecommerce.balance.v1.GetMerchantVersionReply
-	11, // 23: ecommerce.balance.v1.Balance.GetTransactions:output_type -> ecommerce.balance.v1.GetTransactionsReply
-	13, // 24: ecommerce.balance.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balance.v1.BalanceReply
-	5,  // 25: ecommerce.balance.v1.Balance.CreateConsumersBalance:output_type -> ecommerce.balance.v1.CreateConsumersBalanceReply
-	21, // 26: ecommerce.balance.v1.Balance.RechargeBalance:output_type -> ecommerce.balance.v1.RechargeBalanceReply
-	13, // 27: ecommerce.balance.v1.Balance.GetUserBalance:output_type -> ecommerce.balance.v1.BalanceReply
-	15, // 28: ecommerce.balance.v1.Balance.FreezeBalance:output_type -> ecommerce.balance.v1.FreezeBalanceReply
-	19, // 29: ecommerce.balance.v1.Balance.CancelFreeze:output_type -> ecommerce.balance.v1.CancelFreezeReply
-	17, // 30: ecommerce.balance.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balance.v1.ConfirmTransferReply
-	23, // 31: ecommerce.balance.v1.Balance.WithdrawBalance:output_type -> ecommerce.balance.v1.WithdrawBalanceReply
-	8,  // 32: ecommerce.balance.v1.Balance.CreateTransaction:output_type -> ecommerce.balance.v1.CreateTransactionReply
-	25, // 33: ecommerce.balance.v1.Balance.RechargeMerchantBalance:output_type -> ecommerce.balance.v1.RechargeMerchantBalanceReply
-	21, // [21:34] is the sub-list for method output_type
-	8,  // [8:21] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	27, // 0: ecommerce.balance.v1.CreateMerchantBalanceRequest.account_details:type_name -> google.protobuf.Struct
+	27, // 1: ecommerce.balance.v1.CreateConsumersBalanceRequest.account_details:type_name -> google.protobuf.Struct
+	27, // 2: ecommerce.balance.v1.CreateTransactionRequest.payment_extra:type_name -> google.protobuf.Struct
+	0,  // 3: ecommerce.balance.v1.GetTransactionsRequest.user_type:type_name -> ecommerce.balance.v1.TransactionsUserType
+	27, // 4: ecommerce.balance.v1.Transactions.payment_extra:type_name -> google.protobuf.Struct
+	28, // 5: ecommerce.balance.v1.Transactions.created_at:type_name -> google.protobuf.Timestamp
+	28, // 6: ecommerce.balance.v1.Transactions.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 7: ecommerce.balance.v1.GetTransactionsReply.transactions:type_name -> ecommerce.balance.v1.Transactions
+	27, // 8: ecommerce.balance.v1.RechargeMerchantBalanceRequest.payment_extra:type_name -> google.protobuf.Struct
+	3,  // 9: ecommerce.balance.v1.Balance.CreateMerchantBalance:input_type -> ecommerce.balance.v1.CreateMerchantBalanceRequest
+	1,  // 10: ecommerce.balance.v1.Balance.GetMerchantVersion:input_type -> ecommerce.balance.v1.GetMerchantVersionRequest
+	10, // 11: ecommerce.balance.v1.Balance.GetTransactions:input_type -> ecommerce.balance.v1.GetTransactionsRequest
+	25, // 12: ecommerce.balance.v1.Balance.RechargeMerchantBalance:input_type -> ecommerce.balance.v1.RechargeMerchantBalanceRequest
+	13, // 13: ecommerce.balance.v1.Balance.GetMerchantBalance:input_type -> ecommerce.balance.v1.GetMerchantBalanceRequest
+	5,  // 14: ecommerce.balance.v1.Balance.CreateConsumersBalance:input_type -> ecommerce.balance.v1.CreateConsumersBalanceRequest
+	21, // 15: ecommerce.balance.v1.Balance.RechargeBalance:input_type -> ecommerce.balance.v1.RechargeBalanceRequest
+	7,  // 16: ecommerce.balance.v1.Balance.GetUserBalance:input_type -> ecommerce.balance.v1.GetUserBalanceRequest
+	15, // 17: ecommerce.balance.v1.Balance.FreezeBalance:input_type -> ecommerce.balance.v1.FreezeBalanceRequest
+	19, // 18: ecommerce.balance.v1.Balance.CancelFreeze:input_type -> ecommerce.balance.v1.CancelFreezeRequest
+	17, // 19: ecommerce.balance.v1.Balance.ConfirmTransfer:input_type -> ecommerce.balance.v1.ConfirmTransferRequest
+	23, // 20: ecommerce.balance.v1.Balance.WithdrawBalance:input_type -> ecommerce.balance.v1.WithdrawBalanceRequest
+	8,  // 21: ecommerce.balance.v1.Balance.CreateTransaction:input_type -> ecommerce.balance.v1.CreateTransactionRequest
+	4,  // 22: ecommerce.balance.v1.Balance.CreateMerchantBalance:output_type -> ecommerce.balance.v1.CreateMerchantBalanceReply
+	2,  // 23: ecommerce.balance.v1.Balance.GetMerchantVersion:output_type -> ecommerce.balance.v1.GetMerchantVersionReply
+	12, // 24: ecommerce.balance.v1.Balance.GetTransactions:output_type -> ecommerce.balance.v1.GetTransactionsReply
+	26, // 25: ecommerce.balance.v1.Balance.RechargeMerchantBalance:output_type -> ecommerce.balance.v1.RechargeMerchantBalanceReply
+	14, // 26: ecommerce.balance.v1.Balance.GetMerchantBalance:output_type -> ecommerce.balance.v1.BalanceReply
+	6,  // 27: ecommerce.balance.v1.Balance.CreateConsumersBalance:output_type -> ecommerce.balance.v1.CreateConsumersBalanceReply
+	22, // 28: ecommerce.balance.v1.Balance.RechargeBalance:output_type -> ecommerce.balance.v1.RechargeBalanceReply
+	14, // 29: ecommerce.balance.v1.Balance.GetUserBalance:output_type -> ecommerce.balance.v1.BalanceReply
+	16, // 30: ecommerce.balance.v1.Balance.FreezeBalance:output_type -> ecommerce.balance.v1.FreezeBalanceReply
+	20, // 31: ecommerce.balance.v1.Balance.CancelFreeze:output_type -> ecommerce.balance.v1.CancelFreezeReply
+	18, // 32: ecommerce.balance.v1.Balance.ConfirmTransfer:output_type -> ecommerce.balance.v1.ConfirmTransferReply
+	24, // 33: ecommerce.balance.v1.Balance.WithdrawBalance:output_type -> ecommerce.balance.v1.WithdrawBalanceReply
+	9,  // 34: ecommerce.balance.v1.Balance.CreateTransaction:output_type -> ecommerce.balance.v1.CreateTransactionReply
+	22, // [22:35] is the sub-list for method output_type
+	9,  // [9:22] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_v1_balance_proto_init() }
@@ -2167,13 +2228,14 @@ func file_v1_balance_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_balance_proto_rawDesc), len(file_v1_balance_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_v1_balance_proto_goTypes,
 		DependencyIndexes: file_v1_balance_proto_depIdxs,
+		EnumInfos:         file_v1_balance_proto_enumTypes,
 		MessageInfos:      file_v1_balance_proto_msgTypes,
 	}.Build()
 	File_v1_balance_proto = out.File

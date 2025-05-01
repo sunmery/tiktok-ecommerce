@@ -70,6 +70,74 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return id, err
 }
 
+const GetConsumerTransactions = `-- name: GetConsumerTransactions :many
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+FROM balances.transactions
+WHERE from_user_id = $1
+  AND currency = COALESCE($2, currency)
+  AND status = COALESCE($3, status)
+LIMIT $5 OFFSET $4
+`
+
+type GetConsumerTransactionsParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Currency string    `json:"currency"`
+	Status   string    `json:"status"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
+}
+
+// 根据 用户ID 获取交易流水记录
+//
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+//	FROM balances.transactions
+//	WHERE from_user_id = $1
+//	  AND currency = COALESCE($2, currency)
+//	  AND status = COALESCE($3, status)
+//	LIMIT $5 OFFSET $4
+func (q *Queries) GetConsumerTransactions(ctx context.Context, arg GetConsumerTransactionsParams) ([]BalancesTransactions, error) {
+	rows, err := q.db.Query(ctx, GetConsumerTransactions,
+		arg.UserID,
+		arg.Currency,
+		arg.Status,
+		arg.Page,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BalancesTransactions
+	for rows.Next() {
+		var i BalancesTransactions
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Amount,
+			&i.Currency,
+			&i.FromUserID,
+			&i.ToMerchantID,
+			&i.PaymentMethodType,
+			&i.PaymentAccount,
+			&i.PaymentExtra,
+			&i.Status,
+			&i.FreezeID,
+			&i.IdempotencyKey,
+			&i.ConsumerVersion,
+			&i.MerchantVersion,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetMerchantPaymentMethod = `-- name: GetMerchantPaymentMethod :one
 SELECT id, merchant_id, type, is_default, account_details, created_at
 FROM balances.merchant_payment_methods
@@ -102,36 +170,34 @@ func (q *Queries) GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantP
 	return i, err
 }
 
-const GetTransactions = `-- name: GetTransactions :many
+const GetMerchantTransactions = `-- name: GetMerchantTransactions :many
 SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 FROM balances.transactions
-WHERE from_user_id = $1 OR to_merchant_id = $2
-  AND currency = COALESCE($3, currency)
-  AND status = COALESCE($4, status)
-LIMIT $6 OFFSET $5
+WHERE to_merchant_id = $1
+  AND currency = COALESCE($2, currency)
+  AND status = COALESCE($3, status)
+LIMIT $5 OFFSET $4
 `
 
-type GetTransactionsParams struct {
-	UserID     uuid.UUID `json:"userID"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	Currency   string    `json:"currency"`
-	Status     string    `json:"status"`
-	Page       int64     `json:"page"`
-	PageSize   int64     `json:"pageSize"`
+type GetMerchantTransactionsParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Currency string    `json:"currency"`
+	Status   string    `json:"status"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
 }
 
-// 根据 用户ID 获取交易流水记录
+// 根据 商家ID 获取交易流水记录
 //
 //	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 //	FROM balances.transactions
-//	WHERE from_user_id = $1 OR to_merchant_id = $2
-//	  AND currency = COALESCE($3, currency)
-//	  AND status = COALESCE($4, status)
-//	LIMIT $6 OFFSET $5
-func (q *Queries) GetTransactions(ctx context.Context, arg GetTransactionsParams) ([]BalancesTransactions, error) {
-	rows, err := q.db.Query(ctx, GetTransactions,
+//	WHERE to_merchant_id = $1
+//	  AND currency = COALESCE($2, currency)
+//	  AND status = COALESCE($3, status)
+//	LIMIT $5 OFFSET $4
+func (q *Queries) GetMerchantTransactions(ctx context.Context, arg GetMerchantTransactionsParams) ([]BalancesTransactions, error) {
+	rows, err := q.db.Query(ctx, GetMerchantTransactions,
 		arg.UserID,
-		arg.MerchantID,
 		arg.Currency,
 		arg.Status,
 		arg.Page,

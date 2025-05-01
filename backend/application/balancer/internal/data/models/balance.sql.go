@@ -169,7 +169,6 @@ func (q *Queries) CreateMerchantPaymentMethods(ctx context.Context, arg CreateMe
 }
 
 const DecreaseUserAvailableBalance = `-- name: DecreaseUserAvailableBalance :execrows
-
 UPDATE balances.user_balances
 SET available  = available - $3, -- 金额参数 (分)
     version    = version + 1,
@@ -187,7 +186,6 @@ type DecreaseUserAvailableBalanceParams struct {
 	ExpectedVersion int32          `json:"expectedVersion"`
 }
 
-// 乐观锁检查
 // 减少用户可用余额 (用于发起提现) - 使用乐观锁
 //
 //	UPDATE balances.user_balances
@@ -387,7 +385,6 @@ func (q *Queries) GetUserBalance(ctx context.Context, arg GetUserBalanceParams) 
 }
 
 const IncreaseMerchantAvailableBalance = `-- name: IncreaseMerchantAvailableBalance :execrows
-
 UPDATE balances.merchant_balances
 SET available  = available + $3, -- 金额参数 (分)
     version    = version + 1,
@@ -404,7 +401,6 @@ type IncreaseMerchantAvailableBalanceParams struct {
 	ExpectedVersion int32          `json:"expectedVersion"`
 }
 
-// 乐观锁检查
 // 增加商家可用余额 (用于充值成功) - 使用乐观锁
 //
 //	UPDATE balances.merchant_balances

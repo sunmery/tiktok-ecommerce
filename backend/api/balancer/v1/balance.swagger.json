@@ -407,10 +407,22 @@
         "parameters": [
           {
             "name": "userId",
-            "description": "UUID as string",
+            "description": "用户ID",
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "userType",
+            "description": "用户类型: 消费者|商家",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "CONSUMER",
+              "MERCHANT"
+            ],
+            "default": "CONSUMER"
           },
           {
             "name": "currency",
@@ -1039,6 +1051,14 @@
           "format": "date-time"
         }
       }
+    },
+    "v1TransactionsUserType": {
+      "type": "string",
+      "enum": [
+        "CONSUMER",
+        "MERCHANT"
+      ],
+      "default": "CONSUMER"
     },
     "v1WithdrawBalanceReply": {
       "type": "object",

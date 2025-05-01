@@ -234,13 +234,24 @@ func (s *BalanceService) GetTransactions(ctx context.Context, req *v1.GetTransac
 	if err != nil {
 		return nil, err
 	}
+	var userType constants.TransactionsUserType
+	switch req.UserType {
+	case v1.TransactionsUserType(constants.TransactionsUserTypeConsumerPB):
+		userType = constants.TransactionsUserTypeConsumer
+	case v1.TransactionsUserType(constants.TransactionsUserTypeMerchantPB):
+		userType = constants.TransactionsUserTypeMerchant
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid user type")
+	}
+	log.Debugf("userType: %v", userType)
 
 	transactions, err := s.uc.GetTransactions(ctx, &biz.GetTransactionsRequest{
-		UserId:        userId,
-		Currency:      req.Currency,
-		Page:          req.Page,
-		PageSize:      req.PageSize,
-		PaymentStatus: constants.PaymentStatus(req.PaymentStatus),
+		UserId:               userId,
+		Currency:             req.Currency,
+		Page:                 req.Page,
+		PageSize:             req.PageSize,
+		PaymentStatus:        constants.PaymentStatus(req.PaymentStatus),
+		TransactionsUserType: userType,
 	})
 	if err != nil {
 		return nil, err

@@ -16,11 +16,20 @@ SET status     = $1,
     updated_at = NOW()
 WHERE id = $2;
 
--- name: GetTransactions :many
+-- name: GetConsumerTransactions :many
 -- 根据 用户ID 获取交易流水记录
 SELECT *
 FROM balances.transactions
-WHERE from_user_id = @user_id OR to_merchant_id = @merchant_id
+WHERE from_user_id = @user_id
+  AND currency = COALESCE(@currency, currency)
+  AND status = COALESCE(@status, status)
+LIMIT @page_size OFFSET @page;
+
+-- name: GetMerchantTransactions :many
+-- 根据 商家ID 获取交易流水记录
+SELECT *
+FROM balances.transactions
+WHERE to_merchant_id = @user_id
   AND currency = COALESCE(@currency, currency)
   AND status = COALESCE(@status, status)
 LIMIT @page_size OFFSET @page;

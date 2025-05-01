@@ -97,54 +97,16 @@ func (b balanceRepo) GetTransactions(ctx context.Context, req *biz.GetTransactio
 	page := (req.Page - 1) * req.PageSize
 	pageSize := req.PageSize
 
-	transactions, err := b.data.db.GetTransactions(ctx, models.GetTransactionsParams{
-		UserID:   req.UserId,
-		Currency: req.Currency,
-		Status:   string(req.PaymentStatus),
-		Page:     page,
-		PageSize: pageSize,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	bizTransactions := make([]*biz.Transactions, 0, len(transactions))
-	for _, t := range transactions {
-		amount, err := types.NumericToFloat(t.Amount)
-		if err != nil {
-			return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to float64 failed")
-		}
-
-		fromUserID, err := uuid.Parse(t.FromUserID.String())
-		if err != nil {
-			return nil, kerrors.New(500, "PARSE_USER_ID_FAILED", "parse user id failed")
-		}
-
-		toMerchantID, err := uuid.Parse(t.ToMerchantID.String())
-		if err != nil {
-			return nil, kerrors.New(500, "PARSE_MERCHANT_ID_FAILED", "parse merchant id failed")
-		}
-
-		bizTransaction := &biz.Transactions{
-			Id:                t.ID,
-			Type:              constants.TransactionType(t.Type),
-			Amount:            amount,
-			Currency:          t.Currency,
-			FromUserId:        fromUserID,
-			ToMerchantId:      toMerchantID,
-			PaymentMethodType: constants.PaymentMethod(t.PaymentMethodType),
-			PaymentAccount:    t.PaymentAccount,
-			PaymentExtra:      t.PaymentExtra,
-			Status:            constants.PaymentStatus(t.Status),
-			CreatedAt:         t.CreatedAt,
-			UpdatedAt:         t.UpdatedAt,
-		}
-
-		bizTransactions = append(bizTransactions, bizTransaction)
+	var transactions []*biz.Transaction
+	switch req.TransactionsUserType {
+	case constants.TransactionsUserTypeConsumer:
+		return b.getConsumerTransactions(ctx, req, page, pageSize)
+	case constants.TransactionsUserTypeMerchant:
+		return b.getMerchantTransactions(ctx, req, page, pageSize)
 	}
 
 	return &biz.GetTransactionsReply{
-		Transactions: bizTransactions,
+		Transactions: transactions,
 	}, nil
 }
 
@@ -750,4 +712,83 @@ func (b balanceRepo) getMerchantIDFromOrder(ctx context.Context, subOrderId int6
 		return uuid.Nil, err
 	}
 	return merchantId, nil
+}
+
+func (b balanceRepo) getConsumerTransactions(ctx context.Context, req *biz.GetTransactionsRequest, page int64, size int64) (*biz.GetTransactionsReply, error) {
+	transactions, err := b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
+		UserID:   req.UserId,
+		Currency: req.Currency,
+		Status:   string(req.PaymentStatus),
+		Page:     page,
+		PageSize: size,
+	})
+	if err != nil {
+		return nil, err
+	}
+	transactionsReply := make([]*biz.Transaction, 0, len(transactions))
+	// maps.Copy(transactionsReply, transactions)
+	for _, t := range transactions {
+		amount, err := types.NumericToFloat(t.Amount)
+		if err != nil {
+			return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to float64 failed")
+		}
+		transactionsReply = append(transactionsReply, &biz.Transaction{
+			Id:                t.ID,
+			Type:              constants.TransactionType(t.Type),
+			Amount:            amount,
+			Currency:          t.Currency,
+			FromUserId:        t.FromUserID,
+			ToMerchantId:      t.ToMerchantID,
+			PaymentMethodType: constants.PaymentMethod(t.PaymentMethodType),
+			PaymentAccount:    t.PaymentAccount,
+			Status:            constants.PaymentStatus(t.Status),
+			PaymentExtra:      t.PaymentExtra,
+			CreatedAt:         t.CreatedAt,
+			UpdatedAt:         t.UpdatedAt,
+		})
+	}
+
+	return &biz.GetTransactionsReply{
+		Transactions: transactionsReply,
+	}, nil
+}
+
+func (b balanceRepo) getMerchantTransactions(ctx context.Context, req *biz.GetTransactionsRequest, page int64, size int64) (*biz.GetTransactionsReply, error) {
+	transactions, err := b.data.db.GetMerchantTransactions(ctx, models.GetMerchantTransactionsParams{
+		UserID:   req.UserId,
+		Currency: req.Currency,
+		Status:   string(req.PaymentStatus),
+		Page:     page,
+		PageSize: size,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	transactionsReply := make([]*biz.Transaction, 0, len(transactions))
+	// maps.Copy(transactionsReply, transactions)
+	for _, t := range transactions {
+		amount, err := types.NumericToFloat(t.Amount)
+		if err != nil {
+			return nil, kerrors.New(500, "CONVERT_AMOUNT_FAILED", "convert amount to float64 failed")
+		}
+		transactionsReply = append(transactionsReply, &biz.Transaction{
+			Id:                t.ID,
+			Type:              constants.TransactionType(t.Type),
+			Amount:            amount,
+			Currency:          t.Currency,
+			FromUserId:        t.FromUserID,
+			ToMerchantId:      t.ToMerchantID,
+			PaymentMethodType: constants.PaymentMethod(t.PaymentMethodType),
+			PaymentAccount:    t.PaymentAccount,
+			Status:            constants.PaymentStatus(t.Status),
+			PaymentExtra:      t.PaymentExtra,
+			CreatedAt:         t.CreatedAt,
+			UpdatedAt:         t.UpdatedAt,
+		})
+	}
+
+	return &biz.GetTransactionsReply{
+		Transactions: transactionsReply,
+	}, nil
 }

@@ -3,14 +3,16 @@ package constants
 type (
 	RoleType string // 角色类型
 	// ProductStatus   string // 商品状态
-	ProductStatus   int16  // 商品状态, TODO 临时方案, 涉及到数据库的字段类型和其他引用了该状态的代码, 暂时不做修改
-	PaymentStatus   string // 支付状态
-	TradeStatus     string // 支付宝交易状态
-	ShippingStatus  string // 发货状态
-	FreezeStatus    string // 余额冻结状态
-	PaymentMethod   string // 支付方式
-	TransactionType string // 交易类型
-	AddressType     string // 地址类型
+	ProductStatus          int16  // 商品状态, TODO 临时方案, 涉及到数据库的字段类型和其他引用了该状态的代码, 暂时不做修改
+	PaymentStatus          string // 支付状态
+	TradeStatus            string // 支付宝交易状态
+	ShippingStatus         string // 发货状态
+	FreezeStatus           string // 余额冻结状态
+	PaymentMethod          string // 支付方式
+	TransactionType        string // 交易类型
+	AddressType            string // 地址类型
+	TransactionsUserType   string // 转账的用户类型,消费者|商家
+	TransactionsUserTypePB int32  // 适配proto类型, 转账的用户类型,消费者|商家
 )
 
 const (
@@ -88,4 +90,15 @@ const (
 	TransactionPayment  TransactionType = "PAYMENT"  // 支付
 	TransactionRefund   TransactionType = "REFUND"   // 退款
 	TransactionWithdraw TransactionType = "WITHDRAW" // 提现
+)
+
+const (
+	TransactionsUserTypeConsumer TransactionsUserType = "CONSUMER" // 消费者
+	TransactionsUserTypeMerchant TransactionsUserType = "MERCHANT" // 商家
+
+)
+
+const (
+	TransactionsUserTypeConsumerPB TransactionsUserTypePB = 0 // 消费者
+	TransactionsUserTypeMerchantPB TransactionsUserTypePB = 1 // 商家
 )

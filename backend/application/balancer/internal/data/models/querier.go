@@ -62,9 +62,7 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	//  RETURNING id
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
-	// 乐观锁检查
 	// 减少用户可用余额 (用于发起提现) - 使用乐观锁
-	//
 	//
 	//  UPDATE balances.user_balances
 	//  SET available  = available - $3, -- 金额参数 (分)
@@ -89,6 +87,15 @@ type Querier interface {
 	//    AND available >= $3 -- 确保可用余额充足
 	//    AND version = $4
 	FreezeUserBalance(ctx context.Context, arg FreezeUserBalanceParams) (int64, error)
+	// 根据 用户ID 获取交易流水记录
+	//
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+	//  FROM balances.transactions
+	//  WHERE from_user_id = $1
+	//    AND currency = COALESCE($2, currency)
+	//    AND status = COALESCE($3, status)
+	//  LIMIT $5 OFFSET $4
+	GetConsumerTransactions(ctx context.Context, arg GetConsumerTransactionsParams) ([]BalancesTransactions, error)
 	// 确保当前状态是预期的状态 (例如 'FROZEN')
 	// 获取所有已过期但仍处于冻结状态的记录 (用于定时任务处理)
 	//
@@ -125,6 +132,15 @@ type Querier interface {
 	//  WHERE id = $1
 	//    AND merchant_id = $2
 	GetMerchantPaymentMethod(ctx context.Context, arg GetMerchantPaymentMethodParams) (BalancesMerchantPaymentMethods, error)
+	// 根据 商家ID 获取交易流水记录
+	//
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+	//  FROM balances.transactions
+	//  WHERE to_merchant_id = $1
+	//    AND currency = COALESCE($2, currency)
+	//    AND status = COALESCE($3, status)
+	//  LIMIT $5 OFFSET $4
+	GetMerchantTransactions(ctx context.Context, arg GetMerchantTransactionsParams) ([]BalancesTransactions, error)
 	// 获取指定商家的版本号
 	//
 	//  SELECT merchant_id, version
@@ -140,15 +156,6 @@ type Querier interface {
 	//  FROM balances.merchant_balances
 	//  WHERE merchant_id = ANY($1::uuid[])
 	GetMerchantVersions(ctx context.Context, dollar_1 []uuid.UUID) ([]GetMerchantVersionsRow, error)
-	// 根据 用户ID 获取交易流水记录
-	//
-	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
-	//  FROM balances.transactions
-	//  WHERE from_user_id = $1 OR to_merchant_id = $2
-	//    AND currency = COALESCE($3, currency)
-	//    AND status = COALESCE($4, status)
-	//  LIMIT $6 OFFSET $5
-	GetTransactions(ctx context.Context, arg GetTransactionsParams) ([]BalancesTransactions, error)
 	// 获取指定用户和币种的余额信息
 	//
 	//  SELECT available, frozen, version, currency
@@ -163,9 +170,7 @@ type Querier interface {
 	//  WHERE id = $1
 	//    AND user_id = $2
 	GetUserPaymentMethod(ctx context.Context, arg GetUserPaymentMethodParams) (BalancesUserPaymentMethods, error)
-	// 乐观锁检查
 	// 增加商家可用余额 (用于充值成功) - 使用乐观锁
-	//
 	//
 	//  UPDATE balances.merchant_balances
 	//  SET available  = available + $3, -- 金额参数 (分)

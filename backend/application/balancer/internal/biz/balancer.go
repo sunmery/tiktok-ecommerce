@@ -149,7 +149,7 @@ type (
 )
 
 type (
-	Transactions struct {
+	Transaction struct {
 		Id                int64
 		Type              constants.TransactionType
 		Amount            float64
@@ -163,15 +163,17 @@ type (
 		CreatedAt         time.Time
 		UpdatedAt         time.Time
 	}
+
 	GetTransactionsRequest struct {
-		UserId        uuid.UUID
-		Currency      string
-		Page          int64
-		PageSize      int64
-		PaymentStatus constants.PaymentStatus
+		UserId               uuid.UUID
+		Currency             string
+		Page                 int64
+		PageSize             int64
+		PaymentStatus        constants.PaymentStatus
+		TransactionsUserType constants.TransactionsUserType
 	}
 	GetTransactionsReply struct {
-		Transactions []*Transactions
+		Transactions []*Transaction
 	}
 )
 
