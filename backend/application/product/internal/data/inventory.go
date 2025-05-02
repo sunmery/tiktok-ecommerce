@@ -17,7 +17,7 @@ func (p *productRepo) UpdateInventory(ctx context.Context, req *biz.UpdateInvent
 	result, err := p.data.db.UpdateInventory(ctx, models.UpdateInventoryParams{
 		ProductID:  req.ProductId,
 		MerchantID: req.MerchantId,
-		Delta:      int32(req.Stock),
+		Delta:      req.Stock,
 	})
 	if err != nil {
 		var pgErr *pgconn.PgError

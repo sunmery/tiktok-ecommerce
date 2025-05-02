@@ -59,7 +59,7 @@ func (m *CreatePaymentRequest) validate(all bool) error {
 
 	// no validation rules for OrderId
 
-	// no validation rules for UserId
+	// no validation rules for ConsumerId
 
 	// no validation rules for Amount
 
@@ -68,6 +68,10 @@ func (m *CreatePaymentRequest) validate(all bool) error {
 	// no validation rules for Subject
 
 	// no validation rules for ReturnUrl
+
+	// no validation rules for FreezeId
+
+	// no validation rules for ConsumerVersion
 
 	if len(errors) > 0 {
 		return CreatePaymentRequestMultiError(errors)
@@ -469,64 +473,43 @@ var _ interface {
 	ErrorName() string
 } = GetPaymentStatusResponseValidationError{}
 
-// Validate checks the field values on HandlePaymentNotifyRequest with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *HandlePaymentNotifyRequest) Validate() error {
+// Validate checks the field values on KeyValue with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *KeyValue) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on HandlePaymentNotifyRequest with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// HandlePaymentNotifyRequestMultiError, or nil if none found.
-func (m *HandlePaymentNotifyRequest) ValidateAll() error {
+// ValidateAll checks the field values on KeyValue with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in KeyValueMultiError, or nil
+// if none found.
+func (m *KeyValue) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *HandlePaymentNotifyRequest) validate(all bool) error {
+func (m *KeyValue) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for Charset
-
-	// no validation rules for AppId
-
-	// no validation rules for AuthAppId
-
-	// no validation rules for TradeNo
-
-	// no validation rules for Method
-
-	// no validation rules for Sign
-
-	// no validation rules for SignType
-
-	// no validation rules for OutTradeNo
-
-	// no validation rules for TotalAmount
-
-	// no validation rules for SellerId
-
-	// no validation rules for Params
+	// no validation rules for Key
 
 	if len(errors) > 0 {
-		return HandlePaymentNotifyRequestMultiError(errors)
+		return KeyValueMultiError(errors)
 	}
 
 	return nil
 }
 
-// HandlePaymentNotifyRequestMultiError is an error wrapping multiple
-// validation errors returned by HandlePaymentNotifyRequest.ValidateAll() if
-// the designated constraints aren't met.
-type HandlePaymentNotifyRequestMultiError []error
+// KeyValueMultiError is an error wrapping multiple validation errors returned
+// by KeyValue.ValidateAll() if the designated constraints aren't met.
+type KeyValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m HandlePaymentNotifyRequestMultiError) Error() string {
+func (m KeyValueMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -535,11 +518,11 @@ func (m HandlePaymentNotifyRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m HandlePaymentNotifyRequestMultiError) AllErrors() []error { return m }
+func (m KeyValueMultiError) AllErrors() []error { return m }
 
-// HandlePaymentNotifyRequestValidationError is the validation error returned
-// by HandlePaymentNotifyRequest.Validate if the designated constraints aren't met.
-type HandlePaymentNotifyRequestValidationError struct {
+// KeyValueValidationError is the validation error returned by
+// KeyValue.Validate if the designated constraints aren't met.
+type KeyValueValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -547,24 +530,22 @@ type HandlePaymentNotifyRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e HandlePaymentNotifyRequestValidationError) Field() string { return e.field }
+func (e KeyValueValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e HandlePaymentNotifyRequestValidationError) Reason() string { return e.reason }
+func (e KeyValueValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e HandlePaymentNotifyRequestValidationError) Cause() error { return e.cause }
+func (e KeyValueValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e HandlePaymentNotifyRequestValidationError) Key() bool { return e.key }
+func (e KeyValueValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e HandlePaymentNotifyRequestValidationError) ErrorName() string {
-	return "HandlePaymentNotifyRequestValidationError"
-}
+func (e KeyValueValidationError) ErrorName() string { return "KeyValueValidationError" }
 
 // Error satisfies the builtin error interface
-func (e HandlePaymentNotifyRequestValidationError) Error() string {
+func (e KeyValueValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -576,14 +557,14 @@ func (e HandlePaymentNotifyRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sHandlePaymentNotifyRequest.%s: %s%s",
+		"invalid %sKeyValue.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = HandlePaymentNotifyRequestValidationError{}
+var _ error = KeyValueValidationError{}
 
 var _ interface {
 	Field() string
@@ -591,7 +572,140 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = HandlePaymentNotifyRequestValidationError{}
+} = KeyValueValidationError{}
+
+// Validate checks the field values on UrlValues with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *UrlValues) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UrlValues with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in UrlValuesMultiError, or nil
+// if none found.
+func (m *UrlValues) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UrlValues) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetPairs() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UrlValuesValidationError{
+						field:  fmt.Sprintf("Pairs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UrlValuesValidationError{
+						field:  fmt.Sprintf("Pairs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UrlValuesValidationError{
+					field:  fmt.Sprintf("Pairs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return UrlValuesMultiError(errors)
+	}
+
+	return nil
+}
+
+// UrlValuesMultiError is an error wrapping multiple validation errors returned
+// by UrlValues.ValidateAll() if the designated constraints aren't met.
+type UrlValuesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UrlValuesMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UrlValuesMultiError) AllErrors() []error { return m }
+
+// UrlValuesValidationError is the validation error returned by
+// UrlValues.Validate if the designated constraints aren't met.
+type UrlValuesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UrlValuesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UrlValuesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UrlValuesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UrlValuesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UrlValuesValidationError) ErrorName() string { return "UrlValuesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UrlValuesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUrlValues.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UrlValuesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UrlValuesValidationError{}
 
 // Validate checks the field values on HandlePaymentNotifyResponse with the
 // rules defined in the proto definition for this message. If any rules are

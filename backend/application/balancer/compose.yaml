@@ -1,0 +1,10 @@
+services:
+
+  balancer:
+    image: tiktok/balancer:prod
+    platform: linux/amd64
+    ports:
+      - "30025:30025"
+      - "30026:30026"
+    container_name: ecommerce-balancer-v1
+    restart: on-failure:4

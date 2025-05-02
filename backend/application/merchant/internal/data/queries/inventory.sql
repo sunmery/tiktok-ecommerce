@@ -93,7 +93,6 @@ INSERT INTO merchant.stock_adjustments (product_id, merchant_id, quantity, reaso
 VALUES (@product_id::uuid, @merchant_id::uuid, @quantity, @reason, @operator_id::uuid)
 RETURNING id, product_id, merchant_id, quantity, reason, operator_id, created_at;
 
--- 获取库存调整历史
 -- name: GetStockAdjustmentHistory :many
 SELECT sa.id,
        sa.product_id,
@@ -105,10 +104,8 @@ SELECT sa.id,
        sa.created_at
 FROM merchant.stock_adjustments sa
          JOIN products.products p
-              ON sa.product_id = p.id
-                  AND sa.merchant_id = p.merchant_id
--- WHERE sa.product_id = @product_id::uuid
-WHERE sa.merchant_id = @merchant_id::uuid
+              ON sa.merchant_id = p.merchant_id
+WHERE sa.product_id = @product_id::uuid
 ORDER BY sa.created_at DESC
 LIMIT @page_size OFFSET @page;
 
@@ -116,8 +113,7 @@ LIMIT @page_size OFFSET @page;
 -- name: CountStockAdjustmentHistory :one
 SELECT COUNT(*)
 FROM merchant.stock_adjustments sa
-WHERE sa.product_id = @product_id::uuid
-  AND sa.merchant_id = @merchant_id::uuid;
+  WHERE sa.merchant_id = @merchant_id::uuid;
 
 -- 获取低库存产品总数
 -- name: CountLowStockProducts :one

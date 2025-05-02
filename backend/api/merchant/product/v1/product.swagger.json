@@ -56,7 +56,7 @@
       }
     },
     "/v1/merchants/products/{id}": {
-      "put": {
+      "patch": {
         "summary": "更新商品信息",
         "operationId": "Product_UpdateProduct",
         "responses": {
@@ -119,7 +119,11 @@
         "url": {
           "type": "string"
         },
-        "attributes": {}
+        "attributes": {},
+        "status": {
+          "type": "integer",
+          "format": "int64"
+        }
       },
       "title": "更新商品请求"
     },

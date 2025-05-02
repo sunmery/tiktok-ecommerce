@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 
+	addresv1 "backend/api/merchant/address/v1"
+
 	orderv1 "backend/api/merchant/order/v1"
 
 	inventoryv1 "backend/api/merchant/inventory/v1"
@@ -31,7 +33,8 @@ func NewHTTPServer(
 	logger log.Logger,
 	inventoryService *service.InventoryService,
 	productService *service.ProductService,
-	orderService *service.OrderServiceService,
+	orderService *service.OrderService,
+	addresService *service.AddressService,
 ) *http.Server {
 	// trace start
 	ctx := context.Background()
@@ -83,5 +86,6 @@ func NewHTTPServer(
 	inventoryv1.RegisterInventoryHTTPServer(srv, inventoryService)
 	productv1.RegisterProductHTTPServer(srv, productService)
 	orderv1.RegisterOrderHTTPServer(srv, orderService)
+	addresv1.RegisterMerchantAddressesHTTPServer(srv, addresService)
 	return srv
 }

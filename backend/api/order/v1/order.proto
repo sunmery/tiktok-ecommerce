@@ -1,21 +1,17 @@
-syntax = "proto3"; // 指定使用 proto3 语法
+syntax = "proto3";
 
-package ecommerce.order.v1; // 定义包名，用于命名空间隔离
+package ecommerce.order.v1;
 
-// 导入外部依赖
-import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
-import "google/protobuf/timestamp.proto"; // 提供时间戳类型支持
-import "validate/validate.proto"; // 提供字段验证规则支持
-import "backend/api/cart/v1/cart.proto"; // 导入购物车相关的消息定义
-import "backend/api/user/v1/user.proto"; // 导入用户相关的消息定义
-
-// Go 语言生成代码的选项
 option go_package = "backend/api/order/v1;orderv1";
-// `go_package` 指定了生成的 Go 代码的包路径和别名：
-// - "backend/api/order/v1" 是生成代码的完整路径
-// - "orderv1" 是生成代码的包别名
 
-// 订单服务接口定义
+import "google/api/annotations.proto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+import "validate/validate.proto";
+import "backend/api/cart/v1/cart.proto";
+import "backend/api/user/v1/user.proto";
+
 service OrderService {
   // 创建订单
   rpc PlaceOrder(PlaceOrderReq) returns (PlaceOrderResp) {
@@ -26,9 +22,9 @@ service OrderService {
   }
 
   // 查询用户订单列表
-  rpc GetConsumerOrders(GetConsumerOrdersReq) returns (Orders) {
+  rpc GetConsumerOrders(GetConsumerOrdersReq) returns (ConsumerOrders) {
     option (google.api.http) = {
-      get: "/v1/orders"
+      get: "/v1/consumers/orders"
     };
   }
 
@@ -46,6 +42,13 @@ service OrderService {
     };
   }
 
+  // 根据用户主订单查询子订单
+  rpc GetUserOrdersWithSuborders(GetUserOrdersWithSubordersReq) returns (GetUserOrdersWithSubordersReply) {
+    option (google.api.http) = {
+      get: "/v1/orders/users/{order_id}"
+    };
+  }
+
   // 标记订单为已支付
   rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {
     option (google.api.http) = {
@@ -53,12 +56,42 @@ service OrderService {
       body: "*"                          // 表示请求体包含所有字段
     };
   }
+
+  // 查询订单货运状态
+  rpc GetShipOrderStatus(GetShipOrderStatusReq) returns (GetShipOrderStatusReply) {
+    option (google.api.http) = {
+      get: "/v1/orders/{sub_order_id}/ship/status"
+    };
+  }
+
+  // 用户确认收货
+  rpc ConfirmReceived(ConfirmReceivedReq) returns (ConfirmReceivedResp) {
+    option (google.api.http) = {
+      patch: "/v1/consumers/orders/{order_id}/receive" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      body: "*"                            // 表示请求体包含所有字段
+    };
+  }
+}
+
+message GetShipOrderStatusReq {
+  int64 sub_order_id = 1; //  子订单 ID
+}
+
+// 查询订单状态响应的消息结构
+message GetShipOrderStatusReply {
+  int64 order_id = 1; // 主订单 ID
+  int64 sub_order_id = 2; // 子订单 ID
+  order.v1.ShippingStatus shipping_status = 4; // 货运状态
+  google.protobuf.Struct receiver_address = 5;  // 用户收货地址
+  google.protobuf.Struct shipping_address = 6;  // 商家发货地址
+  string tracking_number = 7;  // 物流单号
+  string carrier = 8;  // 承运商
 }
 
 // 创建订单请求的消息结构
 message PlaceOrderReq {
   string currency = 2 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
-  user.v1.Address address = 3; // 用户地址信息
+  user.v1.ConsumerAddress address = 3; // 用户地址信息
   string email = 4; // 用户邮箱
   repeated OrderItem order_items = 5; // 订单项列表
 }
@@ -69,9 +102,13 @@ message OrderItem {
   double cost = 2; // 商品单价
 }
 
+
 // 创建订单响应的消息结构
 message OrderResult {
   int64 order_id = 1; // 订单 ID
+  int64 freeze_id = 2; // 冻结 ID
+  int64 consumer_version = 3; // 消费者乐观锁版本
+  repeated int64 merchant_version = 4; // 商家乐观锁版本
 }
 
 // 创建订单响应的消息结构
@@ -81,30 +118,91 @@ message PlaceOrderResp {
 
 // 支付状态的枚举类型
 enum PaymentStatus {
-  NOT_PAID = 0; // 未支付
-  PROCESSING = 1; // 处理中
-  PAID = 2; // 已支付
-  FAILED = 3; // 支付失败
-  CANCELLED = 4; // 取消支付
+  PENDING = 0; // 未支付
+  PAID = 1; // 已支付
+  FAILED = 2; // 支付失败
+  CANCELLED = 3; // 取消支付
+}
+
+// 货运状态的枚举类型
+enum ShippingStatus {
+  WAIT_COMMAND = 0; //   等待操作
+  PENDING_SHIPMENT = 1; //  待发货
+  SHIPPED = 2; // 已发货
+  IN_TRANSIT = 3; // 运输中
+  DELIVERED = 4; // 已送达
+  CONFIRMED = 5; // 已收货
+  CANCELLED_SHIPMENT = 6; // 已取消发货
 }
 
 // 订单的消息结构
 message Order {
   repeated OrderItem items = 1; // 订单项列表
   int64 order_id = 2; // 订单 ID
-  string user_id = 3 [
+  optional int64 sub_order_id = 3; // 子订单 ID
+  string user_id = 4 [
     (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
     (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
   ];
-  string currency = 4 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
-  user.v1.Address address = 5; // 用户地址信息
-  string email = 6; // 用户邮箱
-  google.protobuf.Timestamp created_at = 7; // 订单创建时间
-  PaymentStatus payment_status = 8; // 支付状态（NOT_PAID/PROCESSING/PAID/FAILED/CANCELLED）
+  string currency = 5 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string email = 7; // 用户邮箱
+  google.protobuf.Timestamp created_at = 8; // 订单创建时间
+  PaymentStatus payment_status = 9; // 支付状态
+  ShippingStatus shipping_status = 10; // 冗余货运状态
+}
+
+message ConsumerOrder {
+  repeated OrderItem items = 1; // 订单项列表
+  int64 order_id = 2; // 订单 ID
+  optional int64 sub_order_id = 3; // 子订单 ID
+  string user_id = 4 [
+    (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
+    (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
+  ];
+  string currency = 5 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string email = 7; // 用户邮箱
+  google.protobuf.Timestamp created_at = 8; // 订单创建时间
+  PaymentStatus payment_status = 9; // 支付状态
+  ShippingStatus shipping_status = 10; // 冗余货运状态
+}
+
+// 订单的消息结构
+message ConsumerOrders {
+  repeated ConsumerOrder items = 1; // 订单项列表
+  int64 order_id = 2; // 订单 ID
 }
 
 message GetOrderReq {
-  int64 id = 1; // 用户 ID
+  int64 id = 1; // 订单 ID
+}
+message GetUserOrdersWithSubordersReq {
+  string user_id = 1; // 用户 ID
+  int64 order_id = 2; //  订单 ID
+}
+
+message Suborders {
+  int64 id = 1;
+  int64 sub_order_id = 17;
+  string street_address = 2;
+  string city = 3;
+  string state = 4;
+  string country = 5;
+  string zip_code = 6;
+  string email = 7;
+  string merchant_id = 8;
+  string payment_status = 9;
+  string shipping_status = 10;
+  double total_amount = 11;
+  string currency = 12;
+  repeated OrderItem items = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+message GetUserOrdersWithSubordersReply {
+  repeated Suborders orders = 1; // 订单列表
 }
 
 message GetConsumerOrdersReq {
@@ -127,9 +225,17 @@ message Orders {
 
 // 标记订单为已支付请求的消息结构
 message MarkOrderPaidReq {
-//  string user_id = 1; // 用户 ID
+  //  string user_id = 1; // 用户 ID
   int64 order_id = 2; // 订单 ID
 }
 
 // 标记订单为已支付响应的消息结构
 message MarkOrderPaidResp {}
+
+// 用户确认收货请求的消息结构
+message ConfirmReceivedReq {
+  int64 order_id = 1; // 订单 ID
+}
+
+// 用户确认收货响应的消息结构
+message ConfirmReceivedResp {}

@@ -38,6 +38,280 @@ var (
 // define the regex for a UUID once up-front
 var _order_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on GetShipOrderStatusReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetShipOrderStatusReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetShipOrderStatusReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetShipOrderStatusReqMultiError, or nil if none found.
+func (m *GetShipOrderStatusReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetShipOrderStatusReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SubOrderId
+
+	if len(errors) > 0 {
+		return GetShipOrderStatusReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetShipOrderStatusReqMultiError is an error wrapping multiple validation
+// errors returned by GetShipOrderStatusReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetShipOrderStatusReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetShipOrderStatusReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetShipOrderStatusReqMultiError) AllErrors() []error { return m }
+
+// GetShipOrderStatusReqValidationError is the validation error returned by
+// GetShipOrderStatusReq.Validate if the designated constraints aren't met.
+type GetShipOrderStatusReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetShipOrderStatusReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetShipOrderStatusReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetShipOrderStatusReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetShipOrderStatusReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetShipOrderStatusReqValidationError) ErrorName() string {
+	return "GetShipOrderStatusReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetShipOrderStatusReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetShipOrderStatusReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetShipOrderStatusReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetShipOrderStatusReqValidationError{}
+
+// Validate checks the field values on GetShipOrderStatusReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetShipOrderStatusReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetShipOrderStatusReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetShipOrderStatusReplyMultiError, or nil if none found.
+func (m *GetShipOrderStatusReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetShipOrderStatusReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for OrderId
+
+	// no validation rules for SubOrderId
+
+	// no validation rules for ShippingStatus
+
+	if all {
+		switch v := interface{}(m.GetReceiverAddress()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetShipOrderStatusReplyValidationError{
+					field:  "ReceiverAddress",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetShipOrderStatusReplyValidationError{
+					field:  "ReceiverAddress",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetReceiverAddress()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetShipOrderStatusReplyValidationError{
+				field:  "ReceiverAddress",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetShippingAddress()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetShipOrderStatusReplyValidationError{
+					field:  "ShippingAddress",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetShipOrderStatusReplyValidationError{
+					field:  "ShippingAddress",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetShippingAddress()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetShipOrderStatusReplyValidationError{
+				field:  "ShippingAddress",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for TrackingNumber
+
+	// no validation rules for Carrier
+
+	if len(errors) > 0 {
+		return GetShipOrderStatusReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetShipOrderStatusReplyMultiError is an error wrapping multiple validation
+// errors returned by GetShipOrderStatusReply.ValidateAll() if the designated
+// constraints aren't met.
+type GetShipOrderStatusReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetShipOrderStatusReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetShipOrderStatusReplyMultiError) AllErrors() []error { return m }
+
+// GetShipOrderStatusReplyValidationError is the validation error returned by
+// GetShipOrderStatusReply.Validate if the designated constraints aren't met.
+type GetShipOrderStatusReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetShipOrderStatusReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetShipOrderStatusReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetShipOrderStatusReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetShipOrderStatusReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetShipOrderStatusReplyValidationError) ErrorName() string {
+	return "GetShipOrderStatusReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetShipOrderStatusReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetShipOrderStatusReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetShipOrderStatusReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetShipOrderStatusReplyValidationError{}
+
 // Validate checks the field values on PlaceOrderReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -368,6 +642,10 @@ func (m *OrderResult) validate(all bool) error {
 	var errors []error
 
 	// no validation rules for OrderId
+
+	// no validation rules for FreezeId
+
+	// no validation rules for ConsumerVersion
 
 	if len(errors) > 0 {
 		return OrderResultMultiError(errors)
@@ -730,6 +1008,12 @@ func (m *Order) validate(all bool) error {
 
 	// no validation rules for PaymentStatus
 
+	// no validation rules for ShippingStatus
+
+	if m.SubOrderId != nil {
+		// no validation rules for SubOrderId
+	}
+
 	if len(errors) > 0 {
 		return OrderMultiError(errors)
 	}
@@ -814,6 +1098,390 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OrderValidationError{}
+
+// Validate checks the field values on ConsumerOrder with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ConsumerOrder) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConsumerOrder with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ConsumerOrderMultiError, or
+// nil if none found.
+func (m *ConsumerOrder) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConsumerOrder) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ConsumerOrderValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ConsumerOrderValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ConsumerOrderValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for OrderId
+
+	if utf8.RuneCountInString(m.GetUserId()) != 32 {
+		err := ConsumerOrderValidationError{
+			field:  "UserId",
+			reason: "value length must be 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if err := m._validateUuid(m.GetUserId()); err != nil {
+		err = ConsumerOrderValidationError{
+			field:  "UserId",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCurrency()) != 3 {
+		err := ConsumerOrderValidationError{
+			field:  "Currency",
+			reason: "value length must be 3 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetAddress()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "Address",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "Address",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAddress()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ConsumerOrderValidationError{
+				field:  "Address",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Email
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ConsumerOrderValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for PaymentStatus
+
+	// no validation rules for ShippingStatus
+
+	if m.SubOrderId != nil {
+		// no validation rules for SubOrderId
+	}
+
+	if len(errors) > 0 {
+		return ConsumerOrderMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *ConsumerOrder) _validateUuid(uuid string) error {
+	if matched := _order_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
+	}
+
+	return nil
+}
+
+// ConsumerOrderMultiError is an error wrapping multiple validation errors
+// returned by ConsumerOrder.ValidateAll() if the designated constraints
+// aren't met.
+type ConsumerOrderMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConsumerOrderMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConsumerOrderMultiError) AllErrors() []error { return m }
+
+// ConsumerOrderValidationError is the validation error returned by
+// ConsumerOrder.Validate if the designated constraints aren't met.
+type ConsumerOrderValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConsumerOrderValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConsumerOrderValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConsumerOrderValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConsumerOrderValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConsumerOrderValidationError) ErrorName() string { return "ConsumerOrderValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ConsumerOrderValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConsumerOrder.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConsumerOrderValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConsumerOrderValidationError{}
+
+// Validate checks the field values on ConsumerOrders with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ConsumerOrders) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConsumerOrders with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ConsumerOrdersMultiError,
+// or nil if none found.
+func (m *ConsumerOrders) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConsumerOrders) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ConsumerOrdersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ConsumerOrdersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ConsumerOrdersValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for OrderId
+
+	if len(errors) > 0 {
+		return ConsumerOrdersMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConsumerOrdersMultiError is an error wrapping multiple validation errors
+// returned by ConsumerOrders.ValidateAll() if the designated constraints
+// aren't met.
+type ConsumerOrdersMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConsumerOrdersMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConsumerOrdersMultiError) AllErrors() []error { return m }
+
+// ConsumerOrdersValidationError is the validation error returned by
+// ConsumerOrders.Validate if the designated constraints aren't met.
+type ConsumerOrdersValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConsumerOrdersValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConsumerOrdersValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConsumerOrdersValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConsumerOrdersValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConsumerOrdersValidationError) ErrorName() string { return "ConsumerOrdersValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ConsumerOrdersValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConsumerOrders.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConsumerOrdersValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConsumerOrdersValidationError{}
 
 // Validate checks the field values on GetOrderReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -915,6 +1583,467 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetOrderReqValidationError{}
+
+// Validate checks the field values on GetUserOrdersWithSubordersReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserOrdersWithSubordersReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOrdersWithSubordersReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOrdersWithSubordersReqMultiError, or nil if none found.
+func (m *GetUserOrdersWithSubordersReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOrdersWithSubordersReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UserId
+
+	// no validation rules for OrderId
+
+	if len(errors) > 0 {
+		return GetUserOrdersWithSubordersReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUserOrdersWithSubordersReqMultiError is an error wrapping multiple
+// validation errors returned by GetUserOrdersWithSubordersReq.ValidateAll()
+// if the designated constraints aren't met.
+type GetUserOrdersWithSubordersReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOrdersWithSubordersReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOrdersWithSubordersReqMultiError) AllErrors() []error { return m }
+
+// GetUserOrdersWithSubordersReqValidationError is the validation error
+// returned by GetUserOrdersWithSubordersReq.Validate if the designated
+// constraints aren't met.
+type GetUserOrdersWithSubordersReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOrdersWithSubordersReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOrdersWithSubordersReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOrdersWithSubordersReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOrdersWithSubordersReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOrdersWithSubordersReqValidationError) ErrorName() string {
+	return "GetUserOrdersWithSubordersReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOrdersWithSubordersReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOrdersWithSubordersReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOrdersWithSubordersReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOrdersWithSubordersReqValidationError{}
+
+// Validate checks the field values on Suborders with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Suborders) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Suborders with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SubordersMultiError, or nil
+// if none found.
+func (m *Suborders) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Suborders) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for SubOrderId
+
+	// no validation rules for StreetAddress
+
+	// no validation rules for City
+
+	// no validation rules for State
+
+	// no validation rules for Country
+
+	// no validation rules for ZipCode
+
+	// no validation rules for Email
+
+	// no validation rules for MerchantId
+
+	// no validation rules for PaymentStatus
+
+	// no validation rules for ShippingStatus
+
+	// no validation rules for TotalAmount
+
+	// no validation rules for Currency
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SubordersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SubordersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SubordersValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubordersValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubordersValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubordersValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubordersValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubordersValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubordersValidationError{
+				field:  "UpdatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SubordersMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubordersMultiError is an error wrapping multiple validation errors returned
+// by Suborders.ValidateAll() if the designated constraints aren't met.
+type SubordersMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubordersMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubordersMultiError) AllErrors() []error { return m }
+
+// SubordersValidationError is the validation error returned by
+// Suborders.Validate if the designated constraints aren't met.
+type SubordersValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubordersValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubordersValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubordersValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubordersValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubordersValidationError) ErrorName() string { return "SubordersValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubordersValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSuborders.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubordersValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubordersValidationError{}
+
+// Validate checks the field values on GetUserOrdersWithSubordersReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserOrdersWithSubordersReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOrdersWithSubordersReply with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOrdersWithSubordersReplyMultiError, or nil if none found.
+func (m *GetUserOrdersWithSubordersReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOrdersWithSubordersReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetOrders() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetUserOrdersWithSubordersReplyValidationError{
+						field:  fmt.Sprintf("Orders[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetUserOrdersWithSubordersReplyValidationError{
+						field:  fmt.Sprintf("Orders[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetUserOrdersWithSubordersReplyValidationError{
+					field:  fmt.Sprintf("Orders[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetUserOrdersWithSubordersReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUserOrdersWithSubordersReplyMultiError is an error wrapping multiple
+// validation errors returned by GetUserOrdersWithSubordersReply.ValidateAll()
+// if the designated constraints aren't met.
+type GetUserOrdersWithSubordersReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOrdersWithSubordersReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOrdersWithSubordersReplyMultiError) AllErrors() []error { return m }
+
+// GetUserOrdersWithSubordersReplyValidationError is the validation error
+// returned by GetUserOrdersWithSubordersReply.Validate if the designated
+// constraints aren't met.
+type GetUserOrdersWithSubordersReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOrdersWithSubordersReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOrdersWithSubordersReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOrdersWithSubordersReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOrdersWithSubordersReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOrdersWithSubordersReplyValidationError) ErrorName() string {
+	return "GetUserOrdersWithSubordersReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOrdersWithSubordersReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOrdersWithSubordersReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOrdersWithSubordersReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOrdersWithSubordersReplyValidationError{}
 
 // Validate checks the field values on GetConsumerOrdersReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1463,3 +2592,209 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MarkOrderPaidRespValidationError{}
+
+// Validate checks the field values on ConfirmReceivedReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ConfirmReceivedReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConfirmReceivedReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ConfirmReceivedReqMultiError, or nil if none found.
+func (m *ConfirmReceivedReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConfirmReceivedReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for OrderId
+
+	if len(errors) > 0 {
+		return ConfirmReceivedReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConfirmReceivedReqMultiError is an error wrapping multiple validation errors
+// returned by ConfirmReceivedReq.ValidateAll() if the designated constraints
+// aren't met.
+type ConfirmReceivedReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConfirmReceivedReqMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConfirmReceivedReqMultiError) AllErrors() []error { return m }
+
+// ConfirmReceivedReqValidationError is the validation error returned by
+// ConfirmReceivedReq.Validate if the designated constraints aren't met.
+type ConfirmReceivedReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConfirmReceivedReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConfirmReceivedReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConfirmReceivedReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConfirmReceivedReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConfirmReceivedReqValidationError) ErrorName() string {
+	return "ConfirmReceivedReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ConfirmReceivedReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConfirmReceivedReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConfirmReceivedReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConfirmReceivedReqValidationError{}
+
+// Validate checks the field values on ConfirmReceivedResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ConfirmReceivedResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConfirmReceivedResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ConfirmReceivedRespMultiError, or nil if none found.
+func (m *ConfirmReceivedResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConfirmReceivedResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ConfirmReceivedRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConfirmReceivedRespMultiError is an error wrapping multiple validation
+// errors returned by ConfirmReceivedResp.ValidateAll() if the designated
+// constraints aren't met.
+type ConfirmReceivedRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConfirmReceivedRespMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConfirmReceivedRespMultiError) AllErrors() []error { return m }
+
+// ConfirmReceivedRespValidationError is the validation error returned by
+// ConfirmReceivedResp.Validate if the designated constraints aren't met.
+type ConfirmReceivedRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConfirmReceivedRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConfirmReceivedRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConfirmReceivedRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConfirmReceivedRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConfirmReceivedRespValidationError) ErrorName() string {
+	return "ConfirmReceivedRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ConfirmReceivedRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConfirmReceivedResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConfirmReceivedRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConfirmReceivedRespValidationError{}

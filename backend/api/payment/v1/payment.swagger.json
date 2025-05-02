@@ -176,7 +176,7 @@
     },
     "/v1/payments/notify": {
       "post": {
-        "summary": "处理支付回调通知",
+        "summary": "处理支付回调通知\n rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {",
         "operationId": "PaymentService_HandlePaymentNotify",
         "responses": {
           "200": {
@@ -198,7 +198,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1HandlePaymentNotifyRequest"
+              "$ref": "#/definitions/v1UrlValues"
             }
           }
         ],
@@ -276,7 +276,7 @@
           "type": "string",
           "format": "int64"
         },
-        "userId": {
+        "consumerId": {
           "type": "string"
         },
         "amount": {
@@ -290,6 +290,21 @@
         },
         "returnUrl": {
           "type": "string"
+        },
+        "freezeId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "consumerVersion": {
+          "type": "string",
+          "format": "int64"
+        },
+        "merchantVersions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          }
         }
       },
       "title": "创建支付订单请求"
@@ -340,55 +355,6 @@
       },
       "title": "支付回调响应"
     },
-    "v1HandlePaymentNotifyRequest": {
-      "type": "object",
-      "properties": {
-        "charset": {
-          "type": "string",
-          "title": "字符集"
-        },
-        "appId": {
-          "type": "string"
-        },
-        "authAppId": {
-          "type": "string",
-          "title": "授权应用ID"
-        },
-        "tradeNo": {
-          "type": "string"
-        },
-        "method": {
-          "type": "string",
-          "title": "支付方式"
-        },
-        "sign": {
-          "type": "string",
-          "title": "签名"
-        },
-        "signType": {
-          "type": "string",
-          "title": "签名类型 RSA2"
-        },
-        "outTradeNo": {
-          "type": "string"
-        },
-        "totalAmount": {
-          "type": "string"
-        },
-        "sellerId": {
-          "type": "string",
-          "title": "卖家ID"
-        },
-        "params": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "存储所有回调参数"
-        }
-      },
-      "title": "支付通知请求"
-    },
     "v1HandlePaymentNotifyResponse": {
       "type": "object",
       "properties": {
@@ -400,6 +366,20 @@
         }
       },
       "title": "支付通知响应"
+    },
+    "v1KeyValue": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "v1PaymentStatus": {
       "type": "string",
@@ -413,6 +393,18 @@
       ],
       "default": "PAYMENT_STATUS_UNKNOWN",
       "title": "支付状态"
+    },
+    "v1UrlValues": {
+      "type": "object",
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          }
+        }
+      }
     }
   }
 }

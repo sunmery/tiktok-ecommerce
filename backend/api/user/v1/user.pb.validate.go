@@ -1299,21 +1299,22 @@ var _ interface {
 	ErrorName() string
 } = ListCreditCardsReplyValidationError{}
 
-// Validate checks the field values on Address with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *Address) Validate() error {
+// Validate checks the field values on ConsumerAddress with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ConsumerAddress) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Address with the rules defined in the
-// proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in AddressMultiError, or nil if none found.
-func (m *Address) ValidateAll() error {
+// ValidateAll checks the field values on ConsumerAddress with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ConsumerAddressMultiError, or nil if none found.
+func (m *ConsumerAddress) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Address) validate(all bool) error {
+func (m *ConsumerAddress) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1322,29 +1323,7 @@ func (m *Address) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if utf8.RuneCountInString(m.GetUserId()) != 36 {
-		err := AddressValidationError{
-			field:  "UserId",
-			reason: "value length must be 36 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
-
-	if err := m._validateUuid(m.GetUserId()); err != nil {
-		err = AddressValidationError{
-			field:  "UserId",
-			reason: "value must be a valid UUID",
-			cause:  err,
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for UserId
 
 	// no validation rules for City
 
@@ -1357,26 +1336,19 @@ func (m *Address) validate(all bool) error {
 	// no validation rules for StreetAddress
 
 	if len(errors) > 0 {
-		return AddressMultiError(errors)
+		return ConsumerAddressMultiError(errors)
 	}
 
 	return nil
 }
 
-func (m *Address) _validateUuid(uuid string) error {
-	if matched := _user_uuidPattern.MatchString(uuid); !matched {
-		return errors.New("invalid uuid format")
-	}
-
-	return nil
-}
-
-// AddressMultiError is an error wrapping multiple validation errors returned
-// by Address.ValidateAll() if the designated constraints aren't met.
-type AddressMultiError []error
+// ConsumerAddressMultiError is an error wrapping multiple validation errors
+// returned by ConsumerAddress.ValidateAll() if the designated constraints
+// aren't met.
+type ConsumerAddressMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m AddressMultiError) Error() string {
+func (m ConsumerAddressMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1385,11 +1357,11 @@ func (m AddressMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m AddressMultiError) AllErrors() []error { return m }
+func (m ConsumerAddressMultiError) AllErrors() []error { return m }
 
-// AddressValidationError is the validation error returned by Address.Validate
-// if the designated constraints aren't met.
-type AddressValidationError struct {
+// ConsumerAddressValidationError is the validation error returned by
+// ConsumerAddress.Validate if the designated constraints aren't met.
+type ConsumerAddressValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1397,22 +1369,22 @@ type AddressValidationError struct {
 }
 
 // Field function returns field value.
-func (e AddressValidationError) Field() string { return e.field }
+func (e ConsumerAddressValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AddressValidationError) Reason() string { return e.reason }
+func (e ConsumerAddressValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AddressValidationError) Cause() error { return e.cause }
+func (e ConsumerAddressValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AddressValidationError) Key() bool { return e.key }
+func (e ConsumerAddressValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AddressValidationError) ErrorName() string { return "AddressValidationError" }
+func (e ConsumerAddressValidationError) ErrorName() string { return "ConsumerAddressValidationError" }
 
 // Error satisfies the builtin error interface
-func (e AddressValidationError) Error() string {
+func (e ConsumerAddressValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1424,14 +1396,14 @@ func (e AddressValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAddress.%s: %s%s",
+		"invalid %sConsumerAddress.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AddressValidationError{}
+var _ error = ConsumerAddressValidationError{}
 
 var _ interface {
 	Field() string
@@ -1439,24 +1411,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AddressValidationError{}
+} = ConsumerAddressValidationError{}
 
-// Validate checks the field values on UpdateAddressesRequest with the rules
-// defined in the proto definition for this message. If any rules are
+// Validate checks the field values on UpdateConsumerAddressesRequest with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UpdateAddressesRequest) Validate() error {
+func (m *UpdateConsumerAddressesRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on UpdateAddressesRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UpdateAddressesRequestMultiError, or nil if none found.
-func (m *UpdateAddressesRequest) ValidateAll() error {
+// ValidateAll checks the field values on UpdateConsumerAddressesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateConsumerAddressesRequestMultiError, or nil if none found.
+func (m *UpdateConsumerAddressesRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *UpdateAddressesRequest) validate(all bool) error {
+func (m *UpdateConsumerAddressesRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1467,7 +1439,7 @@ func (m *UpdateAddressesRequest) validate(all bool) error {
 		switch v := interface{}(m.GetAddresses()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpdateAddressesRequestValidationError{
+				errors = append(errors, UpdateConsumerAddressesRequestValidationError{
 					field:  "Addresses",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1475,7 +1447,7 @@ func (m *UpdateAddressesRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, UpdateAddressesRequestValidationError{
+				errors = append(errors, UpdateConsumerAddressesRequestValidationError{
 					field:  "Addresses",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1484,7 +1456,7 @@ func (m *UpdateAddressesRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetAddresses()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return UpdateAddressesRequestValidationError{
+			return UpdateConsumerAddressesRequestValidationError{
 				field:  "Addresses",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1493,19 +1465,19 @@ func (m *UpdateAddressesRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return UpdateAddressesRequestMultiError(errors)
+		return UpdateConsumerAddressesRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// UpdateAddressesRequestMultiError is an error wrapping multiple validation
-// errors returned by UpdateAddressesRequest.ValidateAll() if the designated
-// constraints aren't met.
-type UpdateAddressesRequestMultiError []error
+// UpdateConsumerAddressesRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateConsumerAddressesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateConsumerAddressesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m UpdateAddressesRequestMultiError) Error() string {
+func (m UpdateConsumerAddressesRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1514,11 +1486,12 @@ func (m UpdateAddressesRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m UpdateAddressesRequestMultiError) AllErrors() []error { return m }
+func (m UpdateConsumerAddressesRequestMultiError) AllErrors() []error { return m }
 
-// UpdateAddressesRequestValidationError is the validation error returned by
-// UpdateAddressesRequest.Validate if the designated constraints aren't met.
-type UpdateAddressesRequestValidationError struct {
+// UpdateConsumerAddressesRequestValidationError is the validation error
+// returned by UpdateConsumerAddressesRequest.Validate if the designated
+// constraints aren't met.
+type UpdateConsumerAddressesRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1526,24 +1499,24 @@ type UpdateAddressesRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpdateAddressesRequestValidationError) Field() string { return e.field }
+func (e UpdateConsumerAddressesRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpdateAddressesRequestValidationError) Reason() string { return e.reason }
+func (e UpdateConsumerAddressesRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpdateAddressesRequestValidationError) Cause() error { return e.cause }
+func (e UpdateConsumerAddressesRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpdateAddressesRequestValidationError) Key() bool { return e.key }
+func (e UpdateConsumerAddressesRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpdateAddressesRequestValidationError) ErrorName() string {
-	return "UpdateAddressesRequestValidationError"
+func (e UpdateConsumerAddressesRequestValidationError) ErrorName() string {
+	return "UpdateConsumerAddressesRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpdateAddressesRequestValidationError) Error() string {
+func (e UpdateConsumerAddressesRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1555,14 +1528,14 @@ func (e UpdateAddressesRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpdateAddressesRequest.%s: %s%s",
+		"invalid %sUpdateConsumerAddressesRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpdateAddressesRequestValidationError{}
+var _ error = UpdateConsumerAddressesRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1570,24 +1543,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpdateAddressesRequestValidationError{}
+} = UpdateConsumerAddressesRequestValidationError{}
 
-// Validate checks the field values on DeleteAddressesRequest with the rules
-// defined in the proto definition for this message. If any rules are
+// Validate checks the field values on DeleteConsumerAddressesRequest with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeleteAddressesRequest) Validate() error {
+func (m *DeleteConsumerAddressesRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DeleteAddressesRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DeleteAddressesRequestMultiError, or nil if none found.
-func (m *DeleteAddressesRequest) ValidateAll() error {
+// ValidateAll checks the field values on DeleteConsumerAddressesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// DeleteConsumerAddressesRequestMultiError, or nil if none found.
+func (m *DeleteConsumerAddressesRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DeleteAddressesRequest) validate(all bool) error {
+func (m *DeleteConsumerAddressesRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1597,7 +1570,7 @@ func (m *DeleteAddressesRequest) validate(all bool) error {
 	// no validation rules for AddressesId
 
 	if utf8.RuneCountInString(m.GetUserId()) != 36 {
-		err := DeleteAddressesRequestValidationError{
+		err := DeleteConsumerAddressesRequestValidationError{
 			field:  "UserId",
 			reason: "value length must be 36 runes",
 		}
@@ -1609,7 +1582,7 @@ func (m *DeleteAddressesRequest) validate(all bool) error {
 	}
 
 	if err := m._validateUuid(m.GetUserId()); err != nil {
-		err = DeleteAddressesRequestValidationError{
+		err = DeleteConsumerAddressesRequestValidationError{
 			field:  "UserId",
 			reason: "value must be a valid UUID",
 			cause:  err,
@@ -1621,13 +1594,13 @@ func (m *DeleteAddressesRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return DeleteAddressesRequestMultiError(errors)
+		return DeleteConsumerAddressesRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-func (m *DeleteAddressesRequest) _validateUuid(uuid string) error {
+func (m *DeleteConsumerAddressesRequest) _validateUuid(uuid string) error {
 	if matched := _user_uuidPattern.MatchString(uuid); !matched {
 		return errors.New("invalid uuid format")
 	}
@@ -1635,13 +1608,13 @@ func (m *DeleteAddressesRequest) _validateUuid(uuid string) error {
 	return nil
 }
 
-// DeleteAddressesRequestMultiError is an error wrapping multiple validation
-// errors returned by DeleteAddressesRequest.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteAddressesRequestMultiError []error
+// DeleteConsumerAddressesRequestMultiError is an error wrapping multiple
+// validation errors returned by DeleteConsumerAddressesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type DeleteConsumerAddressesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DeleteAddressesRequestMultiError) Error() string {
+func (m DeleteConsumerAddressesRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1650,11 +1623,12 @@ func (m DeleteAddressesRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DeleteAddressesRequestMultiError) AllErrors() []error { return m }
+func (m DeleteConsumerAddressesRequestMultiError) AllErrors() []error { return m }
 
-// DeleteAddressesRequestValidationError is the validation error returned by
-// DeleteAddressesRequest.Validate if the designated constraints aren't met.
-type DeleteAddressesRequestValidationError struct {
+// DeleteConsumerAddressesRequestValidationError is the validation error
+// returned by DeleteConsumerAddressesRequest.Validate if the designated
+// constraints aren't met.
+type DeleteConsumerAddressesRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1662,24 +1636,24 @@ type DeleteAddressesRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeleteAddressesRequestValidationError) Field() string { return e.field }
+func (e DeleteConsumerAddressesRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeleteAddressesRequestValidationError) Reason() string { return e.reason }
+func (e DeleteConsumerAddressesRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeleteAddressesRequestValidationError) Cause() error { return e.cause }
+func (e DeleteConsumerAddressesRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeleteAddressesRequestValidationError) Key() bool { return e.key }
+func (e DeleteConsumerAddressesRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeleteAddressesRequestValidationError) ErrorName() string {
-	return "DeleteAddressesRequestValidationError"
+func (e DeleteConsumerAddressesRequestValidationError) ErrorName() string {
+	return "DeleteConsumerAddressesRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DeleteAddressesRequestValidationError) Error() string {
+func (e DeleteConsumerAddressesRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1691,14 +1665,14 @@ func (e DeleteAddressesRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeleteAddressesRequest.%s: %s%s",
+		"invalid %sDeleteConsumerAddressesRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeleteAddressesRequestValidationError{}
+var _ error = DeleteConsumerAddressesRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1706,24 +1680,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeleteAddressesRequestValidationError{}
+} = DeleteConsumerAddressesRequestValidationError{}
 
-// Validate checks the field values on AddressReply with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *AddressReply) Validate() error {
+// Validate checks the field values on ConsumerAddressReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ConsumerAddressReply) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on AddressReply with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in AddressReplyMultiError, or
-// nil if none found.
-func (m *AddressReply) ValidateAll() error {
+// ValidateAll checks the field values on ConsumerAddressReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ConsumerAddressReplyMultiError, or nil if none found.
+func (m *ConsumerAddressReply) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *AddressReply) validate(all bool) error {
+func (m *ConsumerAddressReply) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1736,7 +1710,7 @@ func (m *AddressReply) validate(all bool) error {
 		switch v := interface{}(m.GetAddress()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, AddressReplyValidationError{
+				errors = append(errors, ConsumerAddressReplyValidationError{
 					field:  "Address",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1744,7 +1718,7 @@ func (m *AddressReply) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, AddressReplyValidationError{
+				errors = append(errors, ConsumerAddressReplyValidationError{
 					field:  "Address",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1753,7 +1727,7 @@ func (m *AddressReply) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetAddress()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return AddressReplyValidationError{
+			return ConsumerAddressReplyValidationError{
 				field:  "Address",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1762,18 +1736,19 @@ func (m *AddressReply) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return AddressReplyMultiError(errors)
+		return ConsumerAddressReplyMultiError(errors)
 	}
 
 	return nil
 }
 
-// AddressReplyMultiError is an error wrapping multiple validation errors
-// returned by AddressReply.ValidateAll() if the designated constraints aren't met.
-type AddressReplyMultiError []error
+// ConsumerAddressReplyMultiError is an error wrapping multiple validation
+// errors returned by ConsumerAddressReply.ValidateAll() if the designated
+// constraints aren't met.
+type ConsumerAddressReplyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m AddressReplyMultiError) Error() string {
+func (m ConsumerAddressReplyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1782,11 +1757,11 @@ func (m AddressReplyMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m AddressReplyMultiError) AllErrors() []error { return m }
+func (m ConsumerAddressReplyMultiError) AllErrors() []error { return m }
 
-// AddressReplyValidationError is the validation error returned by
-// AddressReply.Validate if the designated constraints aren't met.
-type AddressReplyValidationError struct {
+// ConsumerAddressReplyValidationError is the validation error returned by
+// ConsumerAddressReply.Validate if the designated constraints aren't met.
+type ConsumerAddressReplyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1794,22 +1769,24 @@ type AddressReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e AddressReplyValidationError) Field() string { return e.field }
+func (e ConsumerAddressReplyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AddressReplyValidationError) Reason() string { return e.reason }
+func (e ConsumerAddressReplyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AddressReplyValidationError) Cause() error { return e.cause }
+func (e ConsumerAddressReplyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AddressReplyValidationError) Key() bool { return e.key }
+func (e ConsumerAddressReplyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AddressReplyValidationError) ErrorName() string { return "AddressReplyValidationError" }
+func (e ConsumerAddressReplyValidationError) ErrorName() string {
+	return "ConsumerAddressReplyValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e AddressReplyValidationError) Error() string {
+func (e ConsumerAddressReplyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1821,14 +1798,14 @@ func (e AddressReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAddressReply.%s: %s%s",
+		"invalid %sConsumerAddressReply.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AddressReplyValidationError{}
+var _ error = ConsumerAddressReplyValidationError{}
 
 var _ interface {
 	Field() string
@@ -1836,24 +1813,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AddressReplyValidationError{}
+} = ConsumerAddressReplyValidationError{}
 
-// Validate checks the field values on GetAddressRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GetAddressRequest) Validate() error {
+// Validate checks the field values on GetConsumerAddressRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetConsumerAddressRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetAddressRequest with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetConsumerAddressRequest with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetAddressRequestMultiError, or nil if none found.
-func (m *GetAddressRequest) ValidateAll() error {
+// GetConsumerAddressRequestMultiError, or nil if none found.
+func (m *GetConsumerAddressRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetAddressRequest) validate(all bool) error {
+func (m *GetConsumerAddressRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1863,7 +1840,7 @@ func (m *GetAddressRequest) validate(all bool) error {
 	// no validation rules for AddressId
 
 	if utf8.RuneCountInString(m.GetUserId()) != 36 {
-		err := GetAddressRequestValidationError{
+		err := GetConsumerAddressRequestValidationError{
 			field:  "UserId",
 			reason: "value length must be 36 runes",
 		}
@@ -1875,7 +1852,7 @@ func (m *GetAddressRequest) validate(all bool) error {
 	}
 
 	if err := m._validateUuid(m.GetUserId()); err != nil {
-		err = GetAddressRequestValidationError{
+		err = GetConsumerAddressRequestValidationError{
 			field:  "UserId",
 			reason: "value must be a valid UUID",
 			cause:  err,
@@ -1887,13 +1864,13 @@ func (m *GetAddressRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetAddressRequestMultiError(errors)
+		return GetConsumerAddressRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-func (m *GetAddressRequest) _validateUuid(uuid string) error {
+func (m *GetConsumerAddressRequest) _validateUuid(uuid string) error {
 	if matched := _user_uuidPattern.MatchString(uuid); !matched {
 		return errors.New("invalid uuid format")
 	}
@@ -1901,13 +1878,13 @@ func (m *GetAddressRequest) _validateUuid(uuid string) error {
 	return nil
 }
 
-// GetAddressRequestMultiError is an error wrapping multiple validation errors
-// returned by GetAddressRequest.ValidateAll() if the designated constraints
-// aren't met.
-type GetAddressRequestMultiError []error
+// GetConsumerAddressRequestMultiError is an error wrapping multiple validation
+// errors returned by GetConsumerAddressRequest.ValidateAll() if the
+// designated constraints aren't met.
+type GetConsumerAddressRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetAddressRequestMultiError) Error() string {
+func (m GetConsumerAddressRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1916,11 +1893,11 @@ func (m GetAddressRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetAddressRequestMultiError) AllErrors() []error { return m }
+func (m GetConsumerAddressRequestMultiError) AllErrors() []error { return m }
 
-// GetAddressRequestValidationError is the validation error returned by
-// GetAddressRequest.Validate if the designated constraints aren't met.
-type GetAddressRequestValidationError struct {
+// GetConsumerAddressRequestValidationError is the validation error returned by
+// GetConsumerAddressRequest.Validate if the designated constraints aren't met.
+type GetConsumerAddressRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1928,24 +1905,24 @@ type GetAddressRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetAddressRequestValidationError) Field() string { return e.field }
+func (e GetConsumerAddressRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetAddressRequestValidationError) Reason() string { return e.reason }
+func (e GetConsumerAddressRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetAddressRequestValidationError) Cause() error { return e.cause }
+func (e GetConsumerAddressRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetAddressRequestValidationError) Key() bool { return e.key }
+func (e GetConsumerAddressRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetAddressRequestValidationError) ErrorName() string {
-	return "GetAddressRequestValidationError"
+func (e GetConsumerAddressRequestValidationError) ErrorName() string {
+	return "GetConsumerAddressRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetAddressRequestValidationError) Error() string {
+func (e GetConsumerAddressRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1957,14 +1934,14 @@ func (e GetAddressRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetAddressRequest.%s: %s%s",
+		"invalid %sGetConsumerAddressRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetAddressRequestValidationError{}
+var _ error = GetConsumerAddressRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1972,24 +1949,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetAddressRequestValidationError{}
+} = GetConsumerAddressRequestValidationError{}
 
-// Validate checks the field values on GetAddressesReply with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GetAddressesReply) Validate() error {
+// Validate checks the field values on GetConsumerAddressesReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetConsumerAddressesReply) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetAddressesReply with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetConsumerAddressesReply with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetAddressesReplyMultiError, or nil if none found.
-func (m *GetAddressesReply) ValidateAll() error {
+// GetConsumerAddressesReplyMultiError, or nil if none found.
+func (m *GetConsumerAddressesReply) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetAddressesReply) validate(all bool) error {
+func (m *GetConsumerAddressesReply) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2003,7 +1980,7 @@ func (m *GetAddressesReply) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, GetAddressesReplyValidationError{
+					errors = append(errors, GetConsumerAddressesReplyValidationError{
 						field:  fmt.Sprintf("Addresses[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2011,7 +1988,7 @@ func (m *GetAddressesReply) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, GetAddressesReplyValidationError{
+					errors = append(errors, GetConsumerAddressesReplyValidationError{
 						field:  fmt.Sprintf("Addresses[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2020,7 +1997,7 @@ func (m *GetAddressesReply) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return GetAddressesReplyValidationError{
+				return GetConsumerAddressesReplyValidationError{
 					field:  fmt.Sprintf("Addresses[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2031,19 +2008,19 @@ func (m *GetAddressesReply) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetAddressesReplyMultiError(errors)
+		return GetConsumerAddressesReplyMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetAddressesReplyMultiError is an error wrapping multiple validation errors
-// returned by GetAddressesReply.ValidateAll() if the designated constraints
-// aren't met.
-type GetAddressesReplyMultiError []error
+// GetConsumerAddressesReplyMultiError is an error wrapping multiple validation
+// errors returned by GetConsumerAddressesReply.ValidateAll() if the
+// designated constraints aren't met.
+type GetConsumerAddressesReplyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetAddressesReplyMultiError) Error() string {
+func (m GetConsumerAddressesReplyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2052,11 +2029,11 @@ func (m GetAddressesReplyMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetAddressesReplyMultiError) AllErrors() []error { return m }
+func (m GetConsumerAddressesReplyMultiError) AllErrors() []error { return m }
 
-// GetAddressesReplyValidationError is the validation error returned by
-// GetAddressesReply.Validate if the designated constraints aren't met.
-type GetAddressesReplyValidationError struct {
+// GetConsumerAddressesReplyValidationError is the validation error returned by
+// GetConsumerAddressesReply.Validate if the designated constraints aren't met.
+type GetConsumerAddressesReplyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2064,24 +2041,24 @@ type GetAddressesReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetAddressesReplyValidationError) Field() string { return e.field }
+func (e GetConsumerAddressesReplyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetAddressesReplyValidationError) Reason() string { return e.reason }
+func (e GetConsumerAddressesReplyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetAddressesReplyValidationError) Cause() error { return e.cause }
+func (e GetConsumerAddressesReplyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetAddressesReplyValidationError) Key() bool { return e.key }
+func (e GetConsumerAddressesReplyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetAddressesReplyValidationError) ErrorName() string {
-	return "GetAddressesReplyValidationError"
+func (e GetConsumerAddressesReplyValidationError) ErrorName() string {
+	return "GetConsumerAddressesReplyValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetAddressesReplyValidationError) Error() string {
+func (e GetConsumerAddressesReplyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2093,14 +2070,14 @@ func (e GetAddressesReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetAddressesReply.%s: %s%s",
+		"invalid %sGetConsumerAddressesReply.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetAddressesReplyValidationError{}
+var _ error = GetConsumerAddressesReplyValidationError{}
 
 var _ interface {
 	Field() string
@@ -2108,24 +2085,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetAddressesReplyValidationError{}
+} = GetConsumerAddressesReplyValidationError{}
 
-// Validate checks the field values on DeleteAddressesReply with the rules
-// defined in the proto definition for this message. If any rules are
+// Validate checks the field values on DeleteConsumerAddressesReply with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeleteAddressesReply) Validate() error {
+func (m *DeleteConsumerAddressesReply) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DeleteAddressesReply with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on DeleteConsumerAddressesReply with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// DeleteAddressesReplyMultiError, or nil if none found.
-func (m *DeleteAddressesReply) ValidateAll() error {
+// DeleteConsumerAddressesReplyMultiError, or nil if none found.
+func (m *DeleteConsumerAddressesReply) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DeleteAddressesReply) validate(all bool) error {
+func (m *DeleteConsumerAddressesReply) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2139,19 +2116,19 @@ func (m *DeleteAddressesReply) validate(all bool) error {
 	// no validation rules for Code
 
 	if len(errors) > 0 {
-		return DeleteAddressesReplyMultiError(errors)
+		return DeleteConsumerAddressesReplyMultiError(errors)
 	}
 
 	return nil
 }
 
-// DeleteAddressesReplyMultiError is an error wrapping multiple validation
-// errors returned by DeleteAddressesReply.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteAddressesReplyMultiError []error
+// DeleteConsumerAddressesReplyMultiError is an error wrapping multiple
+// validation errors returned by DeleteConsumerAddressesReply.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteConsumerAddressesReplyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DeleteAddressesReplyMultiError) Error() string {
+func (m DeleteConsumerAddressesReplyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2160,11 +2137,12 @@ func (m DeleteAddressesReplyMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DeleteAddressesReplyMultiError) AllErrors() []error { return m }
+func (m DeleteConsumerAddressesReplyMultiError) AllErrors() []error { return m }
 
-// DeleteAddressesReplyValidationError is the validation error returned by
-// DeleteAddressesReply.Validate if the designated constraints aren't met.
-type DeleteAddressesReplyValidationError struct {
+// DeleteConsumerAddressesReplyValidationError is the validation error returned
+// by DeleteConsumerAddressesReply.Validate if the designated constraints
+// aren't met.
+type DeleteConsumerAddressesReplyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2172,24 +2150,24 @@ type DeleteAddressesReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeleteAddressesReplyValidationError) Field() string { return e.field }
+func (e DeleteConsumerAddressesReplyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeleteAddressesReplyValidationError) Reason() string { return e.reason }
+func (e DeleteConsumerAddressesReplyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeleteAddressesReplyValidationError) Cause() error { return e.cause }
+func (e DeleteConsumerAddressesReplyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeleteAddressesReplyValidationError) Key() bool { return e.key }
+func (e DeleteConsumerAddressesReplyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeleteAddressesReplyValidationError) ErrorName() string {
-	return "DeleteAddressesReplyValidationError"
+func (e DeleteConsumerAddressesReplyValidationError) ErrorName() string {
+	return "DeleteConsumerAddressesReplyValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DeleteAddressesReplyValidationError) Error() string {
+func (e DeleteConsumerAddressesReplyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2201,14 +2179,14 @@ func (e DeleteAddressesReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeleteAddressesReply.%s: %s%s",
+		"invalid %sDeleteConsumerAddressesReply.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeleteAddressesReplyValidationError{}
+var _ error = DeleteConsumerAddressesReplyValidationError{}
 
 var _ interface {
 	Field() string
@@ -2216,7 +2194,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeleteAddressesReplyValidationError{}
+} = DeleteConsumerAddressesReplyValidationError{}
 
 // Validate checks the field values on GetProfileRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the

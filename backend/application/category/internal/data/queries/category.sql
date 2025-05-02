@@ -229,4 +229,4 @@ SELECT
     created_at,
     updated_at
 FROM categories.categories
-WHERE id = ANY(@ids::bigint[]);
+WHERE id = ANY($1::bigint[]);

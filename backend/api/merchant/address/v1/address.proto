@@ -1,0 +1,210 @@
+syntax = "proto3";
+
+package ecommerce.merchantaddress.v1;
+
+option go_package = "backend/api/merchant/address/v1;merchantaddressv1";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// 商家地址服务接口定义
+service MerchantAddresses {
+  // 创建商家地址（支持多类型地址）
+  rpc CreateMerchantAddress(MerchantAddress) returns (MerchantAddress) {
+    option (google.api.http) = {
+      post: "/v1/merchants/addresses"
+      body: "*"
+    };
+  }
+
+  // 批量导入商家地址（CSV/JSON格式）
+  rpc BatchCreateMerchantAddresses(BatchCreateMerchantAddressesRequest) returns (BatchCreateMerchantAddressesReply) {
+    option (google.api.http) = {
+      post: "/v1/merchants/addresses/batch"
+      body: "*"
+    };
+  }
+
+  // 列出商家全部地址
+  rpc ListAddresses(ListAddressesRequest) returns (ListAddressesReply) {
+    option (google.api.http) = {
+      get: "/v1/merchants/addresses"
+    };
+  }
+
+  // 列出商家地址（按地址类型过滤）
+  rpc ListFilterAddresses(ListFilterAddressesRequest) returns (ListAddressesReply) {
+    option (google.api.http) = {
+      get: "/v1/merchants/addresses/fileter"
+    };
+  }
+
+  // 按照地址类型列出商家默认地址
+  rpc GetDefaultAddress(GetDefaultAddressRequest) returns (MerchantAddress) {
+    option (google.api.http) = {
+      get: "/v1/merchants/addresses/default/{address_type}"
+    };
+  }
+  // 列出商家所有默认地址
+  rpc GetDefaultAddresses(GetDefaultAddressesRequest) returns (ListAddressesReply) {
+    option (google.api.http) = {
+      get: "/v1/merchants/addresses/default/all"
+    };
+  }
+
+  // 更新商家地址（支持部分更新）
+  rpc UpdateMerchantAddress(MerchantAddress) returns (MerchantAddress) {
+    option (google.api.http) = {
+      patch: "/v1/merchants/addresses/{id}"
+      body: "*"
+    };
+  }
+
+  // 删除商家地址
+  rpc DeletMerchanteAddress(DeletMerchanteAddressRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/merchants/addresses/{id}"
+    };
+  }
+
+  // 获取单个地址详情
+  rpc GetMerchantAddress(GetMerchantAddressRequest) returns (MerchantAddress) {
+    option (google.api.http) = {
+      get: "/v1/merchants/addresses/{id}"
+    };
+  }
+
+  // 设置默认地址（按地址类型）
+  rpc SetDefaultMerchantAddress(SetDefaultMerchantAddressRequest) returns (MerchantAddress) {
+    option (google.api.http) = {
+      put: "/v1/merchants/addresses/{id}/default"
+      body: "*"
+    };
+  }
+}
+
+// 商家地址数据结构
+message MerchantAddress {
+  int64 id = 1;
+  string merchant_id = 2;
+
+  // 地址类型枚举
+  enum MerchantAddressType {
+    WAREHOUSE = 0;  // 仓库地址Id
+    RETURN = 1;      // 退货地址
+    STORE = 2;       // 门店地址
+    BILLING = 3;     // 财务地址
+    HEADQUARTERS = 4; // 总部地址
+  }
+
+  MerchantAddressType address_type = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (validate.rules).enum = {
+      defined_only: true
+    }
+  ];
+
+  string contact_person = 4 [
+    (validate.rules).string = {
+      min_len: 2,
+      max_len: 50
+    }
+  ];
+
+  string contact_phone = 5 [
+    (validate.rules).string = {
+      pattern: "^\\+?[0-9\\-\\s]{6,20}$"
+    }
+  ];
+
+  // 继承用户地址基础字段（保持字段名一致）
+  string street_address = 6 [
+    (google.api.field_behavior) = REQUIRED,
+    (validate.rules).string.min_len = 5
+  ];
+  string city = 7 [(validate.rules).string.min_len = 2];
+  string state = 8 [(validate.rules).string.min_len = 2];
+  string country = 9 [(validate.rules).string.min_len = 2];
+  string zip_code = 10 [
+    (validate.rules).string = {
+      pattern: "^[0-9A-Z\\-]{3,10}$"
+    }
+  ];
+
+  bool is_default = 11; // 是否该类型默认地址
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+
+  string remarks = 14; // 地址备注
+  //  double latitude = 15; // 纬度
+  //  double longitude = 16; // 经度
+}
+
+// 批量创建请求
+message BatchCreateMerchantAddressesRequest {
+  repeated MerchantAddress addresses = 1;
+  bool skip_duplicates = 2; // 是否跳过重复地址
+}
+
+message BatchCreateMerchantAddressesReply {
+  int32 success_count = 1;
+  repeated MerchantAddress failed_items = 2;
+}
+
+// 地址删除请求
+message DeletMerchanteAddressRequest {
+  int64 id = 1;
+}
+
+// 地址查询请求
+message GetMerchantAddressRequest {
+  int64 id = 1;
+  optional string merchant_id = 2;
+}
+
+message ListAddressesRequest {
+  optional string merchant_id = 1;
+  uint32 page = 2;
+  uint32 page_size = 3;
+}
+
+// 地址列表请求（支持分页和过滤）
+message ListFilterAddressesRequest {
+  string merchant_id = 1; // 按商家ID过滤
+  optional MerchantAddress.MerchantAddressType address_type = 2; // 按类型过滤
+
+  // 分页参数
+  uint32 page = 4 [
+    (validate.rules).uint32 = {
+      gte: 1
+    }
+  ];
+  uint32 page_size = 5 [
+    (validate.rules).uint32 = {
+      gte: 5,
+      lte: 100
+    }
+  ];
+}
+
+message GetDefaultAddressRequest {
+  string merchant_id = 1;
+  MerchantAddress.MerchantAddressType address_type = 2;
+}
+
+message GetDefaultAddressesRequest {
+  string merchant_id = 1;
+}
+
+message ListAddressesReply {
+  repeated MerchantAddress addresses = 1;
+  uint32 total_count = 2;
+}
+
+// 设置默认地址请求
+message SetDefaultMerchantAddressRequest {
+  int64 id = 1;
+}

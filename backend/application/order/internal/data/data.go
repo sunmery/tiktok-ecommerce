@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"backend/api/user/v1"
+
+	balancerv1 "backend/api/balancer/v1"
+	merchantAddressv1 "backend/api/merchant/address/v1"
 	productv1 "backend/api/product/v1"
 
 	paymentv1 "backend/api/payment/v1"
@@ -27,15 +31,18 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient, NewProductServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewOrderRepo, NewDiscovery, NewPaymentServiceClient, NewBalancerServiceClient, NewProductServiceClient, NewUserServiceClient, NewMerchantAddressServiceClient)
 
 type Data struct {
-	paymentv1 paymentv1.PaymentServiceClient
-	productv1 productv1.ProductServiceClient
-	db        *models.Queries
-	pgx       *pgxpool.Pool
-	rdb       *redis.Client
-	logger    *log.Helper
+	paymentv1         paymentv1.PaymentServiceClient
+	productv1         productv1.ProductServiceClient
+	userv1            userv1.UserServiceClient
+	merchantAddressv1 merchantAddressv1.MerchantAddressesClient
+	balancerv1        balancerv1.BalanceClient
+	db                *models.Queries
+	pgx               *pgxpool.Pool
+	rdb               *redis.Client
+	logger            *log.Helper
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -48,18 +55,24 @@ func NewData(
 	logger log.Logger,
 	paymentv1 paymentv1.PaymentServiceClient,
 	productv1 productv1.ProductServiceClient,
+	userv1 userv1.UserServiceClient,
+	merchantAddressv1 merchantAddressv1.MerchantAddressesClient,
+	balancerv1 balancerv1.BalanceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 
 	return &Data{
-		db:        models.New(db),        // 数据库
-		pgx:       db,                    // 数据库事务
-		rdb:       rdb,                   // 缓存
-		logger:    log.NewHelper(logger), // 注入日志
-		paymentv1: paymentv1,             // 支付服务
-		productv1: productv1,             // 商品服务
+		db:                models.New(db),        // 数据库
+		pgx:               db,                    // 数据库事务
+		rdb:               rdb,                   // 缓存
+		logger:            log.NewHelper(logger), // 注入日志
+		paymentv1:         paymentv1,             // 支付服务
+		productv1:         productv1,             // 商品服务
+		userv1:            userv1,                // 用户服务
+		merchantAddressv1: merchantAddressv1,     // 商家地址服务
+		balancerv1:        balancerv1,            // 余额服务
 	}, cleanup, nil
 }
 
@@ -120,6 +133,24 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 	return r, nil
 }
 
+// NewBalancerServiceClient 余额微服务
+func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancerv1.BalanceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.BalancerServicev1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return balancerv1.NewBalanceClient(conn), nil
+}
+
 // NewPaymentServiceClient 支付微服务
 func NewPaymentServiceClient(d registry.Discovery, logger log.Logger) (paymentv1.PaymentServiceClient, error) {
 	conn, err := grpc.DialInsecure(
@@ -136,6 +167,42 @@ func NewPaymentServiceClient(d registry.Discovery, logger log.Logger) (paymentv1
 		return nil, err
 	}
 	return paymentv1.NewPaymentServiceClient(conn), nil
+}
+
+// NewUserServiceClient 用户微服务
+func NewUserServiceClient(d registry.Discovery, logger log.Logger) (userv1.UserServiceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.UserServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return userv1.NewUserServiceClient(conn), nil
+}
+
+// NewMerchantAddressServiceClient 商家地址微服务
+func NewMerchantAddressServiceClient(d registry.Discovery, logger log.Logger) (merchantAddressv1.MerchantAddressesClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.MerchantServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return merchantAddressv1.NewMerchantAddressesClient(conn), nil
 }
 
 // NewProductServiceClient 商品微服务

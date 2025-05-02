@@ -2,7 +2,10 @@ package biz
 
 import (
 	"context"
+	"net/url"
 	"time"
+
+	"backend/constants"
 
 	"github.com/google/uuid"
 
@@ -48,7 +51,7 @@ type (
 type Payment struct {
 	ID         int64
 	OrderID    int64
-	UserID     uuid.UUID
+	ConsumerID uuid.UUID
 	Amount     float64
 	Currency   string
 	Subject    string
@@ -62,18 +65,69 @@ type Payment struct {
 
 // CreatePaymentReq 创建支付请求
 type CreatePaymentReq struct {
-	OrderID   int64
-	UserID    uuid.UUID
-	Amount    string
-	Currency  string
-	Subject   string
-	ReturnURL string
+	OrderID    int64
+	ConsumerID uuid.UUID
+	// MerchantID      uuid.UUID
+	Amount          string
+	Currency        string
+	Subject         string
+	ReturnURL       string
+	FreezeId        int64
+	ConsumerVersion int64
+	MerchanVersions []int64
 }
 
 // CreatePaymentResp 创建支付响应
 type CreatePaymentResp struct {
 	Payment *Payment
 }
+
+type (
+	Notification struct {
+		AuthAppId           string                `json:"auth_app_id"`
+		NotifyTime          string                `json:"notify_time"`
+		NotifyType          string                `json:"notify_type"`
+		NotifyId            string                `json:"notify_id"`
+		AppId               string                `json:"app_id"`
+		Charset             string                `json:"charset"`
+		Version             string                `json:"version"`
+		SignType            string                `json:"sign_type"`
+		Sign                string                `json:"sign"`
+		TradeNo             string                `json:"trade_no"`
+		OutTradeNo          string                `json:"out_trade_no"`
+		OutRequestNo        string                `json:"out_request_no"`
+		OutBizNo            string                `json:"out_biz_no"`
+		BuyerId             string                `json:"buyer_id"`
+		BuyerLogonId        string                `json:"buyer_logon_id"`
+		BuyerOpenId         string                `json:"buyer_open_id"`
+		SellerId            string                `json:"seller_id"`
+		SellerEmail         string                `json:"seller_email"`
+		TradeStatus         constants.TradeStatus `json:"trade_status"`
+		RefundStatus        string                `json:"refund_status"`
+		RefundReason        string                `json:"refund_reason"`
+		RefundAmount        string                `json:"refund_amount"`
+		TotalAmount         string                `json:"total_amount"`
+		ReceiptAmount       string                `json:"receipt_amount"`
+		InvoiceAmount       string                `json:"invoice_amount"`
+		BuyerPayAmount      string                `json:"buyer_pay_amount"`
+		PointAmount         string                `json:"point_amount"`
+		RefundFee           string                `json:"refund_fee"`
+		Subject             string                `json:"subject"`
+		Body                string                `json:"body"`
+		GmtCreate           string                `json:"gmt_create"`
+		GmtPayment          string                `json:"gmt_payment"`
+		GmtRefund           string                `json:"gmt_refund"`
+		GmtClose            string                `json:"gmt_close"`
+		FundBillList        string                `json:"fund_bill_list"`
+		PassbackParams      string                `json:"passback_params"`
+		VoucherDetailList   string                `json:"voucher_detail_list"`
+		AgreementNo         string                `json:"agreement_no"`
+		ExternalAgreementNo string                `json:"external_agreement_no"`
+		DBackStatus         string                `json:"dback_status"`
+		DBackAmount         string                `json:"dback_amount"`
+		BankAckTime         string                `json:"bank_ack_time"`
+	}
+)
 
 // PaymentNotifyReq 支付通知请求
 type PaymentNotifyReq struct {
@@ -144,7 +198,7 @@ type PaymentRepo interface {
 	// GetPaymentStatus 查询支付状态
 	GetPaymentStatus(ctx context.Context, req *GetPaymentStatusReq) (*GetPaymentStatusResp, error)
 	// HandlePaymentNotify 处理支付通知
-	HandlePaymentNotify(ctx context.Context, req *PaymentNotifyReq) (*PaymentNotifyResp, error)
+	HandlePaymentNotify(ctx context.Context, req url.Values) (*PaymentNotifyResp, error)
 	// HandlePaymentCallback 处理支付回调
 	HandlePaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error)
 	// GetPaymentByOrderID 根据订单ID查询支付记录
@@ -174,19 +228,19 @@ func NewPaymentUsecase(repo PaymentRepo, logger log.Logger) *PaymentUsecase {
 
 // CreatePayment 创建支付
 func (uc *PaymentUsecase) CreatePayment(ctx context.Context, req *CreatePaymentReq) (*CreatePaymentResp, error) {
-	uc.log.WithContext(ctx).Infof("Creating payment for order %d", req.OrderID)
+	uc.log.WithContext(ctx).Debugf("Creating payment for order %d", req.OrderID)
 	return uc.repo.CreatePayment(ctx, req)
 }
 
 // GetPaymentStatus 查询支付状态
 func (uc *PaymentUsecase) GetPaymentStatus(ctx context.Context, req *GetPaymentStatusReq) (*GetPaymentStatusResp, error) {
-	uc.log.WithContext(ctx).Infof("Getting payment status for payment %d", req.PaymentID)
+	uc.log.WithContext(ctx).Debugf("Getting payment status for payment %d", req.PaymentID)
 	return uc.repo.GetPaymentStatus(ctx, req)
 }
 
 // HandlePaymentNotify 处理支付通知
-func (uc *PaymentUsecase) HandlePaymentNotify(ctx context.Context, req *PaymentNotifyReq) (*PaymentNotifyResp, error) {
-	uc.log.WithContext(ctx).Infof("Handling payment notify for order %s", req.OutTradeNo)
+func (uc *PaymentUsecase) HandlePaymentNotify(ctx context.Context, req url.Values) (*PaymentNotifyResp, error) {
+	uc.log.WithContext(ctx).Debugf("Handling payment notify for order %s", req)
 	return uc.repo.HandlePaymentNotify(ctx, req)
 	//
 	// // 处理支付宝通知
@@ -219,7 +273,7 @@ func (uc *PaymentUsecase) HandlePaymentNotify(ctx context.Context, req *PaymentN
 	// 		return nil, fmt.Errorf("标记订单为已支付失败: %w", err)
 	// 	}
 	//
-	// 	uc.log.WithContext(ctx).Infof("Payment for order %s is successful", req.OutTradeNo)
+	// 	uc.log.WithContext(ctx).Debugf("Payment for order %s is successful", req.OutTradeNo)
 	// }
 	//
 	// return resp, nil
@@ -227,12 +281,12 @@ func (uc *PaymentUsecase) HandlePaymentNotify(ctx context.Context, req *PaymentN
 
 // HandlePaymentCallback 处理支付回调
 func (uc *PaymentUsecase) HandlePaymentCallback(ctx context.Context, req *PaymentCallbackReq) (*PaymentCallbackResp, error) {
-	uc.log.WithContext(ctx).Infof("Handling payment callback for order %s", req.OutTradeNo)
+	uc.log.WithContext(ctx).Debugf("Handling payment callback for order %s", req.OutTradeNo)
 	return uc.repo.HandlePaymentCallback(ctx, req)
 }
 
 // GetPaymentByOrderID 根据订单ID查询支付记录
 func (uc *PaymentUsecase) GetPaymentByOrderID(ctx context.Context, req *GetPaymentByOrderIDRequest) (*Payment, error) {
-	uc.log.WithContext(ctx).Infof("Updating payment status for payment %d", req)
+	uc.log.WithContext(ctx).Debugf("Updating payment status for payment %d", req)
 	return uc.repo.GetPaymentByOrderID(ctx, req)
 }

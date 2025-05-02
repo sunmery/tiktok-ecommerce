@@ -73,12 +73,12 @@
     "/v1/users/address": {
       "get": {
         "summary": "根据 ID获取用户地址",
-        "operationId": "UserService_GetAddress",
+        "operationId": "UserService_GetConsumerAddress",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Address"
+              "$ref": "#/definitions/v1ConsumerAddress"
             }
           },
           "default": {
@@ -110,12 +110,12 @@
       },
       "delete": {
         "summary": "删除用户地址",
-        "operationId": "UserService_DeleteAddresses",
+        "operationId": "UserService_DeleteConsumerAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1DeleteAddressesReply"
+              "$ref": "#/definitions/v1DeleteConsumerAddressesReply"
             }
           },
           "default": {
@@ -146,12 +146,12 @@
       },
       "post": {
         "summary": "创建用户地址",
-        "operationId": "UserService_CreateAddresses",
+        "operationId": "UserService_CreateConsumerAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Address"
+              "$ref": "#/definitions/v1ConsumerAddress"
             }
           },
           "default": {
@@ -167,7 +167,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1Address"
+              "$ref": "#/definitions/v1ConsumerAddress"
             }
           }
         ],
@@ -177,12 +177,12 @@
       },
       "patch": {
         "summary": "更新用户地址",
-        "operationId": "UserService_UpdateAddresses",
+        "operationId": "UserService_UpdateConsumerAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Address"
+              "$ref": "#/definitions/v1ConsumerAddress"
             }
           },
           "default": {
@@ -198,7 +198,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1Address"
+              "$ref": "#/definitions/v1ConsumerAddress"
             }
           }
         ],
@@ -210,12 +210,12 @@
     "/v1/users/addresses": {
       "get": {
         "summary": "获取用户地址列表",
-        "operationId": "UserService_GetAddresses",
+        "operationId": "UserService_GetConsumerAddresses",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetAddressesReply"
+              "$ref": "#/definitions/v1GetConsumerAddressesReply"
             }
           },
           "default": {
@@ -586,43 +586,6 @@
         }
       }
     },
-    "v1Address": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
-          "title": "地址 ID"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string",
-          "title": "城市，必填字段"
-        },
-        "state": {
-          "type": "string",
-          "title": "州/省，必填字段"
-        },
-        "country": {
-          "type": "string",
-          "title": "国家，必填字段"
-        },
-        "zipCode": {
-          "type": "string"
-        },
-        "streetAddress": {
-          "type": "string"
-        }
-      },
-      "title": "定义地址信息的消息结构",
-      "required": [
-        "userId",
-        "zipCode",
-        "streetAddress"
-      ]
-    },
     "v1AuditInfo": {
       "type": "object",
       "properties": {
@@ -658,6 +621,42 @@
         }
       },
       "title": "新增分类验证相关定义"
+    },
+    "v1ConsumerAddress": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "地址 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string",
+          "title": "城市，必填字段"
+        },
+        "state": {
+          "type": "string",
+          "title": "州/省，必填字段"
+        },
+        "country": {
+          "type": "string",
+          "title": "国家，必填字段"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string"
+        }
+      },
+      "title": "定义地址信息的消息结构",
+      "required": [
+        "zipCode",
+        "streetAddress"
+      ]
     },
     "v1CreditCard": {
       "type": "object",
@@ -727,7 +726,7 @@
         }
       }
     },
-    "v1DeleteAddressesReply": {
+    "v1DeleteConsumerAddressesReply": {
       "type": "object",
       "properties": {
         "message": {
@@ -785,14 +784,14 @@
         }
       }
     },
-    "v1GetAddressesReply": {
+    "v1GetConsumerAddressesReply": {
       "type": "object",
       "properties": {
         "addresses": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1Address"
+            "$ref": "#/definitions/v1ConsumerAddress"
           },
           "title": "地址列表，必填字段"
         }

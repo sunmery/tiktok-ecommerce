@@ -36,7 +36,9 @@ type PaymentServiceClient interface {
 	// 查询支付状态
 	GetPaymentStatus(ctx context.Context, in *GetPaymentStatusRequest, opts ...grpc.CallOption) (*GetPaymentStatusResponse, error)
 	// 处理支付回调通知
-	HandlePaymentNotify(ctx context.Context, in *HandlePaymentNotifyRequest, opts ...grpc.CallOption) (*HandlePaymentNotifyResponse, error)
+	//
+	//	rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {
+	HandlePaymentNotify(ctx context.Context, in *UrlValues, opts ...grpc.CallOption) (*HandlePaymentNotifyResponse, error)
 	// 支付成功后的回调处理
 	HandlePaymentCallback(ctx context.Context, in *HandlePaymentCallbackRequest, opts ...grpc.CallOption) (*HandlePaymentCallbackResponse, error)
 }
@@ -69,7 +71,7 @@ func (c *paymentServiceClient) GetPaymentStatus(ctx context.Context, in *GetPaym
 	return out, nil
 }
 
-func (c *paymentServiceClient) HandlePaymentNotify(ctx context.Context, in *HandlePaymentNotifyRequest, opts ...grpc.CallOption) (*HandlePaymentNotifyResponse, error) {
+func (c *paymentServiceClient) HandlePaymentNotify(ctx context.Context, in *UrlValues, opts ...grpc.CallOption) (*HandlePaymentNotifyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HandlePaymentNotifyResponse)
 	err := c.cc.Invoke(ctx, PaymentService_HandlePaymentNotify_FullMethodName, in, out, cOpts...)
@@ -100,7 +102,9 @@ type PaymentServiceServer interface {
 	// 查询支付状态
 	GetPaymentStatus(context.Context, *GetPaymentStatusRequest) (*GetPaymentStatusResponse, error)
 	// 处理支付回调通知
-	HandlePaymentNotify(context.Context, *HandlePaymentNotifyRequest) (*HandlePaymentNotifyResponse, error)
+	//
+	//	rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {
+	HandlePaymentNotify(context.Context, *UrlValues) (*HandlePaymentNotifyResponse, error)
 	// 支付成功后的回调处理
 	HandlePaymentCallback(context.Context, *HandlePaymentCallbackRequest) (*HandlePaymentCallbackResponse, error)
 	mustEmbedUnimplementedPaymentServiceServer()
@@ -119,7 +123,7 @@ func (UnimplementedPaymentServiceServer) CreatePayment(context.Context, *CreateP
 func (UnimplementedPaymentServiceServer) GetPaymentStatus(context.Context, *GetPaymentStatusRequest) (*GetPaymentStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPaymentStatus not implemented")
 }
-func (UnimplementedPaymentServiceServer) HandlePaymentNotify(context.Context, *HandlePaymentNotifyRequest) (*HandlePaymentNotifyResponse, error) {
+func (UnimplementedPaymentServiceServer) HandlePaymentNotify(context.Context, *UrlValues) (*HandlePaymentNotifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HandlePaymentNotify not implemented")
 }
 func (UnimplementedPaymentServiceServer) HandlePaymentCallback(context.Context, *HandlePaymentCallbackRequest) (*HandlePaymentCallbackResponse, error) {
@@ -183,7 +187,7 @@ func _PaymentService_GetPaymentStatus_Handler(srv interface{}, ctx context.Conte
 }
 
 func _PaymentService_HandlePaymentNotify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HandlePaymentNotifyRequest)
+	in := new(UrlValues)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -195,7 +199,7 @@ func _PaymentService_HandlePaymentNotify_Handler(srv interface{}, ctx context.Co
 		FullMethod: PaymentService_HandlePaymentNotify_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PaymentServiceServer).HandlePaymentNotify(ctx, req.(*HandlePaymentNotifyRequest))
+		return srv.(PaymentServiceServer).HandlePaymentNotify(ctx, req.(*UrlValues))
 	}
 	return interceptor(ctx, in, info, handler)
 }

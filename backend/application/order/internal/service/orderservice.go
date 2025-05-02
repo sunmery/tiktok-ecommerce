@@ -3,6 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"google.golang.org/protobuf/types/known/structpb"
+
+	"backend/application/order/internal/pkg"
+	globalPkg "backend/pkg"
 
 	"github.com/go-kratos/kratos/v2/log"
 
@@ -12,7 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"backend/application/order/internal/biz"
-	"backend/pkg"
+	globalpkg "backend/pkg"
 
 	v1 "backend/api/order/v1"
 
@@ -32,7 +38,7 @@ func NewOrderServiceService(uc *biz.OrderUsecase) *OrderServiceService {
 }
 
 func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (*v1.PlaceOrderResp, error) {
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
@@ -75,7 +81,10 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 
 	return &v1.PlaceOrderResp{
 		Order: &v1.OrderResult{
-			OrderId: order.Order.OrderId,
+			OrderId:         order.Order.OrderId,
+			FreezeId:        order.Order.FreezeId,
+			ConsumerVersion: order.Order.ConsumerVersion,
+			MerchantVersion: order.Order.MerchantVersion,
 		},
 		// Url: order.URL,
 	}, nil
@@ -83,7 +92,7 @@ func (s *OrderServiceService) PlaceOrder(ctx context.Context, req *v1.PlaceOrder
 
 // GetOrder 查询用户订单ID
 func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq) (*v1.Order, error) {
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	order, err := s.uc.GetOrder(ctx, &biz.GetOrderReq{
 		UserId:  userId,
 		OrderId: req.Id,
@@ -104,45 +113,150 @@ func (s *OrderServiceService) GetOrder(ctx context.Context, req *v1.GetOrderReq)
 	}, nil
 }
 
-func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.GetConsumerOrdersReq) (*v1.Orders, error) {
-	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		log.Errorf("获取用户ID失败: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
+// GetUserOrdersWithSuborders 根据用户主订单查询子订单
+func (s *OrderServiceService) GetUserOrdersWithSuborders(ctx context.Context, req *v1.GetUserOrdersWithSubordersReq) (*v1.GetUserOrdersWithSubordersReply, error) {
+	var userId uuid.UUID
+	var err error
+	if req.UserId == "" {
+		userId, err = globalpkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// 构建业务层请求
-	listReq := &biz.GetConsumerOrdersReq{
-		UserId:   userId,
-		Page:     req.Page,
-		PageSize: req.PageSize,
+	reply, getUserOrdersWithSubordersErr := s.uc.GetUserOrdersWithSuborders(ctx, &biz.GetUserOrdersWithSubordersReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+	})
+	if getUserOrdersWithSubordersErr != nil {
+		return nil, getUserOrdersWithSubordersErr
+	}
+
+	if reply == nil {
+		return nil, nil
+	}
+
+	orders := make([]*v1.Suborders, 0, len(reply.Orders))
+	for _, s := range reply.Orders {
+		var allItems []*v1.OrderItem
+		for _, item := range allItems {
+			allItems = append(allItems, &v1.OrderItem{
+				Item: &cartv1.CartItem{
+					MerchantId: item.Item.MerchantId,
+					ProductId:  item.Item.ProductId,
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+				Cost: item.Cost,
+			})
+		}
+
+		orders = append(orders, &v1.Suborders{
+			Id:             s.OrderId,
+			SubOrderId:     s.SubOrderId,
+			StreetAddress:  s.StreetAddress,
+			City:           s.City,
+			State:          s.State,
+			Country:        s.Country,
+			ZipCode:        s.ZipCode,
+			Email:          s.Email,
+			MerchantId:     s.MerchantId,
+			PaymentStatus:  string(s.PaymentStatus),
+			ShippingStatus: string(s.ShippingStatus),
+			TotalAmount:    s.TotalAmount,
+			Currency:       s.Currency,
+			Items:          allItems,
+			CreatedAt:      timestamppb.New(s.CreatedAt),
+			UpdatedAt:      timestamppb.New(s.UpdatedAt),
+		})
+	}
+	return &v1.GetUserOrdersWithSubordersReply{
+		Orders: orders,
+	}, nil
+}
+
+func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.GetConsumerOrdersReq) (*v1.ConsumerOrders, error) {
+	// 从网关获取用户ID
+	var userId uuid.UUID
+	var err error
+	if req.UserId == "" {
+		userId, err = globalpkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			log.Errorf("获取用户ID失败: %v", err)
+			return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
+		}
+	} else {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			log.Errorf("解析用户ID失败: %v", err)
+			return nil, status.Error(codes.InvalidArgument, "解析用户ID失败")
+		}
 	}
 
 	// 调用业务层获取订单列表
-	resp, err := s.uc.GetConsumerOrders(ctx, listReq)
+	resp, err := s.uc.GetConsumerOrders(ctx, &biz.GetConsumerOrdersReq{
+		UserId:   userId,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	})
 	if err != nil {
 		log.Errorf("获取用户订单失败: %v", err)
 		return nil, status.Errorf(codes.Internal, "获取用户订单失败: %v", err)
 	}
 
-	// 直接返回业务层的响应，因为它已经是v1.Orders的格式
-	if len(resp.Orders) == 0 {
+	if resp == nil {
 		log.Infof("用户 %s 没有订单记录", userId)
-		return &v1.Orders{Orders: []*v1.Order{}}, nil
+		return nil, nil
+	}
+	orders := make([]*v1.ConsumerOrder, 0, len(resp.SubOrders))
+	for _, o := range resp.SubOrders {
+		items := make([]*v1.OrderItem, 0, len(o.Items))
+		for _, item := range o.Items {
+			items = append(items, &v1.OrderItem{
+				Cost: item.Cost,
+				Item: &cartv1.CartItem{
+					MerchantId: item.Item.MerchantId.String(),
+					ProductId:  item.Item.ProductId.String(),
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+			})
+		}
+		orders = append(orders, &v1.ConsumerOrder{
+			Items:      items,
+			OrderId:    resp.OrderId,
+			SubOrderId: &o.SubOrderID,
+			UserId:     req.UserId,
+			Currency:   o.Currency,
+			Address: &userv1.ConsumerAddress{
+				UserId:        req.UserId, // 数据库无需存储用户ID, 直接从请求中返回
+				City:          o.Address.City,
+				State:         o.Address.State,
+				Country:       o.Address.Country,
+				ZipCode:       o.Address.ZipCode,
+				StreetAddress: o.Address.StreetAddress,
+			},
+			Email:          o.Email,
+			CreatedAt:      timestamppb.New(o.CreatedAt),
+			PaymentStatus:  pkg.MapPaymentStatusToProto(o.PaymentStatus),
+			ShippingStatus: pkg.MapShippingStatusToProto(o.ShippingStatus),
+		})
 	}
 
-	return &v1.Orders{Orders: resp.Orders}, nil
+	return &v1.ConsumerOrders{
+		Items:   orders,
+		OrderId: resp.OrderId,
+	}, nil
 }
 
 func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOrdersReq) (*v1.Orders, error) {
-	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		log.Errorf("获取用户ID失败: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
-	}
-
 	// 使用请求中的merchant_id覆盖，如果有指定的话
 
 	// 构建业务层请求
@@ -160,7 +274,7 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 
 	// 检查是否有订单
 	if len(resp.Orders) == 0 {
-		log.Infof("用户 %s 没有订单记录", userId)
+		log.Info("没有订单记录")
 		return &v1.Orders{Orders: []*v1.Order{}}, nil
 	}
 
@@ -205,11 +319,11 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 		createdAt := timestamppb.New(firstSubOrder.CreatedAt)
 
 		// 解析支付状态
-		paymentStatus := mapStringStatusToProto(firstSubOrder.Status)
+		paymentStatus := pkg.MapPaymentStatusToProto(firstSubOrder.PaymentStatus)
 
 		// 创建地址信息 (在真实场景中需要从订单数据中获取)
-		address := &userv1.Address{
-			StreetAddress: "未提供地址信息", // 这里应该从订单数据中获取实际地址
+		address := &userv1.ConsumerAddress{
+			StreetAddress: "未提供地址信息", // TODO 这里应该从订单数据中获取实际地址
 			City:          "",
 			State:         "",
 			Country:       "",
@@ -223,9 +337,9 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 			UserId:        firstSubOrder.MerchantID.String(),
 			Currency:      firstSubOrder.Currency,
 			Address:       address,
-			Email:         "未提供邮箱", // 这里应该从订单数据中获取实际邮箱
+			Email:         "未提供邮箱", // TODO 这里应该从订单数据中获取实际邮箱
 			CreatedAt:     createdAt,
-			PaymentStatus: paymentStatus,
+			PaymentStatus: paymentStatus, // TODO
 		})
 	}
 
@@ -235,7 +349,7 @@ func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOr
 
 func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrderPaidReq) (*v1.MarkOrderPaidResp, error) {
 	// 从网关获取用户ID
-	userId, err := pkg.GetMetadataUesrID(ctx)
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
@@ -246,21 +360,12 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	}
 
 	// 调用业务层标记订单为已支付
-	orderPaid, err := s.uc.MarkOrderPaid(ctx, &biz.MarkOrderPaidReq{
+	orderPaid, markOrderPaidErr := s.uc.MarkOrderPaid(ctx, &biz.MarkOrderPaidReq{
 		UserId:  userId,
 		OrderId: req.OrderId,
 	})
-	if err != nil {
-		// 根据错误类型返回不同的状态码
-		if err.Error() == "order does not belong to user" {
-			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
-		} else if err.Error() == "invalid order ID format" {
-			return nil, status.Error(codes.InvalidArgument, "invalid order ID format")
-		} else if err.Error() == "failed to get order" {
-			return nil, status.Error(codes.NotFound, "order not found")
-		}
-		// 其他错误作为内部错误处理
-		return nil, status.Errorf(codes.Internal, "failed to mark order as paid: %v", err)
+	if markOrderPaidErr != nil {
+		return nil, markOrderPaidErr
 	}
 
 	log.Debugf("orderPaid: %v", orderPaid)
@@ -268,38 +373,95 @@ func (s *OrderServiceService) MarkOrderPaid(ctx context.Context, req *v1.MarkOrd
 	return &v1.MarkOrderPaidResp{}, nil
 }
 
-// 转换业务层枚举到 Proto int
-func mapBizStatusToProto(status biz.PaymentStatus) v1.PaymentStatus {
-	switch status {
-	case biz.PaymentPending:
-		return v1.PaymentStatus_NOT_PAID
-	case biz.PaymentProcessing:
-		return v1.PaymentStatus_PROCESSING
-	case biz.PaymentPaid:
-		return v1.PaymentStatus_PAID
-	case biz.PaymentFailed:
-		return v1.PaymentStatus_FAILED
-	case biz.PaymentCancelled:
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
+// ConfirmReceived 确认收货(用户角色)
+func (s *OrderServiceService) ConfirmReceived(ctx context.Context, req *v1.ConfirmReceivedReq) (*v1.ConfirmReceivedResp, error) {
+	// 从网关获取用户ID
+	userId, err := globalpkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
+	// 验证订单ID
+	if req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层标记订单为已支付
+	orderPaid, err := s.uc.ConfirmReceived(ctx, &biz.ConfirmReceivedReq{
+		UserId:  userId,
+		OrderId: req.OrderId,
+	})
+	if err != nil {
+		// 根据错误类型返回不同的状态码
+		if err.Error() == "order does not belong to user" {
+			return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+		}
+	}
+	log.Debugf("orderPaid: %v", orderPaid)
+	return &v1.ConfirmReceivedResp{}, nil
 }
 
-// 将字符串状态转换为Proto枚举
-func mapStringStatusToProto(status string) v1.PaymentStatus {
-	switch status {
-	case string(biz.PaymentPending):
-		return v1.PaymentStatus_NOT_PAID
-	case string(biz.PaymentProcessing):
-		return v1.PaymentStatus_PROCESSING
-	case string(biz.PaymentPaid):
-		return v1.PaymentStatus_PAID
-	case string(biz.PaymentFailed):
-		return v1.PaymentStatus_FAILED
-	case string(biz.PaymentCancelled):
-		return v1.PaymentStatus_CANCELLED
-	default:
-		return v1.PaymentStatus_NOT_PAID
+func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.GetShipOrderStatusReq) (*v1.GetShipOrderStatusReply, error) {
+	// 从网关获取用户ID
+	userId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
+	// 验证订单ID
+
+	if req.SubOrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "order ID is required")
+	}
+	// 调用业务层获取订单状态
+	orderStatus, err := s.uc.GetShipOrderStatus(ctx, &biz.GetShipOrderStatusReq{
+		UserId:     userId,
+		SubOrderId: req.SubOrderId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+	}
+	log.Debugf("orderStatus: %+v", orderStatus)
+
+	shippingAddressMap := map[string]any{
+		"addressType":   orderStatus.ShippingAddress.AddressType,
+		"city":          orderStatus.ShippingAddress.City,
+		"contactPerson": orderStatus.ShippingAddress.ContactPerson,
+		"contactPhone":  orderStatus.ShippingAddress.ContactPhone,
+		"country":       orderStatus.ShippingAddress.Country,
+		"state":         orderStatus.ShippingAddress.State,
+		"streetAddress": orderStatus.ShippingAddress.StreetAddress,
+		"zipCode":       orderStatus.ShippingAddress.ZipCode,
+	}
+	merchantAddress, err := structpb.NewStruct(shippingAddressMap)
+	if err != nil {
+		log.Errorf("failed to convert merchant address to struct: %v", err)
+		return nil, status.Error(codes.Internal, "failed to convert merchant address to struct")
+	}
+
+	userAddressMap := map[string]any{
+		"city":          orderStatus.ReceiverAddress.City,
+		"country":       orderStatus.ReceiverAddress.Country,
+		"createdAt":     orderStatus.ReceiverAddress.CreatedAt.Format(time.RFC3339),
+		"email":         orderStatus.ReceiverAddress.Email,
+		"id":            orderStatus.ReceiverAddress.ID,
+		"state":         orderStatus.ReceiverAddress.State,
+		"streetAddress": orderStatus.ReceiverAddress.StreetAddress,
+		"updatedAt":     orderStatus.ReceiverAddress.UpdatedAt.Format(time.RFC3339),
+		"userId":        orderStatus.ReceiverAddress.UserID,
+		"zipCode":       orderStatus.ReceiverAddress.ZipCode,
+	}
+	userAddress, err := structpb.NewStruct(userAddressMap)
+	if err != nil {
+		// This is where the original error occurred
+		log.Errorf("failed to convert user address to struct: %v", err)
+		return nil, status.Error(codes.Internal, "failed to convert user address to struct")
+	}
+	log.Debugf("userAddress: %+v", userAddress)
+	return &v1.GetShipOrderStatusReply{
+		OrderId:         orderStatus.Id,
+		SubOrderId:      orderStatus.SubOrderId,
+		ShippingStatus:  pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
+		ReceiverAddress: userAddress,
+		ShippingAddress: merchantAddress,
+		TrackingNumber:  orderStatus.TrackingNumber,
+		Carrier:         orderStatus.Carrier,
+	}, nil
 }

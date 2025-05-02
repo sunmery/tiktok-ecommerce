@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/go-kratos/kratos/v2/log"
 
@@ -68,7 +67,7 @@ func (s *ProductService) UpdateInventory(ctx context.Context, req *pb.UpdateInve
 		Stock:      req.Stock,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, "更新库存失败")
+		return nil, err
 	}
 
 	return &pb.UpdateInventoryReply{
@@ -517,33 +516,6 @@ func convertBizProductToPB(p *biz.Product) *pb.Product {
 	return result
 }
 
-// 其他辅助转换函数
-// func convertPBImagesToBiz(pbImages []*pb.Product_Image) []*biz.ProductImage {
-// 	var images []*biz.ProductImage
-// 	for _, img := range pbImages {
-// 		images = append(images, &biz.ProductImage{
-// 			URL:       img.GetUrl(),
-// 			IsPrimary: img.GetIsPrimary(),
-// 			SortOrder: int(img.GetSortOrder()),
-// 		})
-// 	}
-// 	return images
-// }
-
-// func convertPBStatusToBiz(pbStatus pb.ProductStatus) biz.ProductStatus {
-// 	return biz.ProductStatus(pbStatus)
-// }
-
-func convertPBCategoryToBiz(pbCategory *pb.CategoryInfo) biz.CategoryInfo {
-	if pbCategory == nil {
-		return biz.CategoryInfo{}
-	}
-	return biz.CategoryInfo{
-		CategoryId:   uint64(pbCategory.GetCategoryId()),
-		CategoryName: pbCategory.GetCategoryName(),
-	}
-}
-
 func convertPBImagesToBiz(pbImages []*pb.Image) []*biz.ProductImage {
 	var images []*biz.ProductImage
 	for _, img := range pbImages {
@@ -559,57 +531,6 @@ func convertPBImagesToBiz(pbImages []*pb.Image) []*biz.ProductImage {
 		})
 	}
 	return images
-}
-
-func convertPBAuditInfoToBiz(pbInfo *pb.AuditInfo) (*biz.AuditInfo, error) {
-	if pbInfo == nil {
-		return nil, errors.New("audit info is nil")
-	}
-	auditId, err := uuid.Parse(pbInfo.AuditId)
-	if err != nil {
-		return nil, errors.New("invalid audit ID")
-	}
-
-	operatorId, err := uuid.Parse(pbInfo.OperatorId)
-	if err != nil {
-		return nil, errors.New("invalid operator ID")
-	}
-	return &biz.AuditInfo{
-		AuditId:    auditId,
-		Reason:     pbInfo.Reason,
-		OperatorId: operatorId,
-		OperatedAt: pbInfo.OperatedAt.AsTime(),
-	}, nil
-}
-
-func convertBizStatusToPB(s biz.ProductStatus) pb.ProductStatus {
-	switch s {
-	case biz.ProductStatusDraft:
-		return pb.ProductStatus_PRODUCT_STATUS_DRAFT
-	case biz.ProductStatusPending:
-		return pb.ProductStatus_PRODUCT_STATUS_PENDING
-	case biz.ProductStatusApproved:
-		return pb.ProductStatus_PRODUCT_STATUS_APPROVED
-	case biz.ProductStatusRejected:
-		return pb.ProductStatus_PRODUCT_STATUS_REJECTED
-	default:
-		return pb.ProductStatus_PRODUCT_STATUS_DRAFT
-	}
-}
-
-func convertPBStatusToBiz(s pb.ProductStatus) biz.ProductStatus {
-	switch s {
-	case pb.ProductStatus_PRODUCT_STATUS_DRAFT:
-		return biz.ProductStatusDraft
-	case pb.ProductStatus_PRODUCT_STATUS_PENDING:
-		return biz.ProductStatusPending
-	case pb.ProductStatus_PRODUCT_STATUS_APPROVED:
-		return biz.ProductStatusApproved
-	case pb.ProductStatus_PRODUCT_STATUS_REJECTED:
-		return biz.ProductStatusRejected
-	default:
-		return biz.ProductStatusDraft
-	}
 }
 
 var validTransitions = map[biz.ProductStatus]map[biz.ProductStatus]bool{

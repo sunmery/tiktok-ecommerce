@@ -1,3 +1,31 @@
+-- name: GetConsumerOrders :many
+SELECT oo.id AS order_id,
+       json_agg(
+               json_build_object(
+                       'subOrderId', os.id,
+                       'totalAmount', os.total_amount,
+                       'currency', os.currency,
+                       'paymentStatus', os.status,
+                       'shippingStatus', os.shipping_status,
+                       'items', os.items,
+                       'email', oo.email,
+                       'address', json_build_object(
+                               'streetAddress', oo.street_address,
+                               'city', oo.city,
+                               'state', oo.state,
+                               'country', oo.country,
+                               'zipCode', oo.zip_code
+                                  ),
+                       'createdAt', os.created_at,
+                       'updatedAt', os.updated_at
+               )
+       )     AS sub_orders
+FROM orders.orders oo
+         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+WHERE oo.user_id = @user_id
+GROUP BY oo.id
+LIMIT @page_size OFFSET @page;
+
 -- name: CreateOrder :one
 INSERT INTO orders.orders (id, user_id, currency, street_address,
                            city, state, country, zip_code, email)
@@ -8,92 +36,120 @@ RETURNING *;
 SELECT o.*,
        json_agg(
                json_build_object(
-                       'id', so.id,
-                       'merchant_id', so.merchant_id,
-                       'total_amount', so.total_amount,
-                       'currency', so.currency,
-                       'status', so.status,
-                       'items', so.items,
-                       'created_at', so.created_at,
-                       'updated_at', so.updated_at
+                       'id', os.id,
+                       'merchant_id', os.merchant_id,
+                       'total_amount', os.total_amount,
+                       'currency', os.currency,
+                       'status', os.status,
+                       'shipping_status', os.shipping_status,
+                       'items', os.items,
+                       'created_at', os.created_at,
+                       'updated_at', os.updated_at
                )
        ) AS sub_orders
 FROM orders.orders o
-         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
 WHERE o.user_id = @user_id
   AND o.id = @order_id
 GROUP BY o.id;
 
--- name: GetOrderByUserID :one
-SELECT *
-FROM orders.orders
-WHERE user_id = @user_id;
-
--- name: ListOrders :many
-SELECT *
-FROM orders.sub_orders
-ORDER BY created_at DESC
-LIMIT @page_size OFFSET @page;
-
--- name: GetConsumerOrders :many
+-- name: GetSubOrderByID :one
 SELECT o.*,
        json_agg(
                json_build_object(
-                       'id', so.id,
-                       'merchant_id', so.merchant_id,
-                       'total_amount', so.total_amount,
-                       'currency', so.currency,
-                       'status', so.status,
-                       'items', so.items,
-                       'created_at', so.created_at,
-                       'updated_at', so.updated_at
+                       'id', os.id,
+                       'merchant_id', os.merchant_id,
+                       'total_amount', os.total_amount,
+                       'currency', os.currency,
+                       'status', os.status,
+                       'shipping_status', os.shipping_status,
+                       'items', os.items,
+                       'created_at', os.created_at,
+                       'updated_at', os.updated_at
                )
        ) AS sub_orders
 FROM orders.orders o
-         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
+         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
 WHERE o.user_id = @user_id
-GROUP BY o.id
+  AND os.id = @order_id
+GROUP BY o.id;
+
+-- name: GetOrderByUserID :one
+SELECT os.id,
+       os.order_id,
+       os.merchant_id,
+       os.total_amount,
+       os.currency,
+       os.status,
+       os.items,
+       os.created_at,
+       os.updated_at,
+       oo.payment_status,
+       os.shipping_status
+FROM orders.sub_orders os
+         JOIN orders.orders oo
+              ON os.order_id = oo.id
+WHERE user_id = @user_id;
+
+-- name: ListOrders :many
+SELECT os.id,
+       os.order_id,
+       os.merchant_id,
+       os.total_amount,
+       os.currency,
+       os.status,
+       os.items,
+       os.created_at,
+       os.updated_at,
+       oo.payment_status,
+       os.shipping_status
+FROM orders.sub_orders os
+         JOIN orders.orders oo
+              ON os.order_id = oo.id
+ORDER BY os.created_at DESC
 LIMIT @page_size OFFSET @page;
 
 -- name: GetUserOrdersWithSuborders :many
-SELECT o.id         AS order_id,
-       o.currency   AS order_currency,
+SELECT o.id,
        o.street_address,
        o.city,
        o.state,
        o.country,
        o.zip_code,
        o.email,
-       o.created_at AS order_created,
-       jsonb_agg(
-               jsonb_build_object(
-                       'suborder_id', so.id,
-                       'merchant_id', so.merchant_id,
-                       'total_amount', so.total_amount,
-                       'currency', so.currency,
-                       'status', so.status,
-                       'items', so.items,
-                       'created_at', so.created_at,
-                       'updated_at', so.updated_at
-               ) ORDER BY so.created_at
-       )            AS suborders
+       o.payment_status,
+       os.shipping_status,
+       os.merchant_id,
+       os.id AS sub_order_id,
+       os.total_amount,
+       os.currency,
+       os.items,
+       o.created_at,
+       o.updated_at
 FROM orders.orders o
-         LEFT JOIN orders.sub_orders so ON o.id = so.order_id
-WHERE o.user_id = $1::uuid
-GROUP BY o.id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.created_at
+         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
+WHERE o.user_id = @user_id
+  AND o.id = @order_id
+GROUP BY o.id, os.id, o.currency, os.merchant_id, o.street_address, o.city, o.state, o.country, o.zip_code, o.email,
+         o.created_at,
+         os.shipping_status
 ORDER BY o.created_at DESC;
 
 -- name: QuerySubOrders :many
-SELECT id,
-       merchant_id,
-       total_amount,
-       currency,
-       status,
-       items,
-       created_at,
-       updated_at
-FROM orders.sub_orders
-WHERE order_id = $1
+SELECT os.id,
+       os.order_id,
+       os.merchant_id,
+       os.total_amount,
+       os.currency,
+       os.status,
+       os.items,
+       os.created_at,
+       os.updated_at,
+       oo.payment_status,
+       os.shipping_status
+FROM orders.sub_orders os
+         Join orders.orders oo on os.order_id = oo.id
+WHERE order_id = @order_id
 ORDER BY created_at;
 
 -- name: CreateSubOrder :one
@@ -102,34 +158,58 @@ INSERT INTO orders.sub_orders (id, order_id, merchant_id, total_amount,
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
--- name: UpdateSubOrderStatus :exec
-UPDATE orders.sub_orders
-SET status     = $2,
-    updated_at = $3
-WHERE id = $1;
+-- -- name: UpdateSubOrderStatus :exec
+-- UPDATE orders.sub_orders
+-- SET status     = @status,
+--     updated_at = NOW()
+-- WHERE id = @id;
 
 -- name: UpdatePaymentStatus :one
 SELECT id, user_id, payment_status
 FROM orders.orders
-WHERE id = $1
+WHERE id = @id
     FOR UPDATE;
 
 -- name: MarkOrderAsPaid :one
 UPDATE orders.orders
-SET payment_status = $1,
+SET payment_status = @payment_status,
     updated_at     = now()
 WHERE id = $2
 RETURNING *;
 
 -- name: MarkSubOrderAsPaid :one
 UPDATE orders.sub_orders
-SET status = $1,
-    updated_at     = now()
-WHERE order_id = $2
+SET status     = @status,
+    updated_at = now()
+WHERE order_id = @order_id
 RETURNING *;
 
--- name: UpdateOrderPaymentStatus :exec
-UPDATE orders.orders
-SET payment_status = $2,
-    updated_at     = now()
-WHERE id = $1;
+-- name: CreateOrderShipping :exec
+INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
+                                 shipping_address, receiver_address, shipping_fee)
+VALUES (@id, @merchant_id, @sub_order_id, @shipping_status, @tracking_number, @carrier, @delivery,
+        @shipping_address, @receiver_address, @shipping_fee);
+
+-- name: GetShipOrderStatus :one
+SELECT id,
+       sub_order_id,
+       tracking_number,
+       carrier,
+       shipping_status,
+       delivery,
+       shipping_address,
+       receiver_address,
+       shipping_fee,
+       created_at,
+       updated_at
+FROM orders.shipping_info
+WHERE sub_order_id = @id;
+
+-- name: UpdateOrderShippingStatus :exec
+WITH update_shipinfo_status AS (
+    UPDATE orders.shipping_info
+        SET shipping_status = @shipping_status
+        WHERE sub_order_id = @sub_order_id)
+UPDATE orders.sub_orders
+SET shipping_status = @shipping_status
+WHERE id = @sub_order_id;

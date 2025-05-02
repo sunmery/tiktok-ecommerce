@@ -4,10 +4,9 @@
 // - protoc             v5.29.3
 // source: order/v1/order.proto
 
-package orderv1
+package merchantorderv1
 
 import (
-	v1 "backend/api/order/v1"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -20,15 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Order_GetMerchantOrders_FullMethodName = "/ecommerce.merchant.v1.Order/GetMerchantOrders"
+	Order_GetMerchantOrders_FullMethodName         = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
+	Order_GetMerchantByOrderId_FullMethodName      = "/ecommerce.merchantorder.v1.Order/GetMerchantByOrderId"
+	Order_CreateOrderShip_FullMethodName           = "/ecommerce.merchantorder.v1.Order/CreateOrderShip"
+	Order_UpdateOrderShippingStatus_FullMethodName = "/ecommerce.merchantorder.v1.Order/UpdateOrderShippingStatus"
 )
 
 // OrderClient is the client API for Order service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrderClient interface {
-	// 查询商家订单列表(商家侧)
-	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*v1.Orders, error)
+	// 查询商家订单列表
+	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error)
+	// 根据订单ID查找商家
+	GetMerchantByOrderId(ctx context.Context, in *GetMerchantByOrderIdReq, opts ...grpc.CallOption) (*GetMerchantByOrderIdReply, error)
+	// 创建货运信息
+	CreateOrderShip(ctx context.Context, in *CreateOrderShipReq, opts ...grpc.CallOption) (*CreateOrderShipReply, error)
+	// 更新订单货运状态
+	UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...grpc.CallOption) (*UpdateOrderShippingStatusReply, error)
 }
 
 type orderClient struct {
@@ -39,10 +47,40 @@ func NewOrderClient(cc grpc.ClientConnInterface) OrderClient {
 	return &orderClient{cc}
 }
 
-func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*v1.Orders, error) {
+func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(v1.Orders)
+	out := new(GetMerchantOrdersReply)
 	err := c.cc.Invoke(ctx, Order_GetMerchantOrders_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderClient) GetMerchantByOrderId(ctx context.Context, in *GetMerchantByOrderIdReq, opts ...grpc.CallOption) (*GetMerchantByOrderIdReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMerchantByOrderIdReply)
+	err := c.cc.Invoke(ctx, Order_GetMerchantByOrderId_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderClient) CreateOrderShip(ctx context.Context, in *CreateOrderShipReq, opts ...grpc.CallOption) (*CreateOrderShipReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateOrderShipReply)
+	err := c.cc.Invoke(ctx, Order_CreateOrderShip_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderClient) UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...grpc.CallOption) (*UpdateOrderShippingStatusReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateOrderShippingStatusReply)
+	err := c.cc.Invoke(ctx, Order_UpdateOrderShippingStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +91,14 @@ func (c *orderClient) GetMerchantOrders(ctx context.Context, in *GetMerchantOrde
 // All implementations must embed UnimplementedOrderServer
 // for forward compatibility.
 type OrderServer interface {
-	// 查询商家订单列表(商家侧)
-	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error)
+	// 查询商家订单列表
+	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
+	// 根据订单ID查找商家
+	GetMerchantByOrderId(context.Context, *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
+	// 创建货运信息
+	CreateOrderShip(context.Context, *CreateOrderShipReq) (*CreateOrderShipReply, error)
+	// 更新订单货运状态
+	UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error)
 	mustEmbedUnimplementedOrderServer()
 }
 
@@ -65,8 +109,17 @@ type OrderServer interface {
 // pointer dereference when methods are called.
 type UnimplementedOrderServer struct{}
 
-func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*v1.Orders, error) {
+func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantOrders not implemented")
+}
+func (UnimplementedOrderServer) GetMerchantByOrderId(context.Context, *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantByOrderId not implemented")
+}
+func (UnimplementedOrderServer) CreateOrderShip(context.Context, *CreateOrderShipReq) (*CreateOrderShipReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderShip not implemented")
+}
+func (UnimplementedOrderServer) UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrderShippingStatus not implemented")
 }
 func (UnimplementedOrderServer) mustEmbedUnimplementedOrderServer() {}
 func (UnimplementedOrderServer) testEmbeddedByValue()               {}
@@ -107,16 +160,82 @@ func _Order_GetMerchantOrders_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Order_GetMerchantByOrderId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMerchantByOrderIdReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServer).GetMerchantByOrderId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Order_GetMerchantByOrderId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServer).GetMerchantByOrderId(ctx, req.(*GetMerchantByOrderIdReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Order_CreateOrderShip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderShipReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServer).CreateOrderShip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Order_CreateOrderShip_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServer).CreateOrderShip(ctx, req.(*CreateOrderShipReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Order_UpdateOrderShippingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrderShippingStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServer).UpdateOrderShippingStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Order_UpdateOrderShippingStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServer).UpdateOrderShippingStatus(ctx, req.(*UpdateOrderShippingStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Order_ServiceDesc is the grpc.ServiceDesc for Order service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Order_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ecommerce.merchant.v1.Order",
+	ServiceName: "ecommerce.merchantorder.v1.Order",
 	HandlerType: (*OrderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetMerchantOrders",
 			Handler:    _Order_GetMerchantOrders_Handler,
+		},
+		{
+			MethodName: "GetMerchantByOrderId",
+			Handler:    _Order_GetMerchantByOrderId_Handler,
+		},
+		{
+			MethodName: "CreateOrderShip",
+			Handler:    _Order_CreateOrderShip_Handler,
+		},
+		{
+			MethodName: "UpdateOrderShippingStatus",
+			Handler:    _Order_UpdateOrderShippingStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

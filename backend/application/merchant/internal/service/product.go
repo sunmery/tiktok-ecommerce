@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"backend/constants"
+
 	"github.com/go-kratos/kratos/v2/log"
 
 	productv1 "backend/api/product/v1"
@@ -18,6 +20,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+type ProductService struct {
+	v1.UnimplementedProductServer
+	pc *biz.ProductUsecase
+}
+
+func NewProductService(pc *biz.ProductUsecase) *ProductService {
+	return &ProductService{pc: pc}
+}
 
 func (uc *ProductService) GetMerchantProducts(ctx context.Context, req *v1.GetMerchantProductRequest) (*productv1.Products, error) {
 	merchantId, err := pkg.GetMetadataUesrID(ctx)
@@ -62,6 +73,7 @@ func (uc *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProdu
 		Name:        &req.Name,
 		Price:       &req.Price,
 		Description: &req.Description,
+		Status:      constants.ProductStatus(req.Status),
 	}
 
 	result, err := uc.pc.UpdateProduct(ctx, &updateReq)

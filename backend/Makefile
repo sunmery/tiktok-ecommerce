@@ -1,6 +1,6 @@
 # 默认值
 VERSION ?= dev
-GOIMAGE ?= golang:1.24.0-alpine3.21
+GOIMAGE ?= golang:1.24.2-alpine3.21
 GOOS ?= linux
 GOARCH ?= amd64
 CGOENABLED ?= 0
@@ -10,7 +10,7 @@ DOCKER_IMAGE=e-commerce/$(APP_NAME):$(VERSION)
 SERVICE = $(APP_RELATIVE_PATH)
 REPOSITORY = sumery/$(SERVICE)
 REGISTER = ccr.ccs.tencentyun.com
-ARM64=linux/arm64/v8
+ARM64=linux/arm64
 AMD64=linux/amd64
 
 GOPATH:=$(shell go env GOPATH)
@@ -121,7 +121,9 @@ docker-build:
 	  --build-arg GOOS=$(GOOS) \
 	  --build-arg GOARCH=$(GOARCH) \
 	  --build-arg VERSION=$(VERSION) \
-	  --platform $(GOOS)/$(GOARCH)
+	  --platform $(GOOS)/$(GOARCH)  \
+	  --cache-from type=registry,ref=$(REGISTER)/$(REPOSITORY):cache \
+	  --cache-to type=registry,ref=$(REGISTER)/$(REPOSITORY):cache,mode=max
 
 .PHONY: docker-deployx
 # 使用 docker 构建多平台架构镜像
@@ -139,7 +141,10 @@ docker-deployx:
 	  --build-arg GOIMAGE=$(GOIMAGE) \
 	  --build-arg VERSION=$(VERSION) \
 	  --platform $(ARM64),$(AMD64) \
-	  --push
+	  --push \
+	  --cache-from type=registry,ref=$(REGISTER)/$(REPOSITORY):cache \
+	  --cache-to type=registry,ref=$(REGISTER)/$(REPOSITORY):cache,mode=max
+
 
 # 使用方式: make docker-push SERVICE=微服务名
 .PHONY: docker-push
@@ -157,15 +162,6 @@ docker-deploy:
 	make docker-build SERVICE=$(SERVICE)
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
-
-.PHONY: docker-deploy-all
-# 遍历所有微服务并执行部署
-docker-deploy-all:
-	@for service in $(SERVICES); do \
-		service_name=$$(basename $$service); \
-		echo "正在部署微服务: $$service_name"; \
-		make docker-deploy SERVICE=$$service_name; \
-	done
 
 .PHONY: generate
 # generate client code

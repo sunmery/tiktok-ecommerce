@@ -1,19 +1,58 @@
 syntax = "proto3";
 
-package ecommerce.merchant.v1;
+package ecommerce.merchantorder.v1;
 
-option go_package = "backend/api/merchant/order/v1;orderv1";
+option go_package = "backend/api/merchant/order/v1;merchantorderv1";
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+import "backend/api/cart/v1/cart.proto";
 import "backend/api/order/v1/order.proto";
+import "backend/api/user/v1/user.proto";
 
 service Order {
-  // 查询商家订单列表(商家侧)
-  rpc GetMerchantOrders(GetMerchantOrdersReq) returns (order.v1.Orders) {
+
+  // 查询商家订单列表
+  rpc GetMerchantOrders(GetMerchantOrdersReq) returns (GetMerchantOrdersReply) {
     option (google.api.http) = {
       get: "/v1/merchants/orders"
     };
   }
+
+  // 根据订单ID查找商家
+  rpc GetMerchantByOrderId(GetMerchantByOrderIdReq) returns (GetMerchantByOrderIdReply) {
+    option (google.api.http) = {
+      get: "/v1/merchants/orders/{order_id}"
+    };
+  }
+
+  // 创建货运信息
+  rpc CreateOrderShip(CreateOrderShipReq) returns (CreateOrderShipReply) {
+    option (google.api.http) = {
+      put: "/v1/merchants/orders/ship/{sub_order_id}"
+      body: "*"
+    };
+  }
+
+  // 更新订单货运状态
+  rpc UpdateOrderShippingStatus(UpdateOrderShippingStatusReq) returns (UpdateOrderShippingStatusReply) {
+    option (google.api.http) = {
+      patch: "/v1/merchants/orders/ship/{sub_order_id}/status"
+      body: "*"
+    };
+  }
+
+}
+
+message GetMerchantByOrderIdReq {
+  int64 order_id = 1; // 订单 ID
+}
+
+message GetMerchantByOrderIdReply {
+  string merchant_id = 1;
 }
 
 // 查询商家订单列表请求的消息结构
@@ -21,4 +60,71 @@ message GetMerchantOrdersReq {
   string merchant_id = 1; // 商家 ID
   uint32 page = 2; // 分页参数：当前页码，默认值为 0
   uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
+}
+
+message OrderItem {
+  int64 sub_order_id = 1; // 子订单 ID
+  cart.v1.CartItem item = 2; // 购物车中的商品项
+  double cost = 3; // 商品单价
+  string email = 4; // 用户邮箱
+  string user_id = 5 [
+    (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
+    (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
+  ];
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string currency = 7 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  order.v1.PaymentStatus payment_status = 8; // 支付状态
+  order.v1.ShippingStatus shipping_status = 9; // 货运状态,冗余, 减少查询
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11; // 订单创建时间
+}
+
+message MerchantOrder {
+  repeated OrderItem items = 1; // 订单项列表
+  int64 order_id = 2; // 订单 ID
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message GetMerchantOrdersReply {
+  repeated MerchantOrder orders = 1; // 订单列表
+}
+
+message ReceiverAddress {
+  string name = 1; // 收件人姓名
+  string phone = 2; // 收件人电话
+  google.protobuf.Struct address = 3; // 收件人地址
+}
+
+message CreateOrderShipReq {
+  int64 sub_order_id = 1; // 子订单 ID
+  string tracking_number = 2; // 物流单号
+  string carrier = 3; // 承运商
+  string delivery = 4; // 送达时间
+  double shipping_fee = 9; // 运费
+  google.protobuf.Struct shipping_address = 5; // 发货地址
+}
+
+// 商家发货响应的消息结构
+message CreateOrderShipReply {
+  int64 id = 1; // 物流ID
+  google.protobuf.Timestamp created_at = 2; // 创建时间
+}
+
+
+// 更新订单状态请求的消息结构
+message UpdateOrderShippingStatusReq {
+  string merchant_id = 1; // 商家 ID
+  int64 sub_order_id = 2; // 子订单 ID
+  string tracking_number = 5; // 物流单号
+  string carrier = 3; // 承运商
+  optional google.protobuf.Timestamp delivery = 4; // 送达时间
+  order.v1.ShippingStatus shipping_status = 7; // 货运状态
+  double shipping_fee = 9; // 运费
+  google.protobuf.Struct shipping_address = 6; // 发货地址
+}
+
+// 更新订单状态响应的消息结构
+message UpdateOrderShippingStatusReply {
+  int64 id = 1; // 物流ID
+  google.protobuf.Timestamp updated_at = 2; // 更新时间
 }

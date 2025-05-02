@@ -4,8 +4,8 @@ sql:
     queries: "internal/data/queries"
     engine: "postgresql"
     database:
-      uri: postgresql://postgres:citus@99.suyiiyii.top:3023/ecommerce?sslmode=disable&timezone=Asia/Shanghai&search_path=orders
-#      uri: ${DB_SOURCE}
+      #      uri: postgresql://postgres:citus@99.suyiiyii.top:3023/ecommerce?sslmode=disable&timezone=Asia/Shanghai&search_path=orders
+      uri: ${DB_SOURCE}
     gen:
       go:
         package: "models"

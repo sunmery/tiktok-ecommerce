@@ -1,0 +1,14 @@
+services:
+
+  comment:
+    # image: ecommerce/comments:prod
+    # pull_policy: build
+    platform: linux/amd64
+    build:
+      dockerfile: .
+      context: .
+    ports:
+      - "30023:30023"
+      - "30024:30024"
+    container_name: ecommerce-comment-v1
+    restart: on-failure:3

@@ -20,22 +20,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUserProfile_FullMethodName   = "/ecommerce.user.v1.UserService/GetUserProfile"
-	UserService_GetUsers_FullMethodName         = "/ecommerce.user.v1.UserService/GetUsers"
-	UserService_DeleteUser_FullMethodName       = "/ecommerce.user.v1.UserService/DeleteUser"
-	UserService_CreateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/CreateAddresses"
-	UserService_UpdateAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/UpdateAddresses"
-	UserService_DeleteAddresses_FullMethodName  = "/ecommerce.user.v1.UserService/DeleteAddresses"
-	UserService_GetAddress_FullMethodName       = "/ecommerce.user.v1.UserService/GetAddress"
-	UserService_CreateCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/CreateCreditCard"
-	UserService_GetAddresses_FullMethodName     = "/ecommerce.user.v1.UserService/GetAddresses"
-	UserService_ListCreditCards_FullMethodName  = "/ecommerce.user.v1.UserService/ListCreditCards"
-	UserService_GetFavorites_FullMethodName     = "/ecommerce.user.v1.UserService/GetFavorites"
-	UserService_SetFavorites_FullMethodName     = "/ecommerce.user.v1.UserService/SetFavorites"
-	UserService_DeleteFavorites_FullMethodName  = "/ecommerce.user.v1.UserService/DeleteFavorites"
-	UserService_UpdateUser_FullMethodName       = "/ecommerce.user.v1.UserService/UpdateUser"
-	UserService_GetCreditCard_FullMethodName    = "/ecommerce.user.v1.UserService/GetCreditCard"
-	UserService_DeleteCreditCard_FullMethodName = "/ecommerce.user.v1.UserService/DeleteCreditCard"
+	UserService_GetUserProfile_FullMethodName          = "/ecommerce.user.v1.UserService/GetUserProfile"
+	UserService_GetUsers_FullMethodName                = "/ecommerce.user.v1.UserService/GetUsers"
+	UserService_DeleteUser_FullMethodName              = "/ecommerce.user.v1.UserService/DeleteUser"
+	UserService_CreateConsumerAddresses_FullMethodName = "/ecommerce.user.v1.UserService/CreateConsumerAddresses"
+	UserService_UpdateConsumerAddresses_FullMethodName = "/ecommerce.user.v1.UserService/UpdateConsumerAddresses"
+	UserService_DeleteConsumerAddresses_FullMethodName = "/ecommerce.user.v1.UserService/DeleteConsumerAddresses"
+	UserService_GetConsumerAddress_FullMethodName      = "/ecommerce.user.v1.UserService/GetConsumerAddress"
+	UserService_CreateCreditCard_FullMethodName        = "/ecommerce.user.v1.UserService/CreateCreditCard"
+	UserService_GetConsumerAddresses_FullMethodName    = "/ecommerce.user.v1.UserService/GetConsumerAddresses"
+	UserService_ListCreditCards_FullMethodName         = "/ecommerce.user.v1.UserService/ListCreditCards"
+	UserService_GetFavorites_FullMethodName            = "/ecommerce.user.v1.UserService/GetFavorites"
+	UserService_SetFavorites_FullMethodName            = "/ecommerce.user.v1.UserService/SetFavorites"
+	UserService_DeleteFavorites_FullMethodName         = "/ecommerce.user.v1.UserService/DeleteFavorites"
+	UserService_UpdateUser_FullMethodName              = "/ecommerce.user.v1.UserService/UpdateUser"
+	UserService_GetCreditCard_FullMethodName           = "/ecommerce.user.v1.UserService/GetCreditCard"
+	UserService_DeleteCreditCard_FullMethodName        = "/ecommerce.user.v1.UserService/DeleteCreditCard"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -51,17 +51,17 @@ type UserServiceClient interface {
 	// 删除用户
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	// 创建用户地址
-	CreateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
+	CreateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...grpc.CallOption) (*ConsumerAddress, error)
 	// 更新用户地址
-	UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error)
+	UpdateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...grpc.CallOption) (*ConsumerAddress, error)
 	// 删除用户地址
-	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error)
+	DeleteConsumerAddresses(ctx context.Context, in *DeleteConsumerAddressesRequest, opts ...grpc.CallOption) (*DeleteConsumerAddressesReply, error)
 	// 根据 ID获取用户地址
-	GetAddress(ctx context.Context, in *GetAddressRequest, opts ...grpc.CallOption) (*Address, error)
+	GetConsumerAddress(ctx context.Context, in *GetConsumerAddressRequest, opts ...grpc.CallOption) (*ConsumerAddress, error)
 	// 创建用户的信用卡信息
 	CreateCreditCard(ctx context.Context, in *CreditCard, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取用户地址列表
-	GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error)
+	GetConsumerAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetConsumerAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CreditCards, error)
 	// 获取用户商品收藏
@@ -116,40 +116,40 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReques
 	return out, nil
 }
 
-func (c *userServiceClient) CreateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error) {
+func (c *userServiceClient) CreateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...grpc.CallOption) (*ConsumerAddress, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Address)
-	err := c.cc.Invoke(ctx, UserService_CreateAddresses_FullMethodName, in, out, cOpts...)
+	out := new(ConsumerAddress)
+	err := c.cc.Invoke(ctx, UserService_CreateConsumerAddresses_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) UpdateAddresses(ctx context.Context, in *Address, opts ...grpc.CallOption) (*Address, error) {
+func (c *userServiceClient) UpdateConsumerAddresses(ctx context.Context, in *ConsumerAddress, opts ...grpc.CallOption) (*ConsumerAddress, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Address)
-	err := c.cc.Invoke(ctx, UserService_UpdateAddresses_FullMethodName, in, out, cOpts...)
+	out := new(ConsumerAddress)
+	err := c.cc.Invoke(ctx, UserService_UpdateConsumerAddresses_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesReply, error) {
+func (c *userServiceClient) DeleteConsumerAddresses(ctx context.Context, in *DeleteConsumerAddressesRequest, opts ...grpc.CallOption) (*DeleteConsumerAddressesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteAddressesReply)
-	err := c.cc.Invoke(ctx, UserService_DeleteAddresses_FullMethodName, in, out, cOpts...)
+	out := new(DeleteConsumerAddressesReply)
+	err := c.cc.Invoke(ctx, UserService_DeleteConsumerAddresses_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) GetAddress(ctx context.Context, in *GetAddressRequest, opts ...grpc.CallOption) (*Address, error) {
+func (c *userServiceClient) GetConsumerAddress(ctx context.Context, in *GetConsumerAddressRequest, opts ...grpc.CallOption) (*ConsumerAddress, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Address)
-	err := c.cc.Invoke(ctx, UserService_GetAddress_FullMethodName, in, out, cOpts...)
+	out := new(ConsumerAddress)
+	err := c.cc.Invoke(ctx, UserService_GetConsumerAddress_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +166,10 @@ func (c *userServiceClient) CreateCreditCard(ctx context.Context, in *CreditCard
 	return out, nil
 }
 
-func (c *userServiceClient) GetAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAddressesReply, error) {
+func (c *userServiceClient) GetConsumerAddresses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetConsumerAddressesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAddressesReply)
-	err := c.cc.Invoke(ctx, UserService_GetAddresses_FullMethodName, in, out, cOpts...)
+	out := new(GetConsumerAddressesReply)
+	err := c.cc.Invoke(ctx, UserService_GetConsumerAddresses_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -259,17 +259,17 @@ type UserServiceServer interface {
 	// 删除用户
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	// 创建用户地址
-	CreateAddresses(context.Context, *Address) (*Address, error)
+	CreateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error)
 	// 更新用户地址
-	UpdateAddresses(context.Context, *Address) (*Address, error)
+	UpdateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error)
 	// 删除用户地址
-	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error)
+	DeleteConsumerAddresses(context.Context, *DeleteConsumerAddressesRequest) (*DeleteConsumerAddressesReply, error)
 	// 根据 ID获取用户地址
-	GetAddress(context.Context, *GetAddressRequest) (*Address, error)
+	GetConsumerAddress(context.Context, *GetConsumerAddressRequest) (*ConsumerAddress, error)
 	// 创建用户的信用卡信息
 	CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error)
 	// 获取用户地址列表
-	GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error)
+	GetConsumerAddresses(context.Context, *emptypb.Empty) (*GetConsumerAddressesReply, error)
 	// 列出用户的信用卡信息
 	ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error)
 	// 获取用户商品收藏
@@ -303,23 +303,23 @@ func (UnimplementedUserServiceServer) GetUsers(context.Context, *GetUsersRequest
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
-func (UnimplementedUserServiceServer) CreateAddresses(context.Context, *Address) (*Address, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAddresses not implemented")
+func (UnimplementedUserServiceServer) CreateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateConsumerAddresses not implemented")
 }
-func (UnimplementedUserServiceServer) UpdateAddresses(context.Context, *Address) (*Address, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAddresses not implemented")
+func (UnimplementedUserServiceServer) UpdateConsumerAddresses(context.Context, *ConsumerAddress) (*ConsumerAddress, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateConsumerAddresses not implemented")
 }
-func (UnimplementedUserServiceServer) DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddresses not implemented")
+func (UnimplementedUserServiceServer) DeleteConsumerAddresses(context.Context, *DeleteConsumerAddressesRequest) (*DeleteConsumerAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConsumerAddresses not implemented")
 }
-func (UnimplementedUserServiceServer) GetAddress(context.Context, *GetAddressRequest) (*Address, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAddress not implemented")
+func (UnimplementedUserServiceServer) GetConsumerAddress(context.Context, *GetConsumerAddressRequest) (*ConsumerAddress, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConsumerAddress not implemented")
 }
 func (UnimplementedUserServiceServer) CreateCreditCard(context.Context, *CreditCard) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCreditCard not implemented")
 }
-func (UnimplementedUserServiceServer) GetAddresses(context.Context, *emptypb.Empty) (*GetAddressesReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAddresses not implemented")
+func (UnimplementedUserServiceServer) GetConsumerAddresses(context.Context, *emptypb.Empty) (*GetConsumerAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConsumerAddresses not implemented")
 }
 func (UnimplementedUserServiceServer) ListCreditCards(context.Context, *emptypb.Empty) (*CreditCards, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCreditCards not implemented")
@@ -417,74 +417,74 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_CreateAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Address)
+func _UserService_CreateConsumerAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConsumerAddress)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).CreateAddresses(ctx, in)
+		return srv.(UserServiceServer).CreateConsumerAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_CreateAddresses_FullMethodName,
+		FullMethod: UserService_CreateConsumerAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).CreateAddresses(ctx, req.(*Address))
+		return srv.(UserServiceServer).CreateConsumerAddresses(ctx, req.(*ConsumerAddress))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_UpdateAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Address)
+func _UserService_UpdateConsumerAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConsumerAddress)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).UpdateAddresses(ctx, in)
+		return srv.(UserServiceServer).UpdateConsumerAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_UpdateAddresses_FullMethodName,
+		FullMethod: UserService_UpdateConsumerAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateAddresses(ctx, req.(*Address))
+		return srv.(UserServiceServer).UpdateConsumerAddresses(ctx, req.(*ConsumerAddress))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_DeleteAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteAddressesRequest)
+func _UserService_DeleteConsumerAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConsumerAddressesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).DeleteAddresses(ctx, in)
+		return srv.(UserServiceServer).DeleteConsumerAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_DeleteAddresses_FullMethodName,
+		FullMethod: UserService_DeleteConsumerAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).DeleteAddresses(ctx, req.(*DeleteAddressesRequest))
+		return srv.(UserServiceServer).DeleteConsumerAddresses(ctx, req.(*DeleteConsumerAddressesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAddressRequest)
+func _UserService_GetConsumerAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConsumerAddressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetAddress(ctx, in)
+		return srv.(UserServiceServer).GetConsumerAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GetAddress_FullMethodName,
+		FullMethod: UserService_GetConsumerAddress_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetAddress(ctx, req.(*GetAddressRequest))
+		return srv.(UserServiceServer).GetConsumerAddress(ctx, req.(*GetConsumerAddressRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -507,20 +507,20 @@ func _UserService_CreateCreditCard_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserService_GetConsumerAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetAddresses(ctx, in)
+		return srv.(UserServiceServer).GetConsumerAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GetAddresses_FullMethodName,
+		FullMethod: UserService_GetConsumerAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetAddresses(ctx, req.(*emptypb.Empty))
+		return srv.(UserServiceServer).GetConsumerAddresses(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -671,28 +671,28 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_DeleteUser_Handler,
 		},
 		{
-			MethodName: "CreateAddresses",
-			Handler:    _UserService_CreateAddresses_Handler,
+			MethodName: "CreateConsumerAddresses",
+			Handler:    _UserService_CreateConsumerAddresses_Handler,
 		},
 		{
-			MethodName: "UpdateAddresses",
-			Handler:    _UserService_UpdateAddresses_Handler,
+			MethodName: "UpdateConsumerAddresses",
+			Handler:    _UserService_UpdateConsumerAddresses_Handler,
 		},
 		{
-			MethodName: "DeleteAddresses",
-			Handler:    _UserService_DeleteAddresses_Handler,
+			MethodName: "DeleteConsumerAddresses",
+			Handler:    _UserService_DeleteConsumerAddresses_Handler,
 		},
 		{
-			MethodName: "GetAddress",
-			Handler:    _UserService_GetAddress_Handler,
+			MethodName: "GetConsumerAddress",
+			Handler:    _UserService_GetConsumerAddress_Handler,
 		},
 		{
 			MethodName: "CreateCreditCard",
 			Handler:    _UserService_CreateCreditCard_Handler,
 		},
 		{
-			MethodName: "GetAddresses",
-			Handler:    _UserService_GetAddresses_Handler,
+			MethodName: "GetConsumerAddresses",
+			Handler:    _UserService_GetConsumerAddresses_Handler,
 		},
 		{
 			MethodName: "ListCreditCards",

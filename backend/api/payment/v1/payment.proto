@@ -3,7 +3,7 @@ syntax = "proto3"; // 指定使用 proto3 语法
 package payment.v1; // 定义包名，用于命名空间隔离
 
 // 导入外部依赖
-import "google/api/annotations.proto"; // 提供 HTTP 映射规则的支持
+import "google/api/annotations.proto";
 
 // Go 语言生成代码的选项
 option go_package = "backend/api/payment/v1;paymentv1";
@@ -26,7 +26,8 @@ service PaymentService {
   }
 
   // 处理支付回调通知
-  rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {
+  //  rpc HandlePaymentNotify (HandlePaymentNotifyRequest) returns (HandlePaymentNotifyResponse) {
+  rpc HandlePaymentNotify (UrlValues) returns (HandlePaymentNotifyResponse) {
     option (google.api.http) = {
       post: "/v1/payments/notify"
       body: "*"
@@ -44,11 +45,14 @@ service PaymentService {
 // 创建支付订单请求
 message CreatePaymentRequest {
   int64 order_id = 1;
-  string user_id = 2;
+  string consumer_id = 2;
   string amount = 3;
   string currency = 4;
   string subject = 5;
   string return_url = 6;
+  int64 freeze_id = 8;
+  int64 consumer_version = 9;
+  repeated int64 merchant_versions = 10;
 }
 
 // 创建支付订单响应
@@ -81,18 +85,26 @@ message GetPaymentStatusResponse {
 }
 
 // 支付通知请求
-message HandlePaymentNotifyRequest {
-  string charset = 6; // 字符集
-  string app_id = 1;
-  string auth_app_id = 12; // 授权应用ID
-  string trade_no = 2;
-  string method = 7; // 支付方式
-  string sign = 8; // 签名
-  string sign_type = 9; // 签名类型 RSA2
-  string out_trade_no = 3;
-  string total_amount = 4;
-  string seller_id = 14; // 卖家ID
-  map<string, string> params = 11; // 存储所有回调参数
+//message HandlePaymentNotifyRequest {
+//  string charset = 6; // 字符集
+//  string app_id = 1;
+//  string auth_app_id = 12; // 授权应用ID
+//  string trade_no = 2;
+//  string method = 7; // 支付方式
+//  string sign = 8; // 签名
+//  string sign_type = 9; // 签名类型 RSA2
+//  string out_trade_no = 3;
+//  string total_amount = 4;
+//  string seller_id = 14; // 卖家ID
+//  map<string, string> params = 11; // 存储所有回调参数
+//}
+
+message KeyValue {
+  string key = 1;
+  repeated string values = 2;
+}
+message UrlValues {
+  repeated KeyValue pairs = 1;
 }
 
 // 支付通知响应

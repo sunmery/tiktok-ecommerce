@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 
-	"backend/application/admin/constants"
-	"backend/application/admin/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -12,6 +10,8 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
+	"backend/application/admin/constants"
+	"backend/application/admin/internal/conf"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )

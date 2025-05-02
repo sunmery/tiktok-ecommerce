@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+
 	"github.com/google/uuid"
 )
 
@@ -122,7 +124,7 @@ type RecordStockAdjustmentResponse struct {
 
 // GetStockAdjustmentHistoryRequest 获取库存调整历史请求
 type GetStockAdjustmentHistoryRequest struct {
-	// ProductId  uuid.UUID
+	ProductId  uuid.UUID
 	MerchantId uuid.UUID
 	Page       int64
 	PageSize   int64
@@ -151,6 +153,35 @@ type Inventory struct {
 	ProductId  uuid.UUID
 	MerchantId uuid.UUID
 	Stock      int32
+}
+type InventoryUsecase struct {
+	repo InventoryRepo
+	log  *log.Helper
+}
+
+func NewInventoryUsecase(repo InventoryRepo, logger log.Logger) *InventoryUsecase {
+	return &InventoryUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
+}
+
+// InventoryRepo 库存域方法
+type InventoryRepo interface {
+	// GetProductStock 获取产品库存
+	GetProductStock(ctx context.Context, req *GetProductStockRequest) (*GetProductStockResponse, error)
+	// UpdateProductStock 更新产品库存
+	UpdateProductStock(ctx context.Context, req *UpdateProductStockRequest) (*UpdateProductStockResponse, error)
+	// SetStockAlert 设置库存警报阈值
+	SetStockAlert(ctx context.Context, req *SetStockAlertRequest) (*SetStockAlertResponse, error)
+	// GetStockAlerts 获取库存警报配置
+	GetStockAlerts(ctx context.Context, req *GetStockAlertsRequest) (*GetStockAlertsResponse, error)
+	// GetLowStockProducts 获取低库存产品列表
+	GetLowStockProducts(ctx context.Context, req *GetLowStockProductsRequest) (*GetLowStockProductsResponse, error)
+	// RecordStockAdjustment 记录库存调整
+	RecordStockAdjustment(ctx context.Context, req *RecordStockAdjustmentRequest) (*RecordStockAdjustmentResponse, error)
+	// GetStockAdjustmentHistory 获取库存调整历史
+	GetStockAdjustmentHistory(ctx context.Context, req *GetStockAdjustmentHistoryRequest) (*GetStockAdjustmentHistoryResponse, error)
 }
 
 // GetProductStock 获取产品库存
@@ -187,5 +218,6 @@ func (uc *InventoryUsecase) RecordStockAdjustment(ctx context.Context, req *Reco
 
 // GetStockAdjustmentHistory 获取库存调整历史
 func (uc *InventoryUsecase) GetStockAdjustmentHistory(ctx context.Context, req *GetStockAdjustmentHistoryRequest) (*GetStockAdjustmentHistoryResponse, error) {
+	uc.log.WithContext(ctx).Debugf("获取库存调整历史: %+v", req)
 	return uc.repo.GetStockAdjustmentHistory(ctx, req)
 }

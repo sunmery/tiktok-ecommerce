@@ -34,7 +34,19 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup, err := data.NewData(pool, client, logger, productServiceClient)
+	userServiceClient, err := data.NewUserServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	merchantAddressesClient, err := data.NewMerchantAddressServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	orderServiceClient, err := data.NewOrderServiceClient(discovery, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(pool, client, logger, productServiceClient, userServiceClient, merchantAddressesClient, orderServiceClient)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -46,9 +58,12 @@ func wireApp(confServer *conf.Server, confData *conf.Data, consul *conf.Consul, 
 	productService := service.NewProductService(productUsecase)
 	orderRepo := data.NewOrderRepo(dataData, logger)
 	orderUsecase := biz.NewOrderUsecase(orderRepo, logger)
-	orderServiceService := service.NewOrderService(orderUsecase)
-	grpcServer := server.NewGRPCServer(confServer, observability, logger, inventoryService, productService, orderServiceService)
-	httpServer := server.NewHTTPServer(confServer, observability, logger, inventoryService, productService, orderServiceService)
+	orderService := service.NewOrderService(orderUsecase)
+	addressRepo := data.NewAddressRepo(dataData, logger)
+	addressUsecase := biz.NewAddressUsecase(addressRepo, logger)
+	addressService := service.NewAddressService(addressUsecase)
+	grpcServer := server.NewGRPCServer(confServer, observability, logger, inventoryService, productService, orderService, addressService)
+	httpServer := server.NewHTTPServer(confServer, observability, logger, inventoryService, productService, orderService, addressService)
 	registrar := server.NewRegistrar(consul)
 	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {
