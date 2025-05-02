@@ -44,6 +44,79 @@ type orderRepo struct {
 	log  *log.Helper
 }
 
+func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.GetConsumerOrdersReply, error) {
+	// 设置默认分页参数
+	if req.Page == 0 {
+		req.Page = 1
+	}
+	if req.PageSize == 0 {
+		req.PageSize = 20
+	}
+	// 限制最大页面大小
+	if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+
+	rows, err := o.data.db.GetConsumerOrders(ctx, models.GetConsumerOrdersParams{
+		UserID:   req.UserId,
+		PageSize: int64(req.PageSize),
+		Page:     int64((req.Page - 1) * req.PageSize),
+	})
+	if err != nil {
+		o.log.WithContext(ctx).Errorf("获取用户订单列表失败: %v", err)
+		return nil, fmt.Errorf("获取用户订单列表失败: %w", err)
+	}
+
+	orders := make([]*biz.ConsumerOrder, 0, len(rows))
+	var OrderID int64
+	for _, row := range rows {
+		OrderID = row.OrderID
+		subOrders := make([]*biz.ConsumerOrder, 0, len(row.SubOrders))
+		err := json.Unmarshal(row.SubOrders, &subOrders)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, order := range subOrders {
+			items := make([]*biz.ConsumerOrderItem, 0, len(order.Items))
+			for _, item := range order.Items {
+				items = append(items, &biz.ConsumerOrderItem{
+					Cost: item.Cost,
+					Item: &biz.CartItem{
+						MerchantId: item.Item.MerchantId,
+						ProductId:  item.Item.ProductId,
+						Quantity:   item.Item.Quantity,
+						Name:       item.Item.Name,
+						Picture:    item.Item.Picture,
+					},
+				})
+			}
+			orders = append(orders, &biz.ConsumerOrder{
+				Items: items,
+				Address: biz.Address{
+					StreetAddress: order.Address.StreetAddress,
+					City:          order.Address.City,
+					State:         order.Address.State,
+					Country:       order.Address.Country,
+					ZipCode:       order.Address.ZipCode,
+				},
+				SubOrderID:     order.SubOrderID,
+				Currency:       order.Currency,
+				PaymentStatus:  order.PaymentStatus,
+				ShippingStatus: order.ShippingStatus,
+				Email:          order.Email,
+				CreatedAt:      order.CreatedAt,
+				UpdatedAt:      order.UpdatedAt,
+			})
+		}
+	}
+
+	return &biz.GetConsumerOrdersReply{
+		SubOrders: orders,
+		OrderId:   OrderID,
+	}, nil
+}
+
 func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 	return &orderRepo{
 		data: data,
@@ -265,97 +338,6 @@ func (o *orderRepo) GetOrder(ctx context.Context, req *biz.GetOrderReq) (*v1.Ord
 	}
 
 	return orderProto, nil
-}
-
-func (o *orderRepo) GetOrders(ctx context.Context, req *biz.GetOrdersReq) (*biz.Orders, error) {
-	// 设置默认分页参数
-	if req.Page == 0 {
-		req.Page = 1
-	}
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-	// 限制最大页面大小
-	if req.PageSize > 100 {
-		req.PageSize = 100
-	}
-
-	rows, err := o.data.db.GetOrders(ctx, models.GetOrdersParams{
-		UserID:   req.UserId,
-		PageSize: int64(req.PageSize),
-		Page:     int64((req.Page - 1) * req.PageSize),
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("获取用户订单列表失败: %v", err)
-		return nil, fmt.Errorf("获取用户订单列表失败: %w", err)
-	}
-
-	orders := make([]*v1.Order, 0, len(rows))
-	var paymentStatus constants.PaymentStatus
-	var shippingStatus constants.ShippingStatus
-	for _, order := range rows {
-		// 解析子订单JSON
-		var subOrdersData []byte
-		if order.SubOrders != nil {
-			subOrdersData = order.SubOrders
-		}
-
-		// 解析子订单并转换为OrderItem
-		subOrders, err := parseSubOrders(subOrdersData)
-		if err != nil {
-			o.log.WithContext(ctx).Warnf("解析订单 %d 的子订单失败: %v", order.ID, err)
-			// 继续处理其他订单，不中断
-			continue
-		}
-
-		// 将所有子订单的OrderItem合并到一个列表
-		var allItems []*v1.OrderItem
-		var subOrderId int64
-		for _, subOrder := range subOrders {
-			for _, item := range subOrder.Items {
-				allItems = append(allItems, &v1.OrderItem{
-					Item: &cartv1.CartItem{
-						MerchantId: item.Item.MerchantId.String(),
-						ProductId:  item.Item.ProductId.String(),
-						Quantity:   item.Item.Quantity,
-						Name:       item.Item.Name,
-						Picture:    item.Item.Picture,
-					},
-					Cost: item.Cost,
-				})
-			}
-
-			subOrderId = subOrder.ID // 设置子订单ID
-			paymentStatus = subOrder.PaymentStatus
-			shippingStatus = subOrder.ShippingStatus
-		}
-
-		// 构建主订单
-		orderProto := &v1.Order{
-			Items:    allItems,
-			OrderId:  order.ID,
-			UserId:   order.UserID.String(),
-			Currency: order.Currency,
-			Address: &userv1.ConsumerAddress{
-				StreetAddress: order.StreetAddress,
-				City:          order.City,
-				State:         order.State,
-				Country:       order.Country,
-				ZipCode:       order.ZipCode,
-			},
-			Email:          order.Email,
-			CreatedAt:      timestamppb.New(order.CreatedAt),
-			PaymentStatus:  pkg.MapPaymentStatusToProto(paymentStatus),
-			ShippingStatus: pkg.MapShippingStatusToProto(shippingStatus),
-			SubOrderId:     &subOrderId,
-		}
-
-		orders = append(orders, orderProto)
-	}
-
-	return &biz.Orders{
-		Orders: orders,
-	}, nil
 }
 
 func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*biz.PlaceOrderResp, error) {

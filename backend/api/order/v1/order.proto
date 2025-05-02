@@ -22,7 +22,7 @@ service OrderService {
   }
 
   // 查询用户订单列表
-  rpc GetOrders(GetOrdersReq) returns (Orders) {
+  rpc GetConsumerOrders(GetConsumerOrdersReq) returns (ConsumerOrders) {
     option (google.api.http) = {
       get: "/v1/orders"
     };
@@ -103,6 +103,7 @@ message OrderItem {
   double cost = 2; // 商品单价
 }
 
+
 // 创建订单响应的消息结构
 message OrderResult {
   int64 order_id = 1; // 订单 ID
@@ -152,6 +153,28 @@ message Order {
   ShippingStatus shipping_status = 10; // 冗余货运状态
 }
 
+message ConsumerOrder {
+  repeated OrderItem items = 1; // 订单项列表
+  int64 order_id = 2; // 订单 ID
+  optional int64 sub_order_id = 3; // 子订单 ID
+  string user_id = 4 [
+    (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
+    (validate.rules).string.uuid = true // 验证用户 ID 为 UUID 格式
+  ];
+  string currency = 5 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string email = 7; // 用户邮箱
+  google.protobuf.Timestamp created_at = 8; // 订单创建时间
+  PaymentStatus payment_status = 9; // 支付状态
+  ShippingStatus shipping_status = 10; // 冗余货运状态
+}
+
+// 订单的消息结构
+message ConsumerOrders {
+  repeated ConsumerOrder items = 1; // 订单项列表
+  int64 order_id = 2; // 订单 ID
+}
+
 message GetOrderReq {
   int64 id = 1; // 订单 ID
 }
@@ -183,7 +206,7 @@ message GetUserOrdersWithSubordersReply {
   repeated Suborders orders = 1; // 订单列表
 }
 
-message GetOrdersReq {
+message GetConsumerOrdersReq {
   string user_id = 1; // 用户 ID
   uint32 page = 2; // 分页参数：当前页码，默认值为 0
   uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100

@@ -208,9 +208,36 @@ type (
 	}
 )
 
+type (
+	GetConsumerOrdersReq struct {
+		UserId   uuid.UUID
+		Page     uint32
+		PageSize uint32
+	}
+	ConsumerOrderItem struct {
+		Cost float64
+		Item *CartItem
+	}
+	ConsumerOrder struct {
+		Items          []*ConsumerOrderItem
+		Address        Address
+		SubOrderID     int64
+		Currency       string
+		PaymentStatus  constants.PaymentStatus
+		ShippingStatus constants.ShippingStatus
+		Email          string
+		CreatedAt      time.Time
+		UpdatedAt      time.Time
+	}
+	GetConsumerOrdersReply struct {
+		SubOrders []*ConsumerOrder
+		OrderId   int64
+	}
+)
+
 type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
-	GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error)
+	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*GetConsumerOrdersReply, error)
 	GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
 
@@ -236,9 +263,9 @@ func (oc *OrderUsecase) PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*Pl
 	return oc.repo.PlaceOrder(ctx, req)
 }
 
-func (oc *OrderUsecase) GetOrders(ctx context.Context, req *GetOrdersReq) (*Orders, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order GetOrders:%+v", req)
-	return oc.repo.GetOrders(ctx, req)
+func (oc *OrderUsecase) GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*GetConsumerOrdersReply, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order GetConsumerOrders:%+v", req)
+	return oc.repo.GetConsumerOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error) {

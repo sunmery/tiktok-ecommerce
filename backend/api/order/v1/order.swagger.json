@@ -60,12 +60,12 @@
     "/v1/orders": {
       "get": {
         "summary": "查询用户订单列表",
-        "operationId": "OrderService_GetOrders",
+        "operationId": "OrderService_GetConsumerOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Orders"
+              "$ref": "#/definitions/v1ConsumerOrders"
             }
           },
           "default": {
@@ -438,6 +438,76 @@
         "zipCode",
         "streetAddress"
       ]
+    },
+    "v1ConsumerOrder": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          },
+          "title": "订单项列表"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "订单创建时间"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "冗余货运状态"
+        }
+      }
+    },
+    "v1ConsumerOrders": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ConsumerOrder"
+          },
+          "title": "订单项列表"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
+        }
+      },
+      "title": "订单的消息结构"
     },
     "v1GetShipOrderStatusReply": {
       "type": "object",

@@ -1101,6 +1101,390 @@ var _ interface {
 	ErrorName() string
 } = OrderValidationError{}
 
+// Validate checks the field values on ConsumerOrder with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ConsumerOrder) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConsumerOrder with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ConsumerOrderMultiError, or
+// nil if none found.
+func (m *ConsumerOrder) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConsumerOrder) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ConsumerOrderValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ConsumerOrderValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ConsumerOrderValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for OrderId
+
+	if utf8.RuneCountInString(m.GetUserId()) != 32 {
+		err := ConsumerOrderValidationError{
+			field:  "UserId",
+			reason: "value length must be 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if err := m._validateUuid(m.GetUserId()); err != nil {
+		err = ConsumerOrderValidationError{
+			field:  "UserId",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCurrency()) != 3 {
+		err := ConsumerOrderValidationError{
+			field:  "Currency",
+			reason: "value length must be 3 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetAddress()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "Address",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "Address",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAddress()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ConsumerOrderValidationError{
+				field:  "Address",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Email
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ConsumerOrderValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ConsumerOrderValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for PaymentStatus
+
+	// no validation rules for ShippingStatus
+
+	if m.SubOrderId != nil {
+		// no validation rules for SubOrderId
+	}
+
+	if len(errors) > 0 {
+		return ConsumerOrderMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *ConsumerOrder) _validateUuid(uuid string) error {
+	if matched := _order_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
+	}
+
+	return nil
+}
+
+// ConsumerOrderMultiError is an error wrapping multiple validation errors
+// returned by ConsumerOrder.ValidateAll() if the designated constraints
+// aren't met.
+type ConsumerOrderMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConsumerOrderMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConsumerOrderMultiError) AllErrors() []error { return m }
+
+// ConsumerOrderValidationError is the validation error returned by
+// ConsumerOrder.Validate if the designated constraints aren't met.
+type ConsumerOrderValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConsumerOrderValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConsumerOrderValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConsumerOrderValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConsumerOrderValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConsumerOrderValidationError) ErrorName() string { return "ConsumerOrderValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ConsumerOrderValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConsumerOrder.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConsumerOrderValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConsumerOrderValidationError{}
+
+// Validate checks the field values on ConsumerOrders with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ConsumerOrders) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConsumerOrders with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ConsumerOrdersMultiError,
+// or nil if none found.
+func (m *ConsumerOrders) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConsumerOrders) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ConsumerOrdersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ConsumerOrdersValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ConsumerOrdersValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for OrderId
+
+	if len(errors) > 0 {
+		return ConsumerOrdersMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConsumerOrdersMultiError is an error wrapping multiple validation errors
+// returned by ConsumerOrders.ValidateAll() if the designated constraints
+// aren't met.
+type ConsumerOrdersMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConsumerOrdersMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConsumerOrdersMultiError) AllErrors() []error { return m }
+
+// ConsumerOrdersValidationError is the validation error returned by
+// ConsumerOrders.Validate if the designated constraints aren't met.
+type ConsumerOrdersValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConsumerOrdersValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConsumerOrdersValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConsumerOrdersValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConsumerOrdersValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConsumerOrdersValidationError) ErrorName() string { return "ConsumerOrdersValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ConsumerOrdersValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConsumerOrders.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConsumerOrdersValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConsumerOrdersValidationError{}
+
 // Validate checks the field values on GetOrderReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1663,22 +2047,22 @@ var _ interface {
 	ErrorName() string
 } = GetUserOrdersWithSubordersReplyValidationError{}
 
-// Validate checks the field values on GetOrdersReq with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *GetOrdersReq) Validate() error {
+// Validate checks the field values on GetConsumerOrdersReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetConsumerOrdersReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetOrdersReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in GetOrdersReqMultiError, or
-// nil if none found.
-func (m *GetOrdersReq) ValidateAll() error {
+// ValidateAll checks the field values on GetConsumerOrdersReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetConsumerOrdersReqMultiError, or nil if none found.
+func (m *GetConsumerOrdersReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetOrdersReq) validate(all bool) error {
+func (m *GetConsumerOrdersReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1692,18 +2076,19 @@ func (m *GetOrdersReq) validate(all bool) error {
 	// no validation rules for PageSize
 
 	if len(errors) > 0 {
-		return GetOrdersReqMultiError(errors)
+		return GetConsumerOrdersReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetOrdersReqMultiError is an error wrapping multiple validation errors
-// returned by GetOrdersReq.ValidateAll() if the designated constraints aren't met.
-type GetOrdersReqMultiError []error
+// GetConsumerOrdersReqMultiError is an error wrapping multiple validation
+// errors returned by GetConsumerOrdersReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetConsumerOrdersReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetOrdersReqMultiError) Error() string {
+func (m GetConsumerOrdersReqMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1712,11 +2097,11 @@ func (m GetOrdersReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetOrdersReqMultiError) AllErrors() []error { return m }
+func (m GetConsumerOrdersReqMultiError) AllErrors() []error { return m }
 
-// GetOrdersReqValidationError is the validation error returned by
-// GetOrdersReq.Validate if the designated constraints aren't met.
-type GetOrdersReqValidationError struct {
+// GetConsumerOrdersReqValidationError is the validation error returned by
+// GetConsumerOrdersReq.Validate if the designated constraints aren't met.
+type GetConsumerOrdersReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1724,22 +2109,24 @@ type GetOrdersReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetOrdersReqValidationError) Field() string { return e.field }
+func (e GetConsumerOrdersReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetOrdersReqValidationError) Reason() string { return e.reason }
+func (e GetConsumerOrdersReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetOrdersReqValidationError) Cause() error { return e.cause }
+func (e GetConsumerOrdersReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetOrdersReqValidationError) Key() bool { return e.key }
+func (e GetConsumerOrdersReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetOrdersReqValidationError) ErrorName() string { return "GetOrdersReqValidationError" }
+func (e GetConsumerOrdersReqValidationError) ErrorName() string {
+	return "GetConsumerOrdersReqValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e GetOrdersReqValidationError) Error() string {
+func (e GetConsumerOrdersReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1751,14 +2138,14 @@ func (e GetOrdersReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetOrdersReq.%s: %s%s",
+		"invalid %sGetConsumerOrdersReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetOrdersReqValidationError{}
+var _ error = GetConsumerOrdersReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1766,7 +2153,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetOrdersReqValidationError{}
+} = GetConsumerOrdersReqValidationError{}
 
 // Validate checks the field values on GetAllOrdersReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

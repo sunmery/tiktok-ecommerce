@@ -159,6 +159,94 @@ func (q *Queries) CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) 
 	return i, err
 }
 
+const GetConsumerOrders = `-- name: GetConsumerOrders :many
+SELECT oo.id AS order_id,
+       json_agg(
+               json_build_object(
+                       'subOrderId', os.id,
+                       'totalAmount', os.total_amount,
+                       'currency', os.currency,
+                       'paymentStatus', os.status,
+                       'shippingStatus', os.shipping_status,
+                       'items', os.items,
+                       'email', oo.email,
+                       'address', json_build_object(
+                               'streetAddress', oo.street_address,
+                               'city', oo.city,
+                               'state', oo.state,
+                               'country', oo.country,
+                               'zipCode', oo.zip_code
+                                  ),
+                       'createdAt', os.created_at,
+                       'updatedAt', os.updated_at
+               )
+       )     AS sub_orders
+FROM orders.orders oo
+         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+WHERE oo.user_id = $1
+GROUP BY oo.id
+LIMIT $3 OFFSET $2
+`
+
+type GetConsumerOrdersParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
+}
+
+type GetConsumerOrdersRow struct {
+	OrderID   int64  `json:"orderID"`
+	SubOrders []byte `json:"subOrders"`
+}
+
+// GetConsumerOrders
+//
+//	SELECT oo.id AS order_id,
+//	       json_agg(
+//	               json_build_object(
+//	                       'subOrderId', os.id,
+//	                       'totalAmount', os.total_amount,
+//	                       'currency', os.currency,
+//	                       'paymentStatus', os.status,
+//	                       'shippingStatus', os.shipping_status,
+//	                       'items', os.items,
+//	                       'email', oo.email,
+//	                       'address', json_build_object(
+//	                               'streetAddress', oo.street_address,
+//	                               'city', oo.city,
+//	                               'state', oo.state,
+//	                               'country', oo.country,
+//	                               'zipCode', oo.zip_code
+//	                                  ),
+//	                       'createdAt', os.created_at,
+//	                       'updatedAt', os.updated_at
+//	               )
+//	       )     AS sub_orders
+//	FROM orders.orders oo
+//	         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+//	WHERE oo.user_id = $1
+//	GROUP BY oo.id
+//	LIMIT $3 OFFSET $2
+func (q *Queries) GetConsumerOrders(ctx context.Context, arg GetConsumerOrdersParams) ([]GetConsumerOrdersRow, error) {
+	rows, err := q.db.Query(ctx, GetConsumerOrders, arg.UserID, arg.Page, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetConsumerOrdersRow
+	for rows.Next() {
+		var i GetConsumerOrdersRow
+		if err := rows.Scan(&i.OrderID, &i.SubOrders); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetOrderByID = `-- name: GetOrderByID :one
 SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,
        json_agg(
@@ -310,105 +398,6 @@ func (q *Queries) GetOrderByUserID(ctx context.Context, userID uuid.UUID) (GetOr
 		&i.ShippingStatus,
 	)
 	return i, err
-}
-
-const GetOrders = `-- name: GetOrders :many
-SELECT oo.id, oo.user_id, oo.currency, oo.street_address, oo.city, oo.state, oo.country, oo.zip_code, oo.email, oo.payment_status, oo.created_at, oo.updated_at,
-       json_agg(
-               json_build_object(
-                       'sub_order_id', os.id,
-                       'merchant_id', os.merchant_id,
-                       'total_amount', os.total_amount,
-                       'currency', os.currency,
-                       'status', os.status,
-                       'shipping_status', os.shipping_status,
-                       'items', os.items,
-                       'created_at', os.created_at,
-                       'updated_at', os.updated_at
-               )
-       ) AS sub_orders
-FROM orders.orders oo
-         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
-WHERE oo.user_id = $1
-GROUP BY oo.id
-LIMIT $3 OFFSET $2
-`
-
-type GetOrdersParams struct {
-	UserID   uuid.UUID `json:"userID"`
-	Page     int64     `json:"page"`
-	PageSize int64     `json:"pageSize"`
-}
-
-type GetOrdersRow struct {
-	ID            int64     `json:"id"`
-	UserID        uuid.UUID `json:"userID"`
-	Currency      string    `json:"currency"`
-	StreetAddress string    `json:"streetAddress"`
-	City          string    `json:"city"`
-	State         string    `json:"state"`
-	Country       string    `json:"country"`
-	ZipCode       string    `json:"zipCode"`
-	Email         string    `json:"email"`
-	PaymentStatus string    `json:"paymentStatus"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	SubOrders     []byte    `json:"subOrders"`
-}
-
-// GetOrders
-//
-//	SELECT oo.id, oo.user_id, oo.currency, oo.street_address, oo.city, oo.state, oo.country, oo.zip_code, oo.email, oo.payment_status, oo.created_at, oo.updated_at,
-//	       json_agg(
-//	               json_build_object(
-//	                       'sub_order_id', os.id,
-//	                       'merchant_id', os.merchant_id,
-//	                       'total_amount', os.total_amount,
-//	                       'currency', os.currency,
-//	                       'status', os.status,
-//	                       'shipping_status', os.shipping_status,
-//	                       'items', os.items,
-//	                       'created_at', os.created_at,
-//	                       'updated_at', os.updated_at
-//	               )
-//	       ) AS sub_orders
-//	FROM orders.orders oo
-//	         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
-//	WHERE oo.user_id = $1
-//	GROUP BY oo.id
-//	LIMIT $3 OFFSET $2
-func (q *Queries) GetOrders(ctx context.Context, arg GetOrdersParams) ([]GetOrdersRow, error) {
-	rows, err := q.db.Query(ctx, GetOrders, arg.UserID, arg.Page, arg.PageSize)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetOrdersRow
-	for rows.Next() {
-		var i GetOrdersRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Currency,
-			&i.StreetAddress,
-			&i.City,
-			&i.State,
-			&i.Country,
-			&i.ZipCode,
-			&i.Email,
-			&i.PaymentStatus,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.SubOrders,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const GetShipOrderStatus = `-- name: GetShipOrderStatus :one

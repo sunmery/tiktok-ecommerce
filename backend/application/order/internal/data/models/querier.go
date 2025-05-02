@@ -32,6 +32,35 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, order_id, merchant_id, total_amount, currency, status, items, shipping_status, created_at, updated_at
 	CreateSubOrder(ctx context.Context, arg CreateSubOrderParams) (OrdersSubOrders, error)
+	//GetConsumerOrders
+	//
+	//  SELECT oo.id AS order_id,
+	//         json_agg(
+	//                 json_build_object(
+	//                         'subOrderId', os.id,
+	//                         'totalAmount', os.total_amount,
+	//                         'currency', os.currency,
+	//                         'paymentStatus', os.status,
+	//                         'shippingStatus', os.shipping_status,
+	//                         'items', os.items,
+	//                         'email', oo.email,
+	//                         'address', json_build_object(
+	//                                 'streetAddress', oo.street_address,
+	//                                 'city', oo.city,
+	//                                 'state', oo.state,
+	//                                 'country', oo.country,
+	//                                 'zipCode', oo.zip_code
+	//                                    ),
+	//                         'createdAt', os.created_at,
+	//                         'updatedAt', os.updated_at
+	//                 )
+	//         )     AS sub_orders
+	//  FROM orders.orders oo
+	//           LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+	//  WHERE oo.user_id = $1
+	//  GROUP BY oo.id
+	//  LIMIT $3 OFFSET $2
+	GetConsumerOrders(ctx context.Context, arg GetConsumerOrdersParams) ([]GetConsumerOrdersRow, error)
 	//GetOrderByID
 	//
 	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,
@@ -72,28 +101,6 @@ type Querier interface {
 	//                ON os.order_id = oo.id
 	//  WHERE user_id = $1
 	GetOrderByUserID(ctx context.Context, userID uuid.UUID) (GetOrderByUserIDRow, error)
-	//GetOrders
-	//
-	//  SELECT oo.id, oo.user_id, oo.currency, oo.street_address, oo.city, oo.state, oo.country, oo.zip_code, oo.email, oo.payment_status, oo.created_at, oo.updated_at,
-	//         json_agg(
-	//                 json_build_object(
-	//                         'sub_order_id', os.id,
-	//                         'merchant_id', os.merchant_id,
-	//                         'total_amount', os.total_amount,
-	//                         'currency', os.currency,
-	//                         'status', os.status,
-	//                         'shipping_status', os.shipping_status,
-	//                         'items', os.items,
-	//                         'created_at', os.created_at,
-	//                         'updated_at', os.updated_at
-	//                 )
-	//         ) AS sub_orders
-	//  FROM orders.orders oo
-	//           LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
-	//  WHERE oo.user_id = $1
-	//  GROUP BY oo.id
-	//  LIMIT $3 OFFSET $2
-	GetOrders(ctx context.Context, arg GetOrdersParams) ([]GetOrdersRow, error)
 	//GetShipOrderStatus
 	//
 	//  SELECT id,

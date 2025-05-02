@@ -181,35 +181,79 @@ func (s *OrderServiceService) GetUserOrdersWithSuborders(ctx context.Context, re
 	}, nil
 }
 
-func (s *OrderServiceService) GetOrders(ctx context.Context, req *v1.GetOrdersReq) (*v1.Orders, error) {
+func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.GetConsumerOrdersReq) (*v1.ConsumerOrders, error) {
 	// 从网关获取用户ID
-	userId, err := globalpkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		log.Errorf("获取用户ID失败: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
-	}
-
-	// 构建业务层请求
-	listReq := &biz.GetOrdersReq{
-		UserId:   userId,
-		Page:     req.Page,
-		PageSize: req.PageSize,
+	var userId uuid.UUID
+	var err error
+	if req.UserId == "" {
+		userId, err = globalpkg.GetMetadataUesrID(ctx)
+		if err != nil {
+			log.Errorf("获取用户ID失败: %v", err)
+			return nil, status.Error(codes.Unauthenticated, "获取用户ID失败")
+		}
+	} else {
+		userId, err = uuid.Parse(req.UserId)
+		if err != nil {
+			log.Errorf("解析用户ID失败: %v", err)
+			return nil, status.Error(codes.InvalidArgument, "解析用户ID失败")
+		}
 	}
 
 	// 调用业务层获取订单列表
-	resp, err := s.uc.GetOrders(ctx, listReq)
+	resp, err := s.uc.GetConsumerOrders(ctx, &biz.GetConsumerOrdersReq{
+		UserId:   userId,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	})
 	if err != nil {
 		log.Errorf("获取用户订单失败: %v", err)
 		return nil, status.Errorf(codes.Internal, "获取用户订单失败: %v", err)
 	}
 
-	// 直接返回业务层的响应，因为它已经是v1.Orders的格式
-	if len(resp.Orders) == 0 {
+	if resp == nil {
 		log.Infof("用户 %s 没有订单记录", userId)
-		return &v1.Orders{Orders: []*v1.Order{}}, nil
+		return nil, nil
+	}
+	orders := make([]*v1.ConsumerOrder, 0, len(resp.SubOrders))
+	for _, o := range resp.SubOrders {
+		items := make([]*v1.OrderItem, 0, len(o.Items))
+		for _, item := range o.Items {
+			items = append(items, &v1.OrderItem{
+				Cost: item.Cost,
+				Item: &cartv1.CartItem{
+					MerchantId: item.Item.MerchantId.String(),
+					ProductId:  item.Item.ProductId.String(),
+					Quantity:   item.Item.Quantity,
+					Name:       item.Item.Name,
+					Picture:    item.Item.Picture,
+				},
+			})
+		}
+		orders = append(orders, &v1.ConsumerOrder{
+			Items:      items,
+			OrderId:    resp.OrderId,
+			SubOrderId: &o.SubOrderID,
+			UserId:     req.UserId,
+			Currency:   o.Currency,
+			Address: &userv1.ConsumerAddress{
+				UserId:        req.UserId, // 数据库无需存储用户ID, 直接从请求中返回
+				City:          o.Address.City,
+				State:         o.Address.State,
+				Country:       o.Address.Country,
+				ZipCode:       o.Address.ZipCode,
+				StreetAddress: o.Address.StreetAddress,
+			},
+			Email:          o.Email,
+			CreatedAt:      timestamppb.New(o.CreatedAt),
+			PaymentStatus:  pkg.MapPaymentStatusToProto(o.PaymentStatus),
+			ShippingStatus: pkg.MapShippingStatusToProto(o.ShippingStatus),
+		})
 	}
 
-	return &v1.Orders{Orders: resp.Orders}, nil
+	return &v1.ConsumerOrders{
+		Items:   orders,
+		OrderId: resp.OrderId,
+	}, nil
 }
 
 func (s *OrderServiceService) GetAllOrders(ctx context.Context, req *v1.GetAllOrdersReq) (*v1.Orders, error) {

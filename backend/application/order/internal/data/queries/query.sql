@@ -1,18 +1,25 @@
--- name: GetOrders :many
-SELECT oo.*,
+-- name: GetConsumerOrders :many
+SELECT oo.id AS order_id,
        json_agg(
                json_build_object(
-                       'sub_order_id', os.id,
-                       'merchant_id', os.merchant_id,
-                       'total_amount', os.total_amount,
+                       'subOrderId', os.id,
+                       'totalAmount', os.total_amount,
                        'currency', os.currency,
-                       'status', os.status,
-                       'shipping_status', os.shipping_status,
+                       'paymentStatus', os.status,
+                       'shippingStatus', os.shipping_status,
                        'items', os.items,
-                       'created_at', os.created_at,
-                       'updated_at', os.updated_at
+                       'email', oo.email,
+                       'address', json_build_object(
+                               'streetAddress', oo.street_address,
+                               'city', oo.city,
+                               'state', oo.state,
+                               'country', oo.country,
+                               'zipCode', oo.zip_code
+                                  ),
+                       'createdAt', os.created_at,
+                       'updatedAt', os.updated_at
                )
-       ) AS sub_orders
+       )     AS sub_orders
 FROM orders.orders oo
          LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
 WHERE oo.user_id = @user_id
