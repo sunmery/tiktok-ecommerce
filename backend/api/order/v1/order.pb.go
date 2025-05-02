@@ -1561,13 +1561,12 @@ const file_v1_order_proto_rawDesc = "" +
 	"IN_TRANSIT\x10\x03\x12\r\n" +
 	"\tDELIVERED\x10\x04\x12\r\n" +
 	"\tCONFIRMED\x10\x05\x12\x16\n" +
-	"\x12CANCELLED_SHIPMENT\x10\x062\x9c\b\n" +
+	"\x12CANCELLED_SHIPMENT\x10\x062\xa6\b\n" +
 	"\fOrderService\x12j\n" +
 	"\n" +
 	"PlaceOrder\x12!.ecommerce.order.v1.PlaceOrderReq\x1a\".ecommerce.order.v1.PlaceOrderResp\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
-	"/v1/orders\x12u\n" +
-	"\x11GetConsumerOrders\x12(.ecommerce.order.v1.GetConsumerOrdersReq\x1a\".ecommerce.order.v1.ConsumerOrders\"\x12\x82\xd3\xe4\x93\x02\f\x12\n" +
-	"/v1/orders\x12i\n" +
+	"/v1/orders\x12\x7f\n" +
+	"\x11GetConsumerOrders\x12(.ecommerce.order.v1.GetConsumerOrdersReq\x1a\".ecommerce.order.v1.ConsumerOrders\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/consumers/orders\x12i\n" +
 	"\fGetAllOrders\x12#.ecommerce.order.v1.GetAllOrdersReq\x1a\x1a.ecommerce.order.v1.Orders\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/admin/orders\x12_\n" +
 	"\bGetOrder\x12\x1f.ecommerce.order.v1.GetOrderReq\x1a\x19.ecommerce.order.v1.Order\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/orders/{id}\x12\xa9\x01\n" +
 	"\x1aGetUserOrdersWithSuborders\x121.ecommerce.order.v1.GetUserOrdersWithSubordersReq\x1a3.ecommerce.order.v1.GetUserOrdersWithSubordersReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/users/{order_id}\x12\x83\x01\n" +

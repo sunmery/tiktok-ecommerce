@@ -24,7 +24,7 @@ service OrderService {
   // 查询用户订单列表
   rpc GetConsumerOrders(GetConsumerOrdersReq) returns (ConsumerOrders) {
     option (google.api.http) = {
-      get: "/v1/orders"
+      get: "/v1/consumers/orders"
     };
   }
 

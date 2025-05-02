@@ -57,7 +57,7 @@
         ]
       }
     },
-    "/v1/orders": {
+    "/v1/consumers/orders": {
       "get": {
         "summary": "查询用户订单列表",
         "operationId": "OrderService_GetConsumerOrders",
@@ -103,7 +103,9 @@
         "tags": [
           "OrderService"
         ]
-      },
+      }
+    },
+    "/v1/orders": {
       "post": {
         "summary": "创建订单",
         "operationId": "OrderService_PlaceOrder",

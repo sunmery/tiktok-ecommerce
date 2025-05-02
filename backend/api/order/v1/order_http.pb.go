@@ -50,7 +50,7 @@ type OrderServiceHTTPServer interface {
 func RegisterOrderServiceHTTPServer(s *http.Server, srv OrderServiceHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/orders", _OrderService_PlaceOrder0_HTTP_Handler(srv))
-	r.GET("/v1/orders", _OrderService_GetConsumerOrders0_HTTP_Handler(srv))
+	r.GET("/v1/consumers/orders", _OrderService_GetConsumerOrders0_HTTP_Handler(srv))
 	r.GET("/v1/admin/orders", _OrderService_GetAllOrders0_HTTP_Handler(srv))
 	r.GET("/v1/orders/{id}", _OrderService_GetOrder0_HTTP_Handler(srv))
 	r.GET("/v1/orders/users/{order_id}", _OrderService_GetUserOrdersWithSuborders0_HTTP_Handler(srv))
@@ -282,7 +282,7 @@ func (c *OrderServiceHTTPClientImpl) GetAllOrders(ctx context.Context, in *GetAl
 
 func (c *OrderServiceHTTPClientImpl) GetConsumerOrders(ctx context.Context, in *GetConsumerOrdersReq, opts ...http.CallOption) (*ConsumerOrders, error) {
 	var out ConsumerOrders
-	pattern := "/v1/orders"
+	pattern := "/v1/consumers/orders"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationOrderServiceGetConsumerOrders))
 	opts = append(opts, http.PathTemplate(pattern))
