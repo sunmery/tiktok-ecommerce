@@ -39,7 +39,7 @@ type CreateShipRow struct {
 	CreatedAt time.Time
 }
 
-// CreateShip
+// 创建货运信息
 //
 //	INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
 //	                                 shipping_address, receiver_address, shipping_fee)
@@ -155,27 +155,35 @@ func (q *Queries) GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUI
 }
 
 const GetMerchantOrders = `-- name: GetMerchantOrders :many
-SELECT oo.id,
-       oo.payment_status,
-       oo.user_id,
-       oo.currency,
-       oo.street_address,
-       oo.city,
-       oo.state,
-       oo.country,
-       oo.zip_code,
-       oo.email,
-       os.order_id        AS order_id,
-       os.merchant_id,
-       os.total_amount,
-       os.items,
-       os.shipping_status AS shipping_status,
-       os.created_at,
-       os.updated_at
+SELECT os.order_id,
+       oo.created_at,
+       json_agg(
+               item::jsonb ||
+               jsonb_build_object(
+                       'subOrderId', os.id,
+                       'userId', oo.user_id,
+                       'email', oo.email,
+                       'totalAmount', os.total_amount,
+                       'createdAt', os.created_at,
+                       'updatedAt', os.updated_at,
+                       'paymentStatus', os.status,
+                       'shippingStatus', os.shipping_status,
+                       'currency', oo.currency,
+                       'address', json_build_object(
+                               'streetAddress', oo.street_address,
+                               'city', oo.city,
+                               'state', oo.state,
+                               'country', oo.country,
+                               'zipCode', oo.zip_code
+                                  )
+               )
+       ) AS items
 FROM orders.sub_orders os
-         JOIN orders.orders oo on os.order_id = oo.id
+         JOIN orders.orders oo ON os.order_id = oo.id,
+     json_array_elements(os.items::json) AS item
 WHERE os.merchant_id = $1
-ORDER BY os.created_at DESC
+GROUP BY os.order_id, os.merchant_id, oo.created_at
+ORDER BY oo.created_at DESC
 LIMIT $3 OFFSET $2
 `
 
@@ -186,48 +194,42 @@ type GetMerchantOrdersParams struct {
 }
 
 type GetMerchantOrdersRow struct {
-	ID             int64
-	PaymentStatus  string
-	UserID         uuid.UUID
-	Currency       string
-	StreetAddress  string
-	City           string
-	State          string
-	Country        string
-	ZipCode        string
-	Email          string
-	OrderID        int64
-	MerchantID     uuid.UUID
-	TotalAmount    interface{}
-	Items          []byte
-	ShippingStatus string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	OrderID   int64
+	CreatedAt time.Time
+	Items     []byte
 }
 
 // GetMerchantOrders
 //
-//	SELECT oo.id,
-//	       oo.payment_status,
-//	       oo.user_id,
-//	       oo.currency,
-//	       oo.street_address,
-//	       oo.city,
-//	       oo.state,
-//	       oo.country,
-//	       oo.zip_code,
-//	       oo.email,
-//	       os.order_id        AS order_id,
-//	       os.merchant_id,
-//	       os.total_amount,
-//	       os.items,
-//	       os.shipping_status AS shipping_status,
-//	       os.created_at,
-//	       os.updated_at
+//	SELECT os.order_id,
+//	       oo.created_at,
+//	       json_agg(
+//	               item::jsonb ||
+//	               jsonb_build_object(
+//	                       'subOrderId', os.id,
+//	                       'userId', oo.user_id,
+//	                       'email', oo.email,
+//	                       'totalAmount', os.total_amount,
+//	                       'createdAt', os.created_at,
+//	                       'updatedAt', os.updated_at,
+//	                       'paymentStatus', os.status,
+//	                       'shippingStatus', os.shipping_status,
+//	                       'currency', oo.currency,
+//	                       'address', json_build_object(
+//	                               'streetAddress', oo.street_address,
+//	                               'city', oo.city,
+//	                               'state', oo.state,
+//	                               'country', oo.country,
+//	                               'zipCode', oo.zip_code
+//	                                  )
+//	               )
+//	       ) AS items
 //	FROM orders.sub_orders os
-//	         JOIN orders.orders oo on os.order_id = oo.id
+//	         JOIN orders.orders oo ON os.order_id = oo.id,
+//	     json_array_elements(os.items::json) AS item
 //	WHERE os.merchant_id = $1
-//	ORDER BY os.created_at DESC
+//	GROUP BY os.order_id, os.merchant_id, oo.created_at
+//	ORDER BY oo.created_at DESC
 //	LIMIT $3 OFFSET $2
 func (q *Queries) GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersParams) ([]GetMerchantOrdersRow, error) {
 	rows, err := q.db.Query(ctx, GetMerchantOrders, arg.MerchantID, arg.Page, arg.PageSize)
@@ -238,25 +240,7 @@ func (q *Queries) GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersPa
 	var items []GetMerchantOrdersRow
 	for rows.Next() {
 		var i GetMerchantOrdersRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.PaymentStatus,
-			&i.UserID,
-			&i.Currency,
-			&i.StreetAddress,
-			&i.City,
-			&i.State,
-			&i.Country,
-			&i.ZipCode,
-			&i.Email,
-			&i.OrderID,
-			&i.MerchantID,
-			&i.TotalAmount,
-			&i.Items,
-			&i.ShippingStatus,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
+		if err := rows.Scan(&i.OrderID, &i.CreatedAt, &i.Items); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -267,35 +251,85 @@ func (q *Queries) GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersPa
 	return items, nil
 }
 
-const UpdateOrderShippingStatus = `-- name: UpdateOrderShippingStatus :exec
+const UpdateOrderShippingStatus = `-- name: UpdateOrderShippingStatus :one
 WITH update_shipping_info_ship_status AS (
     UPDATE orders.shipping_info
-        SET shipping_status = $1,
+        SET
+            merchant_id = $3,
+            shipping_status = $1,
+            tracking_number = $4,
+            carrier = $5,
+            receiver_address = $6,
+            shipping_address = $7,
+            shipping_fee = $8,
             updated_at = now()
         WHERE sub_order_id = $2)
 UPDATE orders.sub_orders
 SET shipping_status = $1,
     updated_at      = now()
 WHERE id = $2
+RETURNING id, updated_at
 `
 
 type UpdateOrderShippingStatusParams struct {
-	ShippingStatus *string
-	SubOrderID     *int64
+	ShippingStatus  *string
+	SubOrderID      *int64
+	MerchantID      pgtype.UUID
+	TrackingNumber  *string
+	Carrier         *string
+	ReceiverAddress []byte
+	ShippingAddress []byte
+	ShippingFee     pgtype.Numeric
 }
 
-// UpdateOrderShippingStatus
+type UpdateOrderShippingStatusRow struct {
+	ID        int64
+	UpdatedAt time.Time
+}
+
+// WITH update_shipping_info_ship_status AS (
+//
+//	UPDATE orders.shipping_info
+//	    SET shipping_status = @shipping_status,
+//	        updated_at = now()
+//	    WHERE sub_order_id = @sub_order_id)
+//
+// UPDATE orders.sub_orders
+// SET shipping_status = @shipping_status,
+//
+//	updated_at      = now()
+//
+// WHERE id = @sub_order_id;
 //
 //	WITH update_shipping_info_ship_status AS (
 //	    UPDATE orders.shipping_info
-//	        SET shipping_status = $1,
+//	        SET
+//	            merchant_id = $3,
+//	            shipping_status = $1,
+//	            tracking_number = $4,
+//	            carrier = $5,
+//	            receiver_address = $6,
+//	            shipping_address = $7,
+//	            shipping_fee = $8,
 //	            updated_at = now()
 //	        WHERE sub_order_id = $2)
 //	UPDATE orders.sub_orders
 //	SET shipping_status = $1,
 //	    updated_at      = now()
 //	WHERE id = $2
-func (q *Queries) UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error {
-	_, err := q.db.Exec(ctx, UpdateOrderShippingStatus, arg.ShippingStatus, arg.SubOrderID)
-	return err
+//	RETURNING id, updated_at
+func (q *Queries) UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) (UpdateOrderShippingStatusRow, error) {
+	row := q.db.QueryRow(ctx, UpdateOrderShippingStatus,
+		arg.ShippingStatus,
+		arg.SubOrderID,
+		arg.MerchantID,
+		arg.TrackingNumber,
+		arg.Carrier,
+		arg.ReceiverAddress,
+		arg.ShippingAddress,
+		arg.ShippingFee,
+	)
+	var i UpdateOrderShippingStatusRow
+	err := row.Scan(&i.ID, &i.UpdatedAt)
+	return i, err
 }

@@ -23,8 +23,18 @@ type CartItem struct {
 }
 
 type OrderItem struct {
-	Item *CartItem `json:"item"`
-	Cost float64   `json:"cost"`
+	Cost           float64
+	Item           *CartItem
+	Email          string
+	Address        Address
+	UserID         uuid.UUID
+	SubOrderID     int64
+	TotalAmount    float64
+	Currency       string
+	PaymentStatus  constants.PaymentStatus
+	ShippingStatus constants.ShippingStatus
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 type Address struct {
 	StreetAddress string
@@ -35,30 +45,14 @@ type Address struct {
 }
 
 type SubOrder struct {
-	OrderID        int64
-	UserID         uuid.UUID
-	Address        *Address
-	PaymentMethod  constants.PaymentMethod
-	SubOrderID     int64
-	MerchantID     uuid.UUID
-	Currency       string
-	TotalAmount    float64
-	StreetAddress  string
-	City           string
-	Country        string
-	State          string
-	ZipCode        string
-	Email          string
-	Status         constants.PaymentStatus
-	ShippingStatus constants.ShippingStatus
-	Items          []*OrderItem
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	OrderID   int64
+	Items     []*OrderItem
+	CreatedAt time.Time
 }
 
 // 发货
 type (
-	ShipOrderReq struct {
+	CreateOrderShipReq struct {
 		Id              int64                    // 物流 ID
 		MerchantID      uuid.UUID                // 商家 ID
 		SubOrderId      int64                    // 子订单 ID
@@ -72,7 +66,7 @@ type (
 		CreatedAt       time.Time                // 发货时间
 		UpdatedAt       time.Time                // 更新时间
 	}
-	ShipOrderResp struct {
+	CreateOrderShipResp struct {
 		Id        int64     // 物流 ID
 		CreatedAt time.Time // 发货时间
 	}
@@ -102,11 +96,22 @@ type (
 // 更新订单状态
 type (
 	UpdateOrderShippingStatusReq struct {
-		UserId         uuid.UUID
-		SubOrderId     int64
-		ShippingStatus constants.ShippingStatus
+		MerchantID      uuid.UUID                // 商家 ID
+		SubOrderId      int64                    // 子订单 ID
+		TrackingNumber  string                   // 物流单号
+		Carrier         string                   // 物流承运商
+		ShippingStatus  constants.ShippingStatus // 物流状态
+		Delivery        time.Time                // 送达时间
+		ShippingAddress json.RawMessage          // 发货地址
+		ReceiverAddress []byte                   // 收货地址
+		ShippingFee     float64                  // 运费
+		CreatedAt       time.Time                // 发货时间
+		UpdatedAt       time.Time                // 更新时间
 	}
-	UpdateOrderShippingStatusResply struct{}
+	UpdateOrderShippingStatusResply struct {
+		ID        int64     // 物流 ID
+		UpdatedAt time.Time // 更新时间
+	}
 )
 
 type OrderUsecase struct {
@@ -125,7 +130,7 @@ func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
 type OrderRepo interface {
 	GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
 	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
-	ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error)
+	CreateOrderShip(ctx context.Context, req *CreateOrderShipReq) (*CreateOrderShipResp, error)
 	UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error)
 }
 
@@ -139,9 +144,9 @@ func (oc *OrderUsecase) GetMerchantOrders(ctx context.Context, req *GetMerchantO
 	return oc.repo.GetMerchantOrders(ctx, req)
 }
 
-func (oc *OrderUsecase) ShipOrder(ctx context.Context, req *ShipOrderReq) (*ShipOrderResp, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order ShipOrder req:%+v", req)
-	return oc.repo.ShipOrder(ctx, req)
+func (oc *OrderUsecase) CreateOrderShip(ctx context.Context, req *CreateOrderShipReq) (*CreateOrderShipResp, error) {
+	oc.log.WithContext(ctx).Debugf("biz/order CreateOrderShip req:%+v", req)
+	return oc.repo.CreateOrderShip(ctx, req)
 }
 
 func (oc *OrderUsecase) UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error) {

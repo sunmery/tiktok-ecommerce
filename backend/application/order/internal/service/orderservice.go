@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -361,6 +362,7 @@ func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.Ge
 		return nil, status.Error(codes.Unauthenticated, "failed to get user ID")
 	}
 	// 验证订单ID
+
 	if req.SubOrderId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "order ID is required")
 	}
@@ -372,19 +374,49 @@ func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.Ge
 	if err != nil {
 		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
 	}
-	log.Debugf("orderStatus: %v", orderStatus)
-	merchantAddress, err := structpb.NewStruct(orderStatus.ShippingAddress)
+	log.Debugf("orderStatus: %+v", orderStatus)
+
+	shippingAddressMap := map[string]any{
+		"addressType":   orderStatus.ShippingAddress.AddressType,
+		"city":          orderStatus.ShippingAddress.City,
+		"contactPerson": orderStatus.ShippingAddress.ContactPerson,
+		"contactPhone":  orderStatus.ShippingAddress.ContactPhone,
+		"country":       orderStatus.ShippingAddress.Country,
+		"state":         orderStatus.ShippingAddress.State,
+		"streetAddress": orderStatus.ShippingAddress.StreetAddress,
+		"zipCode":       orderStatus.ShippingAddress.ZipCode,
+	}
+	merchantAddress, err := structpb.NewStruct(shippingAddressMap)
 	if err != nil {
+		log.Errorf("failed to convert merchant address to struct: %v", err)
 		return nil, status.Error(codes.Internal, "failed to convert merchant address to struct")
 	}
-	userAddress, err := structpb.NewStruct(orderStatus.ReceiverAddress)
+
+	userAddressMap := map[string]any{
+		"city":           orderStatus.ReceiverAddress.City,
+		"country":        orderStatus.ReceiverAddress.Country,
+		"createdAt":      orderStatus.ReceiverAddress.CreatedAt.Format(time.RFC3339),
+		"email":          orderStatus.ReceiverAddress.Email,
+		"id":             orderStatus.ReceiverAddress.ID,
+		"paymentStatus":  orderStatus.ReceiverAddress.PaymentStatus,
+		"shippingStatus": orderStatus.ReceiverAddress.ShippingStatus,
+		"state":          orderStatus.ReceiverAddress.State,
+		"streetAddress":  orderStatus.ReceiverAddress.StreetAddress,
+		"updatedAt":      orderStatus.ReceiverAddress.UpdatedAt.Format(time.RFC3339),
+		"userId":         orderStatus.ReceiverAddress.UserID,
+		"zipCode":        orderStatus.ReceiverAddress.ZipCode,
+	}
+	userAddress, err := structpb.NewStruct(userAddressMap)
 	if err != nil {
+		// This is where the original error occurred
+		log.Errorf("failed to convert user address to struct: %v", err)
 		return nil, status.Error(codes.Internal, "failed to convert user address to struct")
 	}
+	log.Debugf("userAddress: %+v", userAddress)
 	return &v1.GetShipOrderStatusReply{
-		OrderId:    orderStatus.SubOrderId,
+		OrderId:    orderStatus.Id,
 		SubOrderId: orderStatus.SubOrderId,
-		// PaymentStatus: pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus),
+		// PaymentStatus: pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus), // 根据需要取消注释或修改
 		ShippingStatus:  pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
 		ReceiverAddress: userAddress,
 		ShippingAddress: merchantAddress,

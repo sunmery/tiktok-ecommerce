@@ -19,18 +19,18 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationOrderCreateOrderShip = "/ecommerce.merchantorder.v1.Order/CreateOrderShip"
 const OperationOrderGetMerchantByOrderId = "/ecommerce.merchantorder.v1.Order/GetMerchantByOrderId"
 const OperationOrderGetMerchantOrders = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
-const OperationOrderShipOrder = "/ecommerce.merchantorder.v1.Order/ShipOrder"
 const OperationOrderUpdateOrderShippingStatus = "/ecommerce.merchantorder.v1.Order/UpdateOrderShippingStatus"
 
 type OrderHTTPServer interface {
+	// CreateOrderShip 创建货运信息
+	CreateOrderShip(context.Context, *CreateOrderShipReq) (*CreateOrderShipReply, error)
 	// GetMerchantByOrderId 根据订单ID查找商家
 	GetMerchantByOrderId(context.Context, *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
 	// GetMerchantOrders 查询商家订单列表
 	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
-	// ShipOrder 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error)
 	// UpdateOrderShippingStatus 更新订单货运状态
 	UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error)
 }
@@ -39,8 +39,8 @@ func RegisterOrderHTTPServer(s *http.Server, srv OrderHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/merchants/orders", _Order_GetMerchantOrders0_HTTP_Handler(srv))
 	r.GET("/v1/merchants/orders/{order_id}", _Order_GetMerchantByOrderId0_HTTP_Handler(srv))
-	r.PUT("/v1/merchants/orders/ship/{sub_order_id}", _Order_ShipOrder0_HTTP_Handler(srv))
-	r.PUT("/v1/merchants/orders/ship/{sub_order_id}/status", _Order_UpdateOrderShippingStatus0_HTTP_Handler(srv))
+	r.PUT("/v1/merchants/orders/ship/{sub_order_id}", _Order_CreateOrderShip0_HTTP_Handler(srv))
+	r.PATCH("/v1/merchants/orders/ship/{sub_order_id}/status", _Order_UpdateOrderShippingStatus0_HTTP_Handler(srv))
 }
 
 func _Order_GetMerchantOrders0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.Context) error {
@@ -84,9 +84,9 @@ func _Order_GetMerchantByOrderId0_HTTP_Handler(srv OrderHTTPServer) func(ctx htt
 	}
 }
 
-func _Order_ShipOrder0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.Context) error {
+func _Order_CreateOrderShip0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in ShipOrderReq
+		var in CreateOrderShipReq
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -96,15 +96,15 @@ func _Order_ShipOrder0_HTTP_Handler(srv OrderHTTPServer) func(ctx http.Context) 
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationOrderShipOrder)
+		http.SetOperation(ctx, OperationOrderCreateOrderShip)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ShipOrder(ctx, req.(*ShipOrderReq))
+			return srv.CreateOrderShip(ctx, req.(*CreateOrderShipReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*ShipOrderReply)
+		reply := out.(*CreateOrderShipReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -135,9 +135,9 @@ func _Order_UpdateOrderShippingStatus0_HTTP_Handler(srv OrderHTTPServer) func(ct
 }
 
 type OrderHTTPClient interface {
+	CreateOrderShip(ctx context.Context, req *CreateOrderShipReq, opts ...http.CallOption) (rsp *CreateOrderShipReply, err error)
 	GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq, opts ...http.CallOption) (rsp *GetMerchantByOrderIdReply, err error)
 	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq, opts ...http.CallOption) (rsp *GetMerchantOrdersReply, err error)
-	ShipOrder(ctx context.Context, req *ShipOrderReq, opts ...http.CallOption) (rsp *ShipOrderReply, err error)
 	UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq, opts ...http.CallOption) (rsp *UpdateOrderShippingStatusReply, err error)
 }
 
@@ -147,6 +147,19 @@ type OrderHTTPClientImpl struct {
 
 func NewOrderHTTPClient(client *http.Client) OrderHTTPClient {
 	return &OrderHTTPClientImpl{client}
+}
+
+func (c *OrderHTTPClientImpl) CreateOrderShip(ctx context.Context, in *CreateOrderShipReq, opts ...http.CallOption) (*CreateOrderShipReply, error) {
+	var out CreateOrderShipReply
+	pattern := "/v1/merchants/orders/ship/{sub_order_id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationOrderCreateOrderShip))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *OrderHTTPClientImpl) GetMerchantByOrderId(ctx context.Context, in *GetMerchantByOrderIdReq, opts ...http.CallOption) (*GetMerchantByOrderIdReply, error) {
@@ -175,26 +188,13 @@ func (c *OrderHTTPClientImpl) GetMerchantOrders(ctx context.Context, in *GetMerc
 	return &out, nil
 }
 
-func (c *OrderHTTPClientImpl) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...http.CallOption) (*ShipOrderReply, error) {
-	var out ShipOrderReply
-	pattern := "/v1/merchants/orders/ship/{sub_order_id}"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationOrderShipOrder))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
 func (c *OrderHTTPClientImpl) UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...http.CallOption) (*UpdateOrderShippingStatusReply, error) {
 	var out UpdateOrderShippingStatusReply
 	pattern := "/v1/merchants/orders/ship/{sub_order_id}/status"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationOrderUpdateOrderShippingStatus))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

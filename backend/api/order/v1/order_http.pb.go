@@ -20,7 +20,6 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationOrderServiceConfirmReceived = "/ecommerce.order.v1.OrderService/ConfirmReceived"
-const OperationOrderServiceCreateOrderShipping = "/ecommerce.order.v1.OrderService/CreateOrderShipping"
 const OperationOrderServiceGetAllOrders = "/ecommerce.order.v1.OrderService/GetAllOrders"
 const OperationOrderServiceGetOrder = "/ecommerce.order.v1.OrderService/GetOrder"
 const OperationOrderServiceGetOrders = "/ecommerce.order.v1.OrderService/GetOrders"
@@ -32,8 +31,6 @@ const OperationOrderServicePlaceOrder = "/ecommerce.order.v1.OrderService/PlaceO
 type OrderServiceHTTPServer interface {
 	// ConfirmReceived 用户确认收货
 	ConfirmReceived(context.Context, *ConfirmReceivedReq) (*ConfirmReceivedResp, error)
-	// CreateOrderShipping 创建订单货运信息
-	CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error)
 	// GetAllOrders 查询全部订单列表(管理员侧)
 	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
 	// GetOrder 根据订单ID查询
@@ -58,7 +55,6 @@ func RegisterOrderServiceHTTPServer(s *http.Server, srv OrderServiceHTTPServer) 
 	r.GET("/v1/orders/{id}", _OrderService_GetOrder0_HTTP_Handler(srv))
 	r.GET("/v1/orders/users/{order_id}", _OrderService_GetUserOrdersWithSuborders0_HTTP_Handler(srv))
 	r.POST("/v1/orders/{order_id}/paid", _OrderService_MarkOrderPaid0_HTTP_Handler(srv))
-	r.POST("/v1/orders/{sub_order_id}/ship", _OrderService_CreateOrderShipping0_HTTP_Handler(srv))
 	r.GET("/v1/orders/{sub_order_id}/ship/status", _OrderService_GetShipOrderStatus0_HTTP_Handler(srv))
 	r.PUT("/v1/orders/{order_id}/receive", _OrderService_ConfirmReceived0_HTTP_Handler(srv))
 }
@@ -192,31 +188,6 @@ func _OrderService_MarkOrderPaid0_HTTP_Handler(srv OrderServiceHTTPServer) func(
 	}
 }
 
-func _OrderService_CreateOrderShipping0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in CreateOrderShippingReq
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationOrderServiceCreateOrderShipping)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CreateOrderShipping(ctx, req.(*CreateOrderShippingReq))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*CreateOrderShippingResp)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _OrderService_GetShipOrderStatus0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetShipOrderStatusReq
@@ -266,7 +237,6 @@ func _OrderService_ConfirmReceived0_HTTP_Handler(srv OrderServiceHTTPServer) fun
 
 type OrderServiceHTTPClient interface {
 	ConfirmReceived(ctx context.Context, req *ConfirmReceivedReq, opts ...http.CallOption) (rsp *ConfirmReceivedResp, err error)
-	CreateOrderShipping(ctx context.Context, req *CreateOrderShippingReq, opts ...http.CallOption) (rsp *CreateOrderShippingResp, err error)
 	GetAllOrders(ctx context.Context, req *GetAllOrdersReq, opts ...http.CallOption) (rsp *Orders, err error)
 	GetOrder(ctx context.Context, req *GetOrderReq, opts ...http.CallOption) (rsp *Order, err error)
 	GetOrders(ctx context.Context, req *GetOrdersReq, opts ...http.CallOption) (rsp *Orders, err error)
@@ -291,19 +261,6 @@ func (c *OrderServiceHTTPClientImpl) ConfirmReceived(ctx context.Context, in *Co
 	opts = append(opts, http.Operation(OperationOrderServiceConfirmReceived))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *OrderServiceHTTPClientImpl) CreateOrderShipping(ctx context.Context, in *CreateOrderShippingReq, opts ...http.CallOption) (*CreateOrderShippingResp, error) {
-	var out CreateOrderShippingResp
-	pattern := "/v1/orders/{sub_order_id}/ship"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationOrderServiceCreateOrderShipping))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

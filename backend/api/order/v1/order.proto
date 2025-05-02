@@ -57,14 +57,6 @@ service OrderService {
     };
   }
 
-  // 创建订单货运信息
-  rpc CreateOrderShipping(CreateOrderShippingReq) returns (CreateOrderShippingResp) {
-    option (google.api.http) = {
-      post: "/v1/orders/{sub_order_id}/ship" // 定义 HTTP POST 请求路径，路径参数为 order_id
-      body: "*"                          // 表示请求体包含所有字段
-    };
-  }
-
   // 查询订单货运状态
   rpc GetShipOrderStatus(GetShipOrderStatusReq) returns (GetShipOrderStatusReply) {
     option (google.api.http) = {
@@ -80,21 +72,6 @@ service OrderService {
     };
   }
 }
-
-message CreateOrderShippingReq {
-  int64 id = 1;
-  optional string merchant_id = 2;
-  int64 sub_order_id = 10;
-  ShippingStatus shipping_status = 3;
-  string tracking_number = 4;
-  string carrier = 5;
-  google.protobuf.Timestamp delivery = 6;
-  google.protobuf.Struct shipping_address = 7;
-  google.protobuf.Struct receiver_address = 8;
-  double shipping_fe = 9;
-}
-
-message CreateOrderShippingResp{}
 
 message GetShipOrderStatusReq {
   int64 sub_order_id = 1; //  子订单 ID
@@ -141,11 +118,10 @@ message PlaceOrderResp {
 
 // 支付状态的枚举类型
 enum PaymentStatus {
-  NOT_PAID = 0; // 未支付
-  PROCESSING = 1; // 处理中
-  PAID = 2; // 已支付
-  FAILED = 3; // 支付失败
-  CANCELLED_PAID = 4; // 取消支付
+  PENDING = 0; // 未支付
+  PAID = 1; // 已支付
+  FAILED = 2; // 支付失败
+  CANCELLED = 3; // 取消支付
 }
 
 // 货运状态的枚举类型

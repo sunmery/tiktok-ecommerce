@@ -630,10 +630,13 @@ func (o *orderRepo) GetShipOrderStatus(ctx context.Context, req *biz.GetShipOrde
 	if err != nil {
 		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
 	}
-	receiverAddress := make(map[string]any)
+	receiverAddress := biz.ReceiverAddress{}
 	err = json.Unmarshal(orderStatus.ReceiverAddress, &receiverAddress)
+	if err != nil {
+		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")
+	}
 
-	shippingAddress := make(map[string]any)
+	shippingAddress := biz.ShippingAddress{}
 	err = json.Unmarshal(orderStatus.ShippingAddress, &shippingAddress)
 	if err != nil {
 		return nil, kerrors.New(400, "shipping_fee", "invalid shipping fee")

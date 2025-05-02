@@ -56,9 +56,8 @@ type Querier interface {
 	//
 	//  SELECT COUNT(*)
 	//  FROM merchant.stock_adjustments sa
-	//  WHERE sa.product_id = $1::uuid
-	//    AND sa.merchant_id = $2::uuid
-	CountStockAdjustmentHistory(ctx context.Context, arg CountStockAdjustmentHistoryParams) (int64, error)
+	//    WHERE sa.merchant_id = $1::uuid
+	CountStockAdjustmentHistory(ctx context.Context, merchantID uuid.UUID) (int64, error)
 	// 获取库存警报配置总数
 	//
 	//  SELECT COUNT(*)
@@ -83,7 +82,7 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (MerchantAddresses, error)
-	//CreateShip
+	// 创建货运信息
 	//
 	//  INSERT INTO orders.shipping_info(id, merchant_id, sub_order_id, shipping_status, tracking_number, carrier, delivery,
 	//                                   shipping_address, receiver_address, shipping_fee)
@@ -179,27 +178,35 @@ type Querier interface {
 	GetMerchantByOrderId(ctx context.Context, id *int64) (uuid.UUID, error)
 	//GetMerchantOrders
 	//
-	//  SELECT oo.id,
-	//         oo.payment_status,
-	//         oo.user_id,
-	//         oo.currency,
-	//         oo.street_address,
-	//         oo.city,
-	//         oo.state,
-	//         oo.country,
-	//         oo.zip_code,
-	//         oo.email,
-	//         os.order_id        AS order_id,
-	//         os.merchant_id,
-	//         os.total_amount,
-	//         os.items,
-	//         os.shipping_status AS shipping_status,
-	//         os.created_at,
-	//         os.updated_at
+	//  SELECT os.order_id,
+	//         oo.created_at,
+	//         json_agg(
+	//                 item::jsonb ||
+	//                 jsonb_build_object(
+	//                         'subOrderId', os.id,
+	//                         'userId', oo.user_id,
+	//                         'email', oo.email,
+	//                         'totalAmount', os.total_amount,
+	//                         'createdAt', os.created_at,
+	//                         'updatedAt', os.updated_at,
+	//                         'paymentStatus', os.status,
+	//                         'shippingStatus', os.shipping_status,
+	//                         'currency', oo.currency,
+	//                         'address', json_build_object(
+	//                                 'streetAddress', oo.street_address,
+	//                                 'city', oo.city,
+	//                                 'state', oo.state,
+	//                                 'country', oo.country,
+	//                                 'zipCode', oo.zip_code
+	//                                    )
+	//                 )
+	//         ) AS items
 	//  FROM orders.sub_orders os
-	//           JOIN orders.orders oo on os.order_id = oo.id
+	//           JOIN orders.orders oo ON os.order_id = oo.id,
+	//       json_array_elements(os.items::json) AS item
 	//  WHERE os.merchant_id = $1
-	//  ORDER BY os.created_at DESC
+	//  GROUP BY os.order_id, os.merchant_id, oo.created_at
+	//  ORDER BY oo.created_at DESC
 	//  LIMIT $3 OFFSET $2
 	GetMerchantOrders(ctx context.Context, arg GetMerchantOrdersParams) ([]GetMerchantOrdersRow, error)
 	//GetMerchantProducts
@@ -259,8 +266,7 @@ type Querier interface {
 	//  WHERE p.id = $1::uuid
 	//    AND p.merchant_id = $2::uuid
 	GetProductStock(ctx context.Context, arg GetProductStockParams) (GetProductStockRow, error)
-	// 获取库存调整历史
-	// WHERE sa.product_id = @product_id::uuid
+	//GetStockAdjustmentHistory
 	//
 	//  SELECT sa.id,
 	//         sa.product_id,
@@ -272,9 +278,8 @@ type Querier interface {
 	//         sa.created_at
 	//  FROM merchant.stock_adjustments sa
 	//           JOIN products.products p
-	//                ON sa.product_id = p.id
-	//                    AND sa.merchant_id = p.merchant_id
-	//  WHERE sa.merchant_id = $1::uuid
+	//                ON sa.merchant_id = p.merchant_id
+	//  WHERE sa.product_id = $1::uuid
 	//  ORDER BY sa.created_at DESC
 	//  LIMIT $3 OFFSET $2
 	GetStockAdjustmentHistory(ctx context.Context, arg GetStockAdjustmentHistoryParams) ([]GetStockAdjustmentHistoryRow, error)
@@ -363,18 +368,34 @@ type Querier interface {
 	//    AND merchant_id = $12
 	//  RETURNING id, merchant_id, address_type, contact_person, contact_phone, street_address, city, state, country, zip_code, is_default, remarks, created_at, updated_at
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (MerchantAddresses, error)
-	//UpdateOrderShippingStatus
+	// WITH update_shipping_info_ship_status AS (
+	//     UPDATE orders.shipping_info
+	//         SET shipping_status = @shipping_status,
+	//             updated_at = now()
+	//         WHERE sub_order_id = @sub_order_id)
+	// UPDATE orders.sub_orders
+	// SET shipping_status = @shipping_status,
+	//     updated_at      = now()
+	// WHERE id = @sub_order_id;
 	//
 	//  WITH update_shipping_info_ship_status AS (
 	//      UPDATE orders.shipping_info
-	//          SET shipping_status = $1,
+	//          SET
+	//              merchant_id = $3,
+	//              shipping_status = $1,
+	//              tracking_number = $4,
+	//              carrier = $5,
+	//              receiver_address = $6,
+	//              shipping_address = $7,
+	//              shipping_fee = $8,
 	//              updated_at = now()
 	//          WHERE sub_order_id = $2)
 	//  UPDATE orders.sub_orders
 	//  SET shipping_status = $1,
 	//      updated_at      = now()
 	//  WHERE id = $2
-	UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) error
+	//  RETURNING id, updated_at
+	UpdateOrderShippingStatus(ctx context.Context, arg UpdateOrderShippingStatusParams) (UpdateOrderShippingStatusRow, error)
 	//UpdateProduct
 	//
 	//  WITH update_product AS (

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	balancerv1 "backend/api/balancer/v1"
+	balancev1 "backend/api/balancer/v1"
 
 	"backend/application/payment/internal/pkg/id"
 
@@ -420,7 +420,7 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 		// 根据商家ID和子订单金额，调用余额服务进行转账
 		for _, v := range payment.MerchantVersions {
 			// 调用余额服务确认转账
-			params := &balancerv1.ConfirmTransferRequest{
+			params := &balancev1.ConfirmTransferRequest{
 				FreezeId:                payment.FreezeID,
 				MerchantId:              merchantId,
 				IdempotencyKey:          strconv.FormatInt(payment.OrderID, 10),
@@ -429,7 +429,7 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 				PaymentAccount:          "", // TODO PaymentAccount
 			}
 			log.Debugf("params: %+v", params)
-			_, err = r.data.balancerv1.ConfirmTransfer(ctx, params)
+			_, err = r.data.balancev1.ConfirmTransfer(ctx, params)
 			if err != nil {
 				r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
 					merchantId, subOrderAmount, err)
@@ -439,7 +439,7 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 					merchantId, subOrderAmount)
 			}
 
-			transaction, err := r.data.balancerv1.CreateTransaction(ctx, &balancerv1.CreateTransactionRequest{
+			transaction, err := r.data.balancev1.CreateTransaction(ctx, &balancev1.CreateTransactionRequest{
 				Type:              string(constants.TransactionPayment),
 				Amount:            subOrderAmount,
 				Currency:          string(constants.CNY),

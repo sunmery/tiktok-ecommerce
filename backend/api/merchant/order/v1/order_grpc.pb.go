@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Order_GetMerchantOrders_FullMethodName         = "/ecommerce.merchantorder.v1.Order/GetMerchantOrders"
 	Order_GetMerchantByOrderId_FullMethodName      = "/ecommerce.merchantorder.v1.Order/GetMerchantByOrderId"
-	Order_ShipOrder_FullMethodName                 = "/ecommerce.merchantorder.v1.Order/ShipOrder"
+	Order_CreateOrderShip_FullMethodName           = "/ecommerce.merchantorder.v1.Order/CreateOrderShip"
 	Order_UpdateOrderShippingStatus_FullMethodName = "/ecommerce.merchantorder.v1.Order/UpdateOrderShippingStatus"
 )
 
@@ -33,8 +33,8 @@ type OrderClient interface {
 	GetMerchantOrders(ctx context.Context, in *GetMerchantOrdersReq, opts ...grpc.CallOption) (*GetMerchantOrdersReply, error)
 	// 根据订单ID查找商家
 	GetMerchantByOrderId(ctx context.Context, in *GetMerchantByOrderIdReq, opts ...grpc.CallOption) (*GetMerchantByOrderIdReply, error)
-	// 商家发货
-	ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderReply, error)
+	// 创建货运信息
+	CreateOrderShip(ctx context.Context, in *CreateOrderShipReq, opts ...grpc.CallOption) (*CreateOrderShipReply, error)
 	// 更新订单货运状态
 	UpdateOrderShippingStatus(ctx context.Context, in *UpdateOrderShippingStatusReq, opts ...grpc.CallOption) (*UpdateOrderShippingStatusReply, error)
 }
@@ -67,10 +67,10 @@ func (c *orderClient) GetMerchantByOrderId(ctx context.Context, in *GetMerchantB
 	return out, nil
 }
 
-func (c *orderClient) ShipOrder(ctx context.Context, in *ShipOrderReq, opts ...grpc.CallOption) (*ShipOrderReply, error) {
+func (c *orderClient) CreateOrderShip(ctx context.Context, in *CreateOrderShipReq, opts ...grpc.CallOption) (*CreateOrderShipReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ShipOrderReply)
-	err := c.cc.Invoke(ctx, Order_ShipOrder_FullMethodName, in, out, cOpts...)
+	out := new(CreateOrderShipReply)
+	err := c.cc.Invoke(ctx, Order_CreateOrderShip_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +95,8 @@ type OrderServer interface {
 	GetMerchantOrders(context.Context, *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	// 根据订单ID查找商家
 	GetMerchantByOrderId(context.Context, *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
-	// 商家发货
-	ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error)
+	// 创建货运信息
+	CreateOrderShip(context.Context, *CreateOrderShipReq) (*CreateOrderShipReply, error)
 	// 更新订单货运状态
 	UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error)
 	mustEmbedUnimplementedOrderServer()
@@ -115,8 +115,8 @@ func (UnimplementedOrderServer) GetMerchantOrders(context.Context, *GetMerchantO
 func (UnimplementedOrderServer) GetMerchantByOrderId(context.Context, *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMerchantByOrderId not implemented")
 }
-func (UnimplementedOrderServer) ShipOrder(context.Context, *ShipOrderReq) (*ShipOrderReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ShipOrder not implemented")
+func (UnimplementedOrderServer) CreateOrderShip(context.Context, *CreateOrderShipReq) (*CreateOrderShipReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderShip not implemented")
 }
 func (UnimplementedOrderServer) UpdateOrderShippingStatus(context.Context, *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrderShippingStatus not implemented")
@@ -178,20 +178,20 @@ func _Order_GetMerchantByOrderId_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Order_ShipOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ShipOrderReq)
+func _Order_CreateOrderShip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderShipReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServer).ShipOrder(ctx, in)
+		return srv.(OrderServer).CreateOrderShip(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Order_ShipOrder_FullMethodName,
+		FullMethod: Order_CreateOrderShip_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServer).ShipOrder(ctx, req.(*ShipOrderReq))
+		return srv.(OrderServer).CreateOrderShip(ctx, req.(*CreateOrderShipReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -230,8 +230,8 @@ var Order_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Order_GetMerchantByOrderId_Handler,
 		},
 		{
-			MethodName: "ShipOrder",
-			Handler:    _Order_ShipOrder_Handler,
+			MethodName: "CreateOrderShip",
+			Handler:    _Order_CreateOrderShip_Handler,
 		},
 		{
 			MethodName: "UpdateOrderShippingStatus",

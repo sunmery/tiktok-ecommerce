@@ -291,46 +291,6 @@
         ]
       }
     },
-    "/v1/orders/{subOrderId}/ship": {
-      "post": {
-        "summary": "创建订单货运信息",
-        "operationId": "OrderService_CreateOrderShipping",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateOrderShippingResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "subOrderId",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/OrderServiceCreateOrderShippingBody"
-            }
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      }
-    },
     "/v1/orders/{subOrderId}/ship/status": {
       "get": {
         "summary": "查询订单货运状态",
@@ -369,41 +329,6 @@
     "OrderServiceConfirmReceivedBody": {
       "type": "object",
       "title": "用户确认收货请求的消息结构"
-    },
-    "OrderServiceCreateOrderShippingBody": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64"
-        },
-        "merchantId": {
-          "type": "string"
-        },
-        "shippingStatus": {
-          "$ref": "#/definitions/v1ShippingStatus"
-        },
-        "trackingNumber": {
-          "type": "string"
-        },
-        "carrier": {
-          "type": "string"
-        },
-        "delivery": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "shippingAddress": {
-          "type": "object"
-        },
-        "receiverAddress": {
-          "type": "object"
-        },
-        "shippingFe": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     },
     "OrderServiceMarkOrderPaidBody": {
       "type": "object",
@@ -513,9 +438,6 @@
         "zipCode",
         "streetAddress"
       ]
-    },
-    "v1CreateOrderShippingResp": {
-      "type": "object"
     },
     "v1GetShipOrderStatusReply": {
       "type": "object",
@@ -687,14 +609,13 @@
     "v1PaymentStatus": {
       "type": "string",
       "enum": [
-        "NOT_PAID",
-        "PROCESSING",
+        "PENDING",
         "PAID",
         "FAILED",
-        "CANCELLED_PAID"
+        "CANCELLED"
       ],
-      "default": "NOT_PAID",
-      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED_PAID: 取消支付",
+      "default": "PENDING",
+      "description": "- PENDING: 未支付\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
       "title": "支付状态的枚举类型"
     },
     "v1PlaceOrderReq": {

@@ -105,7 +105,25 @@ SELECT sa.id,
 FROM merchant.stock_adjustments sa
          JOIN products.products p
               ON sa.merchant_id = p.merchant_id
--- WHERE sa.product_id = @product_id::uuid
-WHERE sa.merchant_id ='17854d75-5ed2-4681-8898-8ef914acdfe0'
+WHERE sa.product_id = @product_id::uuid
 ORDER BY sa.created_at DESC
-LIMIT 200 OFFSET 0;
+LIMIT @page_size OFFSET @page;
+
+-- 获取库存调整历史总数
+-- name: CountStockAdjustmentHistory :one
+SELECT COUNT(*)
+FROM merchant.stock_adjustments sa
+  WHERE sa.merchant_id = @merchant_id::uuid;
+
+-- 获取低库存产品总数
+-- name: CountLowStockProducts :one
+SELECT COUNT(*)
+FROM products.products p
+         JOIN products.inventory i
+              ON p.id = i.product_id
+                  AND p.merchant_id = i.merchant_id
+         LEFT JOIN merchant.stock_alerts sa
+                   ON p.id = sa.product_id
+                       AND p.merchant_id = sa.merchant_id
+WHERE i.stock <= COALESCE(sa.threshold, @threshold)
+  AND p.merchant_id = @merchant_id::uuid;

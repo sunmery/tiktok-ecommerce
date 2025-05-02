@@ -25,7 +25,6 @@ const (
 	OrderService_GetOrder_FullMethodName                   = "/ecommerce.order.v1.OrderService/GetOrder"
 	OrderService_GetUserOrdersWithSuborders_FullMethodName = "/ecommerce.order.v1.OrderService/GetUserOrdersWithSuborders"
 	OrderService_MarkOrderPaid_FullMethodName              = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
-	OrderService_CreateOrderShipping_FullMethodName        = "/ecommerce.order.v1.OrderService/CreateOrderShipping"
 	OrderService_GetShipOrderStatus_FullMethodName         = "/ecommerce.order.v1.OrderService/GetShipOrderStatus"
 	OrderService_ConfirmReceived_FullMethodName            = "/ecommerce.order.v1.OrderService/ConfirmReceived"
 )
@@ -46,8 +45,6 @@ type OrderServiceClient interface {
 	GetUserOrdersWithSuborders(ctx context.Context, in *GetUserOrdersWithSubordersReq, opts ...grpc.CallOption) (*GetUserOrdersWithSubordersReply, error)
 	// 标记订单为已支付
 	MarkOrderPaid(ctx context.Context, in *MarkOrderPaidReq, opts ...grpc.CallOption) (*MarkOrderPaidResp, error)
-	// 创建订单货运信息
-	CreateOrderShipping(ctx context.Context, in *CreateOrderShippingReq, opts ...grpc.CallOption) (*CreateOrderShippingResp, error)
 	// 查询订单货运状态
 	GetShipOrderStatus(ctx context.Context, in *GetShipOrderStatusReq, opts ...grpc.CallOption) (*GetShipOrderStatusReply, error)
 	// 用户确认收货
@@ -122,16 +119,6 @@ func (c *orderServiceClient) MarkOrderPaid(ctx context.Context, in *MarkOrderPai
 	return out, nil
 }
 
-func (c *orderServiceClient) CreateOrderShipping(ctx context.Context, in *CreateOrderShippingReq, opts ...grpc.CallOption) (*CreateOrderShippingResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateOrderShippingResp)
-	err := c.cc.Invoke(ctx, OrderService_CreateOrderShipping_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *orderServiceClient) GetShipOrderStatus(ctx context.Context, in *GetShipOrderStatusReq, opts ...grpc.CallOption) (*GetShipOrderStatusReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetShipOrderStatusReply)
@@ -168,8 +155,6 @@ type OrderServiceServer interface {
 	GetUserOrdersWithSuborders(context.Context, *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error)
 	// 标记订单为已支付
 	MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
-	// 创建订单货运信息
-	CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error)
 	// 查询订单货运状态
 	GetShipOrderStatus(context.Context, *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
 	// 用户确认收货
@@ -201,9 +186,6 @@ func (UnimplementedOrderServiceServer) GetUserOrdersWithSuborders(context.Contex
 }
 func (UnimplementedOrderServiceServer) MarkOrderPaid(context.Context, *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderPaid not implemented")
-}
-func (UnimplementedOrderServiceServer) CreateOrderShipping(context.Context, *CreateOrderShippingReq) (*CreateOrderShippingResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderShipping not implemented")
 }
 func (UnimplementedOrderServiceServer) GetShipOrderStatus(context.Context, *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetShipOrderStatus not implemented")
@@ -340,24 +322,6 @@ func _OrderService_MarkOrderPaid_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_CreateOrderShipping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateOrderShippingReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrderServiceServer).CreateOrderShipping(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OrderService_CreateOrderShipping_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).CreateOrderShipping(ctx, req.(*CreateOrderShippingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrderService_GetShipOrderStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetShipOrderStatusReq)
 	if err := dec(in); err != nil {
@@ -424,10 +388,6 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MarkOrderPaid",
 			Handler:    _OrderService_MarkOrderPaid_Handler,
-		},
-		{
-			MethodName: "CreateOrderShipping",
-			Handler:    _OrderService_CreateOrderShipping_Handler,
 		},
 		{
 			MethodName: "GetShipOrderStatus",

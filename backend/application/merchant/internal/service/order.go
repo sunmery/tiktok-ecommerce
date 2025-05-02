@@ -8,8 +8,6 @@ import (
 
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 
-	"backend/application/merchant/internal/pkg"
-
 	"backend/constants"
 
 	globalPkg "backend/pkg"
@@ -58,7 +56,6 @@ func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *orderv1.Ge
 func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*orderv1.GetMerchantOrdersReply, error) {
 	var userId uuid.UUID
 	var err error
-	log.Debugf("GetMerchantOrders service req.MerchantId: %v", req.MerchantId)
 	if req.MerchantId == "" {
 		// 从网关获取用户ID
 		userId, err = globalPkg.GetMetadataUesrID(ctx)
@@ -76,8 +73,6 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		}
 	}
 
-	log.Debugf("GetMerchantOrders service userId: %v", userId)
-
 	// 调用业务层获取订单列表
 	resp, err := s.oc.GetMerchantOrders(ctx, &biz.GetMerchantOrdersReq{
 		UserID:   userId,
@@ -94,83 +89,64 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		return &orderv1.GetMerchantOrdersReply{Orders: nil}, nil
 	}
 
-	// 按照商家订单分组
-	merchantOrders := make(map[int64][]*biz.SubOrder)
-	for _, subOrder := range resp.Orders {
-		merchantOrders[subOrder.OrderID] = append(merchantOrders[subOrder.OrderID], subOrder)
-	}
-
-	// 转换订单列表为API响应格式
-	var orders []*v1.Order
-	for _, subOrders := range merchantOrders {
-		if len(subOrders) == 0 {
-			continue
-		}
-
-		// 使用第一个子订单信息
-		firstSubOrder := subOrders[0]
-
-		// 订单项集合 - 汇总所有子订单的订单项
-		var orderItems []*v1.OrderItem
-		for _, subOrder := range subOrders {
-			for _, item := range subOrder.Items {
-				// 确保CartItem中的数据是有效的
-				if item.Item == nil {
-					log.Warnf("跳过缺少商品信息的订单项, 订单ID: %d", subOrder.OrderID)
-					continue
-				}
-
-				orderItems = append(orderItems, &v1.OrderItem{
-					Item: &cartv1.CartItem{
-						MerchantId: item.Item.MerchantId.String(),
-						ProductId:  item.Item.ProductId.String(),
-						Quantity:   item.Item.Quantity,
-						Name:       item.Item.Name,
-						Picture:    item.Item.Picture,
-					},
-					Cost: item.Cost,
-				})
-
+	// 将业务层返回的订单数据转换为proto消息格式
+	merchantOrders := make([]*orderv1.MerchantOrder, 0, len(resp.Orders))
+	for _, order := range resp.Orders {
+		// 创建订单项
+		orderItems := make([]*orderv1.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			// 创建购物车商品
+			cartItem := &cartv1.CartItem{
+				MerchantId: item.Item.MerchantId.String(),
+				ProductId:  item.Item.ProductId.String(),
+				Quantity:   item.Item.Quantity,
 			}
+
+			// 创建订单项
+			orderItem := &orderv1.OrderItem{
+				SubOrderId:     item.SubOrderID,
+				Item:           cartItem,
+				Cost:           item.Cost,
+				Email:          item.Email,
+				UserId:         item.UserID.String(),
+				Currency:       item.Currency,
+				PaymentStatus:  convertToPaymentStatus(item.PaymentStatus),
+				ShippingStatus: convertToShippingStatus(item.ShippingStatus),
+				CreatedAt:      timestamppb.New(item.CreatedAt),
+				UpdatedAt:      timestamppb.New(item.UpdatedAt),
+			}
+
+			// 添加地址信息
+			if item.Address.StreetAddress != "" {
+				orderItem.Address = &userv1.ConsumerAddress{
+					StreetAddress: item.Address.StreetAddress,
+					City:          item.Address.City,
+					State:         item.Address.State,
+					Country:       item.Address.Country,
+					ZipCode:       item.Address.ZipCode,
+				}
+			}
+
+			orderItems = append(orderItems, orderItem)
 		}
 
-		// 转换时间戳
-		createdAt := timestamppb.New(firstSubOrder.CreatedAt)
-
-		// 解析支付状态和运输状态
-		paymentStatus := pkg.MapPaymentStatusToProto(string(firstSubOrder.Status))
-		shippingStatus := pkg.MapShippingStatusToProto(firstSubOrder.ShippingStatus)
-
-		// 创建地址信息
-		address := &userv1.ConsumerAddress{
-			StreetAddress: firstSubOrder.StreetAddress,
-			City:          firstSubOrder.City,
-			State:         firstSubOrder.State,
-			Country:       firstSubOrder.Country,
-			ZipCode:       firstSubOrder.ZipCode,
+		// 创建商家订单
+		merchantOrder := &orderv1.MerchantOrder{
+			Items:     orderItems,
+			OrderId:   order.OrderID,
+			CreatedAt: timestamppb.New(order.CreatedAt),
 		}
 
-		// 添加订单到响应列表
-		orders = append(orders, &v1.Order{
-			Items:          orderItems,
-			OrderId:        firstSubOrder.OrderID,
-			SubOrderId:     &firstSubOrder.SubOrderID,
-			UserId:         firstSubOrder.UserID.String(),
-			Currency:       firstSubOrder.Currency,
-			Address:        address,
-			Email:          firstSubOrder.Email,
-			CreatedAt:      createdAt,
-			PaymentStatus:  paymentStatus,
-			ShippingStatus: shippingStatus,
-		})
+		merchantOrders = append(merchantOrders, merchantOrder)
 	}
+
 	return &orderv1.GetMerchantOrdersReply{
-		Orders: orders,
+		Orders: merchantOrders,
 	}, nil
 }
 
-// ShipOrder 发货
-func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq) (*orderv1.ShipOrderReply, error) {
+// CreateOrderShip 创建货运信息
+func (s *OrderService) CreateOrderShip(ctx context.Context, req *orderv1.CreateOrderShipReq) (*orderv1.CreateOrderShipReply, error) {
 	// 从网关获取用户ID
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -186,7 +162,7 @@ func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq)
 		return nil, kerrors.New(500, "shipping_address", err.Error())
 	}
 
-	shipOrder, err := s.oc.ShipOrder(ctx, &biz.ShipOrderReq{
+	result, err := s.oc.CreateOrderShip(ctx, &biz.CreateOrderShipReq{
 		MerchantID:      userId,
 		SubOrderId:      req.SubOrderId,
 		TrackingNumber:  req.TrackingNumber,
@@ -196,12 +172,11 @@ func (s *OrderService) ShipOrder(ctx context.Context, req *orderv1.ShipOrderReq)
 		ShippingFee:     req.ShippingFee,
 	})
 	if err != nil {
-		return nil, status.Error(codes.PermissionDenied, "order does not belong to user")
+		return nil, err
 	}
-	log.Debugf("shipOrder: %v", shipOrder)
-	return &orderv1.ShipOrderReply{
-		Id:        shipOrder.Id,
-		CreatedAt: timestamppb.New(shipOrder.CreatedAt),
+	return &orderv1.CreateOrderShipReply{
+		Id:        result.Id,
+		CreatedAt: timestamppb.New(result.CreatedAt),
 	}, nil
 }
 
@@ -216,15 +191,83 @@ func (s *OrderService) UpdateOrderShippingStatus(ctx context.Context, req *order
 		return nil, status.Error(codes.InvalidArgument, "order ID is required")
 	}
 	// 调用业务层获取订单状态
-	log.Debugf("constants.ShippingStatus(req.ShippingStatus): %v", req)
+	shippingAddress, err := json.Marshal(req.ShippingAddress)
+	if err != nil {
+		return nil, kerrors.New(500, "shipping_address", err.Error())
+	}
+
 	orderStatus, err := s.oc.UpdateOrderShippingStatus(ctx, &biz.UpdateOrderShippingStatusReq{
-		UserId:         userId,
+		MerchantID:     userId,
 		SubOrderId:     req.SubOrderId,
-		ShippingStatus: constants.ShippingStatus(req.ShippingStatus),
+		TrackingNumber: req.TrackingNumber,
+		Carrier:        req.Carrier,
+		ShippingStatus: convertShippingStatusProtoToBiz(req.ShippingStatus),
+		// Delivery:        req.Delivery,
+		ShippingAddress: shippingAddress,
+		ShippingFee:     req.ShippingFee,
 	})
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("orderStatus: %v", orderStatus)
-	return &orderv1.UpdateOrderShippingStatusReply{}, nil
+	return &orderv1.UpdateOrderShippingStatusReply{
+		Id:        orderStatus.ID,
+		UpdatedAt: timestamppb.New(orderStatus.UpdatedAt),
+	}, nil
+}
+
+func convertShippingStatusProtoToBiz(status v1.ShippingStatus) constants.ShippingStatus {
+	switch status {
+	case v1.ShippingStatus_WAIT_COMMAND:
+		return constants.ShippingWaitCommand
+	case v1.ShippingStatus_PENDING_SHIPMENT:
+		return constants.ShippingPending
+	case v1.ShippingStatus_SHIPPED:
+		return constants.ShippingShipped
+	case v1.ShippingStatus_IN_TRANSIT:
+		return constants.ShippingInTransit
+	case v1.ShippingStatus_DELIVERED:
+		return constants.ShippingDelivered
+	case v1.ShippingStatus_CONFIRMED:
+		return constants.ShippingConfirmed
+	case v1.ShippingStatus_CANCELLED_SHIPMENT:
+		return constants.ShippingCancelled
+	default:
+		return constants.ShippingWaitCommand
+	}
+}
+
+func convertToShippingStatus(status constants.ShippingStatus) v1.ShippingStatus {
+	switch status {
+	case constants.ShippingWaitCommand:
+		return v1.ShippingStatus_WAIT_COMMAND
+	case constants.ShippingPending:
+		return v1.ShippingStatus_PENDING_SHIPMENT
+	case constants.ShippingShipped:
+		return v1.ShippingStatus_SHIPPED
+	case constants.ShippingInTransit:
+		return v1.ShippingStatus_IN_TRANSIT
+	case constants.ShippingDelivered:
+		return v1.ShippingStatus_DELIVERED
+	case constants.ShippingConfirmed:
+		return v1.ShippingStatus_CONFIRMED
+	case constants.ShippingCancelled:
+		return v1.ShippingStatus_CANCELLED_SHIPMENT
+	default:
+		return v1.ShippingStatus_WAIT_COMMAND
+	}
+}
+
+func convertToPaymentStatus(status constants.PaymentStatus) v1.PaymentStatus {
+	switch status {
+	case constants.PaymentPending:
+		return v1.PaymentStatus_PENDING
+	case constants.PaymentPaid:
+		return v1.PaymentStatus_PAID
+	case constants.PaymentFailed:
+		return v1.PaymentStatus_FAILED
+	case constants.PaymentCancelled:
+		return v1.PaymentStatus_CANCELLED
+	default:
+		return v1.PaymentStatus_PENDING
+	}
 }

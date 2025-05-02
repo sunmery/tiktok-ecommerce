@@ -124,7 +124,7 @@ type RecordStockAdjustmentResponse struct {
 
 // GetStockAdjustmentHistoryRequest 获取库存调整历史请求
 type GetStockAdjustmentHistoryRequest struct {
-	// ProductId  uuid.UUID
+	ProductId  uuid.UUID
 	MerchantId uuid.UUID
 	Page       int64
 	PageSize   int64

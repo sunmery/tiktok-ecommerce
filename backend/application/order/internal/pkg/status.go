@@ -9,15 +9,15 @@ import (
 func MapPaymentStatusToProto(status constants.PaymentStatus) v1.PaymentStatus {
 	switch status {
 	case constants.PaymentPending:
-		return v1.PaymentStatus_NOT_PAID
+		return v1.PaymentStatus_PENDING
 	case constants.PaymentPaid:
 		return v1.PaymentStatus_PAID
 	case constants.PaymentFailed:
 		return v1.PaymentStatus_FAILED
 	case constants.PaymentCancelled:
-		return v1.PaymentStatus_CANCELLED_PAID
+		return v1.PaymentStatus_CANCELLED
 	default:
-		return v1.PaymentStatus_NOT_PAID
+		return v1.PaymentStatus_CANCELLED
 	}
 }
 

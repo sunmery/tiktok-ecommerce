@@ -66,13 +66,13 @@
     },
     "/v1/merchants/orders/ship/{subOrderId}": {
       "put": {
-        "summary": "商家发货",
-        "operationId": "Order_ShipOrder",
+        "summary": "创建货运信息",
+        "operationId": "Order_CreateOrderShip",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ShipOrderReply"
+              "$ref": "#/definitions/v1CreateOrderShipReply"
             }
           },
           "default": {
@@ -96,7 +96,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/OrderShipOrderBody"
+              "$ref": "#/definitions/OrderCreateOrderShipBody"
             }
           }
         ],
@@ -106,7 +106,7 @@
       }
     },
     "/v1/merchants/orders/ship/{subOrderId}/status": {
-      "put": {
+      "patch": {
         "summary": "更新订单货运状态",
         "operationId": "Order_UpdateOrderShippingStatus",
         "responses": {
@@ -181,7 +181,7 @@
     }
   },
   "definitions": {
-    "OrderShipOrderBody": {
+    "OrderCreateOrderShipBody": {
       "type": "object",
       "properties": {
         "trackingNumber": {
@@ -205,18 +205,94 @@
           "type": "object",
           "title": "发货地址"
         }
-      },
-      "title": "商家发货请求的消息结构"
+      }
     },
     "OrderUpdateOrderShippingStatusBody": {
       "type": "object",
       "properties": {
-        "shippingStatus": {
+        "merchantId": {
           "type": "string",
-          "title": "新的订单状态"
+          "title": "商家 ID"
+        },
+        "trackingNumber": {
+          "type": "string",
+          "title": "物流单号"
+        },
+        "carrier": {
+          "type": "string",
+          "title": "承运商"
+        },
+        "delivery": {
+          "type": "string",
+          "format": "date-time",
+          "title": "送达时间"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态"
+        },
+        "shippingFee": {
+          "type": "number",
+          "format": "double",
+          "title": "运费"
+        },
+        "shippingAddress": {
+          "type": "object",
+          "title": "发货地址"
         }
       },
       "title": "更新订单状态请求的消息结构"
+    },
+    "ecommercemerchantorderv1OrderItem": {
+      "type": "object",
+      "properties": {
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "item": {
+          "$ref": "#/definitions/v1CartItem",
+          "title": "购物车中的商品项"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double",
+          "title": "商品单价"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态,冗余, 减少查询"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "订单创建时间"
+        }
+      }
     },
     "googleprotobufAny": {
       "type": "object",
@@ -319,6 +395,22 @@
         "streetAddress"
       ]
     },
+    "v1CreateOrderShipReply": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "物流ID"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "创建时间"
+        }
+      },
+      "title": "商家发货响应的消息结构"
+    },
     "v1GetMerchantByOrderIdReply": {
       "type": "object",
       "properties": {
@@ -334,20 +426,20 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1Order"
+            "$ref": "#/definitions/v1MerchantOrder"
           },
           "title": "订单列表"
         }
       }
     },
-    "v1Order": {
+    "v1MerchantOrder": {
       "type": "object",
       "properties": {
         "items": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1OrderItem"
+            "$ref": "#/definitions/ecommercemerchantorderv1OrderItem"
           },
           "title": "订单项列表"
         },
@@ -356,85 +448,23 @@
           "format": "int64",
           "title": "订单 ID"
         },
-        "subOrderId": {
-          "type": "string",
-          "format": "int64",
-          "title": "子订单 ID"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "currency": {
-          "type": "string",
-          "title": "货币代码（如 USD、CNY），长度固定为 3"
-        },
-        "address": {
-          "$ref": "#/definitions/v1ConsumerAddress",
-          "title": "用户地址信息"
-        },
-        "email": {
-          "type": "string",
-          "title": "用户邮箱"
-        },
         "createdAt": {
           "type": "string",
-          "format": "date-time",
-          "title": "订单创建时间"
-        },
-        "paymentStatus": {
-          "$ref": "#/definitions/v1PaymentStatus",
-          "title": "支付状态"
-        },
-        "shippingStatus": {
-          "$ref": "#/definitions/v1ShippingStatus",
-          "title": "冗余货运状态"
+          "format": "date-time"
         }
-      },
-      "title": "订单的消息结构"
-    },
-    "v1OrderItem": {
-      "type": "object",
-      "properties": {
-        "item": {
-          "$ref": "#/definitions/v1CartItem",
-          "title": "购物车中的商品项"
-        },
-        "cost": {
-          "type": "number",
-          "format": "double",
-          "title": "商品单价"
-        }
-      },
-      "title": "订单项的消息结构"
+      }
     },
     "v1PaymentStatus": {
       "type": "string",
       "enum": [
-        "NOT_PAID",
-        "PROCESSING",
+        "PENDING",
         "PAID",
         "FAILED",
-        "CANCELLED_PAID"
+        "CANCELLED"
       ],
-      "default": "NOT_PAID",
-      "description": "- NOT_PAID: 未支付\n - PROCESSING: 处理中\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED_PAID: 取消支付",
+      "default": "PENDING",
+      "description": "- PENDING: 未支付\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
       "title": "支付状态的枚举类型"
-    },
-    "v1ShipOrderReply": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64",
-          "title": "物流ID"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "创建时间"
-        }
-      },
-      "title": "商家发货响应的消息结构"
     },
     "v1ShippingStatus": {
       "type": "string",
@@ -453,6 +483,18 @@
     },
     "v1UpdateOrderShippingStatusReply": {
       "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "物流ID"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "更新时间"
+        }
+      },
       "title": "更新订单状态响应的消息结构"
     }
   }

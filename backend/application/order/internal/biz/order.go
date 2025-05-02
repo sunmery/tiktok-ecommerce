@@ -140,6 +140,30 @@ type (
 		UserId     uuid.UUID
 		SubOrderId int64
 	}
+	ShippingAddress struct {
+		AddressType   string `json:"addressType"`
+		City          string `json:"city"`
+		ContactPerson string `json:"contactPerson"`
+		ContactPhone  string `json:"contactPhone"`
+		Country       string `json:"country"`
+		State         string `json:"state"`
+		StreetAddress string `json:"streetAddress"`
+		ZipCode       string `json:"zipCode"`
+	}
+	ReceiverAddress struct {
+		City           string    `json:"city"`
+		Country        string    `json:"country"`
+		CreatedAt      time.Time `json:"createdAt"`
+		Email          string    `json:"email"`
+		ID             int64     `json:"id"`
+		PaymentStatus  string    `json:"paymentStatus"`
+		ShippingStatus string    `json:"shippingStatus"`
+		State          string    `json:"state"`
+		StreetAddress  string    `json:"streetAddress"`
+		UpdatedAt      time.Time `json:"updatedAt"`
+		UserID         string    `json:"userId"`
+		ZipCode        string    `json:"zipCode"`
+	}
 	GetShipOrderStatusReply struct {
 		Id              int64                    // 物流 ID
 		SubOrderId      int64                    // 子订单 ID
@@ -148,8 +172,8 @@ type (
 		ShippingStatus  constants.ShippingStatus // 货运状态
 		Delivery        time.Time                // 送达时间
 		ShippingFee     float64                  // 运费
-		ReceiverAddress map[string]any           // 用户地址
-		ShippingAddress map[string]any           // 商家地址
+		ReceiverAddress ReceiverAddress          // 用户地址
+		ShippingAddress ShippingAddress          // 商家地址
 		// EstimatedDelivery string                     // 送达时间
 		CreatedAt time.Time
 		UpdatedAt time.Time // 更新时间

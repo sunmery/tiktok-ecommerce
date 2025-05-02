@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	balancerv1 "backend/api/balancer/v1"
+	balancev1 "backend/api/balancer/v1"
 
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -36,14 +36,14 @@ import (
 var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewBalancerServiceClient, NewPaymentRepo)
 
 type Data struct {
-	db         *models.Queries
-	pgx        *pgxpool.Pool
-	rdb        *redis.Client
-	logger     *log.Helper
-	alipay     *alipay.Client
-	conf       *conf.Pay
-	orderv1    orderv1.OrderServiceClient
-	balancerv1 balancerv1.BalanceClient
+	db        *models.Queries
+	pgx       *pgxpool.Pool
+	rdb       *redis.Client
+	logger    *log.Helper
+	alipay    *alipay.Client
+	conf      *conf.Pay
+	orderv1   orderv1.OrderServiceClient
+	balancev1 balancev1.BalanceClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -57,20 +57,20 @@ func NewData(
 	alipay *alipay.Client,
 	conf *conf.Pay,
 	orderv1 orderv1.OrderServiceClient,
-	balancerv1 balancerv1.BalanceClient,
+	balancev1 balancev1.BalanceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:         models.New(db),        // 数据库
-		pgx:        db,                    // 数据库事务
-		rdb:        rdb,                   // 缓存
-		logger:     log.NewHelper(logger), // 注入日志
-		alipay:     alipay,
-		conf:       conf,
-		orderv1:    orderv1,
-		balancerv1: balancerv1, // 余额服务
+		db:        models.New(db),        // 数据库
+		pgx:       db,                    // 数据库事务
+		rdb:       rdb,                   // 缓存
+		logger:    log.NewHelper(logger), // 注入日志
+		alipay:    alipay,
+		conf:      conf,
+		orderv1:   orderv1,
+		balancev1: balancev1, // 余额服务
 	}, cleanup, nil
 }
 
@@ -152,7 +152,7 @@ func NewDiscovery(conf *conf.Consul) (registry.Discovery, error) {
 }
 
 // NewBalancerServiceClient 余额微服务
-func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancerv1.BalanceClient, error) {
+func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancev1.BalanceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),
 		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.BalancerServicev1)),
@@ -166,7 +166,7 @@ func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancer
 	if err != nil {
 		return nil, err
 	}
-	return balancerv1.NewBalanceClient(conn), nil
+	return balancev1.NewBalanceClient(conn), nil
 }
 
 // NewOrderServiceClient 订单微服务
