@@ -245,11 +245,14 @@ func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceive
 	tx := o.data.DB(ctx)
 
 	// 获取订单信息，确认订单存在且属于该用户
-	order, err := tx.GetOrderByID(ctx, models.GetOrderByIDParams{
+	order, err := tx.GetSubOrderByID(ctx, models.GetSubOrderByIDParams{
 		UserID:  req.UserId,
 		OrderID: req.OrderId,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, kerrors.NotFound("order", fmt.Sprintf("order '%d' not found", req.OrderId))
+		}
 		o.log.WithContext(ctx).Errorf("Failed to get order %d: %v", req.OrderId, err)
 		return nil, fmt.Errorf("getOrderById failed to get order: %w", err)
 	}
@@ -262,10 +265,12 @@ func (o *orderRepo) ConfirmReceived(ctx context.Context, req *biz.ConfirmReceive
 
 	// 更新订单物流状态为已确认收货
 	shippingConfirmed := string(constants.ShippingConfirmed)
-	err = tx.UpdateOrderShippingStatus(ctx, models.UpdateOrderShippingStatusParams{
+	params := models.UpdateOrderShippingStatusParams{
 		ShippingStatus: &shippingConfirmed,
 		SubOrderID:     &req.OrderId,
-	})
+	}
+	log.Debugf("params: %+v", params)
+	err = tx.UpdateOrderShippingStatus(ctx, params)
 	if err != nil {
 		o.log.WithContext(ctx).Errorf("Failed to update order shipping status: %v", err)
 		return nil, fmt.Errorf("failed to update order shipping status: %w", err)

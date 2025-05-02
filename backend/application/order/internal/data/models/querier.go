@@ -117,6 +117,28 @@ type Querier interface {
 	//  FROM orders.shipping_info
 	//  WHERE sub_order_id = $1
 	GetShipOrderStatus(ctx context.Context, id int64) (GetShipOrderStatusRow, error)
+	//GetSubOrderByID
+	//
+	//  SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,
+	//         json_agg(
+	//                 json_build_object(
+	//                         'id', os.id,
+	//                         'merchant_id', os.merchant_id,
+	//                         'total_amount', os.total_amount,
+	//                         'currency', os.currency,
+	//                         'status', os.status,
+	//                         'shipping_status', os.shipping_status,
+	//                         'items', os.items,
+	//                         'created_at', os.created_at,
+	//                         'updated_at', os.updated_at
+	//                 )
+	//         ) AS sub_orders
+	//  FROM orders.orders o
+	//           LEFT JOIN orders.sub_orders os ON o.id = os.order_id
+	//  WHERE o.user_id = $1
+	//    AND os.id = $2
+	//  GROUP BY o.id
+	GetSubOrderByID(ctx context.Context, arg GetSubOrderByIDParams) (GetSubOrderByIDRow, error)
 	//GetUserOrdersWithSuborders
 	//
 	//  SELECT o.id,

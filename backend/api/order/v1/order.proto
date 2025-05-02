@@ -67,7 +67,7 @@ service OrderService {
   // 用户确认收货
   rpc ConfirmReceived(ConfirmReceivedReq) returns (ConfirmReceivedResp) {
     option (google.api.http) = {
-      put: "/v1/orders/{order_id}/receive" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      patch: "/v1/consumers/orders/{order_id}/receive" // 定义 HTTP PUT 请求路径，路径参数为 order_id
       body: "*"                            // 表示请求体包含所有字段
     };
   }

@@ -168,8 +168,6 @@ func (m *GetShipOrderStatusReply) validate(all bool) error {
 
 	// no validation rules for SubOrderId
 
-	// no validation rules for PaymentStatus
-
 	// no validation rules for ShippingStatus
 
 	if all {

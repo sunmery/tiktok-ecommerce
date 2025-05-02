@@ -464,6 +464,91 @@ func (q *Queries) GetShipOrderStatus(ctx context.Context, id int64) (GetShipOrde
 	return i, err
 }
 
+const GetSubOrderByID = `-- name: GetSubOrderByID :one
+SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,
+       json_agg(
+               json_build_object(
+                       'id', os.id,
+                       'merchant_id', os.merchant_id,
+                       'total_amount', os.total_amount,
+                       'currency', os.currency,
+                       'status', os.status,
+                       'shipping_status', os.shipping_status,
+                       'items', os.items,
+                       'created_at', os.created_at,
+                       'updated_at', os.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders o
+         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
+WHERE o.user_id = $1
+  AND os.id = $2
+GROUP BY o.id
+`
+
+type GetSubOrderByIDParams struct {
+	UserID  uuid.UUID `json:"userID"`
+	OrderID int64     `json:"orderID"`
+}
+
+type GetSubOrderByIDRow struct {
+	ID            int64     `json:"id"`
+	UserID        uuid.UUID `json:"userID"`
+	Currency      string    `json:"currency"`
+	StreetAddress string    `json:"streetAddress"`
+	City          string    `json:"city"`
+	State         string    `json:"state"`
+	Country       string    `json:"country"`
+	ZipCode       string    `json:"zipCode"`
+	Email         string    `json:"email"`
+	PaymentStatus string    `json:"paymentStatus"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	SubOrders     []byte    `json:"subOrders"`
+}
+
+// GetSubOrderByID
+//
+//	SELECT o.id, o.user_id, o.currency, o.street_address, o.city, o.state, o.country, o.zip_code, o.email, o.payment_status, o.created_at, o.updated_at,
+//	       json_agg(
+//	               json_build_object(
+//	                       'id', os.id,
+//	                       'merchant_id', os.merchant_id,
+//	                       'total_amount', os.total_amount,
+//	                       'currency', os.currency,
+//	                       'status', os.status,
+//	                       'shipping_status', os.shipping_status,
+//	                       'items', os.items,
+//	                       'created_at', os.created_at,
+//	                       'updated_at', os.updated_at
+//	               )
+//	       ) AS sub_orders
+//	FROM orders.orders o
+//	         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
+//	WHERE o.user_id = $1
+//	  AND os.id = $2
+//	GROUP BY o.id
+func (q *Queries) GetSubOrderByID(ctx context.Context, arg GetSubOrderByIDParams) (GetSubOrderByIDRow, error) {
+	row := q.db.QueryRow(ctx, GetSubOrderByID, arg.UserID, arg.OrderID)
+	var i GetSubOrderByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Currency,
+		&i.StreetAddress,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.ZipCode,
+		&i.Email,
+		&i.PaymentStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SubOrders,
+	)
+	return i, err
+}
+
 const GetUserOrdersWithSuborders = `-- name: GetUserOrdersWithSuborders :many
 SELECT o.id,
        o.street_address,

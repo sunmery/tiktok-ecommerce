@@ -105,6 +105,47 @@
         ]
       }
     },
+    "/v1/consumers/orders/{orderId}/receive": {
+      "patch": {
+        "summary": "用户确认收货",
+        "operationId": "OrderService_ConfirmReceived",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConfirmReceivedResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderServiceConfirmReceivedBody"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    },
     "/v1/orders": {
       "post": {
         "summary": "创建订单",
@@ -244,47 +285,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/OrderServiceMarkOrderPaidBody"
-            }
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      }
-    },
-    "/v1/orders/{orderId}/receive": {
-      "put": {
-        "summary": "用户确认收货",
-        "operationId": "OrderService_ConfirmReceived",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ConfirmReceivedResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "orderId",
-            "description": "订单 ID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/OrderServiceConfirmReceivedBody"
             }
           }
         ],
@@ -523,10 +523,6 @@
           "type": "string",
           "format": "int64",
           "title": "子订单 ID"
-        },
-        "paymentStatus": {
-          "$ref": "#/definitions/v1PaymentStatus",
-          "title": "支付状态"
         },
         "shippingStatus": {
           "$ref": "#/definitions/v1ShippingStatus",

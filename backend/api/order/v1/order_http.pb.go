@@ -56,7 +56,7 @@ func RegisterOrderServiceHTTPServer(s *http.Server, srv OrderServiceHTTPServer) 
 	r.GET("/v1/orders/users/{order_id}", _OrderService_GetUserOrdersWithSuborders0_HTTP_Handler(srv))
 	r.POST("/v1/orders/{order_id}/paid", _OrderService_MarkOrderPaid0_HTTP_Handler(srv))
 	r.GET("/v1/orders/{sub_order_id}/ship/status", _OrderService_GetShipOrderStatus0_HTTP_Handler(srv))
-	r.PUT("/v1/orders/{order_id}/receive", _OrderService_ConfirmReceived0_HTTP_Handler(srv))
+	r.PATCH("/v1/consumers/orders/{order_id}/receive", _OrderService_ConfirmReceived0_HTTP_Handler(srv))
 }
 
 func _OrderService_PlaceOrder0_HTTP_Handler(srv OrderServiceHTTPServer) func(ctx http.Context) error {
@@ -256,11 +256,11 @@ func NewOrderServiceHTTPClient(client *http.Client) OrderServiceHTTPClient {
 
 func (c *OrderServiceHTTPClientImpl) ConfirmReceived(ctx context.Context, in *ConfirmReceivedReq, opts ...http.CallOption) (*ConfirmReceivedResp, error) {
 	var out ConfirmReceivedResp
-	pattern := "/v1/orders/{order_id}/receive"
+	pattern := "/v1/consumers/orders/{order_id}/receive"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationOrderServiceConfirmReceived))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

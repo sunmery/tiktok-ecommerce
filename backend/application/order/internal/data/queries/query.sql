@@ -53,6 +53,27 @@ WHERE o.user_id = @user_id
   AND o.id = @order_id
 GROUP BY o.id;
 
+-- name: GetSubOrderByID :one
+SELECT o.*,
+       json_agg(
+               json_build_object(
+                       'id', os.id,
+                       'merchant_id', os.merchant_id,
+                       'total_amount', os.total_amount,
+                       'currency', os.currency,
+                       'status', os.status,
+                       'shipping_status', os.shipping_status,
+                       'items', os.items,
+                       'created_at', os.created_at,
+                       'updated_at', os.updated_at
+               )
+       ) AS sub_orders
+FROM orders.orders o
+         LEFT JOIN orders.sub_orders os ON o.id = os.order_id
+WHERE o.user_id = @user_id
+  AND os.id = @order_id
+GROUP BY o.id;
+
 -- name: GetOrderByUserID :one
 SELECT os.id,
        os.order_id,
@@ -180,7 +201,7 @@ SELECT id,
        receiver_address,
        shipping_fee,
        created_at,
-       updated_at,
+       updated_at
 FROM orders.shipping_info
 WHERE sub_order_id = @id;
 

@@ -191,7 +191,6 @@ type GetShipOrderStatusReply struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	OrderId         int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                                                             // 主订单 ID
 	SubOrderId      int64                  `protobuf:"varint,2,opt,name=sub_order_id,json=subOrderId,proto3" json:"sub_order_id,omitempty"`                                                  // 子订单 ID
-	PaymentStatus   PaymentStatus          `protobuf:"varint,3,opt,name=payment_status,json=paymentStatus,proto3,enum=ecommerce.order.v1.PaymentStatus" json:"payment_status,omitempty"`     // 支付状态
 	ShippingStatus  ShippingStatus         `protobuf:"varint,4,opt,name=shipping_status,json=shippingStatus,proto3,enum=ecommerce.order.v1.ShippingStatus" json:"shipping_status,omitempty"` // 货运状态
 	ReceiverAddress *structpb.Struct       `protobuf:"bytes,5,opt,name=receiver_address,json=receiverAddress,proto3" json:"receiver_address,omitempty"`                                      // 用户收货地址
 	ShippingAddress *structpb.Struct       `protobuf:"bytes,6,opt,name=shipping_address,json=shippingAddress,proto3" json:"shipping_address,omitempty"`                                      // 商家发货地址
@@ -243,13 +242,6 @@ func (x *GetShipOrderStatusReply) GetSubOrderId() int64 {
 		return x.SubOrderId
 	}
 	return 0
-}
-
-func (x *GetShipOrderStatusReply) GetPaymentStatus() PaymentStatus {
-	if x != nil {
-		return x.PaymentStatus
-	}
-	return PaymentStatus_PENDING
 }
 
 func (x *GetShipOrderStatusReply) GetShippingStatus() ShippingStatus {
@@ -1443,12 +1435,11 @@ const file_v1_order_proto_rawDesc = "" +
 	"\x0ev1/order.proto\x12\x12ecommerce.order.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\x1a\x1ebackend/api/cart/v1/cart.proto\x1a\x1ebackend/api/user/v1/user.proto\"9\n" +
 	"\x15GetShipOrderStatusReq\x12 \n" +
 	"\fsub_order_id\x18\x01 \x01(\x03R\n" +
-	"subOrderId\"\xb8\x03\n" +
+	"subOrderId\"\xee\x02\n" +
 	"\x17GetShipOrderStatusReply\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\x12 \n" +
 	"\fsub_order_id\x18\x02 \x01(\x03R\n" +
-	"subOrderId\x12H\n" +
-	"\x0epayment_status\x18\x03 \x01(\x0e2!.ecommerce.order.v1.PaymentStatusR\rpaymentStatus\x12K\n" +
+	"subOrderId\x12K\n" +
 	"\x0fshipping_status\x18\x04 \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatus\x12B\n" +
 	"\x10receiver_address\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x0freceiverAddress\x12B\n" +
 	"\x10shipping_address\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddress\x12'\n" +
@@ -1561,7 +1552,7 @@ const file_v1_order_proto_rawDesc = "" +
 	"IN_TRANSIT\x10\x03\x12\r\n" +
 	"\tDELIVERED\x10\x04\x12\r\n" +
 	"\tCONFIRMED\x10\x05\x12\x16\n" +
-	"\x12CANCELLED_SHIPMENT\x10\x062\xa6\b\n" +
+	"\x12CANCELLED_SHIPMENT\x10\x062\xb0\b\n" +
 	"\fOrderService\x12j\n" +
 	"\n" +
 	"PlaceOrder\x12!.ecommerce.order.v1.PlaceOrderReq\x1a\".ecommerce.order.v1.PlaceOrderResp\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
@@ -1571,8 +1562,8 @@ const file_v1_order_proto_rawDesc = "" +
 	"\bGetOrder\x12\x1f.ecommerce.order.v1.GetOrderReq\x1a\x19.ecommerce.order.v1.Order\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/orders/{id}\x12\xa9\x01\n" +
 	"\x1aGetUserOrdersWithSuborders\x121.ecommerce.order.v1.GetUserOrdersWithSubordersReq\x1a3.ecommerce.order.v1.GetUserOrdersWithSubordersReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/users/{order_id}\x12\x83\x01\n" +
 	"\rMarkOrderPaid\x12$.ecommerce.order.v1.MarkOrderPaidReq\x1a%.ecommerce.order.v1.MarkOrderPaidResp\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/orders/{order_id}/paid\x12\x9b\x01\n" +
-	"\x12GetShipOrderStatus\x12).ecommerce.order.v1.GetShipOrderStatusReq\x1a+.ecommerce.order.v1.GetShipOrderStatusReply\"-\x82\xd3\xe4\x93\x02'\x12%/v1/orders/{sub_order_id}/ship/status\x12\x8c\x01\n" +
-	"\x0fConfirmReceived\x12&.ecommerce.order.v1.ConfirmReceivedReq\x1a'.ecommerce.order.v1.ConfirmReceivedResp\"(\x82\xd3\xe4\x93\x02\":\x01*\x1a\x1d/v1/orders/{order_id}/receiveB\x1eZ\x1cbackend/api/order/v1;orderv1b\x06proto3"
+	"\x12GetShipOrderStatus\x12).ecommerce.order.v1.GetShipOrderStatusReq\x1a+.ecommerce.order.v1.GetShipOrderStatusReply\"-\x82\xd3\xe4\x93\x02'\x12%/v1/orders/{sub_order_id}/ship/status\x12\x96\x01\n" +
+	"\x0fConfirmReceived\x12&.ecommerce.order.v1.ConfirmReceivedReq\x1a'.ecommerce.order.v1.ConfirmReceivedResp\"2\x82\xd3\xe4\x93\x02,:\x01*2'/v1/consumers/orders/{order_id}/receiveB\x1eZ\x1cbackend/api/order/v1;orderv1b\x06proto3"
 
 var (
 	file_v1_order_proto_rawDescOnce sync.Once
@@ -1617,51 +1608,50 @@ var file_v1_order_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil),           // 25: google.protobuf.Timestamp
 }
 var file_v1_order_proto_depIdxs = []int32{
-	0,  // 0: ecommerce.order.v1.GetShipOrderStatusReply.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
-	1,  // 1: ecommerce.order.v1.GetShipOrderStatusReply.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
-	22, // 2: ecommerce.order.v1.GetShipOrderStatusReply.receiver_address:type_name -> google.protobuf.Struct
-	22, // 3: ecommerce.order.v1.GetShipOrderStatusReply.shipping_address:type_name -> google.protobuf.Struct
-	23, // 4: ecommerce.order.v1.PlaceOrderReq.address:type_name -> ecommerce.user.v1.ConsumerAddress
-	5,  // 5: ecommerce.order.v1.PlaceOrderReq.order_items:type_name -> ecommerce.order.v1.OrderItem
-	24, // 6: ecommerce.order.v1.OrderItem.item:type_name -> ecommerce.cart.v1.CartItem
-	6,  // 7: ecommerce.order.v1.PlaceOrderResp.order:type_name -> ecommerce.order.v1.OrderResult
-	5,  // 8: ecommerce.order.v1.Order.items:type_name -> ecommerce.order.v1.OrderItem
-	23, // 9: ecommerce.order.v1.Order.address:type_name -> ecommerce.user.v1.ConsumerAddress
-	25, // 10: ecommerce.order.v1.Order.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 11: ecommerce.order.v1.Order.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
-	1,  // 12: ecommerce.order.v1.Order.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
-	5,  // 13: ecommerce.order.v1.ConsumerOrder.items:type_name -> ecommerce.order.v1.OrderItem
-	23, // 14: ecommerce.order.v1.ConsumerOrder.address:type_name -> ecommerce.user.v1.ConsumerAddress
-	25, // 15: ecommerce.order.v1.ConsumerOrder.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 16: ecommerce.order.v1.ConsumerOrder.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
-	1,  // 17: ecommerce.order.v1.ConsumerOrder.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
-	9,  // 18: ecommerce.order.v1.ConsumerOrders.items:type_name -> ecommerce.order.v1.ConsumerOrder
-	5,  // 19: ecommerce.order.v1.Suborders.items:type_name -> ecommerce.order.v1.OrderItem
-	25, // 20: ecommerce.order.v1.Suborders.created_at:type_name -> google.protobuf.Timestamp
-	25, // 21: ecommerce.order.v1.Suborders.updated_at:type_name -> google.protobuf.Timestamp
-	13, // 22: ecommerce.order.v1.GetUserOrdersWithSubordersReply.orders:type_name -> ecommerce.order.v1.Suborders
-	8,  // 23: ecommerce.order.v1.Orders.orders:type_name -> ecommerce.order.v1.Order
-	4,  // 24: ecommerce.order.v1.OrderService.PlaceOrder:input_type -> ecommerce.order.v1.PlaceOrderReq
-	15, // 25: ecommerce.order.v1.OrderService.GetConsumerOrders:input_type -> ecommerce.order.v1.GetConsumerOrdersReq
-	16, // 26: ecommerce.order.v1.OrderService.GetAllOrders:input_type -> ecommerce.order.v1.GetAllOrdersReq
-	11, // 27: ecommerce.order.v1.OrderService.GetOrder:input_type -> ecommerce.order.v1.GetOrderReq
-	12, // 28: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:input_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReq
-	18, // 29: ecommerce.order.v1.OrderService.MarkOrderPaid:input_type -> ecommerce.order.v1.MarkOrderPaidReq
-	2,  // 30: ecommerce.order.v1.OrderService.GetShipOrderStatus:input_type -> ecommerce.order.v1.GetShipOrderStatusReq
-	20, // 31: ecommerce.order.v1.OrderService.ConfirmReceived:input_type -> ecommerce.order.v1.ConfirmReceivedReq
-	7,  // 32: ecommerce.order.v1.OrderService.PlaceOrder:output_type -> ecommerce.order.v1.PlaceOrderResp
-	10, // 33: ecommerce.order.v1.OrderService.GetConsumerOrders:output_type -> ecommerce.order.v1.ConsumerOrders
-	17, // 34: ecommerce.order.v1.OrderService.GetAllOrders:output_type -> ecommerce.order.v1.Orders
-	8,  // 35: ecommerce.order.v1.OrderService.GetOrder:output_type -> ecommerce.order.v1.Order
-	14, // 36: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:output_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReply
-	19, // 37: ecommerce.order.v1.OrderService.MarkOrderPaid:output_type -> ecommerce.order.v1.MarkOrderPaidResp
-	3,  // 38: ecommerce.order.v1.OrderService.GetShipOrderStatus:output_type -> ecommerce.order.v1.GetShipOrderStatusReply
-	21, // 39: ecommerce.order.v1.OrderService.ConfirmReceived:output_type -> ecommerce.order.v1.ConfirmReceivedResp
-	32, // [32:40] is the sub-list for method output_type
-	24, // [24:32] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	1,  // 0: ecommerce.order.v1.GetShipOrderStatusReply.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
+	22, // 1: ecommerce.order.v1.GetShipOrderStatusReply.receiver_address:type_name -> google.protobuf.Struct
+	22, // 2: ecommerce.order.v1.GetShipOrderStatusReply.shipping_address:type_name -> google.protobuf.Struct
+	23, // 3: ecommerce.order.v1.PlaceOrderReq.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	5,  // 4: ecommerce.order.v1.PlaceOrderReq.order_items:type_name -> ecommerce.order.v1.OrderItem
+	24, // 5: ecommerce.order.v1.OrderItem.item:type_name -> ecommerce.cart.v1.CartItem
+	6,  // 6: ecommerce.order.v1.PlaceOrderResp.order:type_name -> ecommerce.order.v1.OrderResult
+	5,  // 7: ecommerce.order.v1.Order.items:type_name -> ecommerce.order.v1.OrderItem
+	23, // 8: ecommerce.order.v1.Order.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	25, // 9: ecommerce.order.v1.Order.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 10: ecommerce.order.v1.Order.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
+	1,  // 11: ecommerce.order.v1.Order.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
+	5,  // 12: ecommerce.order.v1.ConsumerOrder.items:type_name -> ecommerce.order.v1.OrderItem
+	23, // 13: ecommerce.order.v1.ConsumerOrder.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	25, // 14: ecommerce.order.v1.ConsumerOrder.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 15: ecommerce.order.v1.ConsumerOrder.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
+	1,  // 16: ecommerce.order.v1.ConsumerOrder.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
+	9,  // 17: ecommerce.order.v1.ConsumerOrders.items:type_name -> ecommerce.order.v1.ConsumerOrder
+	5,  // 18: ecommerce.order.v1.Suborders.items:type_name -> ecommerce.order.v1.OrderItem
+	25, // 19: ecommerce.order.v1.Suborders.created_at:type_name -> google.protobuf.Timestamp
+	25, // 20: ecommerce.order.v1.Suborders.updated_at:type_name -> google.protobuf.Timestamp
+	13, // 21: ecommerce.order.v1.GetUserOrdersWithSubordersReply.orders:type_name -> ecommerce.order.v1.Suborders
+	8,  // 22: ecommerce.order.v1.Orders.orders:type_name -> ecommerce.order.v1.Order
+	4,  // 23: ecommerce.order.v1.OrderService.PlaceOrder:input_type -> ecommerce.order.v1.PlaceOrderReq
+	15, // 24: ecommerce.order.v1.OrderService.GetConsumerOrders:input_type -> ecommerce.order.v1.GetConsumerOrdersReq
+	16, // 25: ecommerce.order.v1.OrderService.GetAllOrders:input_type -> ecommerce.order.v1.GetAllOrdersReq
+	11, // 26: ecommerce.order.v1.OrderService.GetOrder:input_type -> ecommerce.order.v1.GetOrderReq
+	12, // 27: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:input_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReq
+	18, // 28: ecommerce.order.v1.OrderService.MarkOrderPaid:input_type -> ecommerce.order.v1.MarkOrderPaidReq
+	2,  // 29: ecommerce.order.v1.OrderService.GetShipOrderStatus:input_type -> ecommerce.order.v1.GetShipOrderStatusReq
+	20, // 30: ecommerce.order.v1.OrderService.ConfirmReceived:input_type -> ecommerce.order.v1.ConfirmReceivedReq
+	7,  // 31: ecommerce.order.v1.OrderService.PlaceOrder:output_type -> ecommerce.order.v1.PlaceOrderResp
+	10, // 32: ecommerce.order.v1.OrderService.GetConsumerOrders:output_type -> ecommerce.order.v1.ConsumerOrders
+	17, // 33: ecommerce.order.v1.OrderService.GetAllOrders:output_type -> ecommerce.order.v1.Orders
+	8,  // 34: ecommerce.order.v1.OrderService.GetOrder:output_type -> ecommerce.order.v1.Order
+	14, // 35: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:output_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReply
+	19, // 36: ecommerce.order.v1.OrderService.MarkOrderPaid:output_type -> ecommerce.order.v1.MarkOrderPaidResp
+	3,  // 37: ecommerce.order.v1.OrderService.GetShipOrderStatus:output_type -> ecommerce.order.v1.GetShipOrderStatusReply
+	21, // 38: ecommerce.order.v1.OrderService.ConfirmReceived:output_type -> ecommerce.order.v1.ConfirmReceivedResp
+	31, // [31:39] is the sub-list for method output_type
+	23, // [23:31] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_v1_order_proto_init() }
