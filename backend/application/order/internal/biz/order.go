@@ -174,9 +174,8 @@ type (
 		ShippingFee     float64                  // 运费
 		ReceiverAddress ReceiverAddress          // 用户地址
 		ShippingAddress ShippingAddress          // 商家地址
-		// EstimatedDelivery string                     // 送达时间
-		CreatedAt time.Time
-		UpdatedAt time.Time // 更新时间
+		CreatedAt       time.Time
+		UpdatedAt       time.Time // 更新时间
 	}
 )
 

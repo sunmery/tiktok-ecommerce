@@ -180,7 +180,7 @@ SELECT id,
        receiver_address,
        shipping_fee,
        created_at,
-       updated_at
+       updated_at,
 FROM orders.shipping_info
 WHERE sub_order_id = @id;
 

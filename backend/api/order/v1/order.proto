@@ -81,7 +81,6 @@ message GetShipOrderStatusReq {
 message GetShipOrderStatusReply {
   int64 order_id = 1; // 主订单 ID
   int64 sub_order_id = 2; // 子订单 ID
-  order.v1.PaymentStatus payment_status = 3; // 支付状态
   order.v1.ShippingStatus shipping_status = 4; // 货运状态
   google.protobuf.Struct receiver_address = 5;  // 用户收货地址
   google.protobuf.Struct shipping_address = 6;  // 商家发货地址

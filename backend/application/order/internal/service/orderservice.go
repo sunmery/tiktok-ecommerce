@@ -437,18 +437,16 @@ func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.Ge
 	}
 
 	userAddressMap := map[string]any{
-		"city":           orderStatus.ReceiverAddress.City,
-		"country":        orderStatus.ReceiverAddress.Country,
-		"createdAt":      orderStatus.ReceiverAddress.CreatedAt.Format(time.RFC3339),
-		"email":          orderStatus.ReceiverAddress.Email,
-		"id":             orderStatus.ReceiverAddress.ID,
-		"paymentStatus":  orderStatus.ReceiverAddress.PaymentStatus,
-		"shippingStatus": orderStatus.ReceiverAddress.ShippingStatus,
-		"state":          orderStatus.ReceiverAddress.State,
-		"streetAddress":  orderStatus.ReceiverAddress.StreetAddress,
-		"updatedAt":      orderStatus.ReceiverAddress.UpdatedAt.Format(time.RFC3339),
-		"userId":         orderStatus.ReceiverAddress.UserID,
-		"zipCode":        orderStatus.ReceiverAddress.ZipCode,
+		"city":          orderStatus.ReceiverAddress.City,
+		"country":       orderStatus.ReceiverAddress.Country,
+		"createdAt":     orderStatus.ReceiverAddress.CreatedAt.Format(time.RFC3339),
+		"email":         orderStatus.ReceiverAddress.Email,
+		"id":            orderStatus.ReceiverAddress.ID,
+		"state":         orderStatus.ReceiverAddress.State,
+		"streetAddress": orderStatus.ReceiverAddress.StreetAddress,
+		"updatedAt":     orderStatus.ReceiverAddress.UpdatedAt.Format(time.RFC3339),
+		"userId":        orderStatus.ReceiverAddress.UserID,
+		"zipCode":       orderStatus.ReceiverAddress.ZipCode,
 	}
 	userAddress, err := structpb.NewStruct(userAddressMap)
 	if err != nil {
@@ -458,9 +456,8 @@ func (s *OrderServiceService) GetShipOrderStatus(ctx context.Context, req *v1.Ge
 	}
 	log.Debugf("userAddress: %+v", userAddress)
 	return &v1.GetShipOrderStatusReply{
-		OrderId:    orderStatus.Id,
-		SubOrderId: orderStatus.SubOrderId,
-		// PaymentStatus: pkg.MapPaymentStatusToProto(orderStatus.PaymentStatus), // 根据需要取消注释或修改
+		OrderId:         orderStatus.Id,
+		SubOrderId:      orderStatus.SubOrderId,
 		ShippingStatus:  pkg.MapShippingStatusToProto(orderStatus.ShippingStatus),
 		ReceiverAddress: userAddress,
 		ShippingAddress: merchantAddress,

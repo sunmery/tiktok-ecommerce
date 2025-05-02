@@ -117,7 +117,7 @@ message UpdateOrderShippingStatusReq {
   int64 sub_order_id = 2; // 子订单 ID
   string tracking_number = 5; // 物流单号
   string carrier = 3; // 承运商
-  google.protobuf.Timestamp delivery = 4; // 送达时间
+  optional google.protobuf.Timestamp delivery = 4; // 送达时间
   order.v1.ShippingStatus shipping_status = 7; // 货运状态
   double shipping_fee = 9; // 运费
   google.protobuf.Struct shipping_address = 6; // 发货地址
