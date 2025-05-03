@@ -28,13 +28,6 @@ service OrderService {
     };
   }
 
-  // 查询全部订单列表(管理员侧)
-  rpc GetAllOrders(GetAllOrdersReq) returns (Orders) {
-    option (google.api.http) = {
-      get: "/v1/admin/orders"
-    };
-  }
-
   // 根据订单ID查询
   rpc GetOrder(GetOrderReq) returns (Order) {
     option (google.api.http) = {
@@ -101,7 +94,6 @@ message OrderItem {
   cart.v1.CartItem item = 1; // 购物车中的商品项
   double cost = 2; // 商品单价
 }
-
 
 // 创建订单响应的消息结构
 message OrderResult {
@@ -209,12 +201,6 @@ message GetConsumerOrdersReq {
   string user_id = 1; // 用户 ID
   uint32 page = 2; // 分页参数：当前页码，默认值为 0
   uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
-}
-
-// 查询订单列表请求的消息结构
-message GetAllOrdersReq {
-  uint32 page = 1; // 分页参数：当前页码，默认值为 0
-  uint32 page_size = 2; // 分页参数：每页大小，默认值为 20，最大值为 100
 }
 
 // 查询订单列表响应的消息结构

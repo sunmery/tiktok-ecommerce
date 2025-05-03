@@ -2,6 +2,7 @@ package constants
 
 const (
 	AuthServiceV1      = "ecommerce-auth-v1"
+	AdminServiceV1     = "ecommerce-admin-v1"
 	UserServiceV1      = "ecommerce-user-v1"
 	ProductServiceV1   = "ecommerce-product-v1"
 	CategoryServiceV1  = "ecommerce-category-v1"

@@ -3,16 +3,20 @@ package server
 import (
 	"context"
 
+	commentv1 "backend/api/admin/comment/v1"
+
+	orderv1 "backend/api/admin/order/v1"
+	"backend/application/admin/internal/service"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
+	"backend/application/admin/internal/conf"
+	"backend/constants"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	"backend/application/admin/constants"
-	"backend/application/admin/internal/conf"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
@@ -22,6 +26,8 @@ func NewHTTPServer(
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
+	orderService *service.AdminOrderService,
+	commentService *service.AdminCommentService,
 ) *http.Server {
 	// trace start
 	ctx := context.Background()
@@ -34,7 +40,7 @@ func NewHTTPServer(
 			// attribute.Float64("float", 312.23),
 
 			// The service name used to display traces in backends serviceName
-			semconv.ServiceNameKey.String(constants.ServiceNameV1),
+			semconv.ServiceNameKey.String(constants.AdminServiceV1),
 		),
 	)
 	if err != nil {
@@ -70,6 +76,7 @@ func NewHTTPServer(
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	// v1.RegisterUserServiceHTTPServer(srv, user)
+	orderv1.RegisterAdminOrderHTTPServer(srv, orderService)
+	commentv1.RegisterAdminCommentHTTPServer(srv, commentService)
 	return srv
 }

@@ -103,16 +103,6 @@ type PlaceOrderResp struct {
 	Order *OrderResult
 }
 
-type (
-	GetAllOrdersReq struct {
-		Page     uint32 // 分页页码，从1开始
-		PageSize uint32 // 每页数量
-	}
-	GetAllOrdersReply struct {
-		Orders []*SubOrder
-	}
-)
-
 type MarkOrderPaidResp struct{}
 
 type MarkOrderPaidReq struct {
@@ -238,8 +228,6 @@ type OrderRepo interface {
 	PlaceOrder(ctx context.Context, req *PlaceOrderReq) (*PlaceOrderResp, error)
 	GetConsumerOrders(ctx context.Context, req *GetConsumerOrdersReq) (*GetConsumerOrdersReply, error)
 	GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error)
-	GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error)
-
 	MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error)
 	GetOrder(ctx context.Context, req *GetOrderReq) (*v1.Order, error)
 	GetShipOrderStatus(ctx context.Context, req *GetShipOrderStatusReq) (*GetShipOrderStatusReply, error)
@@ -270,11 +258,6 @@ func (oc *OrderUsecase) GetConsumerOrders(ctx context.Context, req *GetConsumerO
 func (oc *OrderUsecase) GetUserOrdersWithSuborders(ctx context.Context, req *GetUserOrdersWithSubordersReq) (*GetUserOrdersWithSubordersReply, error) {
 	oc.log.WithContext(ctx).Debugf("biz/order GetUserOrdersWithSuborders:%+v", req)
 	return oc.repo.GetUserOrdersWithSuborders(ctx, req)
-}
-
-func (oc *OrderUsecase) GetAllOrders(ctx context.Context, req *GetAllOrdersReq) (*GetAllOrdersReply, error) {
-	oc.log.WithContext(ctx).Debugf("biz/order GetAllOrders:%+v", req)
-	return oc.repo.GetAllOrders(ctx, req)
 }
 
 func (oc *OrderUsecase) MarkOrderPaid(ctx context.Context, req *MarkOrderPaidReq) (*MarkOrderPaidResp, error) {

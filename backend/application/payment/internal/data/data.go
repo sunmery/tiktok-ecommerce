@@ -111,7 +111,7 @@ func NewAlipay(c *conf.Pay) *alipay.Client {
 	// 加载支付宝公钥证书
 	// if err := client.LoadAlipayCertPublicKeyFromFile("/app/alipayPublicCert.crt"); err != nil {
 	if err := client.LoadAlipayCertPublicKeyFromFile("./alipayPublicCert.crt"); err != nil {
-		panic(fmt.Errorf("load alipay public cert failed: %v", err))
+		// 	panic(fmt.Errorf("load alipay public cert failed: %v", err))
 	}
 
 	// // 加载应用公钥证书

@@ -19,8 +19,8 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAdminCommentGetSensitiveWords = "/ecommerce.admin.v1.AdminComment/GetSensitiveWords"
-const OperationAdminCommentSetSensitiveWords = "/ecommerce.admin.v1.AdminComment/SetSensitiveWords"
+const OperationAdminCommentGetSensitiveWords = "/admin.admincomment.v1.AdminComment/GetSensitiveWords"
+const OperationAdminCommentSetSensitiveWords = "/admin.admincomment.v1.AdminComment/SetSensitiveWords"
 
 type AdminCommentHTTPServer interface {
 	// GetSensitiveWords 查询评论敏感词
@@ -31,8 +31,8 @@ type AdminCommentHTTPServer interface {
 
 func RegisterAdminCommentHTTPServer(s *http.Server, srv AdminCommentHTTPServer) {
 	r := s.Route("/")
-	r.PUT("/v1/admin/comments/sensitiveWords", _AdminComment_SetSensitiveWords0_HTTP_Handler(srv))
-	r.GET("/v1/admin/comments/sensitiveWords", _AdminComment_GetSensitiveWords0_HTTP_Handler(srv))
+	r.PUT("/v1/admin/comments/sensitive-words", _AdminComment_SetSensitiveWords0_HTTP_Handler(srv))
+	r.GET("/v1/admin/comments/sensitive-words", _AdminComment_GetSensitiveWords0_HTTP_Handler(srv))
 }
 
 func _AdminComment_SetSensitiveWords0_HTTP_Handler(srv AdminCommentHTTPServer) func(ctx http.Context) error {
@@ -91,7 +91,7 @@ func NewAdminCommentHTTPClient(client *http.Client) AdminCommentHTTPClient {
 
 func (c *AdminCommentHTTPClientImpl) GetSensitiveWords(ctx context.Context, in *GetSensitiveWordsReq, opts ...http.CallOption) (*GetSensitiveWordsReply, error) {
 	var out GetSensitiveWordsReply
-	pattern := "/v1/admin/comments/sensitiveWords"
+	pattern := "/v1/admin/comments/sensitive-words"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAdminCommentGetSensitiveWords))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -104,7 +104,7 @@ func (c *AdminCommentHTTPClientImpl) GetSensitiveWords(ctx context.Context, in *
 
 func (c *AdminCommentHTTPClientImpl) SetSensitiveWords(ctx context.Context, in *SetSensitiveWordsReq, opts ...http.CallOption) (*SetSensitiveWordsReply, error) {
 	var out SetSensitiveWordsReply
-	pattern := "/v1/admin/comments/sensitiveWords"
+	pattern := "/v1/admin/comments/sensitive-words"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAdminCommentSetSensitiveWords))
 	opts = append(opts, http.PathTemplate(pattern))

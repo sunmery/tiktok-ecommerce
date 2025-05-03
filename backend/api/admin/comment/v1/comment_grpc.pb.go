@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminComment_SetSensitiveWords_FullMethodName = "/ecommerce.admin.v1.AdminComment/SetSensitiveWords"
-	AdminComment_GetSensitiveWords_FullMethodName = "/ecommerce.admin.v1.AdminComment/GetSensitiveWords"
+	AdminComment_SetSensitiveWords_FullMethodName = "/admin.admincomment.v1.AdminComment/SetSensitiveWords"
+	AdminComment_GetSensitiveWords_FullMethodName = "/admin.admincomment.v1.AdminComment/GetSensitiveWords"
 )
 
 // AdminCommentClient is the client API for AdminComment service.
@@ -146,7 +146,7 @@ func _AdminComment_GetSensitiveWords_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AdminComment_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ecommerce.admin.v1.AdminComment",
+	ServiceName: "admin.admincomment.v1.AdminComment",
 	HandlerType: (*AdminCommentServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

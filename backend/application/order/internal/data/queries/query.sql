@@ -91,24 +91,6 @@ FROM orders.sub_orders os
               ON os.order_id = oo.id
 WHERE user_id = @user_id;
 
--- name: ListOrders :many
-SELECT os.id,
-       os.order_id,
-       os.merchant_id,
-       os.total_amount,
-       os.currency,
-       os.status,
-       os.items,
-       os.created_at,
-       os.updated_at,
-       oo.payment_status,
-       os.shipping_status
-FROM orders.sub_orders os
-         JOIN orders.orders oo
-              ON os.order_id = oo.id
-ORDER BY os.created_at DESC
-LIMIT @page_size OFFSET @page;
-
 -- name: GetUserOrdersWithSuborders :many
 SELECT o.id,
        o.street_address,

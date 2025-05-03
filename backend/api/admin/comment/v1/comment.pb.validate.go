@@ -35,6 +35,178 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on SensitiveWord with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SensitiveWord) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SensitiveWord with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SensitiveWordMultiError, or
+// nil if none found.
+func (m *SensitiveWord) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SensitiveWord) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CreatedBy
+
+	// no validation rules for Category
+
+	// no validation rules for Word
+
+	// no validation rules for Level
+
+	// no validation rules for IsActive
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SensitiveWordValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SensitiveWordValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SensitiveWordValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SensitiveWordValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SensitiveWordValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SensitiveWordValidationError{
+				field:  "UpdatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.Id != nil {
+		// no validation rules for Id
+	}
+
+	if len(errors) > 0 {
+		return SensitiveWordMultiError(errors)
+	}
+
+	return nil
+}
+
+// SensitiveWordMultiError is an error wrapping multiple validation errors
+// returned by SensitiveWord.ValidateAll() if the designated constraints
+// aren't met.
+type SensitiveWordMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SensitiveWordMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SensitiveWordMultiError) AllErrors() []error { return m }
+
+// SensitiveWordValidationError is the validation error returned by
+// SensitiveWord.Validate if the designated constraints aren't met.
+type SensitiveWordValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SensitiveWordValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SensitiveWordValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SensitiveWordValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SensitiveWordValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SensitiveWordValidationError) ErrorName() string { return "SensitiveWordValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SensitiveWordValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSensitiveWord.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SensitiveWordValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SensitiveWordValidationError{}
+
 // Validate checks the field values on SetSensitiveWordsReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -56,6 +228,40 @@ func (m *SetSensitiveWordsReq) validate(all bool) error {
 	}
 
 	var errors []error
+
+	for idx, item := range m.GetSensitiveWords() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SetSensitiveWordsReqValidationError{
+						field:  fmt.Sprintf("SensitiveWords[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SetSensitiveWordsReqValidationError{
+						field:  fmt.Sprintf("SensitiveWords[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SetSensitiveWordsReqValidationError{
+					field:  fmt.Sprintf("SensitiveWords[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	if len(errors) > 0 {
 		return SetSensitiveWordsReqMultiError(errors)
@@ -159,6 +365,8 @@ func (m *SetSensitiveWordsReply) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Rows
+
 	if len(errors) > 0 {
 		return SetSensitiveWordsReplyMultiError(errors)
 	}
@@ -261,6 +469,26 @@ func (m *GetSensitiveWordsReq) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Page
+
+	// no validation rules for PageSize
+
+	if m.Category != nil {
+		// no validation rules for Category
+	}
+
+	if m.Level != nil {
+		// no validation rules for Level
+	}
+
+	if m.IsActive != nil {
+		// no validation rules for IsActive
+	}
+
+	if m.CreatedBy != nil {
+		// no validation rules for CreatedBy
+	}
+
 	if len(errors) > 0 {
 		return GetSensitiveWordsReqMultiError(errors)
 	}
@@ -362,6 +590,40 @@ func (m *GetSensitiveWordsReply) validate(all bool) error {
 	}
 
 	var errors []error
+
+	for idx, item := range m.GetWords() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetSensitiveWordsReplyValidationError{
+						field:  fmt.Sprintf("Words[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetSensitiveWordsReplyValidationError{
+						field:  fmt.Sprintf("Words[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetSensitiveWordsReplyValidationError{
+					field:  fmt.Sprintf("Words[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	if len(errors) > 0 {
 		return GetSensitiveWordsReplyMultiError(errors)

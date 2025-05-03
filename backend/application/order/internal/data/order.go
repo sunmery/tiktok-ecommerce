@@ -44,6 +44,13 @@ type orderRepo struct {
 	log  *log.Helper
 }
 
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
 func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.GetConsumerOrdersReply, error) {
 	// 设置默认分页参数
 	if req.Page == 0 {
@@ -115,13 +122,6 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 		SubOrders: orders,
 		OrderId:   OrderID,
 	}, nil
-}
-
-func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
-	return &orderRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }
 
 func (o *orderRepo) GetUserOrdersWithSuborders(ctx context.Context, req *biz.GetUserOrdersWithSubordersReq) (*biz.GetUserOrdersWithSubordersReply, error) {
@@ -527,81 +527,6 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			MerchantVersion: merchantVersion,
 		},
 	}, nil
-}
-
-func (o *orderRepo) GetAllOrders(ctx context.Context, req *biz.GetAllOrdersReq) (*biz.GetAllOrdersReply, error) {
-	// 设置默认分页参数
-	if req.Page == 0 {
-		req.Page = 1
-	}
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-	// 限制最大页面大小
-	if req.PageSize > 100 {
-		req.PageSize = 100
-	}
-
-	// 查询订单列表
-	pageSize := int64(req.PageSize)
-	page := int64((req.Page - 1) * req.PageSize)
-	orders, err := o.data.db.ListOrders(ctx, models.ListOrdersParams{
-		PageSize: pageSize,
-		Page:     page,
-	})
-	if err != nil {
-		o.log.WithContext(ctx).Errorf("获取订单列表失败: %v", err)
-		return nil, fmt.Errorf("获取订单列表失败: %w", err)
-	}
-
-	if len(orders) == 0 {
-		return &biz.GetAllOrdersReply{Orders: nil}, nil
-	}
-
-	// 创建一个映射以存储订单ID与子订单的关系
-	var respOrders []*biz.SubOrder
-	var orderIDs []int64
-
-	// 收集所有主订单ID
-	for _, order := range orders {
-		orderIDs = append(orderIDs, order.OrderID)
-	}
-
-	// 去重订单ID
-	uniqueOrderIDs := make(map[int64]bool)
-	var uniqueIDs []int64
-	for _, orderId := range orderIDs {
-		if !uniqueOrderIDs[orderId] {
-			uniqueOrderIDs[orderId] = true
-			uniqueIDs = append(uniqueIDs, orderId)
-		}
-	}
-
-	// 对每个唯一的订单ID获取子订单
-	for _, orderID := range uniqueIDs {
-		// 使用getSubOrders函数获取子订单
-		subOrders, err := o.getSubOrders(ctx, orderID)
-		if err != nil {
-			o.log.WithContext(ctx).Errorf("获取订单 %d 的子订单失败: %v", orderID, err)
-			// 继续处理其他订单，不因为一个订单失败而中断整个流程
-			continue
-		}
-
-		// 添加子订单到结果
-		for _, subOrder := range subOrders {
-			// 查找对应的原始订单以获取支付状态
-			for _, order := range orders {
-				if order.ID == subOrder.ID {
-					subOrder.PaymentStatus = constants.PaymentStatus(order.PaymentStatus)
-					subOrder.ShippingStatus = constants.ShippingStatus(order.ShippingStatus)
-					break
-				}
-			}
-			respOrders = append(respOrders, subOrder)
-		}
-	}
-
-	return &biz.GetAllOrdersReply{Orders: respOrders}, nil
 }
 
 func (o *orderRepo) GetShipOrderStatus(ctx context.Context, req *biz.GetShipOrderStatusReq) (*biz.GetShipOrderStatusReply, error) {

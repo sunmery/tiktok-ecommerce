@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "comment/v1/comment.proto",
+    "title": "order/v1/admin.proto",
     "version": "version not set"
   },
   "tags": [
     {
-      "name": "AdminComment"
+      "name": "AdminOrder"
     }
   ],
   "consumes": [
@@ -16,15 +16,15 @@
     "application/json"
   ],
   "paths": {
-    "/v1/admin/comments/sensitive-words": {
+    "/v1/admin/orders": {
       "get": {
-        "summary": "查询评论敏感词",
-        "operationId": "AdminComment_GetSensitiveWords",
+        "summary": "查询全部订单列表",
+        "operationId": "AdminOrder_GetAllOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetSensitiveWordsReply"
+              "$ref": "#/definitions/v1AdminOrderReply"
             }
           },
           "default": {
@@ -37,6 +37,7 @@
         "parameters": [
           {
             "name": "page",
+            "description": "分页参数：当前页码，默认值为 0",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -44,75 +45,71 @@
           },
           {
             "name": "pageSize",
+            "description": "分页参数：每页大小，默认值为 20，最大值为 100",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "level",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "isActive",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "createdBy",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
-          "AdminComment"
-        ]
-      },
-      "put": {
-        "summary": "设置评论敏感词",
-        "operationId": "AdminComment_SetSensitiveWords",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1SetSensitiveWordsReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1SetSensitiveWordsReq"
-            }
-          }
-        ],
-        "tags": [
-          "AdminComment"
+          "AdminOrder"
         ]
       }
     }
   },
   "definitions": {
+    "ecommerceadminorderv1OrderItem": {
+      "type": "object",
+      "properties": {
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "item": {
+          "$ref": "#/definitions/v1CartItem",
+          "title": "购物车中的商品项"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double",
+          "title": "商品单价"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态,冗余, 减少查询"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "订单创建时间"
+        }
+      }
+    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -143,72 +140,130 @@
         }
       }
     },
-    "v1GetSensitiveWordsReply": {
+    "v1AdminOrderInterface": {
       "type": "object",
       "properties": {
-        "words": {
+        "items": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1SensitiveWord"
-          }
-        }
-      }
-    },
-    "v1SensitiveWord": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int32"
+            "$ref": "#/definitions/ecommerceadminorderv1OrderItem"
+          },
+          "title": "订单项列表"
         },
-        "createdBy": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "word": {
-          "type": "string"
-        },
-        "level": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "isActive": {
-          "type": "boolean"
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
         }
       }
     },
-    "v1SetSensitiveWordsReply": {
+    "v1AdminOrderReply": {
       "type": "object",
       "properties": {
-        "rows": {
-          "type": "integer",
-          "format": "int64",
-          "title": "插入的行数"
-        }
-      }
-    },
-    "v1SetSensitiveWordsReq": {
-      "type": "object",
-      "properties": {
-        "sensitiveWords": {
+        "orders": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1SensitiveWord"
-          }
+            "$ref": "#/definitions/v1AdminOrderInterface"
+          },
+          "title": "订单列表"
         }
       }
+    },
+    "v1CartItem": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "商家ID"
+        },
+        "productId": {
+          "type": "string",
+          "title": "商品ID"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品数量"
+        },
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "picture": {
+          "type": "string",
+          "title": "商品主图"
+        }
+      },
+      "title": "购物车商品"
+    },
+    "v1ConsumerAddress": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "地址 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string",
+          "title": "城市，必填字段"
+        },
+        "state": {
+          "type": "string",
+          "title": "州/省，必填字段"
+        },
+        "country": {
+          "type": "string",
+          "title": "国家，必填字段"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string"
+        }
+      },
+      "title": "定义地址信息的消息结构",
+      "required": [
+        "zipCode",
+        "streetAddress"
+      ]
+    },
+    "v1PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "PAID",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "default": "PENDING",
+      "description": "- PENDING: 未支付\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
+      "title": "支付状态的枚举类型"
+    },
+    "v1ShippingStatus": {
+      "type": "string",
+      "enum": [
+        "WAIT_COMMAND",
+        "PENDING_SHIPMENT",
+        "SHIPPED",
+        "IN_TRANSIT",
+        "DELIVERED",
+        "CONFIRMED",
+        "CANCELLED_SHIPMENT"
+      ],
+      "default": "WAIT_COMMAND",
+      "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
+      "title": "货运状态的枚举类型"
     }
   }
 }
