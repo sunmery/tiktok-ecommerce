@@ -21,7 +21,6 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	OrderService_PlaceOrder_FullMethodName                 = "/ecommerce.order.v1.OrderService/PlaceOrder"
 	OrderService_GetConsumerOrders_FullMethodName          = "/ecommerce.order.v1.OrderService/GetConsumerOrders"
-	OrderService_GetAllOrders_FullMethodName               = "/ecommerce.order.v1.OrderService/GetAllOrders"
 	OrderService_GetOrder_FullMethodName                   = "/ecommerce.order.v1.OrderService/GetOrder"
 	OrderService_GetUserOrdersWithSuborders_FullMethodName = "/ecommerce.order.v1.OrderService/GetUserOrdersWithSuborders"
 	OrderService_MarkOrderPaid_FullMethodName              = "/ecommerce.order.v1.OrderService/MarkOrderPaid"
@@ -37,8 +36,6 @@ type OrderServiceClient interface {
 	PlaceOrder(ctx context.Context, in *PlaceOrderReq, opts ...grpc.CallOption) (*PlaceOrderResp, error)
 	// 查询用户订单列表
 	GetConsumerOrders(ctx context.Context, in *GetConsumerOrdersReq, opts ...grpc.CallOption) (*ConsumerOrders, error)
-	// 查询全部订单列表(管理员侧)
-	GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error)
 	// 根据订单ID查询
 	GetOrder(ctx context.Context, in *GetOrderReq, opts ...grpc.CallOption) (*Order, error)
 	// 根据用户主订单查询子订单
@@ -73,16 +70,6 @@ func (c *orderServiceClient) GetConsumerOrders(ctx context.Context, in *GetConsu
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ConsumerOrders)
 	err := c.cc.Invoke(ctx, OrderService_GetConsumerOrders_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *orderServiceClient) GetAllOrders(ctx context.Context, in *GetAllOrdersReq, opts ...grpc.CallOption) (*Orders, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Orders)
-	err := c.cc.Invoke(ctx, OrderService_GetAllOrders_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +134,6 @@ type OrderServiceServer interface {
 	PlaceOrder(context.Context, *PlaceOrderReq) (*PlaceOrderResp, error)
 	// 查询用户订单列表
 	GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*ConsumerOrders, error)
-	// 查询全部订单列表(管理员侧)
-	GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error)
 	// 根据订单ID查询
 	GetOrder(context.Context, *GetOrderReq) (*Order, error)
 	// 根据用户主订单查询子订单
@@ -174,9 +159,6 @@ func (UnimplementedOrderServiceServer) PlaceOrder(context.Context, *PlaceOrderRe
 }
 func (UnimplementedOrderServiceServer) GetConsumerOrders(context.Context, *GetConsumerOrdersReq) (*ConsumerOrders, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConsumerOrders not implemented")
-}
-func (UnimplementedOrderServiceServer) GetAllOrders(context.Context, *GetAllOrdersReq) (*Orders, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
 }
 func (UnimplementedOrderServiceServer) GetOrder(context.Context, *GetOrderReq) (*Order, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
@@ -246,24 +228,6 @@ func _OrderService_GetConsumerOrders_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrderServiceServer).GetConsumerOrders(ctx, req.(*GetConsumerOrdersReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrderService_GetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllOrdersReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrderServiceServer).GetAllOrders(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OrderService_GetAllOrders_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).GetAllOrders(ctx, req.(*GetAllOrdersReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -372,10 +336,6 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConsumerOrders",
 			Handler:    _OrderService_GetConsumerOrders_Handler,
-		},
-		{
-			MethodName: "GetAllOrders",
-			Handler:    _OrderService_GetAllOrders_Handler,
 		},
 		{
 			MethodName: "GetOrder",

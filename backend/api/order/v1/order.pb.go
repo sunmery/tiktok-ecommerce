@@ -751,7 +751,7 @@ func (x *ConsumerOrder) GetShippingStatus() ShippingStatus {
 // 订单的消息结构
 type ConsumerOrders struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*ConsumerOrder       `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`                     // 订单项列表
+	Orders        []*ConsumerOrder       `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`                   // 订单项列表
 	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -787,9 +787,9 @@ func (*ConsumerOrders) Descriptor() ([]byte, []int) {
 	return file_v1_order_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ConsumerOrders) GetItems() []*ConsumerOrder {
+func (x *ConsumerOrders) GetOrders() []*ConsumerOrder {
 	if x != nil {
-		return x.Items
+		return x.Orders
 	}
 	return nil
 }
@@ -1165,59 +1165,6 @@ func (x *GetConsumerOrdersReq) GetPageSize() uint32 {
 	return 0
 }
 
-// 查询订单列表请求的消息结构
-type GetAllOrdersReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`                         // 分页参数：当前页码，默认值为 0
-	PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"` // 分页参数：每页大小，默认值为 20，最大值为 100
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAllOrdersReq) Reset() {
-	*x = GetAllOrdersReq{}
-	mi := &file_v1_order_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAllOrdersReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAllOrdersReq) ProtoMessage() {}
-
-func (x *GetAllOrdersReq) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAllOrdersReq.ProtoReflect.Descriptor instead.
-func (*GetAllOrdersReq) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *GetAllOrdersReq) GetPage() uint32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetAllOrdersReq) GetPageSize() uint32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
 // 查询订单列表响应的消息结构
 type Orders struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1228,7 +1175,7 @@ type Orders struct {
 
 func (x *Orders) Reset() {
 	*x = Orders{}
-	mi := &file_v1_order_proto_msgTypes[15]
+	mi := &file_v1_order_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1240,7 +1187,7 @@ func (x *Orders) String() string {
 func (*Orders) ProtoMessage() {}
 
 func (x *Orders) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[15]
+	mi := &file_v1_order_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1253,7 +1200,7 @@ func (x *Orders) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Orders.ProtoReflect.Descriptor instead.
 func (*Orders) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{15}
+	return file_v1_order_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Orders) GetOrders() []*Order {
@@ -1274,7 +1221,7 @@ type MarkOrderPaidReq struct {
 
 func (x *MarkOrderPaidReq) Reset() {
 	*x = MarkOrderPaidReq{}
-	mi := &file_v1_order_proto_msgTypes[16]
+	mi := &file_v1_order_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1286,7 +1233,7 @@ func (x *MarkOrderPaidReq) String() string {
 func (*MarkOrderPaidReq) ProtoMessage() {}
 
 func (x *MarkOrderPaidReq) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[16]
+	mi := &file_v1_order_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1299,7 +1246,7 @@ func (x *MarkOrderPaidReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkOrderPaidReq.ProtoReflect.Descriptor instead.
 func (*MarkOrderPaidReq) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{16}
+	return file_v1_order_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *MarkOrderPaidReq) GetOrderId() int64 {
@@ -1318,7 +1265,7 @@ type MarkOrderPaidResp struct {
 
 func (x *MarkOrderPaidResp) Reset() {
 	*x = MarkOrderPaidResp{}
-	mi := &file_v1_order_proto_msgTypes[17]
+	mi := &file_v1_order_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1330,7 +1277,7 @@ func (x *MarkOrderPaidResp) String() string {
 func (*MarkOrderPaidResp) ProtoMessage() {}
 
 func (x *MarkOrderPaidResp) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[17]
+	mi := &file_v1_order_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1343,7 +1290,7 @@ func (x *MarkOrderPaidResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkOrderPaidResp.ProtoReflect.Descriptor instead.
 func (*MarkOrderPaidResp) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{17}
+	return file_v1_order_proto_rawDescGZIP(), []int{16}
 }
 
 // 用户确认收货请求的消息结构
@@ -1356,7 +1303,7 @@ type ConfirmReceivedReq struct {
 
 func (x *ConfirmReceivedReq) Reset() {
 	*x = ConfirmReceivedReq{}
-	mi := &file_v1_order_proto_msgTypes[18]
+	mi := &file_v1_order_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1368,7 +1315,7 @@ func (x *ConfirmReceivedReq) String() string {
 func (*ConfirmReceivedReq) ProtoMessage() {}
 
 func (x *ConfirmReceivedReq) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[18]
+	mi := &file_v1_order_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1381,7 +1328,7 @@ func (x *ConfirmReceivedReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmReceivedReq.ProtoReflect.Descriptor instead.
 func (*ConfirmReceivedReq) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{18}
+	return file_v1_order_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ConfirmReceivedReq) GetOrderId() int64 {
@@ -1400,7 +1347,7 @@ type ConfirmReceivedResp struct {
 
 func (x *ConfirmReceivedResp) Reset() {
 	*x = ConfirmReceivedResp{}
-	mi := &file_v1_order_proto_msgTypes[19]
+	mi := &file_v1_order_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1412,7 +1359,7 @@ func (x *ConfirmReceivedResp) String() string {
 func (*ConfirmReceivedResp) ProtoMessage() {}
 
 func (x *ConfirmReceivedResp) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_order_proto_msgTypes[19]
+	mi := &file_v1_order_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1425,7 +1372,7 @@ func (x *ConfirmReceivedResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmReceivedResp.ProtoReflect.Descriptor instead.
 func (*ConfirmReceivedResp) Descriptor() ([]byte, []int) {
-	return file_v1_order_proto_rawDescGZIP(), []int{19}
+	return file_v1_order_proto_rawDescGZIP(), []int{18}
 }
 
 var File_v1_order_proto protoreflect.FileDescriptor
@@ -1490,9 +1437,9 @@ const file_v1_order_proto_rawDesc = "" +
 	"\x0epayment_status\x18\t \x01(\x0e2!.ecommerce.order.v1.PaymentStatusR\rpaymentStatus\x12K\n" +
 	"\x0fshipping_status\x18\n" +
 	" \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatusB\x0f\n" +
-	"\r_sub_order_id\"d\n" +
-	"\x0eConsumerOrders\x127\n" +
-	"\x05items\x18\x01 \x03(\v2!.ecommerce.order.v1.ConsumerOrderR\x05items\x12\x19\n" +
+	"\r_sub_order_id\"f\n" +
+	"\x0eConsumerOrders\x129\n" +
+	"\x06orders\x18\x01 \x03(\v2!.ecommerce.order.v1.ConsumerOrderR\x06orders\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\x03R\aorderId\"\x1d\n" +
 	"\vGetOrderReq\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"S\n" +
@@ -1526,10 +1473,7 @@ const file_v1_order_proto_rawDesc = "" +
 	"\x14GetConsumerOrdersReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\rR\bpageSize\"B\n" +
-	"\x0fGetAllOrdersReq\x12\x12\n" +
-	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\rR\bpageSize\";\n" +
+	"\tpage_size\x18\x03 \x01(\rR\bpageSize\";\n" +
 	"\x06Orders\x121\n" +
 	"\x06orders\x18\x01 \x03(\v2\x19.ecommerce.order.v1.OrderR\x06orders\"-\n" +
 	"\x10MarkOrderPaidReq\x12\x19\n" +
@@ -1552,13 +1496,12 @@ const file_v1_order_proto_rawDesc = "" +
 	"IN_TRANSIT\x10\x03\x12\r\n" +
 	"\tDELIVERED\x10\x04\x12\r\n" +
 	"\tCONFIRMED\x10\x05\x12\x16\n" +
-	"\x12CANCELLED_SHIPMENT\x10\x062\xb0\b\n" +
+	"\x12CANCELLED_SHIPMENT\x10\x062\xc5\a\n" +
 	"\fOrderService\x12j\n" +
 	"\n" +
 	"PlaceOrder\x12!.ecommerce.order.v1.PlaceOrderReq\x1a\".ecommerce.order.v1.PlaceOrderResp\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
 	"/v1/orders\x12\x7f\n" +
-	"\x11GetConsumerOrders\x12(.ecommerce.order.v1.GetConsumerOrdersReq\x1a\".ecommerce.order.v1.ConsumerOrders\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/consumers/orders\x12i\n" +
-	"\fGetAllOrders\x12#.ecommerce.order.v1.GetAllOrdersReq\x1a\x1a.ecommerce.order.v1.Orders\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/admin/orders\x12_\n" +
+	"\x11GetConsumerOrders\x12(.ecommerce.order.v1.GetConsumerOrdersReq\x1a\".ecommerce.order.v1.ConsumerOrders\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/consumers/orders\x12_\n" +
 	"\bGetOrder\x12\x1f.ecommerce.order.v1.GetOrderReq\x1a\x19.ecommerce.order.v1.Order\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/orders/{id}\x12\xa9\x01\n" +
 	"\x1aGetUserOrdersWithSuborders\x121.ecommerce.order.v1.GetUserOrdersWithSubordersReq\x1a3.ecommerce.order.v1.GetUserOrdersWithSubordersReply\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/orders/users/{order_id}\x12\x83\x01\n" +
 	"\rMarkOrderPaid\x12$.ecommerce.order.v1.MarkOrderPaidReq\x1a%.ecommerce.order.v1.MarkOrderPaidResp\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/orders/{order_id}/paid\x12\x9b\x01\n" +
@@ -1578,7 +1521,7 @@ func file_v1_order_proto_rawDescGZIP() []byte {
 }
 
 var file_v1_order_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_v1_order_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_v1_order_proto_goTypes = []any{
 	(PaymentStatus)(0),                      // 0: ecommerce.order.v1.PaymentStatus
 	(ShippingStatus)(0),                     // 1: ecommerce.order.v1.ShippingStatus
@@ -1596,59 +1539,56 @@ var file_v1_order_proto_goTypes = []any{
 	(*Suborders)(nil),                       // 13: ecommerce.order.v1.Suborders
 	(*GetUserOrdersWithSubordersReply)(nil), // 14: ecommerce.order.v1.GetUserOrdersWithSubordersReply
 	(*GetConsumerOrdersReq)(nil),            // 15: ecommerce.order.v1.GetConsumerOrdersReq
-	(*GetAllOrdersReq)(nil),                 // 16: ecommerce.order.v1.GetAllOrdersReq
-	(*Orders)(nil),                          // 17: ecommerce.order.v1.Orders
-	(*MarkOrderPaidReq)(nil),                // 18: ecommerce.order.v1.MarkOrderPaidReq
-	(*MarkOrderPaidResp)(nil),               // 19: ecommerce.order.v1.MarkOrderPaidResp
-	(*ConfirmReceivedReq)(nil),              // 20: ecommerce.order.v1.ConfirmReceivedReq
-	(*ConfirmReceivedResp)(nil),             // 21: ecommerce.order.v1.ConfirmReceivedResp
-	(*structpb.Struct)(nil),                 // 22: google.protobuf.Struct
-	(*v1.ConsumerAddress)(nil),              // 23: ecommerce.user.v1.ConsumerAddress
-	(*v11.CartItem)(nil),                    // 24: ecommerce.cart.v1.CartItem
-	(*timestamppb.Timestamp)(nil),           // 25: google.protobuf.Timestamp
+	(*Orders)(nil),                          // 16: ecommerce.order.v1.Orders
+	(*MarkOrderPaidReq)(nil),                // 17: ecommerce.order.v1.MarkOrderPaidReq
+	(*MarkOrderPaidResp)(nil),               // 18: ecommerce.order.v1.MarkOrderPaidResp
+	(*ConfirmReceivedReq)(nil),              // 19: ecommerce.order.v1.ConfirmReceivedReq
+	(*ConfirmReceivedResp)(nil),             // 20: ecommerce.order.v1.ConfirmReceivedResp
+	(*structpb.Struct)(nil),                 // 21: google.protobuf.Struct
+	(*v1.ConsumerAddress)(nil),              // 22: ecommerce.user.v1.ConsumerAddress
+	(*v11.CartItem)(nil),                    // 23: ecommerce.cart.v1.CartItem
+	(*timestamppb.Timestamp)(nil),           // 24: google.protobuf.Timestamp
 }
 var file_v1_order_proto_depIdxs = []int32{
 	1,  // 0: ecommerce.order.v1.GetShipOrderStatusReply.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
-	22, // 1: ecommerce.order.v1.GetShipOrderStatusReply.receiver_address:type_name -> google.protobuf.Struct
-	22, // 2: ecommerce.order.v1.GetShipOrderStatusReply.shipping_address:type_name -> google.protobuf.Struct
-	23, // 3: ecommerce.order.v1.PlaceOrderReq.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	21, // 1: ecommerce.order.v1.GetShipOrderStatusReply.receiver_address:type_name -> google.protobuf.Struct
+	21, // 2: ecommerce.order.v1.GetShipOrderStatusReply.shipping_address:type_name -> google.protobuf.Struct
+	22, // 3: ecommerce.order.v1.PlaceOrderReq.address:type_name -> ecommerce.user.v1.ConsumerAddress
 	5,  // 4: ecommerce.order.v1.PlaceOrderReq.order_items:type_name -> ecommerce.order.v1.OrderItem
-	24, // 5: ecommerce.order.v1.OrderItem.item:type_name -> ecommerce.cart.v1.CartItem
+	23, // 5: ecommerce.order.v1.OrderItem.item:type_name -> ecommerce.cart.v1.CartItem
 	6,  // 6: ecommerce.order.v1.PlaceOrderResp.order:type_name -> ecommerce.order.v1.OrderResult
 	5,  // 7: ecommerce.order.v1.Order.items:type_name -> ecommerce.order.v1.OrderItem
-	23, // 8: ecommerce.order.v1.Order.address:type_name -> ecommerce.user.v1.ConsumerAddress
-	25, // 9: ecommerce.order.v1.Order.created_at:type_name -> google.protobuf.Timestamp
+	22, // 8: ecommerce.order.v1.Order.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	24, // 9: ecommerce.order.v1.Order.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 10: ecommerce.order.v1.Order.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
 	1,  // 11: ecommerce.order.v1.Order.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
 	5,  // 12: ecommerce.order.v1.ConsumerOrder.items:type_name -> ecommerce.order.v1.OrderItem
-	23, // 13: ecommerce.order.v1.ConsumerOrder.address:type_name -> ecommerce.user.v1.ConsumerAddress
-	25, // 14: ecommerce.order.v1.ConsumerOrder.created_at:type_name -> google.protobuf.Timestamp
+	22, // 13: ecommerce.order.v1.ConsumerOrder.address:type_name -> ecommerce.user.v1.ConsumerAddress
+	24, // 14: ecommerce.order.v1.ConsumerOrder.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 15: ecommerce.order.v1.ConsumerOrder.payment_status:type_name -> ecommerce.order.v1.PaymentStatus
 	1,  // 16: ecommerce.order.v1.ConsumerOrder.shipping_status:type_name -> ecommerce.order.v1.ShippingStatus
-	9,  // 17: ecommerce.order.v1.ConsumerOrders.items:type_name -> ecommerce.order.v1.ConsumerOrder
+	9,  // 17: ecommerce.order.v1.ConsumerOrders.orders:type_name -> ecommerce.order.v1.ConsumerOrder
 	5,  // 18: ecommerce.order.v1.Suborders.items:type_name -> ecommerce.order.v1.OrderItem
-	25, // 19: ecommerce.order.v1.Suborders.created_at:type_name -> google.protobuf.Timestamp
-	25, // 20: ecommerce.order.v1.Suborders.updated_at:type_name -> google.protobuf.Timestamp
+	24, // 19: ecommerce.order.v1.Suborders.created_at:type_name -> google.protobuf.Timestamp
+	24, // 20: ecommerce.order.v1.Suborders.updated_at:type_name -> google.protobuf.Timestamp
 	13, // 21: ecommerce.order.v1.GetUserOrdersWithSubordersReply.orders:type_name -> ecommerce.order.v1.Suborders
 	8,  // 22: ecommerce.order.v1.Orders.orders:type_name -> ecommerce.order.v1.Order
 	4,  // 23: ecommerce.order.v1.OrderService.PlaceOrder:input_type -> ecommerce.order.v1.PlaceOrderReq
 	15, // 24: ecommerce.order.v1.OrderService.GetConsumerOrders:input_type -> ecommerce.order.v1.GetConsumerOrdersReq
-	16, // 25: ecommerce.order.v1.OrderService.GetAllOrders:input_type -> ecommerce.order.v1.GetAllOrdersReq
-	11, // 26: ecommerce.order.v1.OrderService.GetOrder:input_type -> ecommerce.order.v1.GetOrderReq
-	12, // 27: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:input_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReq
-	18, // 28: ecommerce.order.v1.OrderService.MarkOrderPaid:input_type -> ecommerce.order.v1.MarkOrderPaidReq
-	2,  // 29: ecommerce.order.v1.OrderService.GetShipOrderStatus:input_type -> ecommerce.order.v1.GetShipOrderStatusReq
-	20, // 30: ecommerce.order.v1.OrderService.ConfirmReceived:input_type -> ecommerce.order.v1.ConfirmReceivedReq
-	7,  // 31: ecommerce.order.v1.OrderService.PlaceOrder:output_type -> ecommerce.order.v1.PlaceOrderResp
-	10, // 32: ecommerce.order.v1.OrderService.GetConsumerOrders:output_type -> ecommerce.order.v1.ConsumerOrders
-	17, // 33: ecommerce.order.v1.OrderService.GetAllOrders:output_type -> ecommerce.order.v1.Orders
-	8,  // 34: ecommerce.order.v1.OrderService.GetOrder:output_type -> ecommerce.order.v1.Order
-	14, // 35: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:output_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReply
-	19, // 36: ecommerce.order.v1.OrderService.MarkOrderPaid:output_type -> ecommerce.order.v1.MarkOrderPaidResp
-	3,  // 37: ecommerce.order.v1.OrderService.GetShipOrderStatus:output_type -> ecommerce.order.v1.GetShipOrderStatusReply
-	21, // 38: ecommerce.order.v1.OrderService.ConfirmReceived:output_type -> ecommerce.order.v1.ConfirmReceivedResp
-	31, // [31:39] is the sub-list for method output_type
-	23, // [23:31] is the sub-list for method input_type
+	11, // 25: ecommerce.order.v1.OrderService.GetOrder:input_type -> ecommerce.order.v1.GetOrderReq
+	12, // 26: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:input_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReq
+	17, // 27: ecommerce.order.v1.OrderService.MarkOrderPaid:input_type -> ecommerce.order.v1.MarkOrderPaidReq
+	2,  // 28: ecommerce.order.v1.OrderService.GetShipOrderStatus:input_type -> ecommerce.order.v1.GetShipOrderStatusReq
+	19, // 29: ecommerce.order.v1.OrderService.ConfirmReceived:input_type -> ecommerce.order.v1.ConfirmReceivedReq
+	7,  // 30: ecommerce.order.v1.OrderService.PlaceOrder:output_type -> ecommerce.order.v1.PlaceOrderResp
+	10, // 31: ecommerce.order.v1.OrderService.GetConsumerOrders:output_type -> ecommerce.order.v1.ConsumerOrders
+	8,  // 32: ecommerce.order.v1.OrderService.GetOrder:output_type -> ecommerce.order.v1.Order
+	14, // 33: ecommerce.order.v1.OrderService.GetUserOrdersWithSuborders:output_type -> ecommerce.order.v1.GetUserOrdersWithSubordersReply
+	18, // 34: ecommerce.order.v1.OrderService.MarkOrderPaid:output_type -> ecommerce.order.v1.MarkOrderPaidResp
+	3,  // 35: ecommerce.order.v1.OrderService.GetShipOrderStatus:output_type -> ecommerce.order.v1.GetShipOrderStatusReply
+	20, // 36: ecommerce.order.v1.OrderService.ConfirmReceived:output_type -> ecommerce.order.v1.ConfirmReceivedResp
+	30, // [30:37] is the sub-list for method output_type
+	23, // [23:30] is the sub-list for method input_type
 	23, // [23:23] is the sub-list for extension type_name
 	23, // [23:23] is the sub-list for extension extendee
 	0,  // [0:23] is the sub-list for field type_name
@@ -1667,7 +1607,7 @@ func file_v1_order_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_order_proto_rawDesc), len(file_v1_order_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   20,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

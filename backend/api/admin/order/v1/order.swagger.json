@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "order/v1/admin.proto",
+    "title": "order/v1/order.proto",
     "version": "version not set"
   },
   "tags": [
@@ -59,57 +59,6 @@
     }
   },
   "definitions": {
-    "ecommerceadminorderv1OrderItem": {
-      "type": "object",
-      "properties": {
-        "subOrderId": {
-          "type": "string",
-          "format": "int64",
-          "title": "子订单 ID"
-        },
-        "item": {
-          "$ref": "#/definitions/v1CartItem",
-          "title": "购物车中的商品项"
-        },
-        "cost": {
-          "type": "number",
-          "format": "double",
-          "title": "商品单价"
-        },
-        "email": {
-          "type": "string",
-          "title": "用户邮箱"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "address": {
-          "$ref": "#/definitions/v1ConsumerAddress",
-          "title": "用户地址信息"
-        },
-        "currency": {
-          "type": "string",
-          "title": "货币代码（如 USD、CNY），长度固定为 3"
-        },
-        "paymentStatus": {
-          "$ref": "#/definitions/v1PaymentStatus",
-          "title": "支付状态"
-        },
-        "shippingStatus": {
-          "$ref": "#/definitions/v1ShippingStatus",
-          "title": "货运状态,冗余, 减少查询"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "订单创建时间"
-        }
-      }
-    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -140,28 +89,6 @@
         }
       }
     },
-    "v1AdminOrderInterface": {
-      "type": "object",
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/ecommerceadminorderv1OrderItem"
-          },
-          "title": "订单项列表"
-        },
-        "orderId": {
-          "type": "string",
-          "format": "int64",
-          "title": "订单 ID"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
     "v1AdminOrderReply": {
       "type": "object",
       "properties": {
@@ -169,7 +96,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1AdminOrderInterface"
+            "$ref": "#/definitions/v1SubOrder"
           },
           "title": "订单列表"
         }
@@ -264,6 +191,80 @@
       "default": "WAIT_COMMAND",
       "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
       "title": "货运状态的枚举类型"
+    },
+    "v1SubOrder": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "totalAmount": {
+          "type": "number",
+          "format": "double",
+          "title": "订单总价"
+        },
+        "consumerId": {
+          "type": "string",
+          "title": "用户 ID"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "consumerEmail": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "subOrderItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SubOrderItem"
+          },
+          "title": "订单项列表"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态,冗余, 减少查询"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1SubOrderItem": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1CartItem",
+          "title": "购物车中的商品项"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double",
+          "title": "商品单价"
+        }
+      }
     }
   }
 }

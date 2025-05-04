@@ -12,7 +12,7 @@ https://i0jecrneytu.feishu.cn/docx/WoStdOA3zo7KF1xnOM5caU8cnUg?from=from_copylin
 - payment: 30013,30014
 - category: 30015,30016
 - assistant: 30017,30018
-- merchants: 30019,30020
+- merchant: 30019,30020
 - admin: 30021, 30022
 - comment: 30023, 30024
 - balancer: 30025, 30026

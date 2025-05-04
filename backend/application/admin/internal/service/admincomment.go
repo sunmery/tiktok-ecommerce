@@ -28,7 +28,7 @@ func (ac *AdminCommentService) SetSensitiveWords(ctx context.Context, req *pb.Se
 	}
 
 	collection := make([]*biz.SensitiveWord, 0, len(req.SensitiveWords))
-	for _, word := range collection {
+	for _, word := range req.SensitiveWords {
 		collection = append(collection, &biz.SensitiveWord{
 			CreatedBy: adminId,
 			Category:  word.Category,
@@ -60,9 +60,9 @@ func (ac *AdminCommentService) GetSensitiveWords(ctx context.Context, req *pb.Ge
 		CreatedBy: &adminId,
 		Page:      req.Page,
 		PageSize:  req.PageSize,
-		Level:     req.Level,
-		IsActive:  req.IsActive,
-		Category:  req.Category,
+		// Level:     req.Level,
+		// IsActive:  req.IsActive,
+		// Category:  req.Category,
 	})
 	if getSensitiveWordsErr != nil {
 		return nil, getSensitiveWordsErr

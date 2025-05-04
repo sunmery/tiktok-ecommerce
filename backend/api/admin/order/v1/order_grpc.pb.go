@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: order/v1/admin.proto
+// source: order/v1/order.proto
 
 package adminorderv1
 
@@ -119,5 +119,5 @@ var AdminOrder_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "order/v1/admin.proto",
+	Metadata: "order/v1/order.proto",
 }

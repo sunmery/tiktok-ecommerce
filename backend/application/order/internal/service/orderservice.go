@@ -251,7 +251,7 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 	}
 
 	return &v1.ConsumerOrders{
-		Items:   orders,
+		Orders:  orders,
 		OrderId: resp.OrderId,
 	}, nil
 }

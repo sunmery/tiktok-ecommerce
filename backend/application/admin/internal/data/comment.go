@@ -21,6 +21,13 @@ type AdminCommentRepo struct {
 	log  *log.Helper
 }
 
+func NewAdminCommentRepo(data *Data, logger log.Logger) biz.AdminCommentRepo {
+	return &AdminCommentRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
 func (a AdminCommentRepo) SetSensitiveWords(ctx context.Context, req *biz.SetSensitiveWordsReq) (*biz.SetSensitiveWordsReply, error) {
 	rows, err := a.data.db.CreateBulkSensitiveWords(ctx, convertToBulkParams(req))
 	if err != nil {
@@ -89,11 +96,4 @@ func convertToBulkParams(req *biz.SetSensitiveWordsReq) models.CreateBulkSensiti
 	}
 
 	return params
-}
-
-func NewAdminCommentRepo(data *Data, logger log.Logger) biz.AdminCommentRepo {
-	return &AdminCommentRepo{
-		data: data,
-		log:  log.NewHelper(logger),
-	}
 }

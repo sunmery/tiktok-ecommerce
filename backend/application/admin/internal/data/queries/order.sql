@@ -9,14 +9,12 @@ SELECT os.id     AS sub_order_id,
        os.updated_at,
        oo.id     AS order_id,
        oo.user_id,
-       json_agg(
-               json_build_object(
-                       'streetAddress', oo.street_address,
-                       'city', oo.city,
-                       'state', oo.state,
-                       'country', oo.country,
-                       'zipCode', oo.zip_code
-               )
+       json_build_object(
+               'streetAddress', oo.street_address,
+               'city', oo.city,
+               'state', oo.state,
+               'country', oo.country,
+               'zipCode', oo.zip_code
        )         AS consumer_address,
        oo.email
 FROM orders.sub_orders os

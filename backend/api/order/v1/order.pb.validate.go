@@ -1369,7 +1369,7 @@ func (m *ConsumerOrders) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetItems() {
+	for idx, item := range m.GetOrders() {
 		_, _ = idx, item
 
 		if all {
@@ -1377,7 +1377,7 @@ func (m *ConsumerOrders) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, ConsumerOrdersValidationError{
-						field:  fmt.Sprintf("Items[%v]", idx),
+						field:  fmt.Sprintf("Orders[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1385,7 +1385,7 @@ func (m *ConsumerOrders) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, ConsumerOrdersValidationError{
-						field:  fmt.Sprintf("Items[%v]", idx),
+						field:  fmt.Sprintf("Orders[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1394,7 +1394,7 @@ func (m *ConsumerOrders) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ConsumerOrdersValidationError{
-					field:  fmt.Sprintf("Items[%v]", idx),
+					field:  fmt.Sprintf("Orders[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2152,110 +2152,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetConsumerOrdersReqValidationError{}
-
-// Validate checks the field values on GetAllOrdersReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GetAllOrdersReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetAllOrdersReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetAllOrdersReqMultiError, or nil if none found.
-func (m *GetAllOrdersReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetAllOrdersReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Page
-
-	// no validation rules for PageSize
-
-	if len(errors) > 0 {
-		return GetAllOrdersReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetAllOrdersReqMultiError is an error wrapping multiple validation errors
-// returned by GetAllOrdersReq.ValidateAll() if the designated constraints
-// aren't met.
-type GetAllOrdersReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetAllOrdersReqMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetAllOrdersReqMultiError) AllErrors() []error { return m }
-
-// GetAllOrdersReqValidationError is the validation error returned by
-// GetAllOrdersReq.Validate if the designated constraints aren't met.
-type GetAllOrdersReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetAllOrdersReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetAllOrdersReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetAllOrdersReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetAllOrdersReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetAllOrdersReqValidationError) ErrorName() string { return "GetAllOrdersReqValidationError" }
-
-// Error satisfies the builtin error interface
-func (e GetAllOrdersReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetAllOrdersReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetAllOrdersReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetAllOrdersReqValidationError{}
 
 // Validate checks the field values on Orders with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

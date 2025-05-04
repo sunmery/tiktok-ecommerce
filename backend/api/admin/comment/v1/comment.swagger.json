@@ -48,31 +48,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "level",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "isActive",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "createdBy",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [

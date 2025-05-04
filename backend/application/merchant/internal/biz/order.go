@@ -119,19 +119,19 @@ type OrderUsecase struct {
 	log  *log.Helper
 }
 
-func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
-	return &OrderUsecase{
-		repo: repo,
-		log:  log.NewHelper(logger),
-	}
-}
-
 // OrderRepo 订单域方法
 type OrderRepo interface {
 	GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error)
 	GetMerchantOrders(ctx context.Context, req *GetMerchantOrdersReq) (*GetMerchantOrdersReply, error)
 	CreateOrderShip(ctx context.Context, req *CreateOrderShipReq) (*CreateOrderShipResp, error)
 	UpdateOrderShippingStatus(ctx context.Context, req *UpdateOrderShippingStatusReq) (*UpdateOrderShippingStatusResply, error)
+}
+
+func NewOrderUsecase(repo OrderRepo, logger log.Logger) *OrderUsecase {
+	return &OrderUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
 }
 
 func (oc *OrderUsecase) GetMerchantByOrderId(ctx context.Context, req *GetMerchantByOrderIdReq) (*GetMerchantByOrderIdReply, error) {

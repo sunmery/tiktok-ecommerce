@@ -473,22 +473,6 @@ func (m *GetSensitiveWordsReq) validate(all bool) error {
 
 	// no validation rules for PageSize
 
-	if m.Category != nil {
-		// no validation rules for Category
-	}
-
-	if m.Level != nil {
-		// no validation rules for Level
-	}
-
-	if m.IsActive != nil {
-		// no validation rules for IsActive
-	}
-
-	if m.CreatedBy != nil {
-		// no validation rules for CreatedBy
-	}
-
 	if len(errors) > 0 {
 		return GetSensitiveWordsReqMultiError(errors)
 	}

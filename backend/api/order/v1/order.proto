@@ -162,7 +162,7 @@ message ConsumerOrder {
 
 // 订单的消息结构
 message ConsumerOrders {
-  repeated ConsumerOrder items = 1; // 订单项列表
+  repeated ConsumerOrder orders = 1; // 订单项列表
   int64 order_id = 2; // 订单 ID
 }
 

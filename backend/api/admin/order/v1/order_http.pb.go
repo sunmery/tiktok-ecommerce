@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.4
 // - protoc             v5.29.3
-// source: order/v1/admin.proto
+// source: order/v1/order.proto
 
 package adminorderv1
 

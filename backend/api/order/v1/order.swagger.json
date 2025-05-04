@@ -16,47 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/v1/admin/orders": {
-      "get": {
-        "summary": "查询全部订单列表(管理员侧)",
-        "operationId": "OrderService_GetAllOrders",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1Orders"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "page",
-            "description": "分页参数：当前页码，默认值为 0",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "pageSize",
-            "description": "分页参数：每页大小，默认值为 20，最大值为 100",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "OrderService"
-        ]
-      }
-    },
     "/v1/consumers/orders": {
       "get": {
         "summary": "查询用户订单列表",
@@ -495,7 +454,7 @@
     "v1ConsumerOrders": {
       "type": "object",
       "properties": {
-        "items": {
+        "orders": {
           "type": "array",
           "items": {
             "type": "object",
@@ -659,20 +618,6 @@
         }
       },
       "title": "创建订单响应的消息结构"
-    },
-    "v1Orders": {
-      "type": "object",
-      "properties": {
-        "orders": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Order"
-          },
-          "title": "订单列表"
-        }
-      },
-      "title": "查询订单列表响应的消息结构"
     },
     "v1PaymentStatus": {
       "type": "string",

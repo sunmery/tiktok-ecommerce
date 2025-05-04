@@ -215,10 +215,6 @@ type GetSensitiveWordsReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	Category      *string                `protobuf:"bytes,3,opt,name=category,proto3,oneof" json:"category,omitempty"`
-	Level         *int32                 `protobuf:"varint,4,opt,name=level,proto3,oneof" json:"level,omitempty"`
-	IsActive      *bool                  `protobuf:"varint,5,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
-	CreatedBy     *string                `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3,oneof" json:"created_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -265,34 +261,6 @@ func (x *GetSensitiveWordsReq) GetPageSize() uint32 {
 		return x.PageSize
 	}
 	return 0
-}
-
-func (x *GetSensitiveWordsReq) GetCategory() string {
-	if x != nil && x.Category != nil {
-		return *x.Category
-	}
-	return ""
-}
-
-func (x *GetSensitiveWordsReq) GetLevel() int32 {
-	if x != nil && x.Level != nil {
-		return *x.Level
-	}
-	return 0
-}
-
-func (x *GetSensitiveWordsReq) GetIsActive() bool {
-	if x != nil && x.IsActive != nil {
-		return *x.IsActive
-	}
-	return false
-}
-
-func (x *GetSensitiveWordsReq) GetCreatedBy() string {
-	if x != nil && x.CreatedBy != nil {
-		return *x.CreatedBy
-	}
-	return ""
 }
 
 type GetSensitiveWordsReply struct {
@@ -360,20 +328,10 @@ const file_comment_v1_comment_proto_rawDesc = "" +
 	"\x14SetSensitiveWordsReq\x12M\n" +
 	"\x0fsensitive_words\x18\x01 \x03(\v2$.admin.admincomment.v1.SensitiveWordR\x0esensitiveWords\",\n" +
 	"\x16SetSensitiveWordsReply\x12\x12\n" +
-	"\x04rows\x18\x01 \x01(\rR\x04rows\"\xfd\x01\n" +
+	"\x04rows\x18\x01 \x01(\rR\x04rows\"G\n" +
 	"\x14GetSensitiveWordsReq\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\rR\bpageSize\x12\x1f\n" +
-	"\bcategory\x18\x03 \x01(\tH\x00R\bcategory\x88\x01\x01\x12\x19\n" +
-	"\x05level\x18\x04 \x01(\x05H\x01R\x05level\x88\x01\x01\x12 \n" +
-	"\tis_active\x18\x05 \x01(\bH\x02R\bisActive\x88\x01\x01\x12\"\n" +
-	"\n" +
-	"created_by\x18\x06 \x01(\tH\x03R\tcreatedBy\x88\x01\x01B\v\n" +
-	"\t_categoryB\b\n" +
-	"\x06_levelB\f\n" +
-	"\n" +
-	"_is_activeB\r\n" +
-	"\v_created_by\"T\n" +
+	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"T\n" +
 	"\x16GetSensitiveWordsReply\x12:\n" +
 	"\x05words\x18\x01 \x03(\v2$.admin.admincomment.v1.SensitiveWordR\x05words2\xcd\x02\n" +
 	"\fAdminComment\x12\x9e\x01\n" +
@@ -423,7 +381,6 @@ func file_comment_v1_comment_proto_init() {
 		return
 	}
 	file_comment_v1_comment_proto_msgTypes[0].OneofWrappers = []any{}
-	file_comment_v1_comment_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
