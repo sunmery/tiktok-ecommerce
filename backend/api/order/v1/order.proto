@@ -146,7 +146,7 @@ message Order {
 
 message ConsumerOrder {
   repeated OrderItem items = 1; // 订单项列表
-  int64 order_id = 2; // 订单 ID
+  optional int64 order_id = 2; // 订单 ID
   optional int64 sub_order_id = 3; // 子订单 ID
   string user_id = 4 [
     (validate.rules).string.len = 32, // 验证用户 ID 的长度为 32
@@ -163,7 +163,6 @@ message ConsumerOrder {
 // 订单的消息结构
 message ConsumerOrders {
   repeated ConsumerOrder orders = 1; // 订单项列表
-  int64 order_id = 2; // 订单 ID
 }
 
 message GetOrderReq {

@@ -52,18 +52,6 @@ func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
 }
 
 func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerOrdersReq) (*biz.GetConsumerOrdersReply, error) {
-	// 设置默认分页参数
-	if req.Page == 0 {
-		req.Page = 1
-	}
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-	// 限制最大页面大小
-	if req.PageSize > 100 {
-		req.PageSize = 100
-	}
-
 	rows, err := o.data.db.GetConsumerOrders(ctx, models.GetConsumerOrdersParams{
 		UserID:   req.UserId,
 		PageSize: int64(req.PageSize),
@@ -75,52 +63,48 @@ func (o *orderRepo) GetConsumerOrders(ctx context.Context, req *biz.GetConsumerO
 	}
 
 	orders := make([]*biz.ConsumerOrder, 0, len(rows))
-	var OrderID int64
 	for _, row := range rows {
-		OrderID = row.OrderID
-		subOrders := make([]*biz.ConsumerOrder, 0, len(row.SubOrders))
-		err := json.Unmarshal(row.SubOrders, &subOrders)
+		var items []*biz.ConsumerOrderItem
+		err := json.Unmarshal(row.Items, &items)
 		if err != nil {
-			return nil, err
+			log.Warnf("failed to unmarshal items: %v, item order_id: '%+v' sub_order_id:%+v", err, row.OrderID, row.SubOrderID)
+			continue
 		}
 
-		for _, order := range subOrders {
-			items := make([]*biz.ConsumerOrderItem, 0, len(order.Items))
-			for _, item := range order.Items {
-				items = append(items, &biz.ConsumerOrderItem{
-					Cost: item.Cost,
-					Item: &biz.CartItem{
-						MerchantId: item.Item.MerchantId,
-						ProductId:  item.Item.ProductId,
-						Quantity:   item.Item.Quantity,
-						Name:       item.Item.Name,
-						Picture:    item.Item.Picture,
-					},
-				})
-			}
-			orders = append(orders, &biz.ConsumerOrder{
-				Items: items,
-				Address: biz.Address{
-					StreetAddress: order.Address.StreetAddress,
-					City:          order.Address.City,
-					State:         order.Address.State,
-					Country:       order.Address.Country,
-					ZipCode:       order.Address.ZipCode,
+		for _, i := range items {
+			items = append(items, &biz.ConsumerOrderItem{
+				Cost: i.Cost,
+				Item: &biz.CartItem{
+					MerchantId: i.Item.MerchantId,
+					ProductId:  i.Item.ProductId,
+					Quantity:   i.Item.Quantity,
+					Name:       i.Item.Name,
+					Picture:    i.Item.Picture,
 				},
-				SubOrderID:     order.SubOrderID,
-				Currency:       order.Currency,
-				PaymentStatus:  order.PaymentStatus,
-				ShippingStatus: order.ShippingStatus,
-				Email:          order.Email,
-				CreatedAt:      order.CreatedAt,
-				UpdatedAt:      order.UpdatedAt,
 			})
 		}
+		orders = append(orders, &biz.ConsumerOrder{
+			OrderId:    row.OrderID,
+			SubOrderID: *row.SubOrderID,
+			Items:      items,
+			Address: biz.Address{
+				StreetAddress: row.StreetAddress,
+				City:          row.City,
+				State:         row.State,
+				Country:       row.Country,
+				ZipCode:       row.ZipCode,
+			},
+			Currency:       *row.Currency,
+			PaymentStatus:  constants.PaymentStatus(*row.PaymentStatus),
+			ShippingStatus: constants.ShippingStatus(*row.ShippingStatus),
+			Email:          row.Email,
+			CreatedAt:      row.CreatedAt.Time,
+			UpdatedAt:      row.UpdatedAt.Time,
+		})
 	}
 
 	return &biz.GetConsumerOrdersReply{
 		SubOrders: orders,
-		OrderId:   OrderID,
 	}, nil
 }
 
@@ -140,9 +124,8 @@ func (o *orderRepo) GetUserOrdersWithSuborders(ctx context.Context, req *biz.Get
 		return nil, nil
 	}
 
-	orders := make([]*biz.Suborder, 0, len(suborders))
+	orders := make([]*biz.SubOrder, 0, len(suborders))
 	for _, s := range suborders {
-
 		totalAmount, err := types.NumericToFloat(s.TotalAmount)
 		if err != nil {
 			return nil, err
@@ -164,7 +147,7 @@ func (o *orderRepo) GetUserOrdersWithSuborders(ctx context.Context, req *biz.Get
 			})
 		}
 
-		orders = append(orders, &biz.Suborder{
+		orders = append(orders, &biz.SubOrder{
 			OrderId:        s.ID,
 			SubOrderId:     *s.SubOrderID,
 			StreetAddress:  s.StreetAddress,
@@ -174,9 +157,9 @@ func (o *orderRepo) GetUserOrdersWithSuborders(ctx context.Context, req *biz.Get
 			ZipCode:        s.ZipCode,
 			Email:          s.Email,
 			MerchantId:     s.MerchantID.String(),
+			TotalAmount:    totalAmount,
 			PaymentStatus:  constants.PaymentStatus(s.PaymentStatus),
 			ShippingStatus: constants.ShippingStatus(*(s.ShippingStatus)),
-			TotalAmount:    totalAmount,
 			Currency:       *s.Currency,
 			Items:          allItems,
 			CreatedAt:      s.CreatedAt,
@@ -422,17 +405,13 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 	// 第三步：创建子订单并预扣库存
 	merchantVersions := make(map[string]int64)
 	for _, subOrder := range subOrders {
+		totalAmount, err := types.Float64ToNumeric(subOrder.amount)
+		log.Debugf("405 totalAmount: %v", totalAmount)
 		// 序列化订单项
 		items := []biz.OrderItem{subOrder.item}
 		itemsJSON, marshalErr := json.Marshal(items)
 		if marshalErr != nil {
 			return nil, kerrors.New(400, "INVALID_ORDER_ITEM", fmt.Sprintf("序列化订单项失败: %v", marshalErr))
-		}
-
-		// 转换价格到pgtype.Numeric
-		totalAmount, totalAmountErr := types.Float64ToNumeric(subOrder.amount)
-		if totalAmountErr != nil {
-			return nil, fmt.Errorf("invalid price format: %w", totalAmountErr)
 		}
 
 		// 创建子订单ID
@@ -441,7 +420,6 @@ func (o *orderRepo) PlaceOrder(ctx context.Context, req *biz.PlaceOrderReq) (*bi
 			OrderID:     order.ID,
 			MerchantID:  subOrder.merchantId,
 			TotalAmount: totalAmount,
-			Currency:    req.Currency,
 			Status:      string(constants.PaymentPending),
 			Items:       itemsJSON,
 		}
@@ -578,7 +556,6 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 	type dbSubOrder struct {
 		ID             int64           `json:"sub_order_id,omitempty"`
 		MerchantID     string          `json:"merchant_id,omitempty"`
-		TotalAmount    json.Number     `json:"total_amount,omitempty"`
 		Currency       string          `json:"currency,omitempty"`
 		PaymentStatus  string          `json:"status,omitempty"`
 		ShippingStatus string          `json:"shipping_status,omitempty"`
@@ -597,16 +574,6 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 		// 检查是否为空值
 		if d.ID == 0 {
 			continue
-		}
-
-		merchantID, err := uuid.Parse(d.MerchantID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid merchant id: %w", err)
-		}
-
-		totalAmount, err := d.TotalAmount.Float64()
-		if err != nil {
-			return nil, fmt.Errorf("invalid total amount: %w", err)
 		}
 
 		// 解析订单项
@@ -651,82 +618,14 @@ func parseSubOrders(data []byte) ([]*biz.SubOrder, error) {
 		}
 
 		subOrders = append(subOrders, &biz.SubOrder{
-			ID:             d.ID,
-			MerchantID:     merchantID,
-			TotalAmount:    totalAmount,
+			OrderId: d.ID,
+			// MerchantID:     merchantID,
 			Currency:       d.Currency,
 			PaymentStatus:  constants.PaymentStatus(d.PaymentStatus),
 			ShippingStatus: constants.ShippingStatus(d.ShippingStatus),
 			Items:          orderItems,
 			CreatedAt:      d.CreatedAt,
 			UpdatedAt:      d.UpdatedAt,
-		})
-	}
-
-	return subOrders, nil
-}
-
-// 获取订单的子订单信息
-func (o *orderRepo) getSubOrders(ctx context.Context, orderID int64) ([]*biz.SubOrder, error) {
-	// 创建独立上下文，设置合理超时（如5秒）
-	subCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// 查询子订单
-	rows, err := o.data.db.QuerySubOrders(subCtx, orderID)
-	if err != nil {
-		// 检查是否是上下文取消导致的错误
-		if ctx.Err() != nil {
-			o.log.WithContext(ctx).Warnf("Context canceled during database query for order %d", orderID)
-			return nil, fmt.Errorf("failed to query sub orders: %w", ctx.Err())
-		}
-		return nil, fmt.Errorf("failed to query sub orders: %w", err)
-	}
-
-	var subOrders []*biz.SubOrder
-	for _, order := range rows {
-		// 解析订单项 - 先解析为SubOrderItem结构
-		type SubOrderItem struct {
-			Item *biz.CartItem
-			Cost float64
-		}
-		var subOrderItems []SubOrderItem
-		if err := json.Unmarshal(order.Items, &subOrderItems); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal sub order items: %w", err)
-		}
-
-		// 转换为biz.OrderItem
-		var orderItems []*biz.OrderItem
-		for _, item := range subOrderItems {
-			// 确保CartItem中的MerchantId和ProductId正确映射
-			cartItem := &biz.CartItem{
-				MerchantId: item.Item.MerchantId,
-				ProductId:  item.Item.ProductId,
-				Quantity:   item.Item.Quantity,
-			}
-
-			orderItems = append(orderItems, &biz.OrderItem{
-				Item: cartItem,
-				Cost: item.Cost,
-			})
-		}
-
-		// 转换金额
-		amount, err := types.NumericToFloat(order.TotalAmount.(pgtype.Numeric))
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert amount: %w", err)
-		}
-
-		subOrders = append(subOrders, &biz.SubOrder{
-			ID:             order.ID,
-			MerchantID:     order.MerchantID,
-			TotalAmount:    amount,
-			Currency:       order.Currency,
-			PaymentStatus:  constants.PaymentStatus(order.PaymentStatus),
-			ShippingStatus: constants.ShippingStatus(order.ShippingStatus),
-			Items:          orderItems,
-			CreatedAt:      order.CreatedAt.Time,
-			UpdatedAt:      order.UpdatedAt.Time,
 		})
 	}
 

@@ -461,11 +461,6 @@
             "$ref": "#/definitions/v1ConsumerOrder"
           },
           "title": "订单项列表"
-        },
-        "orderId": {
-          "type": "string",
-          "format": "int64",
-          "title": "订单 ID"
         }
       },
       "title": "订单的消息结构"

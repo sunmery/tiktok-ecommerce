@@ -1155,8 +1155,6 @@ func (m *ConsumerOrder) validate(all bool) error {
 
 	}
 
-	// no validation rules for OrderId
-
 	if utf8.RuneCountInString(m.GetUserId()) != 32 {
 		err := ConsumerOrderValidationError{
 			field:  "UserId",
@@ -1256,6 +1254,10 @@ func (m *ConsumerOrder) validate(all bool) error {
 	// no validation rules for PaymentStatus
 
 	// no validation rules for ShippingStatus
+
+	if m.OrderId != nil {
+		// no validation rules for OrderId
+	}
 
 	if m.SubOrderId != nil {
 		// no validation rules for SubOrderId
@@ -1402,8 +1404,6 @@ func (m *ConsumerOrders) validate(all bool) error {
 		}
 
 	}
-
-	// no validation rules for OrderId
 
 	if len(errors) > 0 {
 		return ConsumerOrdersMultiError(errors)

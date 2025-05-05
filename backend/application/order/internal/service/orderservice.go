@@ -219,7 +219,6 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 		items := make([]*v1.OrderItem, 0, len(o.Items))
 		for _, item := range o.Items {
 			items = append(items, &v1.OrderItem{
-				Cost: item.Cost,
 				Item: &cartv1.CartItem{
 					MerchantId: item.Item.MerchantId.String(),
 					ProductId:  item.Item.ProductId.String(),
@@ -227,14 +226,15 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 					Name:       item.Item.Name,
 					Picture:    item.Item.Picture,
 				},
+				Cost: item.Cost,
 			})
 		}
 		orders = append(orders, &v1.ConsumerOrder{
-			Items:      items,
-			OrderId:    resp.OrderId,
-			SubOrderId: &o.SubOrderID,
-			UserId:     req.UserId,
-			Currency:   o.Currency,
+			Items:   items,
+			OrderId: &o.OrderId,
+			// SubOrderId: &o.SubOrderID,
+			// UserId:     req.UserId,
+			Currency: o.Currency,
 			Address: &userv1.ConsumerAddress{
 				UserId:        req.UserId, // 数据库无需存储用户ID, 直接从请求中返回
 				City:          o.Address.City,
@@ -251,8 +251,7 @@ func (s *OrderServiceService) GetConsumerOrders(ctx context.Context, req *v1.Get
 	}
 
 	return &v1.ConsumerOrders{
-		Orders:  orders,
-		OrderId: resp.OrderId,
+		Orders: orders,
 	}, nil
 }
 

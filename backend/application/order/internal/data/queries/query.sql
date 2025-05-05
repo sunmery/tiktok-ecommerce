@@ -1,29 +1,24 @@
 -- name: GetConsumerOrders :many
 SELECT oo.id AS order_id,
-       json_agg(
-               json_build_object(
-                       'subOrderId', os.id,
-                       'totalAmount', os.total_amount,
-                       'currency', os.currency,
-                       'paymentStatus', os.status,
-                       'shippingStatus', os.shipping_status,
-                       'items', os.items,
-                       'email', oo.email,
-                       'address', json_build_object(
-                               'streetAddress', oo.street_address,
-                               'city', oo.city,
-                               'state', oo.state,
-                               'country', oo.country,
-                               'zipCode', oo.zip_code
-                                  ),
-                       'createdAt', os.created_at,
-                       'updatedAt', os.updated_at
-               )
-       )     AS sub_orders
+       os.id AS sub_order_id,
+       os.total_amount,
+       os.currency,
+       os.status AS payment_status,
+       os.shipping_status,
+       os.items,
+       oo.email,
+       oo.street_address,
+       oo.city,
+       oo.state,
+       oo.country,
+       oo.zip_code,
+       os.created_at,
+       os.updated_at
 FROM orders.orders oo
-         LEFT JOIN orders.sub_orders os ON oo.id = os.order_id
+         LEFT JOIN orders.sub_orders os
+                   ON oo.id = os.order_id
 WHERE oo.user_id = @user_id
-GROUP BY oo.id
+GROUP BY oo.id, os.id, os.total_amount, os.currency, os.status, os.shipping_status, os.items, oo.email
 LIMIT @page_size OFFSET @page;
 
 -- name: CreateOrder :one

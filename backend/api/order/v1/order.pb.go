@@ -635,7 +635,7 @@ func (x *Order) GetShippingStatus() ShippingStatus {
 type ConsumerOrder struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Items          []*OrderItem           `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`                                      // 订单项列表
-	OrderId        int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                  // 订单 ID
+	OrderId        *int64                 `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3,oneof" json:"order_id,omitempty"`            // 订单 ID
 	SubOrderId     *int64                 `protobuf:"varint,3,opt,name=sub_order_id,json=subOrderId,proto3,oneof" json:"sub_order_id,omitempty"` // 子订单 ID
 	UserId         string                 `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Currency       string                 `protobuf:"bytes,5,opt,name=currency,proto3" json:"currency,omitempty"`                                                                            // 货币代码（如 USD、CNY），长度固定为 3
@@ -686,8 +686,8 @@ func (x *ConsumerOrder) GetItems() []*OrderItem {
 }
 
 func (x *ConsumerOrder) GetOrderId() int64 {
-	if x != nil {
-		return x.OrderId
+	if x != nil && x.OrderId != nil {
+		return *x.OrderId
 	}
 	return 0
 }
@@ -751,8 +751,7 @@ func (x *ConsumerOrder) GetShippingStatus() ShippingStatus {
 // 订单的消息结构
 type ConsumerOrders struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Orders        []*ConsumerOrder       `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`                   // 订单项列表
-	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"` // 订单 ID
+	Orders        []*ConsumerOrder       `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"` // 订单项列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -792,13 +791,6 @@ func (x *ConsumerOrders) GetOrders() []*ConsumerOrder {
 		return x.Orders
 	}
 	return nil
-}
-
-func (x *ConsumerOrders) GetOrderId() int64 {
-	if x != nil {
-		return x.OrderId
-	}
-	return 0
 }
 
 type GetOrderReq struct {
@@ -1422,11 +1414,11 @@ const file_v1_order_proto_rawDesc = "" +
 	"\x0epayment_status\x18\t \x01(\x0e2!.ecommerce.order.v1.PaymentStatusR\rpaymentStatus\x12K\n" +
 	"\x0fshipping_status\x18\n" +
 	" \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatusB\x0f\n" +
-	"\r_sub_order_id\"\x89\x04\n" +
+	"\r_sub_order_id\"\x9b\x04\n" +
 	"\rConsumerOrder\x123\n" +
-	"\x05items\x18\x01 \x03(\v2\x1d.ecommerce.order.v1.OrderItemR\x05items\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\x12%\n" +
-	"\fsub_order_id\x18\x03 \x01(\x03H\x00R\n" +
+	"\x05items\x18\x01 \x03(\v2\x1d.ecommerce.order.v1.OrderItemR\x05items\x12\x1e\n" +
+	"\border_id\x18\x02 \x01(\x03H\x00R\aorderId\x88\x01\x01\x12%\n" +
+	"\fsub_order_id\x18\x03 \x01(\x03H\x01R\n" +
 	"subOrderId\x88\x01\x01\x12$\n" +
 	"\auser_id\x18\x04 \x01(\tB\v\xfaB\br\x06\x98\x01 \xb0\x01\x01R\x06userId\x12$\n" +
 	"\bcurrency\x18\x05 \x01(\tB\b\xfaB\x05r\x03\x98\x01\x03R\bcurrency\x12<\n" +
@@ -1436,11 +1428,11 @@ const file_v1_order_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12H\n" +
 	"\x0epayment_status\x18\t \x01(\x0e2!.ecommerce.order.v1.PaymentStatusR\rpaymentStatus\x12K\n" +
 	"\x0fshipping_status\x18\n" +
-	" \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatusB\x0f\n" +
-	"\r_sub_order_id\"f\n" +
+	" \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatusB\v\n" +
+	"\t_order_idB\x0f\n" +
+	"\r_sub_order_id\"K\n" +
 	"\x0eConsumerOrders\x129\n" +
-	"\x06orders\x18\x01 \x03(\v2!.ecommerce.order.v1.ConsumerOrderR\x06orders\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\"\x1d\n" +
+	"\x06orders\x18\x01 \x03(\v2!.ecommerce.order.v1.ConsumerOrderR\x06orders\"\x1d\n" +
 	"\vGetOrderReq\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"S\n" +
 	"\x1dGetUserOrdersWithSubordersReq\x12\x17\n" +

@@ -22,12 +22,19 @@ type Address struct {
 }
 
 type SubOrder struct {
-	ID             int64
-	MerchantID     uuid.UUID
+	OrderId        int64
+	SubOrderId     int64
+	StreetAddress  string
+	City           string
+	State          string
+	Country        string
+	ZipCode        string
+	Email          string
+	MerchantId     string
 	TotalAmount    float64
-	Currency       string
 	PaymentStatus  constants.PaymentStatus
 	ShippingStatus constants.ShippingStatus
+	Currency       string
 	Items          []*OrderItem
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -43,30 +50,6 @@ type (
 		Orders []*v1.Order
 	}
 )
-
-// // GetMerchantOrdersReq 获取商家订单
-// type (
-// 	GetMerchantOrdersReq struct {
-// 		MerchantId uuid.UUID
-// 		Page       uint32
-// 		PageSize   uint32
-// 	}
-// 	MerchantOrdersSubOrder struct {
-// 		OrderID        int64
-// 		SubOrderID     int64
-// 		MerchantID     uuid.UUID
-// 		TotalAmount    float64
-// 		Currency       string
-// 		PaymentStatus  constants.PaymentStatus
-// 		ShippingStatus constants.ShippingStatus
-// 		Items          []*OrderItem
-// 		CreatedAt      time.Time
-// 		UpdatedAt      time.Time
-// 	}
-// 	GetMerchantOrdersReply struct {
-// 		Orders []*MerchantOrdersSubOrder
-// 	}
-// )
 
 // CartItem 购物车商品, 是以 JSON 存储到数据库中, 需要添加tags
 // 最终是给前端展示, 所以使用小驼峰符合前端变量命名规范
@@ -174,26 +157,9 @@ type (
 		UserId  uuid.UUID
 		OrderId int64
 	}
-	Suborder struct {
-		OrderId        int64
-		SubOrderId     int64
-		StreetAddress  string
-		City           string
-		State          string
-		Country        string
-		ZipCode        string
-		Email          string
-		MerchantId     string
-		PaymentStatus  constants.PaymentStatus
-		ShippingStatus constants.ShippingStatus
-		TotalAmount    float64
-		Currency       string
-		Items          []*OrderItem
-		CreatedAt      time.Time
-		UpdatedAt      time.Time
-	}
+
 	GetUserOrdersWithSubordersReply struct {
-		Orders []*Suborder
+		Orders []*SubOrder
 	}
 )
 
@@ -208,9 +174,10 @@ type (
 		Item *CartItem
 	}
 	ConsumerOrder struct {
+		OrderId        int64
+		SubOrderID     int64
 		Items          []*ConsumerOrderItem
 		Address        Address
-		SubOrderID     int64
 		Currency       string
 		PaymentStatus  constants.PaymentStatus
 		ShippingStatus constants.ShippingStatus
@@ -220,7 +187,6 @@ type (
 	}
 	GetConsumerOrdersReply struct {
 		SubOrders []*ConsumerOrder
-		OrderId   int64
 	}
 )
 
