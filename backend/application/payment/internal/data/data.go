@@ -9,6 +9,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 
+	consumerOrderv1 "backend/api/consumer/order/v1"
 	orderv1 "backend/api/order/v1"
 	"backend/constants"
 
@@ -33,17 +34,18 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewBalancerServiceClient, NewPaymentRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAlipay, NewDiscovery, NewOrderServiceClient, NewBalancerServiceClient, NewPaymentRepo, NewConsumerOrderServiceClient)
 
 type Data struct {
-	db        *models.Queries
-	pgx       *pgxpool.Pool
-	rdb       *redis.Client
-	logger    *log.Helper
-	alipay    *alipay.Client
-	conf      *conf.Pay
-	orderv1   orderv1.OrderServiceClient
-	balancev1 balancev1.BalanceClient
+	db              *models.Queries
+	pgx             *pgxpool.Pool
+	rdb             *redis.Client
+	logger          *log.Helper
+	alipay          *alipay.Client
+	conf            *conf.Pay
+	orderv1         orderv1.OrderServiceClient
+	balancev1       balancev1.BalanceClient
+	consumerOrderv1 consumerOrderv1.ConsumerOrderClient
 }
 
 // 使用标准库的私有类型(包级唯一)避免冲突
@@ -58,19 +60,21 @@ func NewData(
 	conf *conf.Pay,
 	orderv1 orderv1.OrderServiceClient,
 	balancev1 balancev1.BalanceClient,
+	consumerOrderv1 consumerOrderv1.ConsumerOrderClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		db:        models.New(db),        // 数据库
-		pgx:       db,                    // 数据库事务
-		rdb:       rdb,                   // 缓存
-		logger:    log.NewHelper(logger), // 注入日志
-		alipay:    alipay,
-		conf:      conf,
-		orderv1:   orderv1,
-		balancev1: balancev1, // 余额服务
+		db:              models.New(db),        // 数据库
+		pgx:             db,                    // 数据库事务
+		rdb:             rdb,                   // 缓存
+		logger:          log.NewHelper(logger), // 注入日志
+		alipay:          alipay,
+		conf:            conf,
+		orderv1:         orderv1,
+		balancev1:       balancev1,       // 余额服务
+		consumerOrderv1: consumerOrderv1, // 消费者订单服务
 	}, cleanup, nil
 }
 
@@ -169,7 +173,7 @@ func NewBalancerServiceClient(d registry.Discovery, logger log.Logger) (balancev
 	return balancev1.NewBalanceClient(conn), nil
 }
 
-// NewOrderServiceClient 订单微服务
+// NewOrderServiceClient 订单微服务, 独立于角色订单服务
 func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.OrderServiceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),
@@ -185,6 +189,24 @@ func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.Ord
 		return nil, err
 	}
 	return orderv1.NewOrderServiceClient(conn), nil
+}
+
+// NewConsumerOrderServiceClient 消费者订单微服务
+func NewConsumerOrderServiceClient(d registry.Discovery, logger log.Logger) (consumerOrderv1.ConsumerOrderClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ConsumerServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return consumerOrderv1.NewConsumerOrderClient(conn), nil
 }
 
 // NewDB 数据库

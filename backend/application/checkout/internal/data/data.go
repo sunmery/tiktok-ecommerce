@@ -12,6 +12,7 @@ import (
 	"backend/application/checkout/internal/conf"
 	"backend/constants"
 
+	consumerOrderv1 "backend/api/consumer/order/v1"
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -25,16 +26,17 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewUserServiceClient, NewProductServiceClient, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewUserServiceClient, NewProductServiceClient, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient, NewConsumerOrderServiceClient)
 
 type Data struct {
-	rdb       *redis.Client
-	logger    *log.Helper
-	cartv1    cartv1.CartServiceClient
-	orderv1   orderv1.OrderServiceClient
-	userv1    userv1.UserServiceClient
-	paymentv1 paymentv1.PaymentServiceClient
-	productv1 productv1.ProductServiceClient
+	rdb             *redis.Client
+	logger          *log.Helper
+	cartv1          cartv1.CartServiceClient
+	orderv1         orderv1.OrderServiceClient
+	userv1          userv1.UserServiceClient
+	paymentv1       paymentv1.PaymentServiceClient
+	productv1       productv1.ProductServiceClient
+	consumerOrderv1 consumerOrderv1.ConsumerOrderClient
 }
 
 func NewData(
@@ -45,18 +47,21 @@ func NewData(
 	orderv1 orderv1.OrderServiceClient,
 	paymentv1 paymentv1.PaymentServiceClient,
 	productv1 productv1.ProductServiceClient,
+
+	consumerOrderv1 consumerOrderv1.ConsumerOrderClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
-		rdb:       rdb,                   // 缓存
-		logger:    log.NewHelper(logger), // 注入日志
-		userv1:    userv1,                // 用户服务
-		cartv1:    cartv1,                // 购物车服务
-		orderv1:   orderv1,               // 订单服务
-		paymentv1: paymentv1,             // 支付服务
-		productv1: productv1,             // 商品服务
+		rdb:             rdb,                   // 缓存
+		logger:          log.NewHelper(logger), // 注入日志
+		userv1:          userv1,                // 用户服务
+		cartv1:          cartv1,                // 购物车服务
+		orderv1:         orderv1,               // 订单服务
+		paymentv1:       paymentv1,             // 支付服务
+		productv1:       productv1,             // 商品服务
+		consumerOrderv1: consumerOrderv1,       // 消费者订单服务
 	}, cleanup, nil
 }
 
@@ -144,6 +149,24 @@ func NewOrderServiceClient(d registry.Discovery, logger log.Logger) (orderv1.Ord
 		return nil, err
 	}
 	return orderv1.NewOrderServiceClient(conn), nil
+}
+
+// NewConsumerOrderServiceClient 消费者订单微服务
+func NewConsumerOrderServiceClient(d registry.Discovery, logger log.Logger) (consumerOrderv1.ConsumerOrderClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ConsumerServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return consumerOrderv1.NewConsumerOrderClient(conn), nil
 }
 
 // NewPaymentServiceClient 支付微服务

@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	cartv1 "backend/api/cart/v1"
-	v1 "backend/api/order/v1"
+	consumerv1 "backend/api/consumer/order/v1"
 	userv1 "backend/api/user/v1"
 	"backend/application/checkout/internal/biz"
 	"backend/constants"
@@ -64,7 +64,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	}
 
 	var cartItems []cartv1.CartItem
-	var orderItems []*v1.OrderItem
+	var orderItems []*consumerv1.OrderItem
 	var amount float64
 	for _, cart := range carts.Items {
 		for _, p := range products.Items {
@@ -90,7 +90,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 					Picture:    p.Images[0].Url,
 				})
 
-				orderItems = append(orderItems, &v1.OrderItem{
+				orderItems = append(orderItems, &consumerv1.OrderItem{
 					Item: &cartv1.CartItem{
 						MerchantId: cart.MerchantId,
 						ProductId:  cart.ProductId,
@@ -127,7 +127,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	}
 
 	// 调用订单微服务创建订单
-	order, orderErr := c.data.orderv1.PlaceOrder(ctx, &v1.PlaceOrderReq{
+	order, orderErr := c.data.consumerOrderv1.PlaceOrder(ctx, &consumerv1.PlaceOrderRequest{
 		Currency: string(constants.CNY), // Use fixed currency for now
 		Address: &userv1.ConsumerAddress{
 			Id:            address.Id,

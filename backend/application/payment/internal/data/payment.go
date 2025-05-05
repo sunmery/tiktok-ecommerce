@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	balancev1 "backend/api/balancer/v1"
+	consumerOrderv1 "backend/api/consumer/order/v1"
 
 	"backend/application/payment/internal/pkg/id"
 
@@ -33,6 +34,7 @@ import (
 	"backend/application/payment/internal/data/models"
 
 	"backend/application/payment/internal/biz"
+
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -387,7 +389,7 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 	}
 
 	// 查询订单的所有子订单信息
-	orderInfo, err := r.data.orderv1.GetUserOrdersWithSuborders(ctx, &orderv1.GetUserOrdersWithSubordersReq{
+	orderInfo, err := r.data.consumerOrderv1.GetConsumerOrdersWithSuborders(ctx, &consumerOrderv1.GetConsumerOrdersWithSubordersRequest{
 		UserId:  payment.ConsumerID.String(),
 		OrderId: payment.OrderID,
 	})

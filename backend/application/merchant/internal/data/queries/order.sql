@@ -29,7 +29,6 @@ SET shipping_status = @shipping_status,
 WHERE id = @sub_order_id
 RETURNING id, updated_at;
 
-
 -- name: GetMerchantByOrderId :one
 SELECT os.merchant_id
 FROM orders.sub_orders os

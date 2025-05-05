@@ -16,7 +16,8 @@ https://i0jecrneytu.feishu.cn/docx/WoStdOA3zo7KF1xnOM5caU8cnUg?from=from_copylin
 - admin: 30021, 30022
 - comment: 30023, 30024
 - balancer: 30025, 30026
-
+- consumer: 30027, 30028
+- 
 ## 启动基础设施
 ```bash
 make infra

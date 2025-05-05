@@ -243,57 +243,6 @@
       },
       "title": "更新订单状态请求的消息结构"
     },
-    "ecommercemerchantorderv1OrderItem": {
-      "type": "object",
-      "properties": {
-        "subOrderId": {
-          "type": "string",
-          "format": "int64",
-          "title": "子订单 ID"
-        },
-        "item": {
-          "$ref": "#/definitions/v1CartItem",
-          "title": "购物车中的商品项"
-        },
-        "cost": {
-          "type": "number",
-          "format": "double",
-          "title": "商品单价"
-        },
-        "email": {
-          "type": "string",
-          "title": "用户邮箱"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "address": {
-          "$ref": "#/definitions/v1ConsumerAddress",
-          "title": "用户地址信息"
-        },
-        "currency": {
-          "type": "string",
-          "title": "货币代码（如 USD、CNY），长度固定为 3"
-        },
-        "paymentStatus": {
-          "$ref": "#/definitions/v1PaymentStatus",
-          "title": "支付状态"
-        },
-        "shippingStatus": {
-          "$ref": "#/definitions/v1ShippingStatus",
-          "title": "货运状态,冗余, 减少查询"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "订单创建时间"
-        }
-      }
-    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -439,7 +388,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/ecommercemerchantorderv1OrderItem"
+            "$ref": "#/definitions/v1OrderItem"
           },
           "title": "订单项列表"
         },
@@ -451,6 +400,57 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "v1OrderItem": {
+      "type": "object",
+      "properties": {
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "item": {
+          "$ref": "#/definitions/v1CartItem",
+          "title": "购物车中的商品项"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double",
+          "title": "商品单价"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态,冗余, 减少查询"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "订单创建时间"
         }
       }
     },
