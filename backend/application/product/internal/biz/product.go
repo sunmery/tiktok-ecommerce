@@ -314,7 +314,7 @@ func (p *ProductUsecase) UploadProductFile(ctx context.Context, req *UploadProdu
 }
 
 func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error) {
-	// p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
+	p.log.WithContext(ctx).Debugf("CreateProduct: %v", req)
 	return p.repo.CreateProduct(ctx, req)
 }
 

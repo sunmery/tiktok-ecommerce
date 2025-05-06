@@ -406,6 +406,7 @@ func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, 
 
 	// 插入图片
 	eg.Go(func() error {
+		log.Debugf("插入图片: %v", pr.Images)
 		if len(pr.Images) > 0 {
 			return p.createProductImages(ctx, result.ID, pr.MerchantId, pr.Images)
 		}
@@ -596,6 +597,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 			if err := json.Unmarshal(product.Images, &images); err != nil {
 				// 处理错误或记录日志
 				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+				continue
 			}
 		}
 
@@ -985,7 +987,7 @@ func (p *productRepo) createProductImages(ctx context.Context, productID uuid.UU
 		}
 	}
 
-	return p.data.DB(ctx).BulkCreateProductImages(ctx, bulkParams)
+	return p.data.db.BulkCreateProductImages(ctx, bulkParams)
 }
 
 func (p *productRepo) GetCategoryWithChildrenProducts(ctx context.Context, req *biz.GetCategoryWithChildrenProducts) (*biz.Products, error) {

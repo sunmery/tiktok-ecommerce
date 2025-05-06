@@ -5,6 +5,8 @@ import (
 
 	"backend/application/comment/internal/pkg/id"
 
+	"backend/pkg/types"
+
 	"backend/application/comment/internal/data/models"
 
 	"backend/application/comment/internal/biz"
@@ -18,28 +20,27 @@ type commentRepo struct {
 	log  *log.Helper
 }
 
-func (c commentRepo) CreateComment(ctx context.Context, req *biz.CreateCommentRequest) (*biz.Comment, error) {
-	comment, err := c.data.db.CreateComment(ctx, models.CreateCommentParams{
-		ID:         id.SnowflakeID(),
-		ProductID:  req.ProductId,
-		MerchantID: req.MerchantId,
-		UserID:     req.UserId,
-		Score:      int32(req.Score),
-		Content:    req.Content,
+func (c commentRepo) CreateComment(ctx context.Context, req *biz.CreateCommentRequest) (*biz.CreateCommentReply, error) {
+	snowflakeId := id.SnowflakeID()
+	productId := types.ToPgUUID(req.ProductId)
+	merchantId := types.ToPgUUID(req.MerchantId)
+	userId := types.ToPgUUID(req.UserId)
+	score := int32(req.Score)
+	content := req.Content
+	isSensitive, err := c.data.db.CreateComment(ctx, models.CreateCommentParams{
+		ID:         &snowflakeId,
+		ProductID:  productId,
+		MerchantID: merchantId,
+		UserID:     userId,
+		Score:      &score,
+		Content:    &content,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &biz.Comment{
-		Id:         comment.ID,
-		ProductId:  comment.ProductID,
-		MerchantId: comment.MerchantID,
-		UserId:     comment.UserID,
-		Content:    comment.Content,
-		Score:      uint32(comment.Score),
-		CreatedAt:  comment.CreatedAt.Time,
-		UpdatedAt:  comment.UpdatedAt.Time,
+	return &biz.CreateCommentReply{
+		IsSensitive: isSensitive,
 	}, nil
 }
 

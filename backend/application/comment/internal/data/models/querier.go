@@ -9,12 +9,23 @@ import (
 )
 
 type Querier interface {
-	//CreateComment
+	// 返回最终结果：是否命中敏感词
 	//
-	//  INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
-	//  VALUES ($1, $2, $3, $4, $5, $6)
-	//  RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
-	CreateComment(ctx context.Context, arg CreateCommentParams) (CommentsComments, error)
+	//  WITH check_sensitive_word AS (
+	//      -- 检查 content 是否包含敏感词
+	//      SELECT EXISTS (SELECT 1
+	//                     FROM admin.sensitive_words sw
+	//                     WHERE $1::text ILIKE '%' || sw.word || '%'
+	//                       AND sw.is_active = TRUE) AS has_sensitive_word),
+	//       insert_comment AS (
+	//           -- 如果没有检测到敏感词，则执行插入操作
+	//           INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
+	//               SELECT $2::bigint, $3::uuid, $4::uuid, $5::uuid, $6, $1
+	//               WHERE NOT (SELECT has_sensitive_word FROM check_sensitive_word)
+	//               RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at)
+	//  SELECT has_sensitive_word AS is_sensitive
+	//  FROM check_sensitive_word
+	CreateComment(ctx context.Context, arg CreateCommentParams) (bool, error)
 	//DeleteComment
 	//
 	//  DELETE

@@ -73,7 +73,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CommentType"
+              "$ref": "#/definitions/v1CreateCommentReply"
             }
           },
           "default": {
@@ -249,6 +249,14 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "v1CreateCommentReply": {
+      "type": "object",
+      "properties": {
+        "isSensitive": {
+          "type": "boolean"
         }
       }
     },

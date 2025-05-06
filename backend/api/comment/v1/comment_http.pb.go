@@ -26,7 +26,7 @@ const OperationCommentUpdateComment = "/ecommerce.comment.v1.Comment/UpdateComme
 
 type CommentHTTPServer interface {
 	// CreateComment 创建评论
-	CreateComment(context.Context, *CreateCommentRequest) (*CommentType, error)
+	CreateComment(context.Context, *CreateCommentRequest) (*CreateCommentReply, error)
 	// DeleteComment 删除评论
 	DeleteComment(context.Context, *DeleteCommentRequest) (*DeleteCommentResponse, error)
 	// GetComments 获取评论
@@ -60,7 +60,7 @@ func _Comment_CreateComment0_HTTP_Handler(srv CommentHTTPServer) func(ctx http.C
 		if err != nil {
 			return err
 		}
-		reply := out.(*CommentType)
+		reply := out.(*CreateCommentReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -132,7 +132,7 @@ func _Comment_DeleteComment0_HTTP_Handler(srv CommentHTTPServer) func(ctx http.C
 }
 
 type CommentHTTPClient interface {
-	CreateComment(ctx context.Context, req *CreateCommentRequest, opts ...http.CallOption) (rsp *CommentType, err error)
+	CreateComment(ctx context.Context, req *CreateCommentRequest, opts ...http.CallOption) (rsp *CreateCommentReply, err error)
 	DeleteComment(ctx context.Context, req *DeleteCommentRequest, opts ...http.CallOption) (rsp *DeleteCommentResponse, err error)
 	GetComments(ctx context.Context, req *GetCommentsRequest, opts ...http.CallOption) (rsp *GetCommentsResponse, err error)
 	UpdateComment(ctx context.Context, req *UpdateCommentRequest, opts ...http.CallOption) (rsp *CommentType, err error)
@@ -146,8 +146,8 @@ func NewCommentHTTPClient(client *http.Client) CommentHTTPClient {
 	return &CommentHTTPClientImpl{client}
 }
 
-func (c *CommentHTTPClientImpl) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...http.CallOption) (*CommentType, error) {
-	var out CommentType
+func (c *CommentHTTPClientImpl) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...http.CallOption) (*CreateCommentReply, error) {
+	var out CreateCommentReply
 	pattern := "/v1/comments"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationCommentCreateComment))

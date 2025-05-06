@@ -33,7 +33,7 @@ func NewBalanceService(uc *biz.BalanceUsecase) *BalanceService {
 	return &BalanceService{uc: uc}
 }
 
-func (s *BalanceService) CreateConsumerBalance(ctx context.Context, req *v1.CreateConsumersBalanceRequest) (*v1.CreateConsumersBalanceReply, error) {
+func (s *BalanceService) CreateConsumersBalance(ctx context.Context, req *v1.CreateConsumersBalanceRequest) (*v1.CreateConsumersBalanceReply, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, err

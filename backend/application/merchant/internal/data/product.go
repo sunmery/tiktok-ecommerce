@@ -50,7 +50,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到商家的商品")
+			return nil, nil
 		}
 		return nil, v1.ErrorInvalidStatus("GetMerchantProducts 内部错误")
 	}
@@ -94,6 +94,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 		if len(product.Images) > 0 {
 			if err := json.Unmarshal(product.Images, &images); err != nil {
 				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+				continue
 			}
 		}
 
@@ -103,6 +104,7 @@ func (p *productRepo) GetMerchantProducts(ctx context.Context, req *biz.GetMerch
 			var rawJSON map[string]any
 			if err := json.Unmarshal(product.Attributes, &rawJSON); err != nil {
 				p.log.WithContext(ctx).Warnf("unmarshal attributes error: %v", err)
+				continue
 			} else {
 				attributes = make(map[string]*biz.AttributeValue)
 				for key, value := range rawJSON {

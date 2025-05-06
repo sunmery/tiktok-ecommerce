@@ -13,6 +13,7 @@
 - merchants: 30019,30020
 - admin: 30021, 30022
 - balaner: 30025, 30026
+- consumer: 30027, 30028
 
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 

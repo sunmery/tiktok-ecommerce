@@ -31,18 +31,25 @@ func NewProductService(pc *biz.ProductUsecase) *ProductService {
 }
 
 func (uc *ProductService) GetMerchantProducts(ctx context.Context, req *v1.GetMerchantProductRequest) (*productv1.Products, error) {
-	merchantId, err := pkg.GetMetadataUesrID(ctx)
+	var merchantId uuid.UUID
+	var err error
+	if req.MerchantId != nil {
+		merchantId, err = uuid.Parse(*req.MerchantId)
+	} else {
+		merchantId, err = pkg.GetMetadataUesrID(ctx)
+	}
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
 	page := (req.Page - 1) * req.PageSize
-	products, err := uc.pc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
+	products, getMerchantProductsErr := uc.pc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
+		// _, getMerchantProductsErr := uc.pc.GetMerchantProducts(ctx, &biz.GetMerchantProducts{
 		MerchantID: merchantId,
 		Page:       int64(page),
 		PageSize:   int64(req.PageSize),
 	})
-	if err != nil {
-		return nil, err
+	if getMerchantProductsErr != nil {
+		return nil, getMerchantProductsErr
 	}
 
 	var pbProducts []*productv1.Product
@@ -95,7 +102,7 @@ func convertBizProductToPB(p *biz.Product) *productv1.Product {
 
 	// 转换图片
 	images := make([]*productv1.Image, 0)
-	if p.Images != nil {
+	if p.Images != nil && len(p.Images) > 0 {
 		for _, img := range p.Images {
 			if img != nil {
 				sortOrder := int32(0)

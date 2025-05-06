@@ -28,8 +28,14 @@ func NewCommentService(uc *biz.CommentUsecase, logger log.Logger) *CommentServic
 	return &CommentService{uc: uc, log: log.NewHelper(logger)}
 }
 
-func (s *CommentService) CreateComment(ctx context.Context, req *pb.CreateCommentRequest) (*pb.CommentType, error) {
-	userId, err := pkg.GetMetadataUesrID(ctx)
+func (s *CommentService) CreateComment(ctx context.Context, req *pb.CreateCommentRequest) (*pb.CreateCommentReply, error) {
+	var userId uuid.UUID
+	var err error
+	userId, err = pkg.GetMetadataUesrID(ctx)
+	if req.UserId != "" {
+		userId, err = uuid.Parse(req.UserId)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("get user id from metadata failed: %v", err)
 	}
@@ -42,7 +48,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *pb.CreateCommen
 		return nil, fmt.Errorf("parse merchant id failed: %v", err)
 	}
 
-	result, err := s.uc.CreateComment(ctx, &biz.CreateCommentRequest{
+	reply, err := s.uc.CreateComment(ctx, &biz.CreateCommentRequest{
 		ProductId:  productId,
 		MerchantId: merchantId,
 		UserId:     userId,
@@ -52,15 +58,9 @@ func (s *CommentService) CreateComment(ctx context.Context, req *pb.CreateCommen
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CommentType{
-		Id:         result.Id,
-		ProductId:  result.ProductId.String(),
-		MerchantId: result.MerchantId.String(),
-		UserId:     result.UserId.String(),
-		Score:      result.Score,
-		Content:    result.Content,
-		CreatedAt:  timestamppb.New(result.CreatedAt),
-		UpdatedAt:  timestamppb.New(result.UpdatedAt),
+
+	return &pb.CreateCommentReply{
+		IsSensitive: reply.IsSensitive,
 	}, nil
 }
 

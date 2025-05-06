@@ -163,7 +163,7 @@ docker-deploy:
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
 
-SERVICES := auth user product cart order checkout payment category merchant admin comment balancer
+SERVICES := auth user product cart order checkout payment category merchant admin comment balancer consumer
 CONCURRENT_JOBS := 5
 
 .PHONY: deploy-all clean-status

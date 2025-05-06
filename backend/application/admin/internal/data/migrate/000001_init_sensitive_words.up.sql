@@ -12,4 +12,6 @@ CREATE TABLE admin.sensitive_words
     updated_at timestamptz DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX idx_sensitive_words ON admin.sensitive_words (word);
+CREATE EXTENSION IF NOT EXISTS pg_trgm; -- 扩展提供了三元模型（trigram）功能，可以极大地加速子串匹配 (LIKE, ILIKE) 和相似度搜索。
+-- 创建 GIN 索引
+CREATE INDEX IF NOT EXISTS idx_sensitive_words_trgm_gin ON admin.sensitive_words USING gin (word gin_trgm_ops);

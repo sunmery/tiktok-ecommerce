@@ -28,6 +28,9 @@ type (
 		Score      uint32
 		Content    string
 	}
+	CreateCommentReply struct {
+		IsSensitive bool // 是否包含敏感词
+	}
 	UpdateCommentRequest struct {
 		Id      int64
 		UserId  uuid.UUID
@@ -62,7 +65,7 @@ type (
 
 type CommentRepo interface {
 	// CreateComment 创建评论
-	CreateComment(ctx context.Context, req *CreateCommentRequest) (*Comment, error)
+	CreateComment(ctx context.Context, req *CreateCommentRequest) (*CreateCommentReply, error)
 	// GetComments 获取评论
 	GetComments(ctx context.Context, req *GetCommentsRequest) (*GetCommentsResponse, error)
 	// UpdateComment 更新评论
@@ -83,7 +86,7 @@ func NewCommentUsecase(repo CommentRepo, logger log.Logger) *CommentUsecase {
 	}
 }
 
-func (uc *CommentUsecase) CreateComment(ctx context.Context, req *CreateCommentRequest) (*Comment, error) {
+func (uc *CommentUsecase) CreateComment(ctx context.Context, req *CreateCommentRequest) (*CreateCommentReply, error) {
 	uc.log.WithContext(ctx).Debugf("req:%+v", req)
 	return uc.repo.CreateComment(ctx, req)
 }

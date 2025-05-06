@@ -9,6 +9,14 @@ import (
 )
 
 type Querier interface {
+	// 检查评论是否包含任何激活的敏感词 (使用 ILIKE 进行不区分大小写匹配)
+	//
+	//  SELECT EXISTS (
+	//    SELECT 1
+	//    FROM admin.sensitive_words sw
+	//    WHERE $1::text ILIKE '%' || sw.word || '%' AND sw.is_active = TRUE
+	//  )
+	CheckCommentContainsSensitiveWord(ctx context.Context, word string) (bool, error)
 	// 跳过重复的敏感词
 	//
 	//  INSERT
