@@ -65,9 +65,15 @@ func (m *CheckoutReq) validate(all bool) error {
 
 	// no validation rules for Email
 
+	// no validation rules for Phone
+
 	// no validation rules for CreditCardId
 
 	// no validation rules for AddressId
+
+	// no validation rules for Currency
+
+	// no validation rules for PaymentMethod
 
 	if len(errors) > 0 {
 		return CheckoutReqMultiError(errors)

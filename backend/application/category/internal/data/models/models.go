@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// 分类表
 type CategoriesCategories struct {
 	ID        int64
 	ParentID  *int64
@@ -20,6 +21,7 @@ type CategoriesCategories struct {
 	UpdatedAt time.Time
 }
 
+// 闭包表
 type CategoriesCategoryClosure struct {
 	Ancestor   int64
 	Descendant int64

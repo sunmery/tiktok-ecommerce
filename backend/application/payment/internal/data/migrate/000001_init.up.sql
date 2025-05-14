@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS payments;
 SET search_path TO payments;
 
--- 存储主订单
+-- 支付表
 CREATE TABLE payments.payments
 (
     id                BIGINT PRIMARY KEY,
@@ -19,6 +19,7 @@ CREATE TABLE payments.payments
     created_at        timestamptz DEFAULT now() NOT NULL,
     updated_at        timestamptz DEFAULT now() NOT NULL
 );
+COMMENT ON TABLE payments.payments IS '支付表';
 
 CREATE INDEX idx_payments_order ON payments.payments (order_id);
 CREATE INDEX idx_payments_status ON payments.payments (status);

@@ -22,6 +22,7 @@ CREATE TABLE categories.categories (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (parent_id, name)
 );
+COMMENT ON TABLE categories.categories IS '分类表';
 
 -- 闭包表
 CREATE TABLE categories.category_closure (
@@ -30,6 +31,7 @@ CREATE TABLE categories.category_closure (
     depth      SMALLINT NOT NULL CHECK (depth >= 0),
     PRIMARY KEY (ancestor, descendant)
 );
+COMMENT ON TABLE categories.category_closure IS '闭包表';
 
 CREATE INDEX idx_categories_path_gist ON categories.categories USING GIST (path);
 CREATE INDEX idx_categories_id ON categories.categories USING HASH (id);

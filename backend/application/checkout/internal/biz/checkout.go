@@ -13,9 +13,11 @@ type (
 		Firstname     string    // 用户的名字（必填），允许非注册用户直接填写信息下单
 		Lastname      string    // 用户的姓氏（必填）
 		Email         string    // 用户的邮箱地址（必填），用于接收订单确认邮件等
-		CreditCardId  uint32    // 用户的信用卡信息（必填），用于支付
+		CreditCardId  uint32    // 用户的信用卡信息,非必须，用于支付
 		AddressId     uint32
+		Currency      string // 订单的货币类型，例如 "USD"
 		PaymentMethod string
+		Phone         string
 	}
 	CheckoutReply struct {
 		OrderId    int64  // 唯一标识订单，用于后续查询、退换货等操作

@@ -11,5 +11,6 @@ CREATE TABLE users.addresses
     country        VARCHAR(100) NOT NULL, -- 国家
     zip_code       VARCHAR(20)  NOT NULL  -- 邮政编码
 );
+COMMENT ON TABLE users.addresses IS '消费者地址表';
 
 CREATE INDEX idx_addresses_user_id ON users.addresses (user_id);

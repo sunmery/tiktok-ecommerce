@@ -283,6 +283,7 @@ message GetProfileResponse {
   string display_name = 9;
   bool is_deleted = 10; // 用户是否注销
   string signupApplication = 11;
+  string phone = 12;
   //  repeated string roles = 6;
 }
 

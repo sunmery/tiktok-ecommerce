@@ -12,6 +12,7 @@ CREATE TABLE comments.comments
     created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE comments.comments IS '评论表';
 
 CREATE INDEX idx_comments_product ON comments.comments (merchant_id, product_id);
 CREATE INDEX idx_comments_user ON comments.comments (user_id);

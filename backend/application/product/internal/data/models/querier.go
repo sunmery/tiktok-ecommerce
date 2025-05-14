@@ -39,13 +39,7 @@ type Querier interface {
 	//  VALUES ($1, $2, $3)
 	//  RETURNING product_id, merchant_id, stock, created_at, updated_at
 	CreateInventory(ctx context.Context, arg CreateInventoryParams) (ProductsInventory, error)
-	// 所有分片表必须：
-	// 1. 包含分片键列（merchant_id）
-	// 2. 主键必须包含分片键
-	// 3. 外键约束需要特殊处理（Citus 不支持跨节点外键）
-	// 创建商品主记录，返回生成的ID
-	// merchant_id 作为分片键，必须提供
-	//
+	//CreateProduct
 	//
 	//  INSERT INTO products.products (name,
 	//                                 description,
@@ -280,56 +274,7 @@ type Querier interface {
 	//    AND product_id = $2 -- 查询必须包含分片键
 	//  ORDER BY sort_order
 	GetProductImages(ctx context.Context, arg GetProductImagesParams) ([]ProductsProductImages, error)
-	// -- name: CreateProductBatch :one
-	// INSERT INTO products.products (name,
-	//                                description,
-	//                                price,
-	//                                status,
-	//                                merchant_id,
-	//                                category_id)
-	// SELECT unnest(@name),
-	//        unnest(@description),
-	//        unnest(@price),
-	//        unnest(@status),
-	//        unnest(@merchant_id),
-	//        unnest(@category_id)
-	// RETURNING id, created_at, updated_at;
-	//        p.status,
-	//        p.merchant_id,
-	//        p.category_id,
-	//        p.created_at,
-	//        p.updated_at,
-	//        i.stock,
-	//        (SELECT jsonb_agg(jsonb_build_object(
-	//                'url', pi.url,
-	//                'is_primary', pi.is_primary,
-	//                'sort_order', pi.sort_order
-	//                          ))
-	//         FROM products.product_images pi
-	//         WHERE pi.product_id = p.id
-	//           AND pi.merchant_id = p.merchant_id) AS images,
-	//        pa.attributes,
-	//        (SELECT jsonb_build_object(
-	//                        'id', a.id,
-	//                        'old_status', a.old_status,
-	//                        'new_status', a.new_status,
-	//                        'reason', a.reason,
-	//                        'created_at', a.created_at
-	//                )
-	//         FROM products.product_audits a
-	//         WHERE a.product_id = p.id
-	//           AND a.merchant_id = p.merchant_id
-	//         ORDER BY a.created_at DESC
-	//         LIMIT 1)                              AS latest_audit
-	// FROM products.products p
-	//          INNER JOIN products.inventory i
-	//                     ON p.id = i.product_id AND p.merchant_id = i.merchant_id
-	//          LEFT JOIN products.product_attributes pa
-	//                    ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-	// WHERE p.id = $1
-	//   AND p.merchant_id = $2
-	//   AND p.deleted_at IS NULL;
-	//
+	//GetProductsBatch
 	//
 	//  SELECT p.id,
 	//         p.name,

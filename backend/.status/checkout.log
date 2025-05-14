@@ -1,0 +1,89 @@
+使用方式: make docker-deploy SERVICE=微服务名
+SERVICE=checkout
+make docker-build SERVICE=checkout
+构建的微服务: checkout
+系统: linux | CPU架构: amd64
+镜像名: sumery/checkout:b9ce9e3
+docker build . \
+	  -f application/checkout/Dockerfile \
+	  --progress=plain \
+	  -t ecommerce/checkout:b9ce9e3 \
+	  --build-arg SERVICE=checkout \
+	  --build-arg CGOENABLED=0 \
+	  --build-arg GOIMAGE=golang:1.24.2-alpine3.21 \
+	  --build-arg GOOS=linux \
+	  --build-arg GOARCH=amd64 \
+	  --build-arg VERSION=b9ce9e3 \
+	  --platform linux/amd64  \
+	  --cache-from type=registry,ref=ccr.ccs.tencentyun.com/sumery/checkout:cache \
+	  --cache-to type=registry,ref=ccr.ccs.tencentyun.com/sumery/checkout:cache,mode=max
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 932B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/golang:1.24.0-alpine3.21
+#2 DONE 0.0s
+
+#3 [internal] load metadata for gcr.io/distroless/static-debian12:latest
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 importing cache manifest from ccr.ccs.tencentyun.com/sumery/checkout:cache
+#5 ...
+
+#6 [compile 1/6] FROM docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c
+#6 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c done
+#6 DONE 0.0s
+
+#7 [final 1/2] FROM gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9
+#7 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 done
+#7 DONE 0.0s
+
+#5 importing cache manifest from ccr.ccs.tencentyun.com/sumery/checkout:cache
+#5 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
+#5 DONE 0.5s
+
+#8 [internal] load build context
+#8 transferring context: 150.80kB 0.1s done
+#8 DONE 0.1s
+
+#9 [compile 2/6] WORKDIR /build
+#9 CACHED
+
+#10 [compile 3/6] COPY go.mod go.sum ./
+#10 CACHED
+
+#11 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#11 CACHED
+
+#12 [compile 5/6] COPY . .
+#12 DONE 0.1s
+
+#13 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=b9ce9e3" -o /app/checkout ./application/checkout/cmd/checkout
+#13 0.391 # backend/application/checkout/internal/service
+#13 0.391 application/checkout/internal/service/checkoutservice.go:37:22: req.PaymentMethod undefined (type *checkoutv1.CheckoutReq has no field or method PaymentMethod)
+#13 ERROR: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
+------
+ > [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=b9ce9e3" -o /app/checkout ./application/checkout/cmd/checkout:
+0.391 # backend/application/checkout/internal/service
+0.391 application/checkout/internal/service/checkoutservice.go:37:22: req.PaymentMethod undefined (type *checkoutv1.CheckoutReq has no field or method PaymentMethod)
+------
+Dockerfile:22
+--------------------
+  21 |     COPY . .
+  22 | >>> RUN --mount=type=cache,target=/go/pkg/mod \
+  23 | >>>     --mount=type=cache,target=/root/.cache/go-build \
+  24 | >>>     GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED \
+  25 | >>>     go build -ldflags="-s -w -X main.Version=$VERSION" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}
+  26 |     
+--------------------
+ERROR: failed to solve: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/fzo5vyw2xcblwhhtu1vih0oxk
+make[3]: *** [docker-build] Error 1
+make[2]: *** [docker-deploy] Error 2

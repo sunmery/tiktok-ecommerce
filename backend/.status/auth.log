@@ -1,0 +1,193 @@
+使用方式: make docker-deploy SERVICE=微服务名
+SERVICE=auth
+make docker-build SERVICE=auth
+构建的微服务: auth
+系统: linux | CPU架构: amd64
+镜像名: sumery/auth:b9ce9e3
+docker build . \
+	  -f application/auth/Dockerfile \
+	  --progress=plain \
+	  -t ecommerce/auth:b9ce9e3 \
+	  --build-arg SERVICE=auth \
+	  --build-arg CGOENABLED=0 \
+	  --build-arg GOIMAGE=golang:1.24.2-alpine3.21 \
+	  --build-arg GOOS=linux \
+	  --build-arg GOARCH=amd64 \
+	  --build-arg VERSION=b9ce9e3 \
+	  --platform linux/amd64  \
+	  --cache-from type=registry,ref=ccr.ccs.tencentyun.com/sumery/auth:cache \
+	  --cache-to type=registry,ref=ccr.ccs.tencentyun.com/sumery/auth:cache,mode=max
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 932B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/golang:1.24.0-alpine3.21
+#2 DONE 0.0s
+
+#3 [internal] load metadata for gcr.io/distroless/static-debian12:latest
+#3 DONE 1.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [compile 1/6] FROM docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c
+#5 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c done
+#5 DONE 0.0s
+
+#6 [final 1/2] FROM gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9
+#6 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 done
+#6 DONE 0.0s
+
+#7 importing cache manifest from ccr.ccs.tencentyun.com/sumery/auth:cache
+#7 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
+#7 DONE 0.7s
+
+#8 [internal] load build context
+#8 transferring context: 132.89kB 0.1s done
+#8 DONE 0.1s
+
+#9 [compile 3/6] COPY go.mod go.sum ./
+#9 CACHED
+
+#10 [compile 2/6] WORKDIR /build
+#10 CACHED
+
+#11 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#11 CACHED
+
+#12 [compile 5/6] COPY . .
+#12 DONE 0.2s
+
+#13 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=b9ce9e3" -o /app/auth ./application/auth/cmd/auth
+#13 DONE 1.1s
+
+#14 [final 2/2] COPY --from=compile /app/auth /app/service
+#14 CACHED
+
+#15 exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:0dd1babc91d4edbbacc4ae9ca45bf97124611ac1ce9ed716ccb5b0eb369b064e done
+#15 exporting config sha256:f75ebc38f56f4d26ec60eecc485b2e2a766500957636808a7172ecd9235d76fa done
+#15 exporting attestation manifest sha256:44a162d80934fe786652f77c628972bce2d50ebc77557d4c1d7cbc261c2edf8b 0.0s done
+#15 exporting manifest list sha256:a483621751a038bb0aae8b5b34d9ba65d8d23cad0ea6bd5c538bc02089c52c03 done
+#15 naming to docker.io/ecommerce/auth:b9ce9e3 done
+#15 DONE 0.1s
+
+#16 exporting cache to registry
+#16 preparing build cache for export
+#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa
+#16 ...
+
+#17 [auth] sumery/auth:pull,push token for ccr.ccs.tencentyun.com
+#17 DONE 0.0s
+
+#16 exporting cache to registry
+#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa 0.3s done
+#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6
+#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6 0.0s done
+#16 writing layer sha256:17255018abb848b1e59c30f622d007ce960b5ac975b1980934625ea6c5d1725b
+#16 writing layer sha256:17255018abb848b1e59c30f622d007ce960b5ac975b1980934625ea6c5d1725b 2.1s done
+#16 writing layer sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4
+#16 writing layer sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 0.4s done
+#16 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0
+#16 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0 0.3s done
+#16 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f
+#16 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f 0.1s done
+#16 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660 0.1s done
+#16 writing layer sha256:4eff9a62d888790350b2481ff4a4f38f9c94b3674d26b2f2c85ca39cdef43fd9
+#16 writing layer sha256:4eff9a62d888790350b2481ff4a4f38f9c94b3674d26b2f2c85ca39cdef43fd9 0.1s done
+#16 writing layer sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 0.1s done
+#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2
+#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2 0.1s done
+#16 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd
+#16 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd 0.1s done
+#16 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836
+#16 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836 0.1s done
+#16 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81
+#16 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81 0.1s done
+#16 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212
+#16 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 0.1s done
+#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71
+#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71 0.2s done
+#16 writing layer sha256:a5021b7e6d210fd7098e98dc8517bbc709278db20064df1f54e2cd6a7f10eb08
+#16 writing layer sha256:a5021b7e6d210fd7098e98dc8517bbc709278db20064df1f54e2cd6a7f10eb08 3.3s done
+#16 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3
+#16 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3 0.1s done
+#16 writing layer sha256:aba55a16599e8db8489710cf21f819edfa791b50328951a0504b8fc07dcd0e28
+#16 writing layer sha256:aba55a16599e8db8489710cf21f819edfa791b50328951a0504b8fc07dcd0e28 0.1s done
+#16 writing layer sha256:bfb59b82a9b65e47d485e53b3e815bca3b3e21a095bd0cb88ced9ac0b48062bf 0.0s done
+#16 writing layer sha256:d5ee79c4f08d2b641e76b52e5b3442e8fff617dc9bdf0e7391b03226f70aad26
+#16 writing layer sha256:d5ee79c4f08d2b641e76b52e5b3442e8fff617dc9bdf0e7391b03226f70aad26 0.0s done
+#16 writing layer sha256:da7816fa955ea24533c388143c78804c28682eef99b4ee3723b548c70148bba6 0.0s done
+#16 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7 0.0s done
+#16 writing config sha256:73b8625276f6b4e7a350ebcfdfa22836ce4018aa112e2cb0a3bd4d2579b89872
+#16 writing config sha256:73b8625276f6b4e7a350ebcfdfa22836ce4018aa112e2cb0a3bd4d2579b89872 0.9s done
+#16 writing cache manifest sha256:83dc7e087fdc635c063d3513b37ff1497d516bbb6f9ce6662b112d74bf912cd0
+#16 preparing build cache for export 12.4s done
+#16 writing cache manifest sha256:83dc7e087fdc635c063d3513b37ff1497d516bbb6f9ce6662b112d74bf912cd0 2.2s done
+#16 DONE 12.4s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/7cktpmij1137iy9fj1tqgi03q
+SERVICE=auth
+make docker-push SERVICE=auth
+使用方式: make docker-push SERVICE=微服务名
+OS: linux | ARCH: amd64
+Docker image: sumery/auth:b9ce9e3
+docker tag ecommerce/auth:b9ce9e3 ccr.ccs.tencentyun.com/sumery/auth:b9ce9e3
+docker push ccr.ccs.tencentyun.com/sumery/auth:b9ce9e3
+The push refers to repository [ccr.ccs.tencentyun.com/sumery/auth]
+4eff9a62d888: Waiting
+3d78e577de35: Waiting
+da7816fa955e: Waiting
+bfb59b82a9b6: Waiting
+a62778643d56: Waiting
+7c12895b777b: Waiting
+4aa0ea1413d3: Waiting
+3214acf345c0: Waiting
+9aee425378d2: Waiting
+5664b15f108b: Waiting
+99334eb656bc: Waiting
+d5ee79c4f08d: Waiting
+0bab15eea81d: Waiting
+7c12895b777b: Waiting
+4aa0ea1413d3: Waiting
+3214acf345c0: Waiting
+9aee425378d2: Waiting
+5664b15f108b: Waiting
+99334eb656bc: Waiting
+d5ee79c4f08d: Waiting
+a62778643d56: Waiting
+0bab15eea81d: Waiting
+3d78e577de35: Waiting
+da7816fa955e: Waiting
+bfb59b82a9b6: Waiting
+4eff9a62d888: Waiting
+a62778643d56: Waiting
+7c12895b777b: Layer already exists
+4aa0ea1413d3: Waiting
+3214acf345c0: Waiting
+9aee425378d2: Waiting
+5664b15f108b: Waiting
+99334eb656bc: Waiting
+d5ee79c4f08d: Waiting
+0bab15eea81d: Layer already exists
+4eff9a62d888: Waiting
+3d78e577de35: Waiting
+da7816fa955e: Waiting
+bfb59b82a9b6: Waiting
+4eff9a62d888: Layer already exists
+3d78e577de35: Layer already exists
+da7816fa955e: Layer already exists
+bfb59b82a9b6: Layer already exists
+a62778643d56: Layer already exists
+4aa0ea1413d3: Layer already exists
+3214acf345c0: Layer already exists
+9aee425378d2: Layer already exists
+5664b15f108b: Layer already exists
+99334eb656bc: Waiting
+d5ee79c4f08d: Layer already exists
+99334eb656bc: Pushed
+b9ce9e3: digest: sha256:a483621751a038bb0aae8b5b34d9ba65d8d23cad0ea6bd5c538bc02089c52c03 size: 856

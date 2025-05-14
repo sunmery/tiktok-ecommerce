@@ -833,6 +833,9 @@
           "title": "用户是否注销"
         },
         "signupApplication": {
+          "type": "string"
+        },
+        "phone": {
           "type": "string",
           "title": "repeated string roles = 6;"
         }

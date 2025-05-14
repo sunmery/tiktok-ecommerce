@@ -29,7 +29,6 @@ func NewCartRepo(data *Data, logger log.Logger) biz.CartRepo {
 	}
 }
 
-// EmptyCart implements biz.CartRepo.
 func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.EmptyCartResp, error) {
 	_, err := c.data.db.EmptyCart(ctx, models.EmptyCartParams{
 		UserID:   req.UserId,
@@ -48,7 +47,6 @@ func (c *cartRepo) EmptyCart(ctx context.Context, req *biz.EmptyCartReq) (*biz.E
 	}, nil
 }
 
-// GetCart implements biz.CartRepo.
 func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCartRelpy, error) {
 	carts, err := c.data.db.GetCart(ctx, models.GetCartParams{
 		UserID:   req.UserId,
@@ -115,7 +113,6 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 	}, nil
 }
 
-// RemoveCartItem implements biz.CartRepo.
 func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemReq) (*biz.RemoveCartItemResp, error) {
 	_, err := c.data.db.RemoveCartItem(ctx, models.RemoveCartItemParams{
 		UserID:     req.UserId,
@@ -131,7 +128,6 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 	}, nil
 }
 
-// UpsertItem implements biz.CartRepo.
 func (c *cartRepo) UpsertItem(ctx context.Context, req *biz.UpsertItemReq) (*biz.UpsertItemResp, error) {
 	resp, err := c.data.db.UpsertItem(ctx, models.UpsertItemParams{
 		UserID:     req.UserId,

@@ -17,5 +17,6 @@ CREATE TABLE users.credit_cards
     country      VARCHAR(50)  NOT NULL,              -- 卡所属国家
     created_time timestamptz    NOT NULL DEFAULT NOW() -- 创建时间
 );
+COMMENT ON TABLE users.credit_cards IS '消费者银行卡表';
 
 CREATE INDEX idx_credit_cards_id ON users.credit_cards (id);

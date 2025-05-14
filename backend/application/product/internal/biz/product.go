@@ -18,11 +18,6 @@ const (
 	ProductStatusSoldOut                       // 商品因某种原因不可购买。
 )
 
-const (
-	Approved AuditAction = 1
-	Rejected AuditAction = 2
-)
-
 var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	ProductStatusDraft: {
 		ProductStatusPending: true,
@@ -39,10 +34,6 @@ var validTransitions = map[ProductStatus]map[ProductStatus]bool{
 	},
 }
 
-type (
-	AuditAction int
-)
-
 // AuditRecord 完善AuditRecord定义
 type AuditRecord struct {
 	ID         uuid.UUID
@@ -52,12 +43,6 @@ type AuditRecord struct {
 	Reason     string
 	OperatorID uuid.UUID
 	OperatedAt time.Time
-}
-type AuditInfo struct {
-	AuditId    uuid.UUID // 审核记录ID
-	Reason     string    // 审核意见/驳回原因
-	OperatorId uuid.UUID // 操作人ID
-	OperatedAt time.Time // 操作时间
 }
 
 // Product 商品领域模型
@@ -96,44 +81,6 @@ type (
 type GetProductsBatchRequest struct {
 	ProductIds  []uuid.UUID
 	MerchantIds []uuid.UUID
-}
-
-type SubmitAuditRequest struct {
-	ProductID  uuid.UUID
-	MerchantID uuid.UUID
-	ID         uuid.UUID
-	Reason     string
-	OperatorID uuid.UUID
-	OperatedAt time.Time
-}
-
-type ListProductsReq struct {
-	Page         uint   `json:"page"`
-	PageSize     uint   `json:"pageSize"`
-	CategoryName string `json:"categoryName"`
-}
-
-type ListProductsResp struct {
-	Product []*Product `json:"product"`
-}
-
-type GetProductResp struct {
-	Product *Product `json:"product"`
-}
-
-type SearchProductsReq struct {
-	Query string `json:"query"`
-}
-type SearchProductsResp struct {
-	Result []*Product `json:"result"`
-}
-
-type AuditProductRequest struct {
-	ProductID  uuid.UUID
-	MerchantID uuid.UUID
-	Action     uint64
-	Reason     string
-	OperatorID uuid.UUID
 }
 
 // DeleteProductRequest 完善DeleteProductRequest
@@ -175,14 +122,6 @@ type ImageModel struct {
 	URL       string
 	IsPrimary bool
 	SortOrder int32
-}
-
-type AttributeModel struct {
-	ID        uint `gorm:"primaryKey"`
-	ProductID uint64
-	Key       string
-	Type      string // "string", "array", "object"
-	Value     string
 }
 
 type ListRandomProductsRequest struct {
@@ -282,8 +221,6 @@ type ProductRepo interface {
 	UploadProductFile(ctx context.Context, req *UploadProductFileRequest) (*UploadProductFileReply, error)
 	CreateProduct(ctx context.Context, req *CreateProductRequest) (*CreateProductReply, error)
 	CreateProductBatch(ctx context.Context, req *CreateProductBatchRequest) (*CreateProductBatchReply, error)
-	SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error)
-	AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error)
 	GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error)
 	GetProductBatch(ctx context.Context, req *GetProductsBatchRequest) (*Products, error)
 	GetCategoryProducts(ctx context.Context, req *GetCategoryProducts) (*Products, error)
@@ -321,14 +258,6 @@ func (p *ProductUsecase) CreateProduct(ctx context.Context, req *CreateProductRe
 func (p *ProductUsecase) CreateProductBatch(ctx context.Context, req *CreateProductBatchRequest) (*CreateProductBatchReply, error) {
 	p.log.WithContext(ctx).Debugf("CreateProductBatch: %v", req)
 	return p.repo.CreateProductBatch(ctx, req)
-}
-
-func (p *ProductUsecase) SubmitForAudit(ctx context.Context, req *SubmitAuditRequest) (*AuditRecord, error) {
-	return p.repo.SubmitForAudit(ctx, req)
-}
-
-func (p *ProductUsecase) AuditProduct(ctx context.Context, req *AuditProductRequest) (*AuditRecord, error) {
-	return p.repo.AuditProduct(ctx, req)
 }
 
 func (p *ProductUsecase) GetProduct(ctx context.Context, req *GetProductRequest) (*Product, error) {

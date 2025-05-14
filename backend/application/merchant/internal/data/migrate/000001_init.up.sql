@@ -26,6 +26,7 @@ CREATE TABLE merchant.stock_alerts
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),         -- 更新时间
     UNIQUE (product_id, merchant_id)                        -- 每个产品每个商家只能有一个警报配置
 );
+COMMENT ON TABLE merchant.stock_alerts IS '库存警报表';
 
 -----------------------------
 -- 库存调整记录表（记录库存变更历史）
@@ -40,6 +41,7 @@ CREATE TABLE merchant.stock_adjustments
     operator_id UUID        NOT NULL,              -- 操作人ID
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW() -- 创建时间
 );
+COMMENT ON TABLE merchant.stock_adjustments IS '库存调整记录表';
 
 -- 创建索引
 CREATE INDEX idx_stock_alerts_product_merchant ON merchant.stock_alerts (product_id, merchant_id);

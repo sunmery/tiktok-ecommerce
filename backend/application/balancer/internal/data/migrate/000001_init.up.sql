@@ -11,6 +11,7 @@ CREATE TABLE balances.user_balances
     updated_at timestamptz             DEFAULT NOW(),
     PRIMARY KEY (user_id, currency)
 );
+COMMENT ON TABLE balances.user_balances IS '消费者余额表';
 
 -- 用户支付方式表
 CREATE TABLE balances.user_payment_methods
@@ -18,11 +19,12 @@ CREATE TABLE balances.user_payment_methods
     id              BIGINT PRIMARY KEY,
     user_id         UUID        NOT NULL,
     type            VARCHAR(20) NOT NULL
-        CHECK ( type IN ('ALIPAY', 'WECHAT', 'BANK_CARD', 'BALANCER')),
+        CHECK ( type IN ('ALIPAY', 'BANK_CARD', 'BALANCE')),
     is_default      BOOLEAN     NOT NULL DEFAULT FALSE,
     account_details JSONB       NOT NULL DEFAULT '{}', -- 示例: {"account": "123@alipay.com", "real_name": "张三"}
     created_at      timestamptz NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE balances.user_payment_methods IS '用户支付方式表';
 
 -- 冻结记录表
 CREATE TABLE balances.balance_freezes
@@ -38,20 +40,22 @@ CREATE TABLE balances.balance_freezes
     updated_at timestamptz    NOT NULL DEFAULT NOW(),
     expires_at timestamptz    NOT NULL  -- 冻结过期时间
 );
+COMMENT ON TABLE balances.balance_freezes IS '冻结记录表';
 
 -- 商家支付方式表 (merchant_payment_methods)
 -- 支持商家绑定多个支付账号（支付宝、微信、银行账户）。
--- CREATE TYPE merchant_payment_type AS ENUM ('ALIPAY', 'WECHAT', 'BANK_ACCOUNT','BALANCER');
+-- CREATE TYPE merchant_payment_type AS ENUM ('ALIPAY', 'WECHAT', 'BANK_ACCOUNT','BALANCE');
 CREATE TABLE balances.merchant_payment_methods
 (
     id              BIGINT PRIMARY KEY,
     merchant_id     UUID NOT NULL,
     type            VARCHAR(15) NOT NULL  -- 支付方式
-        CHECK ( type IN ('ALIPAY', 'WECHAT', 'BANK_ACCOUNT', 'BALANCER')),
+        CHECK ( type IN ('ALIPAY', 'BANK_CARD', 'BALANCE')),
     is_default      BOOLEAN     NOT NULL DEFAULT FALSE,
     account_details JSONB       NOT NULL, -- 示例: {"account": "merchant@alipay.com", "bank_name": "中国银行"}
     created_at      timestamptz NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE balances.merchant_payment_methods IS '商家支付方式表';
 
 -- 商家余额表
 -- 资金要从用户冻结余额转移到商家
@@ -65,6 +69,7 @@ CREATE TABLE balances.merchant_balances
     created_at  timestamptz    NOT NULL DEFAULT NOW(),
     updated_at  timestamptz    NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE balances.merchant_balances IS '商家余额表';
 
 -- 交易流水表 (transactions)
 -- 记录所有资金变动，保留支付方式快照
@@ -96,6 +101,7 @@ CREATE TABLE balances.transactions
     created_at          timestamptz    NOT NULL DEFAULT NOW(),
     updated_at          timestamptz    NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE balances.merchant_balances IS '交易流水表';
 
 -- 索引优化
 CREATE INDEX idx_balance_freezes_user_order ON balances.balance_freezes (user_id, order_id); -- 联合索引

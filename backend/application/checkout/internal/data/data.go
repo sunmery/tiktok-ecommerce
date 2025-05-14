@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	banancev1 "backend/api/balancer/v1"
 	cartv1 "backend/api/cart/v1"
 	orderv1 "backend/api/order/v1"
 	paymentv1 "backend/api/payment/v1"
@@ -26,7 +27,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewUserServiceClient, NewProductServiceClient, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient, NewConsumerOrderServiceClient)
+var ProviderSet = wire.NewSet(NewData, NewCache, NewCheckoutRepo, NewDiscovery, NewUserServiceClient, NewProductServiceClient, NewCartServiceClient, NewOrderServiceClient, NewPaymentServiceClient, NewConsumerOrderServiceClient, NewBananceServiceClient)
 
 type Data struct {
 	rdb             *redis.Client
@@ -37,6 +38,7 @@ type Data struct {
 	paymentv1       paymentv1.PaymentServiceClient
 	productv1       productv1.ProductServiceClient
 	consumerOrderv1 consumerOrderv1.ConsumerOrderClient
+	banancev1       banancev1.BalanceClient
 }
 
 func NewData(
@@ -47,8 +49,8 @@ func NewData(
 	orderv1 orderv1.OrderServiceClient,
 	paymentv1 paymentv1.PaymentServiceClient,
 	productv1 productv1.ProductServiceClient,
-
 	consumerOrderv1 consumerOrderv1.ConsumerOrderClient,
+	banancev1 banancev1.BalanceClient,
 ) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -62,6 +64,7 @@ func NewData(
 		paymentv1:       paymentv1,             // 支付服务
 		productv1:       productv1,             // 商品服务
 		consumerOrderv1: consumerOrderv1,       // 消费者订单服务
+		banancev1:       banancev1,             // 余额服务
 	}, cleanup, nil
 }
 
@@ -167,6 +170,24 @@ func NewConsumerOrderServiceClient(d registry.Discovery, logger log.Logger) (con
 		return nil, err
 	}
 	return consumerOrderv1.NewConsumerOrderClient(conn), nil
+}
+
+// NewBananceServiceClient 余额微服务
+func NewBananceServiceClient(d registry.Discovery, logger log.Logger) (banancev1.BalanceClient, error) {
+	conn, err := grpc.DialInsecure(
+		context.Background(),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ConsumerServiceV1)),
+		grpc.WithDiscovery(d),
+		grpc.WithMiddleware(
+			metadata.Client(),
+			recovery.Recovery(),
+			logging.Client(logger),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return banancev1.NewBalanceClient(conn), nil
 }
 
 // NewPaymentServiceClient 支付微服务

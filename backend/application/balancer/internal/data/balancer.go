@@ -361,6 +361,7 @@ func (b balanceRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalance
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			log.Warnf("getUserBalance balance record not found err:%+v", err)
 			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
 		}
 		return nil, err
@@ -372,7 +373,8 @@ func (b balanceRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalance
 	frozen, err := types.NumericToFloat(balance.Frozen)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
+			log.Warnf("frozen balance record not found err:%+v", err)
+			return nil, kerrors.New(404, "FROZEN_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
 		}
 		return nil, kerrors.New(500, "CONVERT_FROZEN_FAILED", "convert available to float64 failed")
 	}
@@ -682,7 +684,7 @@ func (b balanceRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransf
 		Currency:          freeze.Currency,
 		FromUserID:        freeze.UserID,
 		ToMerchantID:      merchantId,
-		PaymentMethodType: string(constants.PaymentMethodBalancer), // 使用余额支付
+		PaymentMethodType: string(constants.PaymentMethodBalance), // 使用余额支付
 		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,
 		Status:            string(constants.PaymentPaid), // 已支付状态

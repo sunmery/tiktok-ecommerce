@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 评论表
 type CommentsComments struct {
 	ID         int64            `json:"id"`
 	ProductID  uuid.UUID        `json:"productID"`

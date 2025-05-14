@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// 敏感词表
 type AdminSensitiveWords struct {
 	ID        int32     `json:"id"`
 	CreatedBy uuid.UUID `json:"createdBy"`

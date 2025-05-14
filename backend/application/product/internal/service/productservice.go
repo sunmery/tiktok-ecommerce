@@ -14,7 +14,6 @@ import (
 	pb "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 
-	"github.com/go-kratos/kratos/v2/metadata"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -89,7 +88,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 		Description: req.Description,
 		MerchantId:  merchantId,
 		Images:      convertPBImagesToBiz(req.Images),
-		Status:      biz.ProductStatusPending,
+		Status:      biz.ProductStatusApproved,
 		Category: biz.CategoryInfo{
 			CategoryId:   uint64(req.Category.CategoryId),
 			CategoryName: req.Category.CategoryName,
@@ -173,83 +172,6 @@ func (s *ProductService) CreateProductBatch(ctx context.Context, req *pb.CreateP
 		SuccessCount: created.SuccessCount,
 		FailedCount:  created.FailedCount,
 		Errors:       errResults,
-	}, nil
-}
-
-func (s *ProductService) SubmitForAudit(ctx context.Context, req *pb.SubmitAuditRequest) (*pb.AuditRecord, error) {
-	productId, err := uuid.Parse(req.ProductId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid product ID")
-	}
-
-	var userId string
-	if md, ok := metadata.FromServerContext(ctx); ok {
-		userId = md.Get("x-md-global-user-id")
-	}
-	merchantId, err := uuid.Parse(userId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
-	}
-
-	bizReq := biz.SubmitAuditRequest{
-		ProductID:  productId,
-		MerchantID: merchantId,
-	}
-
-	record, err := s.uc.SubmitForAudit(ctx, &bizReq)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.AuditRecord{
-		Id:         record.ID.String(),
-		ProductId:  productId.String(),
-		OldStatus:  uint32(record.OldStatus),
-		NewStatus:  uint32(record.NewStatus),
-		Reason:     record.Reason,
-		OperatorId: record.OperatorID.String(),
-		OperatedAt: timestamppb.New(record.OperatedAt),
-	}, nil
-}
-
-func (s *ProductService) AuditProduct(ctx context.Context, req *pb.AuditProductRequest) (*pb.AuditRecord, error) {
-	if req.Action == pb.AuditAction_AUDIT_ACTION_REJECT && req.Reason == "" {
-		return nil, status.Error(codes.InvalidArgument, "reject reason required")
-	}
-	productId, err := uuid.Parse(req.ProductId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid productId ID")
-	}
-	merchantId, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
-	}
-
-	operatorId, err := pkg.GetMetadataUesrID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid operatorId ID")
-	}
-
-	bizReq := biz.AuditProductRequest{
-		ProductID:  productId,
-		MerchantID: merchantId,
-		Action:     uint64(biz.AuditAction(req.Action)),
-		Reason:     req.Reason,
-		OperatorID: operatorId,
-	}
-
-	record, err := s.uc.AuditProduct(ctx, &bizReq)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.AuditRecord{
-		Id:         record.ID.String(),
-		ProductId:  record.ProductID.String(),
-		OldStatus:  uint32(record.OldStatus),
-		NewStatus:  uint32(record.NewStatus),
-		Reason:     record.Reason,
-		OperatorId: record.OperatorID.String(),
-		OperatedAt: timestamppb.New(record.OperatedAt),
 	}, nil
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 冻结记录表
 type BalancesBalanceFreezes struct {
 	ID        int64          `json:"id"`
 	UserID    uuid.UUID      `json:"userID"`
@@ -23,6 +24,7 @@ type BalancesBalanceFreezes struct {
 	ExpiresAt time.Time      `json:"expiresAt"`
 }
 
+// 交易流水表
 type BalancesMerchantBalances struct {
 	MerchantID uuid.UUID      `json:"merchantID"`
 	Currency   string         `json:"currency"`
@@ -32,6 +34,7 @@ type BalancesMerchantBalances struct {
 	UpdatedAt  time.Time      `json:"updatedAt"`
 }
 
+// 商家支付方式表
 type BalancesMerchantPaymentMethods struct {
 	ID             int64     `json:"id"`
 	MerchantID     uuid.UUID `json:"merchantID"`
@@ -60,6 +63,7 @@ type BalancesTransactions struct {
 	UpdatedAt         time.Time      `json:"updatedAt"`
 }
 
+// 消费者余额表
 type BalancesUserBalances struct {
 	UserID    uuid.UUID      `json:"userID"`
 	Currency  string         `json:"currency"`
@@ -70,6 +74,7 @@ type BalancesUserBalances struct {
 	UpdatedAt *time.Time     `json:"updatedAt"`
 }
 
+// 用户支付方式表
 type BalancesUserPaymentMethods struct {
 	ID             int64     `json:"id"`
 	UserID         uuid.UUID `json:"userID"`

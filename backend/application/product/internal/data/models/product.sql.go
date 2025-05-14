@@ -69,17 +69,17 @@ RETURNING id, created_at
 `
 
 type CreateAuditRecordParams struct {
-	ProductID  uuid.UUID `json:"productID"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	OldStatus  int16     `json:"oldStatus"`
-	NewStatus  int16     `json:"newStatus"`
-	Reason     *string   `json:"reason"`
-	OperatorID uuid.UUID `json:"operatorID"`
+	Column1 pgtype.UUID `json:"column1"`
+	Column2 pgtype.UUID `json:"column2"`
+	Column3 *int16      `json:"column3"`
+	Column4 *int16      `json:"column4"`
+	Column5 *string     `json:"column5"`
+	Column6 pgtype.UUID `json:"column6"`
 }
 
 type CreateAuditRecordRow struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID        uuid.UUID          `json:"id"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 }
 
 // 创建审核记录，返回新记录ID
@@ -94,12 +94,12 @@ type CreateAuditRecordRow struct {
 //	RETURNING id, created_at
 func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) (CreateAuditRecordRow, error) {
 	row := q.db.QueryRow(ctx, CreateAuditRecord,
-		arg.ProductID,
-		arg.MerchantID,
-		arg.OldStatus,
-		arg.NewStatus,
-		arg.Reason,
-		arg.OperatorID,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
 	)
 	var i CreateAuditRecordRow
 	err := row.Scan(&i.ID, &i.CreatedAt)
@@ -107,7 +107,6 @@ func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordPa
 }
 
 const CreateProduct = `-- name: CreateProduct :one
-
 INSERT INTO products.products (name,
                                description,
                                price,
@@ -133,12 +132,7 @@ type CreateProductRow struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// 所有分片表必须：
-// 1. 包含分片键列（merchant_id）
-// 2. 主键必须包含分片键
-// 3. 外键约束需要特殊处理（Citus 不支持跨节点外键）
-// 创建商品主记录，返回生成的ID
-// merchant_id 作为分片键，必须提供
+// CreateProduct
 //
 //	INSERT INTO products.products (name,
 //	                               description,
@@ -589,17 +583,17 @@ RETURNING id, created_at
 `
 
 type GetLatestAuditParams struct {
-	MerchantID uuid.UUID `json:"merchantID"`
-	ProductID  uuid.UUID `json:"productID"`
-	OldStatus  int16     `json:"oldStatus"`
-	NewStatus  int16     `json:"newStatus"`
-	Reason     *string   `json:"reason"`
-	OperatorID uuid.UUID `json:"operatorID"`
+	Column1 pgtype.UUID `json:"column1"`
+	Column2 pgtype.UUID `json:"column2"`
+	Column3 *int16      `json:"column3"`
+	Column4 *int16      `json:"column4"`
+	Column5 *string     `json:"column5"`
+	Column6 pgtype.UUID `json:"column6"`
 }
 
 type GetLatestAuditRow struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID        uuid.UUID          `json:"id"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 }
 
 // 获取最新审核记录
@@ -614,12 +608,12 @@ type GetLatestAuditRow struct {
 //	RETURNING id, created_at
 func (q *Queries) GetLatestAudit(ctx context.Context, arg GetLatestAuditParams) (GetLatestAuditRow, error) {
 	row := q.db.QueryRow(ctx, GetLatestAudit,
-		arg.MerchantID,
-		arg.ProductID,
-		arg.OldStatus,
-		arg.NewStatus,
-		arg.Reason,
-		arg.OperatorID,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
 	)
 	var i GetLatestAuditRow
 	err := row.Scan(&i.ID, &i.CreatedAt)
@@ -669,24 +663,24 @@ WHERE p.id = $1
 `
 
 type GetProductParams struct {
-	ID         uuid.UUID `json:"id"`
-	MerchantID uuid.UUID `json:"merchantID"`
+	ID         pgtype.UUID `json:"id"`
+	MerchantID pgtype.UUID `json:"merchantID"`
 }
 
 type GetProductRow struct {
-	ID          uuid.UUID      `json:"id"`
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	Price       pgtype.Numeric `json:"price"`
-	Status      int16          `json:"status"`
-	MerchantID  uuid.UUID      `json:"merchantID"`
-	CategoryID  int64          `json:"categoryID"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	Stock       int32          `json:"stock"`
-	Images      []byte         `json:"images"`
-	Attributes  []byte         `json:"attributes"`
-	LatestAudit []byte         `json:"latestAudit"`
+	ID          uuid.UUID          `json:"id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	Price       interface{}        `json:"price"`
+	Status      int16              `json:"status"`
+	MerchantID  uuid.UUID          `json:"merchantID"`
+	CategoryID  int64              `json:"categoryID"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	Stock       int32              `json:"stock"`
+	Images      []byte             `json:"images"`
+	Attributes  []byte             `json:"attributes"`
+	LatestAudit []byte             `json:"latestAudit"`
 }
 
 // 获取商品详情，包含软删除检查
@@ -839,7 +833,6 @@ func (q *Queries) GetProductImages(ctx context.Context, arg GetProductImagesPara
 }
 
 const GetProductsBatch = `-- name: GetProductsBatch :many
-
 SELECT p.id,
        p.name,
        p.description,
@@ -887,80 +880,22 @@ type GetProductsBatchParams struct {
 }
 
 type GetProductsBatchRow struct {
-	ID          uuid.UUID      `json:"id"`
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	Price       pgtype.Numeric `json:"price"`
-	Status      int16          `json:"status"`
-	MerchantID  uuid.UUID      `json:"merchantID"`
-	CategoryID  int64          `json:"categoryID"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	Stock       int32          `json:"stock"`
-	Images      []byte         `json:"images"`
-	Attributes  []byte         `json:"attributes"`
-	LatestAudit []byte         `json:"latestAudit"`
+	ID          uuid.UUID          `json:"id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	Price       interface{}        `json:"price"`
+	Status      int16              `json:"status"`
+	MerchantID  uuid.UUID          `json:"merchantID"`
+	CategoryID  int64              `json:"categoryID"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	Stock       int32              `json:"stock"`
+	Images      []byte             `json:"images"`
+	Attributes  []byte             `json:"attributes"`
+	LatestAudit []byte             `json:"latestAudit"`
 }
 
-// -- name: CreateProductBatch :one
-// INSERT INTO products.products (name,
-//
-//	description,
-//	price,
-//	status,
-//	merchant_id,
-//	category_id)
-//
-// SELECT unnest(@name),
-//
-//	unnest(@description),
-//	unnest(@price),
-//	unnest(@status),
-//	unnest(@merchant_id),
-//	unnest(@category_id)
-//
-// RETURNING id, created_at, updated_at;
-//
-//	p.status,
-//	p.merchant_id,
-//	p.category_id,
-//	p.created_at,
-//	p.updated_at,
-//	i.stock,
-//	(SELECT jsonb_agg(jsonb_build_object(
-//	        'url', pi.url,
-//	        'is_primary', pi.is_primary,
-//	        'sort_order', pi.sort_order
-//	                  ))
-//	 FROM products.product_images pi
-//	 WHERE pi.product_id = p.id
-//	   AND pi.merchant_id = p.merchant_id) AS images,
-//	pa.attributes,
-//	(SELECT jsonb_build_object(
-//	                'id', a.id,
-//	                'old_status', a.old_status,
-//	                'new_status', a.new_status,
-//	                'reason', a.reason,
-//	                'created_at', a.created_at
-//	        )
-//	 FROM products.product_audits a
-//	 WHERE a.product_id = p.id
-//	   AND a.merchant_id = p.merchant_id
-//	 ORDER BY a.created_at DESC
-//	 LIMIT 1)                              AS latest_audit
-//
-// FROM products.products p
-//
-//	INNER JOIN products.inventory i
-//	           ON p.id = i.product_id AND p.merchant_id = i.merchant_id
-//	LEFT JOIN products.product_attributes pa
-//	          ON p.id = pa.product_id AND p.merchant_id = pa.merchant_id
-//
-// WHERE p.id = $1
-//
-//	 AND p.merchant_id = $2
-//	 AND p.deleted_at IS NULL;
-//
+// GetProductsBatch
 //
 //	SELECT p.id,
 //	       p.name,

@@ -1,4 +1,4 @@
--- 创建物流表
+-- 物流表
 CREATE TABLE orders.shipping_info
 (
     id               BIGINT PRIMARY KEY,
@@ -17,7 +17,7 @@ CREATE TABLE orders.shipping_info
     created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
-
+COMMENT ON TABLE orders.shipping_info IS '物流表';
 -- 添加索引
 CREATE INDEX idx_shipping_sub_order_id ON orders.shipping_info (sub_order_id);
 CREATE INDEX idx_shipping_tracking_number ON orders.shipping_info (tracking_number);

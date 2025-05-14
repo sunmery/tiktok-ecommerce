@@ -2342,6 +2342,8 @@ func (m *GetProfileResponse) validate(all bool) error {
 
 	// no validation rules for SignupApplication
 
+	// no validation rules for Phone
+
 	if len(errors) > 0 {
 		return GetProfileResponseMultiError(errors)
 	}

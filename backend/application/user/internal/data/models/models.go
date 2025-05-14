@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 消费者地址表
 type UsersAddresses struct {
 	ID            int32     `json:"id"`
 	UserID        uuid.UUID `json:"userID"`
@@ -21,6 +22,7 @@ type UsersAddresses struct {
 	ZipCode       string    `json:"zipCode"`
 }
 
+// 消费者银行卡表
 type UsersCreditCards struct {
 	ID          int32     `json:"id"`
 	UserID      uuid.UUID `json:"userID"`
@@ -37,6 +39,7 @@ type UsersCreditCards struct {
 	CreatedTime time.Time `json:"createdTime"`
 }
 
+// 消费者收藏表
 type UsersFavorites struct {
 	UserID     uuid.UUID          `json:"userID"`
 	ProductID  uuid.UUID          `json:"productID"`

@@ -11,28 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const CheckCommentContainsSensitiveWord = `-- name: CheckCommentContainsSensitiveWord :one
-SELECT EXISTS (
-  SELECT 1
-  FROM admin.sensitive_words sw
-  WHERE $1::text ILIKE '%' || sw.word || '%' AND sw.is_active = TRUE
-)
-`
-
-// 检查评论是否包含任何激活的敏感词 (使用 ILIKE 进行不区分大小写匹配)
-//
-//	SELECT EXISTS (
-//	  SELECT 1
-//	  FROM admin.sensitive_words sw
-//	  WHERE $1::text ILIKE '%' || sw.word || '%' AND sw.is_active = TRUE
-//	)
-func (q *Queries) CheckCommentContainsSensitiveWord(ctx context.Context, word string) (bool, error) {
-	row := q.db.QueryRow(ctx, CheckCommentContainsSensitiveWord, word)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
-}
-
 const CreateBulkSensitiveWords = `-- name: CreateBulkSensitiveWords :execrows
 INSERT
 INTO admin.sensitive_words(created_by, category, word, level, is_active)

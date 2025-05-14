@@ -26,6 +26,7 @@ type (
 		UpdatedTime       string
 		DeletedTime       time.Time
 		DisplayName       string // 显示的用户名(可作为昵称)
+		Phone             string // 手机号
 	}
 )
 

@@ -29,8 +29,11 @@ type CheckoutReq struct {
 	Firstname     string                 `protobuf:"bytes,2,opt,name=firstname,proto3" json:"firstname,omitempty"`                              // 用户的名字（必填），允许非注册用户直接填写信息下单
 	Lastname      string                 `protobuf:"bytes,3,opt,name=lastname,proto3" json:"lastname,omitempty"`                                // 用户的姓氏（必填）
 	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`                                      // 用户的邮箱地址（必填），用于接收订单确认邮件等
+	Phone         string                 `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`                                      // 用户的电话号码（必填），用于联系用户
 	CreditCardId  uint32                 `protobuf:"varint,6,opt,name=credit_card_id,json=creditCardId,proto3" json:"credit_card_id,omitempty"` // 用户的信用卡id（必填），用于支付
 	AddressId     uint32                 `protobuf:"varint,7,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`            // 地址 ID（必填），用于选择配送地址
+	Currency      string                 `protobuf:"bytes,8,opt,name=currency,proto3" json:"currency,omitempty"`                                // 货币代码，例如 "USD"、"EUR" 等
+	PaymentMethod string                 `protobuf:"bytes,9,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"` // 支付方式
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -93,6 +96,13 @@ func (x *CheckoutReq) GetEmail() string {
 	return ""
 }
 
+func (x *CheckoutReq) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
 func (x *CheckoutReq) GetCreditCardId() uint32 {
 	if x != nil {
 		return x.CreditCardId
@@ -105,6 +115,20 @@ func (x *CheckoutReq) GetAddressId() uint32 {
 		return x.AddressId
 	}
 	return 0
+}
+
+func (x *CheckoutReq) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *CheckoutReq) GetPaymentMethod() string {
+	if x != nil {
+		return x.PaymentMethod
+	}
+	return ""
 }
 
 // 结账响应的消息结构
@@ -172,15 +196,18 @@ var File_v1_checkout_proto protoreflect.FileDescriptor
 
 const file_v1_checkout_proto_rawDesc = "" +
 	"\n" +
-	"\x11v1/checkout.proto\x12\x15ecommerce.checkout.v1\x1a\x1cgoogle/api/annotations.proto\"\xbb\x01\n" +
+	"\x11v1/checkout.proto\x12\x15ecommerce.checkout.v1\x1a\x1cgoogle/api/annotations.proto\"\x94\x02\n" +
 	"\vCheckoutReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1c\n" +
 	"\tfirstname\x18\x02 \x01(\tR\tfirstname\x12\x1a\n" +
 	"\blastname\x18\x03 \x01(\tR\blastname\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email\x12$\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12\x14\n" +
+	"\x05phone\x18\x05 \x01(\tR\x05phone\x12$\n" +
 	"\x0ecredit_card_id\x18\x06 \x01(\rR\fcreditCardId\x12\x1d\n" +
 	"\n" +
-	"address_id\x18\a \x01(\rR\taddressId\"i\n" +
+	"address_id\x18\a \x01(\rR\taddressId\x12\x1a\n" +
+	"\bcurrency\x18\b \x01(\tR\bcurrency\x12%\n" +
+	"\x0epayment_method\x18\t \x01(\tR\rpaymentMethod\"i\n" +
 	"\fCheckoutResp\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1d\n" +
 	"\n" +
