@@ -2,7 +2,8 @@ package data
 
 import (
 	"context"
-	"errors"
+
+	kerrors "github.com/go-kratos/kratos/v2/errors"
 
 	"backend/application/auth/internal/biz"
 
@@ -15,7 +16,7 @@ func (u *authRepo) Signin(ctx context.Context, req *biz.SigninRequest) (*biz.Sig
 	token, err := u.data.cs.GetOAuthToken(code, state)
 	if err != nil {
 		u.log.Errorf("GetOAuthToken() error: %s", err)
-		return nil, errors.New("GetOAuthToken() error:" + err.Error())
+		return nil, kerrors.InternalServer("GET_OAUTH_TOKEN", err.Error())
 	}
 
 	return &biz.SigninReply{

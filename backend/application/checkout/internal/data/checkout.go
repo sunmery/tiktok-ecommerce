@@ -125,12 +125,10 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 
 	switch req.PaymentMethod {
 	case string(constants.PaymentMethodBalance):
-		if req.CreditCardId == 0 {
-			return nil, kerrors.BadRequest("BALANCE_REQUIRED", "Credit card ID is required for credit card payment")
-		}
+		log.Debugf("PaymentMethodGetUserBalanceBalance: %+v", req.UserId.String())
 		banance, bananceErr := c.data.banancev1.GetUserBalance(ctx, &banancev1.GetUserBalanceRequest{
 			UserId:   req.UserId.String(),
-			Currency: req.Currency,
+			Currency: paymentCurrency,
 		})
 		if bananceErr != nil {
 			return nil, kerrors.NotFound("GET_BALANCE_FAILED", fmt.Sprintf("获取用户余额信息失败: %v", bananceErr))
@@ -174,6 +172,7 @@ func (c checkoutRepo) Checkout(ctx context.Context, req *biz.CheckoutRequest) (*
 	case string(constants.PaymentMethodBalance):
 		// 1. Check balance - IMPORTANT: Assumes c.data.userv1.GetUserBalance method exists and is correctly implemented.
 		// If this method is not available or behaves differently, this section will need adjustment.
+		log.Debugf("paymentCurrency: %s", paymentCurrency)
 		balanceResp, balanceCheckErr := c.data.banancev1.GetUserBalance(ctx, &banancev1.GetUserBalanceRequest{
 			UserId:   req.UserId.String(),
 			Currency: paymentCurrency,

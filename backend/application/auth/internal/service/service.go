@@ -15,7 +15,6 @@ type AuthService struct {
 	ac *biz.AuthUsecase
 }
 
-// NewAuthService new a Auth service.
 func NewAuthService(ac *biz.AuthUsecase) *AuthService {
 	return &AuthService{ac: ac}
 }

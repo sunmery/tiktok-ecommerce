@@ -176,7 +176,7 @@ func NewConsumerOrderServiceClient(d registry.Discovery, logger log.Logger) (con
 func NewBananceServiceClient(d registry.Discovery, logger log.Logger) (banancev1.BalanceClient, error) {
 	conn, err := grpc.DialInsecure(
 		context.Background(),
-		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.ConsumerServiceV1)),
+		grpc.WithEndpoint(fmt.Sprintf("discovery:///%s", constants.BalancerServicev1)),
 		grpc.WithDiscovery(d),
 		grpc.WithMiddleware(
 			metadata.Client(),
