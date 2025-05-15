@@ -1127,8 +1127,6 @@ func (m *GetTransactionsRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for UserId
-
 	// no validation rules for UserType
 
 	// no validation rules for Currency
@@ -1138,6 +1136,10 @@ func (m *GetTransactionsRequest) validate(all bool) error {
 	// no validation rules for PageSize
 
 	// no validation rules for PaymentStatus
+
+	if m.UserId != nil {
+		// no validation rules for UserId
+	}
 
 	if len(errors) > 0 {
 		return GetTransactionsRequestMultiError(errors)

@@ -3,17 +3,17 @@ SERVICE=balancer
 make docker-build SERVICE=balancer
 构建的微服务: balancer
 系统: linux | CPU架构: amd64
-镜像名: sumery/balancer:b9ce9e3
+镜像名: sumery/balancer:f4cbec5
 docker build . \
 	  -f application/balancer/Dockerfile \
 	  --progress=plain \
-	  -t ecommerce/balancer:b9ce9e3 \
+	  -t ecommerce/balancer:f4cbec5 \
 	  --build-arg SERVICE=balancer \
 	  --build-arg CGOENABLED=0 \
 	  --build-arg GOIMAGE=golang:1.24.2-alpine3.21 \
 	  --build-arg GOOS=linux \
 	  --build-arg GOARCH=amd64 \
-	  --build-arg VERSION=b9ce9e3 \
+	  --build-arg VERSION=f4cbec5 \
 	  --platform linux/amd64  \
 	  --cache-from type=registry,ref=ccr.ccs.tencentyun.com/sumery/balancer:cache \
 	  --cache-to type=registry,ref=ccr.ccs.tencentyun.com/sumery/balancer:cache,mode=max
@@ -27,15 +27,15 @@ docker build . \
 #2 DONE 0.0s
 
 #3 [internal] load metadata for gcr.io/distroless/static-debian12:latest
-#3 DONE 0.5s
+#3 DONE 0.4s
 
 #4 [compile 1/6] FROM docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c
-#4 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c done
-#4 DONE 0.0s
+#4 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c 0.9s done
+#4 DONE 0.9s
 
 #5 [final 1/2] FROM gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9
-#5 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 done
-#5 DONE 0.0s
+#5 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 0.0s done
+#5 CACHED
 
 #6 [internal] load .dockerignore
 #6 transferring context: 2B done
@@ -45,143 +45,154 @@ docker build . \
 #7 DONE 0.0s
 
 #8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/balancer:cache
+#8 ...
+
+#9 [auth] sumery/balancer:pull token for ccr.ccs.tencentyun.com
+#9 DONE 0.0s
+
+#8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/balancer:cache
 #8 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
-#8 DONE 0.6s
+#8 DONE 0.7s
 
 #7 [internal] load build context
-#7 transferring context: 160.13kB 0.1s done
+#7 transferring context: 168.86kB 0.0s done
 #7 DONE 0.1s
 
-#9 [compile 2/6] WORKDIR /build
-#9 CACHED
-
-#10 [compile 3/6] COPY go.mod go.sum ./
+#10 [compile 2/6] WORKDIR /build
 #10 CACHED
 
-#11 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#11 [compile 3/6] COPY go.mod go.sum ./
 #11 CACHED
 
-#12 [compile 5/6] COPY . .
-#12 DONE 0.1s
+#12 [compile 3/6] COPY go.mod go.sum ./
+#12 CACHED
 
-#13 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=b9ce9e3" -o /app/balancer ./application/balancer/cmd/balancer
-#13 DONE 0.7s
+#13 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#13 CACHED
 
-#14 [final 2/2] COPY --from=compile /app/balancer /app/service
-#14 CACHED
+#14 [compile 5/6] COPY . .
+#14 DONE 0.1s
 
-#15 exporting to image
-#15 exporting layers done
-#15 exporting manifest sha256:9fd046ae393d1440f99a92e353603d2eb06fab316ff730ab3bf953f434d5dabd done
-#15 exporting config sha256:482521b7fb668d55b21f1ff0bec592950cf49480bdd2d389f3736579e52fd881 done
-#15 exporting attestation manifest sha256:3f1af2f33550f9b5a59e76462386fb970885a6084dc28e10752467af86c51fb2 0.0s done
-#15 exporting manifest list sha256:e46ecbd27ef20381b9d0738ecff48b57451429609a983832d8d77b53e886633b done
-#15 naming to docker.io/ecommerce/balancer:b9ce9e3 done
-#15 DONE 0.1s
+#15 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=f4cbec5" -o /app/balancer ./application/balancer/cmd/balancer
+#15 DONE 1.4s
 
-#16 exporting cache to registry
-#16 preparing build cache for export
-#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa
-#16 ...
+#16 [final 2/2] COPY --from=compile /app/balancer /app/service
+#16 DONE 0.1s
 
-#17 [auth] sumery/balancer:pull,push token for ccr.ccs.tencentyun.com
-#17 DONE 0.0s
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 1.1s done
+#17 exporting manifest sha256:0d7f3fe4d3c416a02592938b47d09a521cb4be005d3ad5f8b1d42e7c4dc85df1 done
+#17 exporting config sha256:e6a0b2c085f4ac839e0ac0de47f3b832aa6821abfb457ed9693173e490cd9281 done
+#17 exporting attestation manifest sha256:626934c32926de8df51eaee5ce2cfa33da25f5442a6c2804e63c7ffa5b494f70 0.0s done
+#17 exporting manifest list sha256:91282417ff2accb335b651f6b1dba9b7d532d2f0e8b379fc084ed324dc33454a 0.0s done
+#17 naming to docker.io/ecommerce/balancer:f4cbec5 done
+#17 DONE 1.3s
 
-#16 exporting cache to registry
-#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa 0.3s done
-#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6
-#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6 0.0s done
-#16 writing layer sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 0.0s done
-#16 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0 0.0s done
-#16 writing layer sha256:427d92e3a1686628954a7ff9153c4ee65f3de0e703b131c1be257c1da70eca72 0.1s done
-#16 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f
-#16 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f 0.0s done
-#16 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660 0.0s done
-#16 writing layer sha256:4eff9a62d888790350b2481ff4a4f38f9c94b3674d26b2f2c85ca39cdef43fd9 0.0s done
-#16 writing layer sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 0.0s done
-#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2
-#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2 0.0s done
-#16 writing layer sha256:54c5afff19569f1688316a16c15d16ad1e4ca90ca8a8993d96436af8d47a2c1e
-#16 writing layer sha256:54c5afff19569f1688316a16c15d16ad1e4ca90ca8a8993d96436af8d47a2c1e 1.2s done
-#16 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd
-#16 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd 0.0s done
-#16 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836 0.0s done
-#16 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81 0.0s done
-#16 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 0.0s done
-#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71
-#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71 0.0s done
-#16 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3 0.0s done
-#16 writing layer sha256:bfb59b82a9b65e47d485e53b3e815bca3b3e21a095bd0cb88ced9ac0b48062bf 0.0s done
-#16 writing layer sha256:da7816fa955ea24533c388143c78804c28682eef99b4ee3723b548c70148bba6 0.0s done
-#16 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7
-#16 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7 0.0s done
-#16 writing layer sha256:f6bf770f8d3f417a77223e299aa6680b365fa0639da1789b918b993a227a7beb
-#16 writing layer sha256:f6bf770f8d3f417a77223e299aa6680b365fa0639da1789b918b993a227a7beb 3.4s done
-#16 writing layer sha256:fc49306ada6264480fee1fd0a6860ec47700f279c23b1d0a8a658a2d1cc18e1d
-#16 writing layer sha256:fc49306ada6264480fee1fd0a6860ec47700f279c23b1d0a8a658a2d1cc18e1d 0.0s done
-#16 writing config sha256:af9bb7adb0c572e4402d75ef60fbb95e40607a135490a7916bd565cceaf50efd
-#16 writing config sha256:af9bb7adb0c572e4402d75ef60fbb95e40607a135490a7916bd565cceaf50efd 0.8s done
-#16 writing cache manifest sha256:b88a69ffaab51a5306d4224839fc5dd72673558407d60bfe3e0966d26dcc1152
-#16 preparing build cache for export 11.0s done
-#16 writing cache manifest sha256:b88a69ffaab51a5306d4224839fc5dd72673558407d60bfe3e0966d26dcc1152 3.5s done
-#16 DONE 11.0s
+#18 exporting cache to registry
+#18 preparing build cache for export
+#18 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa
+#18 ...
 
-View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/fqvtqjblvlb5rndmw180mm7e2
+#19 [auth] sumery/balancer:pull,push token for ccr.ccs.tencentyun.com
+#19 DONE 0.0s
+
+#18 exporting cache to registry
+#18 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa 0.2s done
+#18 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6
+#18 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6 0.0s done
+#18 writing layer sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 0.0s done
+#18 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0 0.0s done
+#18 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f 0.0s done
+#18 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660
+#18 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660 0.0s done
+#18 writing layer sha256:4eff9a62d888790350b2481ff4a4f38f9c94b3674d26b2f2c85ca39cdef43fd9 0.0s done
+#18 writing layer sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 0.0s done
+#18 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2 0.0s done
+#18 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd
+#18 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd 0.0s done
+#18 writing layer sha256:63890b0d636dbcf1c7a7b2362c25d12fb9c3fd358c840c12da6ecb9d77545f1b
+#18 writing layer sha256:63890b0d636dbcf1c7a7b2362c25d12fb9c3fd358c840c12da6ecb9d77545f1b 2.2s done
+#18 writing layer sha256:66d89eca48455c6367f9adf69eb1d55be86769191985a670c9f34b9f62d9902c
+#18 writing layer sha256:66d89eca48455c6367f9adf69eb1d55be86769191985a670c9f34b9f62d9902c 2.4s done
+#18 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836
+#18 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836 0.1s done
+#18 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81
+#18 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81 0.2s done
+#18 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212
+#18 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 0.4s done
+#18 writing layer sha256:7d897f0d2adc24598d3c40409f687ad5ea0847969e2a5513cde73d3e70ea850d
+#18 writing layer sha256:7d897f0d2adc24598d3c40409f687ad5ea0847969e2a5513cde73d3e70ea850d 0.3s done
+#18 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71
+#18 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71 0.0s done
+#18 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3 0.0s done
+#18 writing layer sha256:bfb59b82a9b65e47d485e53b3e815bca3b3e21a095bd0cb88ced9ac0b48062bf 0.0s done
+#18 writing layer sha256:da7816fa955ea24533c388143c78804c28682eef99b4ee3723b548c70148bba6 0.0s done
+#18 writing layer sha256:dcedfdab1d08e8cd35988e5e5fad256f2788f35f66871f8edbf24e22b153e276
+#18 writing layer sha256:dcedfdab1d08e8cd35988e5e5fad256f2788f35f66871f8edbf24e22b153e276 2.9s done
+#18 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7
+#18 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7 0.0s done
+#18 writing config sha256:253d9488d2134a70bddcd032170be22417ef3f5324defc5647026f8a543fb820
+#18 writing config sha256:253d9488d2134a70bddcd032170be22417ef3f5324defc5647026f8a543fb820 0.7s done
+#18 writing cache manifest sha256:cfc705a956cfe912e904f65abde4d132be6cdf84885d303c384585c7099b83f5
+#18 preparing build cache for export 14.1s done
+#18 writing cache manifest sha256:cfc705a956cfe912e904f65abde4d132be6cdf84885d303c384585c7099b83f5 2.5s done
+#18 DONE 14.1s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/d82g2agw8015mhehz173c2egf
 SERVICE=balancer
 make docker-push SERVICE=balancer
 使用方式: make docker-push SERVICE=微服务名
 OS: linux | ARCH: amd64
-Docker image: sumery/balancer:b9ce9e3
-docker tag ecommerce/balancer:b9ce9e3 ccr.ccs.tencentyun.com/sumery/balancer:b9ce9e3
-docker push ccr.ccs.tencentyun.com/sumery/balancer:b9ce9e3
+Docker image: sumery/balancer:f4cbec5
+docker tag ecommerce/balancer:f4cbec5 ccr.ccs.tencentyun.com/sumery/balancer:f4cbec5
+docker push ccr.ccs.tencentyun.com/sumery/balancer:f4cbec5
 The push refers to repository [ccr.ccs.tencentyun.com/sumery/balancer]
-4aa0ea1413d3: Waiting
-da7816fa955e: Waiting
-9aee425378d2: Waiting
-d7d906057bec: Waiting
-7c12895b777b: Waiting
-3214acf345c0: Waiting
-4eff9a62d888: Waiting
 0bab15eea81d: Waiting
-a62778643d56: Waiting
-fc49306ada62: Waiting
+4aa0ea1413d3: Waiting
+7c12895b777b: Waiting
+da7816fa955e: Waiting
+dcedfdab1d08: Waiting
 3d78e577de35: Waiting
-5664b15f108b: Waiting
 bfb59b82a9b6: Waiting
 4eff9a62d888: Waiting
-4aa0ea1413d3: Waiting
-da7816fa955e: Waiting
-9aee425378d2: Waiting
-d7d906057bec: Waiting
-7c12895b777b: Waiting
 3214acf345c0: Waiting
-bfb59b82a9b6: Waiting
-0bab15eea81d: Waiting
 a62778643d56: Waiting
-fc49306ada62: Waiting
-3d78e577de35: Waiting
+00c8ae4a4617: Waiting
+9aee425378d2: Waiting
 5664b15f108b: Waiting
-3214acf345c0: Layer already exists
+3d78e577de35: Waiting
+bfb59b82a9b6: Waiting
 4eff9a62d888: Waiting
-4aa0ea1413d3: Layer already exists
-da7816fa955e: Layer already exists
+0bab15eea81d: Waiting
+4aa0ea1413d3: Waiting
+7c12895b777b: Waiting
+da7816fa955e: Waiting
+dcedfdab1d08: Waiting
+a62778643d56: Waiting
+3214acf345c0: Waiting
+9aee425378d2: Waiting
+5664b15f108b: Waiting
+00c8ae4a4617: Waiting
+00c8ae4a4617: Waiting
 9aee425378d2: Layer already exists
-d7d906057bec: Waiting
-7c12895b777b: Waiting
-5664b15f108b: Waiting
-bfb59b82a9b6: Layer already exists
-0bab15eea81d: Waiting
-a62778643d56: Waiting
-fc49306ada62: Waiting
-3d78e577de35: Waiting
-a62778643d56: Layer already exists
-fc49306ada62: Layer already exists
-3d78e577de35: Layer already exists
 5664b15f108b: Layer already exists
-0bab15eea81d: Layer already exists
-d7d906057bec: Waiting
-7c12895b777b: Layer already exists
+4aa0ea1413d3: Waiting
+7c12895b777b: Waiting
+da7816fa955e: Layer already exists
+dcedfdab1d08: Waiting
+3d78e577de35: Waiting
+bfb59b82a9b6: Waiting
 4eff9a62d888: Layer already exists
-d7d906057bec: Waiting
-d7d906057bec: Pushed
-b9ce9e3: digest: sha256:e46ecbd27ef20381b9d0738ecff48b57451429609a983832d8d77b53e886633b size: 856
+0bab15eea81d: Waiting
+3214acf345c0: Waiting
+a62778643d56: Layer already exists
+0bab15eea81d: Layer already exists
+4aa0ea1413d3: Layer already exists
+7c12895b777b: Layer already exists
+dcedfdab1d08: Layer already exists
+3d78e577de35: Layer already exists
+bfb59b82a9b6: Layer already exists
+3214acf345c0: Layer already exists
+00c8ae4a4617: Pushed
+f4cbec5: digest: sha256:91282417ff2accb335b651f6b1dba9b7d532d2f0e8b379fc084ed324dc33454a size: 856

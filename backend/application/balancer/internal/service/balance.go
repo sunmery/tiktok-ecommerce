@@ -227,12 +227,13 @@ func (s *BalanceService) GetMerchantBalance(ctx context.Context, req *v1.GetMerc
 func (s *BalanceService) GetTransactions(ctx context.Context, req *v1.GetTransactionsRequest) (*v1.GetTransactionsReply, error) {
 	var err error
 	var userId uuid.UUID
-	if req.UserId == "" {
+	if req.UserId == nil {
 		userId, err = globalPkg.GetMetadataUesrID(ctx)
-	}
-	userId, err = uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, err
+	} else {
+		userId, err = uuid.Parse(*req.UserId)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var userType constants.TransactionsUserType
 	switch req.UserType {

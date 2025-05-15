@@ -3,17 +3,17 @@ SERVICE=comment
 make docker-build SERVICE=comment
 构建的微服务: comment
 系统: linux | CPU架构: amd64
-镜像名: sumery/comment:b9ce9e3
+镜像名: sumery/comment:f4cbec5
 docker build . \
 	  -f application/comment/Dockerfile \
 	  --progress=plain \
-	  -t ecommerce/comment:b9ce9e3 \
+	  -t ecommerce/comment:f4cbec5 \
 	  --build-arg SERVICE=comment \
 	  --build-arg CGOENABLED=0 \
 	  --build-arg GOIMAGE=golang:1.24.2-alpine3.21 \
 	  --build-arg GOOS=linux \
 	  --build-arg GOARCH=amd64 \
-	  --build-arg VERSION=b9ce9e3 \
+	  --build-arg VERSION=f4cbec5 \
 	  --platform linux/amd64  \
 	  --cache-from type=registry,ref=ccr.ccs.tencentyun.com/sumery/comment:cache \
 	  --cache-to type=registry,ref=ccr.ccs.tencentyun.com/sumery/comment:cache,mode=max
@@ -27,152 +27,82 @@ docker build . \
 #2 DONE 0.0s
 
 #3 [internal] load metadata for gcr.io/distroless/static-debian12:latest
-#3 DONE 0.2s
+#3 DONE 0.4s
 
 #4 [compile 1/6] FROM docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c
-#4 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c done
-#4 DONE 0.0s
+#4 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c 0.9s done
+#4 DONE 0.9s
 
 #5 [final 1/2] FROM gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9
-#5 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 done
-#5 DONE 0.0s
+#5 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 0.0s done
+#5 CACHED
 
 #6 [internal] load .dockerignore
 #6 transferring context: 2B done
 #6 DONE 0.0s
 
-#7 importing cache manifest from ccr.ccs.tencentyun.com/sumery/comment:cache
-#7 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
-#7 DONE 0.6s
+#7 [internal] load build context
+#7 DONE 0.0s
 
-#8 [internal] load build context
-#8 transferring context: 125.20kB 0.1s done
-#8 DONE 0.1s
+#8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/comment:cache
+#8 ...
 
-#9 [compile 2/6] WORKDIR /build
-#9 CACHED
+#9 [auth] sumery/comment:pull token for ccr.ccs.tencentyun.com
+#9 DONE 0.0s
 
-#10 [compile 3/6] COPY go.mod go.sum ./
+#8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/comment:cache
+#8 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
+#8 DONE 0.8s
+
+#10 [compile 2/6] WORKDIR /build
 #10 CACHED
 
-#11 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#11 [compile 3/6] COPY go.mod go.sum ./
 #11 CACHED
 
-#12 [compile 5/6] COPY . .
-#12 DONE 0.1s
+#7 [internal] load build context
+#7 transferring context: 158.75kB 0.0s done
+#7 DONE 0.1s
 
-#13 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=b9ce9e3" -o /app/comment ./application/comment/cmd/comment
-#13 DONE 0.7s
+#12 [compile 3/6] COPY go.mod go.sum ./
+#12 CACHED
 
-#14 [final 2/2] COPY --from=compile /app/comment /app/service
-#14 CACHED
+#13 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#13 CACHED
 
-#15 exporting to image
-#15 exporting layers done
-#15 exporting manifest sha256:cf1886fabe5a79756ea86cee546f88afb4feb97f5e96d5f2efad326b7e3e321c done
-#15 exporting config sha256:7edc67cb28fde017f82110da4797c9bac0074ba56c8f02f7ca8fccb990aab95d done
-#15 exporting attestation manifest sha256:d18ffddb76b86042ede4a5926d288ca7d045601f86c93c4d50fb2243b98796dd 0.0s done
-#15 exporting manifest list sha256:0e594820b39b0927e043e9487dc9fc1c34c51796a86d388084433f1e54f7502c done
-#15 naming to docker.io/ecommerce/comment:b9ce9e3 done
-#15 DONE 0.0s
+#14 [compile 5/6] COPY . .
+#14 DONE 0.1s
 
-#16 exporting cache to registry
-#16 preparing build cache for export
-#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa
-#16 ...
+#15 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=f4cbec5" -o /app/comment ./application/comment/cmd/comment
+#15 0.281 # backend/application/comment/internal/data
+#15 0.281 application/comment/internal/data/sensitive_words.go:20:34: r.data.db.SetSensitiveWords undefined (type *models.Queries has no field or method SetSensitiveWords)
+#15 0.281 application/comment/internal/data/sensitive_words.go:20:64: undefined: models.SetSensitiveWordsParams
+#15 0.281 application/comment/internal/data/sensitive_words.go:46:26: r.data.db.GetSensitiveWords undefined (type *models.Queries has no field or method GetSensitiveWords)
+#15 0.281 application/comment/internal/data/sensitive_words.go:46:56: undefined: models.GetSensitiveWordsParams
+#15 0.281 application/comment/internal/data/sensitive_words.go:77:19: r.data.db.DeleteSensitiveWord undefined (type *models.Queries has no field or method DeleteSensitiveWord)
+#15 0.281 application/comment/internal/data/sensitive_words.go:77:51: undefined: models.DeleteSensitiveWordParams
+#15 ERROR: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
+------
+ > [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=f4cbec5" -o /app/comment ./application/comment/cmd/comment:
+0.281 # backend/application/comment/internal/data
+0.281 application/comment/internal/data/sensitive_words.go:20:34: r.data.db.SetSensitiveWords undefined (type *models.Queries has no field or method SetSensitiveWords)
+0.281 application/comment/internal/data/sensitive_words.go:20:64: undefined: models.SetSensitiveWordsParams
+0.281 application/comment/internal/data/sensitive_words.go:46:26: r.data.db.GetSensitiveWords undefined (type *models.Queries has no field or method GetSensitiveWords)
+0.281 application/comment/internal/data/sensitive_words.go:46:56: undefined: models.GetSensitiveWordsParams
+0.281 application/comment/internal/data/sensitive_words.go:77:19: r.data.db.DeleteSensitiveWord undefined (type *models.Queries has no field or method DeleteSensitiveWord)
+0.281 application/comment/internal/data/sensitive_words.go:77:51: undefined: models.DeleteSensitiveWordParams
+------
+Dockerfile:22
+--------------------
+  21 |     COPY . .
+  22 | >>> RUN --mount=type=cache,target=/go/pkg/mod \
+  23 | >>>     --mount=type=cache,target=/root/.cache/go-build \
+  24 | >>>     GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED \
+  25 | >>>     go build -ldflags="-s -w -X main.Version=$VERSION" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}
+  26 |     
+--------------------
+ERROR: failed to solve: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
 
-#17 [auth] sumery/comment:pull,push token for ccr.ccs.tencentyun.com
-#17 DONE 0.0s
-
-#16 exporting cache to registry
-#16 writing layer sha256:0bab15eea81d0fe6ab56ebf5fba14e02c4c1775a7f7436fbddd3505add4e18fa 0.5s done
-#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6
-#16 writing layer sha256:14aa1d43e92f86dc074668d0ee29a76fd40e91e4c4142a8f0580170417c1a1e6 0.0s done
-#16 writing layer sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 0.0s done
-#16 writing layer sha256:393a61a9af3174ee92a405f188ea906d8888488fa778b396454d83c102a39d57 0.1s done
-#16 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0
-#16 writing layer sha256:3d78e577de35c8bf231e34862a13cde36cd7b253b6a7af2158035251d2dc48c0 0.0s done
-#16 writing layer sha256:4a823f65490260affa9c7393172a9f885227dba48c93a4019cfe09f4ef18df36 0.1s done
-#16 writing layer sha256:4aa0ea1413d37a58615488592a0b827ea4b2e48fa5a77cf707d0e35f025e613f 0.0s done
-#16 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660
-#16 writing layer sha256:4d476c939a0568149dd1f92e1efdc4f4c562a475772453124720a8e1fcb9f660 0.0s done
-#16 writing layer sha256:4eff9a62d888790350b2481ff4a4f38f9c94b3674d26b2f2c85ca39cdef43fd9 0.0s done
-#16 writing layer sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 0.0s done
-#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2
-#16 writing layer sha256:548d7ee64d1f92a48d22b95b49e35541b138de25a4a7721b598b614c2913efe2 0.0s done
-#16 writing layer sha256:5664b15f108bf9436ce3312090a767300800edbbfd4511aa1a6d64357024d5dd 0.0s done
-#16 writing layer sha256:6ba13e4ba52312976cd73671fd09b9b010ee1b8186ccabe52446784bf1952836 0.0s done
-#16 writing layer sha256:6e771e15690e2fabf2332d3a3b744495411d6e0b00b2aea64419b58b0066cf81 0.0s done
-#16 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212
-#16 writing layer sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 0.0s done
-#16 writing layer sha256:846a7ba3dd717cc751ff3bfed277a1121422acaa35583155c8859371c59518e3
-#16 writing layer sha256:846a7ba3dd717cc751ff3bfed277a1121422acaa35583155c8859371c59518e3 4.0s done
-#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71
-#16 writing layer sha256:9aee425378d2c16cd44177dc54a274b312897f5860a8e78fdfda555a0d79dd71 0.4s done
-#16 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3
-#16 writing layer sha256:a62778643d563b511190663ef9a77c30d46d282facfdce4f3a7aecc03423c1f3 0.3s done
-#16 writing layer sha256:b09a633fb470317855718b5c72c5f3278ac393afc32f9515718d71610814a06f
-#16 writing layer sha256:b09a633fb470317855718b5c72c5f3278ac393afc32f9515718d71610814a06f 4.0s done
-#16 writing layer sha256:bfb59b82a9b65e47d485e53b3e815bca3b3e21a095bd0cb88ced9ac0b48062bf
-#16 writing layer sha256:bfb59b82a9b65e47d485e53b3e815bca3b3e21a095bd0cb88ced9ac0b48062bf 0.0s done
-#16 writing layer sha256:da7816fa955ea24533c388143c78804c28682eef99b4ee3723b548c70148bba6 0.0s done
-#16 writing layer sha256:e18364ce0d2587c74fc30d8602f743c52178d9e6408c64d9091baffbff467af7 0.0s done
-#16 writing config sha256:fce85e38ed1d6b7b5d57ab0b4f9d98ca8710f2efc64a0490a4de4e57ee9a055e
-#16 writing config sha256:fce85e38ed1d6b7b5d57ab0b4f9d98ca8710f2efc64a0490a4de4e57ee9a055e 0.7s done
-#16 writing cache manifest sha256:0156f0a668efd2291d23dd11d3e352dbdff51a21207d00df7ca9ede45e8f3b0d
-#16 preparing build cache for export 13.6s done
-#16 writing cache manifest sha256:0156f0a668efd2291d23dd11d3e352dbdff51a21207d00df7ca9ede45e8f3b0d 2.1s done
-#16 DONE 13.6s
-
-View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/wysrlm7u0pfvjf1zupceo4xqx
-SERVICE=comment
-make docker-push SERVICE=comment
-使用方式: make docker-push SERVICE=微服务名
-OS: linux | ARCH: amd64
-Docker image: sumery/comment:b9ce9e3
-docker tag ecommerce/comment:b9ce9e3 ccr.ccs.tencentyun.com/sumery/comment:b9ce9e3
-docker push ccr.ccs.tencentyun.com/sumery/comment:b9ce9e3
-The push refers to repository [ccr.ccs.tencentyun.com/sumery/comment]
-3214acf345c0: Waiting
-5664b15f108b: Waiting
-0bab15eea81d: Waiting
-9aee425378d2: Waiting
-38c6bfd4b3a8: Waiting
-7c12895b777b: Waiting
-3d78e577de35: Waiting
-bfb59b82a9b6: Waiting
-4eff9a62d888: Waiting
-4aa0ea1413d3: Waiting
-da7816fa955e: Waiting
-393a61a9af31: Waiting
-a62778643d56: Waiting
-bfb59b82a9b6: Waiting
-4eff9a62d888: Waiting
-4aa0ea1413d3: Waiting
-da7816fa955e: Waiting
-393a61a9af31: Waiting
-a62778643d56: Waiting
-3d78e577de35: Waiting
-5664b15f108b: Waiting
-0bab15eea81d: Waiting
-9aee425378d2: Waiting
-38c6bfd4b3a8: Waiting
-7c12895b777b: Waiting
-3214acf345c0: Waiting
-da7816fa955e: Layer already exists
-393a61a9af31: Layer already exists
-a62778643d56: Layer already exists
-3d78e577de35: Layer already exists
-bfb59b82a9b6: Waiting
-4eff9a62d888: Layer already exists
-4aa0ea1413d3: Layer already exists
-38c6bfd4b3a8: Waiting
-7c12895b777b: Layer already exists
-3214acf345c0: Layer already exists
-5664b15f108b: Layer already exists
-0bab15eea81d: Layer already exists
-9aee425378d2: Layer already exists
-38c6bfd4b3a8: Waiting
-bfb59b82a9b6: Layer already exists
-38c6bfd4b3a8: Pushed
-b9ce9e3: digest: sha256:0e594820b39b0927e043e9487dc9fc1c34c51796a86d388084433f1e54f7502c size: 856
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/4r81wpbm13vy90y2yqtm32trf
+make[3]: *** [docker-build] Error 1
+make[2]: *** [docker-deploy] Error 2
