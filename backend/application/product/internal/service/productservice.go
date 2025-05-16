@@ -243,6 +243,8 @@ func (s *ProductService) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid merchantId ID")
 	}
+
+	log.Debugf("DeleteProduct userid:%+v", userId)
 	bizReq := biz.DeleteProductRequest{
 		ID:         id,
 		MerchantID: userId,

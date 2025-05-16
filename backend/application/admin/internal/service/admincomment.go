@@ -92,3 +92,44 @@ func (ac *AdminCommentService) GetSensitiveWords(ctx context.Context, req *pb.Ge
 		Words: words,
 	}, nil
 }
+
+func (ac *AdminCommentService) DeleteSensitiveWord(ctx context.Context, req *pb.DeleteSensitiveWordReq) (*pb.DeleteSensitiveWordReply, error) {
+	adminId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ac.ac.DeleteSensitiveWord(ctx, &biz.DeleteSensitiveWordReq{
+		ID:        uint32(req.Id),
+		CreatedBy: adminId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DeleteSensitiveWordReply{
+		Success: true,
+	}, nil
+}
+
+func (ac *AdminCommentService) UpdateSensitiveWord(ctx context.Context, req *pb.UpdateSensitiveWordReq) (*pb.UpdateSensitiveWordReply, error) {
+	adminId, err := globalPkg.GetMetadataUesrID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ac.ac.UpdateSensitiveWord(ctx, &biz.UpdateSensitiveWordReq{
+		ID:        req.Id,
+		CreatedBy: adminId,
+		Level:     int32(req.Level),
+		IsActive:  req.IsActive,
+		Category:  req.Category,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateSensitiveWordReply{
+		Success: true,
+	}, nil
+}

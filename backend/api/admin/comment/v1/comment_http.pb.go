@@ -19,20 +19,28 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationAdminCommentDeleteSensitiveWord = "/admin.admincomment.v1.AdminComment/DeleteSensitiveWord"
 const OperationAdminCommentGetSensitiveWords = "/admin.admincomment.v1.AdminComment/GetSensitiveWords"
 const OperationAdminCommentSetSensitiveWords = "/admin.admincomment.v1.AdminComment/SetSensitiveWords"
+const OperationAdminCommentUpdateSensitiveWord = "/admin.admincomment.v1.AdminComment/UpdateSensitiveWord"
 
 type AdminCommentHTTPServer interface {
+	// DeleteSensitiveWord 删除敏感词
+	DeleteSensitiveWord(context.Context, *DeleteSensitiveWordReq) (*DeleteSensitiveWordReply, error)
 	// GetSensitiveWords 查询评论敏感词
 	GetSensitiveWords(context.Context, *GetSensitiveWordsReq) (*GetSensitiveWordsReply, error)
 	// SetSensitiveWords 设置评论敏感词
 	SetSensitiveWords(context.Context, *SetSensitiveWordsReq) (*SetSensitiveWordsReply, error)
+	// UpdateSensitiveWord 更新敏感词
+	UpdateSensitiveWord(context.Context, *UpdateSensitiveWordReq) (*UpdateSensitiveWordReply, error)
 }
 
 func RegisterAdminCommentHTTPServer(s *http.Server, srv AdminCommentHTTPServer) {
 	r := s.Route("/")
 	r.PUT("/v1/admin/comments/sensitive-words", _AdminComment_SetSensitiveWords0_HTTP_Handler(srv))
 	r.GET("/v1/admin/comments/sensitive-words", _AdminComment_GetSensitiveWords0_HTTP_Handler(srv))
+	r.DELETE("/v1/admin/comments/sensitive-words/{id}", _AdminComment_DeleteSensitiveWord0_HTTP_Handler(srv))
+	r.PATCH("/v1/admin/comments/sensitive-words/{id}", _AdminComment_UpdateSensitiveWord0_HTTP_Handler(srv))
 }
 
 func _AdminComment_SetSensitiveWords0_HTTP_Handler(srv AdminCommentHTTPServer) func(ctx http.Context) error {
@@ -76,9 +84,58 @@ func _AdminComment_GetSensitiveWords0_HTTP_Handler(srv AdminCommentHTTPServer) f
 	}
 }
 
+func _AdminComment_DeleteSensitiveWord0_HTTP_Handler(srv AdminCommentHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteSensitiveWordReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminCommentDeleteSensitiveWord)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteSensitiveWord(ctx, req.(*DeleteSensitiveWordReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DeleteSensitiveWordReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AdminComment_UpdateSensitiveWord0_HTTP_Handler(srv AdminCommentHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateSensitiveWordReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminCommentUpdateSensitiveWord)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateSensitiveWord(ctx, req.(*UpdateSensitiveWordReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateSensitiveWordReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AdminCommentHTTPClient interface {
+	DeleteSensitiveWord(ctx context.Context, req *DeleteSensitiveWordReq, opts ...http.CallOption) (rsp *DeleteSensitiveWordReply, err error)
 	GetSensitiveWords(ctx context.Context, req *GetSensitiveWordsReq, opts ...http.CallOption) (rsp *GetSensitiveWordsReply, err error)
 	SetSensitiveWords(ctx context.Context, req *SetSensitiveWordsReq, opts ...http.CallOption) (rsp *SetSensitiveWordsReply, err error)
+	UpdateSensitiveWord(ctx context.Context, req *UpdateSensitiveWordReq, opts ...http.CallOption) (rsp *UpdateSensitiveWordReply, err error)
 }
 
 type AdminCommentHTTPClientImpl struct {
@@ -87,6 +144,19 @@ type AdminCommentHTTPClientImpl struct {
 
 func NewAdminCommentHTTPClient(client *http.Client) AdminCommentHTTPClient {
 	return &AdminCommentHTTPClientImpl{client}
+}
+
+func (c *AdminCommentHTTPClientImpl) DeleteSensitiveWord(ctx context.Context, in *DeleteSensitiveWordReq, opts ...http.CallOption) (*DeleteSensitiveWordReply, error) {
+	var out DeleteSensitiveWordReply
+	pattern := "/v1/admin/comments/sensitive-words/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAdminCommentDeleteSensitiveWord))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *AdminCommentHTTPClientImpl) GetSensitiveWords(ctx context.Context, in *GetSensitiveWordsReq, opts ...http.CallOption) (*GetSensitiveWordsReply, error) {
@@ -109,6 +179,19 @@ func (c *AdminCommentHTTPClientImpl) SetSensitiveWords(ctx context.Context, in *
 	opts = append(opts, http.Operation(OperationAdminCommentSetSensitiveWords))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminCommentHTTPClientImpl) UpdateSensitiveWord(ctx context.Context, in *UpdateSensitiveWordReq, opts ...http.CallOption) (*UpdateSensitiveWordReply, error) {
+	var out UpdateSensitiveWordReply
+	pattern := "/v1/admin/comments/sensitive-words/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminCommentUpdateSensitiveWord))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

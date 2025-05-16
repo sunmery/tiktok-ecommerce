@@ -85,9 +85,100 @@
           "AdminComment"
         ]
       }
+    },
+    "/v1/admin/comments/sensitive-words/{id}": {
+      "delete": {
+        "summary": "删除敏感词",
+        "operationId": "AdminComment_DeleteSensitiveWord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteSensitiveWordReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "AdminComment"
+        ]
+      },
+      "patch": {
+        "summary": "更新敏感词",
+        "operationId": "AdminComment_UpdateSensitiveWord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateSensitiveWordReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminCommentUpdateSensitiveWordBody"
+            }
+          }
+        ],
+        "tags": [
+          "AdminComment"
+        ]
+      }
     }
   },
   "definitions": {
+    "AdminCommentUpdateSensitiveWordBody": {
+      "type": "object",
+      "properties": {
+        "createdBy": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string"
+        },
+        "word": {
+          "type": "string"
+        }
+      }
+    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -115,6 +206,14 @@
             "type": "object",
             "$ref": "#/definitions/googleprotobufAny"
           }
+        }
+      }
+    },
+    "v1DeleteSensitiveWordReply": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -182,6 +281,14 @@
             "type": "object",
             "$ref": "#/definitions/v1SensitiveWord"
           }
+        }
+      }
+    },
+    "v1UpdateSensitiveWordReply": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     }

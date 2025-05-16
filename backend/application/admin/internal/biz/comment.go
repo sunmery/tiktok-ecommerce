@@ -42,9 +42,31 @@ type (
 	}
 )
 
+type (
+	UpdateSensitiveWordReq struct {
+		ID        uint32
+		CreatedBy uuid.UUID
+		Level     int32
+		IsActive  bool
+		Category  string
+		Word      string
+	}
+	UpdateSensitiveWordReply struct{}
+)
+
+type (
+	DeleteSensitiveWordReq struct {
+		ID        uint32
+		CreatedBy uuid.UUID
+	}
+	DeleteSensitiveWordReply struct{}
+)
+
 type AdminCommentRepo interface {
 	SetSensitiveWords(ctx context.Context, req *SetSensitiveWordsReq) (*SetSensitiveWordsReply, error)
 	GetSensitiveWords(ctx context.Context, req *GetSensitiveWordsReq) (*GetSensitiveWordsReply, error)
+	UpdateSensitiveWord(ctx context.Context, req *UpdateSensitiveWordReq) (*UpdateSensitiveWordReply, error)
+	DeleteSensitiveWord(ctx context.Context, req *DeleteSensitiveWordReq) (*DeleteSensitiveWordReply, error)
 }
 
 type AdminCommentUsecase struct {
@@ -64,7 +86,17 @@ func (cc *AdminCommentUsecase) SetSensitiveWords(ctx context.Context, req *SetSe
 	return cc.repo.SetSensitiveWords(ctx, req)
 }
 
+func (cc *AdminCommentUsecase) UpdateSensitiveWord(ctx context.Context, req *UpdateSensitiveWordReq) (*UpdateSensitiveWordReply, error) {
+	cc.log.WithContext(ctx).Debugf("DeleteSensitiveWord request: %+v", req)
+	return cc.repo.UpdateSensitiveWord(ctx, req)
+}
+
 func (cc *AdminCommentUsecase) GetSensitiveWords(ctx context.Context, req *GetSensitiveWordsReq) (*GetSensitiveWordsReply, error) {
 	cc.log.WithContext(ctx).Debugf("GetSensitiveWords request: %+v", req)
 	return cc.repo.GetSensitiveWords(ctx, req)
+}
+
+func (cc *AdminCommentUsecase) DeleteSensitiveWord(ctx context.Context, req *DeleteSensitiveWordReq) (*DeleteSensitiveWordReply, error) {
+	cc.log.WithContext(ctx).Debugf("DeleteSensitiveWord request: %+v", req)
+	return cc.repo.DeleteSensitiveWord(ctx, req)
 }

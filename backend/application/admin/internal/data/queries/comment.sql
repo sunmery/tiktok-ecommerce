@@ -15,7 +15,7 @@ FROM admin.sensitive_words
 ORDER BY created_at DESC
 LIMIT @page_size::INT OFFSET @page::INT;
 
--- name: UpdateSensitiveWords :execrows
+-- name: UpdateSensitiveWord :execrows
 UPDATE admin.sensitive_words
 SET category   = COALESCE(@category, category),
     created_by = COALESCE(@created_by, created_by),

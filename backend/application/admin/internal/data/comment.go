@@ -78,6 +78,43 @@ func (a AdminCommentRepo) GetSensitiveWords(ctx context.Context, req *biz.GetSen
 	}, nil
 }
 
+func (a AdminCommentRepo) UpdateSensitiveWord(ctx context.Context, req *biz.UpdateSensitiveWordReq) (*biz.UpdateSensitiveWordReply, error) {
+	// 使用准备好的参数调用数据库查询
+	_, err := a.data.db.UpdateSensitiveWord(ctx, models.UpdateSensitiveWordParams{
+		Category:  req.Category,
+		CreatedBy: req.CreatedBy,
+		Word:      req.Word,
+		Level:     req.Level,
+		IsActive:  req.IsActive,
+		ID:        int32(req.ID),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			a.log.WithContext(ctx).Infof("no sensitive words found for request: %+v", req)
+			return nil, nil
+		}
+		a.log.WithContext(ctx).Errorf("a.data.db.UpdateSensitiveWord failed with params %+v", err)
+		return nil, kerrors.InternalServer("UPDATE_SENSITIVE_WORDS_INTERNAL_SERVER", "get sensitive words failed")
+	}
+
+	return &biz.UpdateSensitiveWordReply{}, nil
+}
+
+func (a AdminCommentRepo) DeleteSensitiveWord(ctx context.Context, req *biz.DeleteSensitiveWordReq) (*biz.DeleteSensitiveWordReply, error) {
+	// 使用准备好的参数调用数据库查询
+	_, err := a.data.db.DeleteSensitiveWords(ctx, int32(req.ID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			a.log.WithContext(ctx).Infof("no sensitive words found for request: %+v", req)
+			return nil, nil
+		}
+		a.log.WithContext(ctx).Errorf("a.data.db.UpdateSensitiveWord failed with params %+v", err)
+		return nil, kerrors.InternalServer("UPDATE_SENSITIVE_WORDS_INTERNAL_SERVER", "get sensitive words failed")
+	}
+
+	return &biz.DeleteSensitiveWordReply{}, nil
+}
+
 func convertToBulkParams(req *biz.SetSensitiveWordsReq) models.CreateBulkSensitiveWordsParams {
 	params := models.CreateBulkSensitiveWordsParams{
 		CreatedBy:  make([]uuid.UUID, 0, len(req.SensitiveWords)),

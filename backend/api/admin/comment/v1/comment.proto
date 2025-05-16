@@ -22,6 +22,20 @@ service AdminComment {
       get: "/v1/admin/comments/sensitive-words"
     };
   }
+
+  // 删除敏感词
+  rpc DeleteSensitiveWord(DeleteSensitiveWordReq) returns (DeleteSensitiveWordReply) {
+    option (google.api.http) = {
+      delete: "/v1/admin/comments/sensitive-words/{id}"
+    };
+  }
+  // 更新敏感词
+  rpc UpdateSensitiveWord(UpdateSensitiveWordReq) returns (UpdateSensitiveWordReply) {
+    option (google.api.http) = {
+      patch: "/v1/admin/comments/sensitive-words/{id}",
+      body: "*"
+    };
+  }
 }
 message SensitiveWord {
   optional  int32 id = 8;
@@ -49,4 +63,25 @@ message GetSensitiveWordsReq {
 
 message GetSensitiveWordsReply {
   repeated SensitiveWord words = 1;
+}
+
+message DeleteSensitiveWordReq {
+  int32 id = 1;
+}
+
+message DeleteSensitiveWordReply {
+  bool success = 1;
+}
+
+message UpdateSensitiveWordReq {
+  uint32 id = 1;
+  string created_by = 2;
+  uint32 level = 3;
+  bool is_active = 4;
+  string category = 5;
+  string word = 6;
+}
+
+message UpdateSensitiveWordReply {
+  bool success = 1;
 }

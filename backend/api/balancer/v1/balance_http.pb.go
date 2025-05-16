@@ -8,35 +8,30 @@ package balancev1
 
 import (
 	context "context"
-
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
 )
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the kratos package it is being compiled against.
-var (
-	_ = new(context.Context)
-	_ = binding.EncodeURL
-)
+var _ = new(context.Context)
+var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const (
-	OperationBalanceCancelFreeze            = "/ecommerce.balance.v1.Balance/CancelFreeze"
-	OperationBalanceConfirmTransfer         = "/ecommerce.balance.v1.Balance/ConfirmTransfer"
-	OperationBalanceCreateConsumersBalance  = "/ecommerce.balance.v1.Balance/CreateConsumersBalance"
-	OperationBalanceCreateMerchantBalance   = "/ecommerce.balance.v1.Balance/CreateMerchantBalance"
-	OperationBalanceCreateTransaction       = "/ecommerce.balance.v1.Balance/CreateTransaction"
-	OperationBalanceFreezeBalance           = "/ecommerce.balance.v1.Balance/FreezeBalance"
-	OperationBalanceGetMerchantBalance      = "/ecommerce.balance.v1.Balance/GetMerchantBalance"
-	OperationBalanceGetMerchantVersion      = "/ecommerce.balance.v1.Balance/GetMerchantVersion"
-	OperationBalanceGetTransactions         = "/ecommerce.balance.v1.Balance/GetTransactions"
-	OperationBalanceGetUserBalance          = "/ecommerce.balance.v1.Balance/GetUserBalance"
-	OperationBalanceRechargeBalance         = "/ecommerce.balance.v1.Balance/RechargeBalance"
-	OperationBalanceRechargeMerchantBalance = "/ecommerce.balance.v1.Balance/RechargeMerchantBalance"
-	OperationBalanceWithdrawBalance         = "/ecommerce.balance.v1.Balance/WithdrawBalance"
-)
+const OperationBalanceCancelFreeze = "/ecommerce.balance.v1.Balance/CancelFreeze"
+const OperationBalanceConfirmTransfer = "/ecommerce.balance.v1.Balance/ConfirmTransfer"
+const OperationBalanceCreateConsumersBalance = "/ecommerce.balance.v1.Balance/CreateConsumersBalance"
+const OperationBalanceCreateMerchantBalance = "/ecommerce.balance.v1.Balance/CreateMerchantBalance"
+const OperationBalanceCreateTransaction = "/ecommerce.balance.v1.Balance/CreateTransaction"
+const OperationBalanceFreezeBalance = "/ecommerce.balance.v1.Balance/FreezeBalance"
+const OperationBalanceGetMerchantBalance = "/ecommerce.balance.v1.Balance/GetMerchantBalance"
+const OperationBalanceGetMerchantVersion = "/ecommerce.balance.v1.Balance/GetMerchantVersion"
+const OperationBalanceGetTransactions = "/ecommerce.balance.v1.Balance/GetTransactions"
+const OperationBalanceGetUserBalance = "/ecommerce.balance.v1.Balance/GetUserBalance"
+const OperationBalanceRechargeBalance = "/ecommerce.balance.v1.Balance/RechargeBalance"
+const OperationBalanceRechargeMerchantBalance = "/ecommerce.balance.v1.Balance/RechargeMerchantBalance"
+const OperationBalanceWithdrawBalance = "/ecommerce.balance.v1.Balance/WithdrawBalance"
 
 type BalanceHTTPServer interface {
 	// CancelFreeze 取消冻结

@@ -120,7 +120,7 @@ func (q *Queries) GetSensitiveWords(ctx context.Context, arg GetSensitiveWordsPa
 	return items, nil
 }
 
-const UpdateSensitiveWords = `-- name: UpdateSensitiveWords :execrows
+const UpdateSensitiveWord = `-- name: UpdateSensitiveWord :execrows
 UPDATE admin.sensitive_words
 SET category   = COALESCE($1, category),
     created_by = COALESCE($2, created_by),
@@ -130,7 +130,7 @@ SET category   = COALESCE($1, category),
 WHERE id = $6
 `
 
-type UpdateSensitiveWordsParams struct {
+type UpdateSensitiveWordParams struct {
 	Category  string    `json:"category"`
 	CreatedBy uuid.UUID `json:"createdBy"`
 	Word      string    `json:"word"`
@@ -139,7 +139,7 @@ type UpdateSensitiveWordsParams struct {
 	ID        int32     `json:"id"`
 }
 
-// UpdateSensitiveWords
+// UpdateSensitiveWord
 //
 //	UPDATE admin.sensitive_words
 //	SET category   = COALESCE($1, category),
@@ -148,8 +148,8 @@ type UpdateSensitiveWordsParams struct {
 //	    level      = COALESCE($4, level),
 //	    is_active  = COALESCE($5, is_active)
 //	WHERE id = $6
-func (q *Queries) UpdateSensitiveWords(ctx context.Context, arg UpdateSensitiveWordsParams) (int64, error) {
-	result, err := q.db.Exec(ctx, UpdateSensitiveWords,
+func (q *Queries) UpdateSensitiveWord(ctx context.Context, arg UpdateSensitiveWordParams) (int64, error) {
+	result, err := q.db.Exec(ctx, UpdateSensitiveWord,
 		arg.Category,
 		arg.CreatedBy,
 		arg.Word,

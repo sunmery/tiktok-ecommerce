@@ -307,6 +307,222 @@ func (x *GetSensitiveWordsReply) GetWords() []*SensitiveWord {
 	return nil
 }
 
+type DeleteSensitiveWordReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSensitiveWordReq) Reset() {
+	*x = DeleteSensitiveWordReq{}
+	mi := &file_comment_v1_comment_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSensitiveWordReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSensitiveWordReq) ProtoMessage() {}
+
+func (x *DeleteSensitiveWordReq) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSensitiveWordReq.ProtoReflect.Descriptor instead.
+func (*DeleteSensitiveWordReq) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeleteSensitiveWordReq) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type DeleteSensitiveWordReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSensitiveWordReply) Reset() {
+	*x = DeleteSensitiveWordReply{}
+	mi := &file_comment_v1_comment_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSensitiveWordReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSensitiveWordReply) ProtoMessage() {}
+
+func (x *DeleteSensitiveWordReply) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSensitiveWordReply.ProtoReflect.Descriptor instead.
+func (*DeleteSensitiveWordReply) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeleteSensitiveWordReply) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type UpdateSensitiveWordReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreatedBy     string                 `protobuf:"bytes,2,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	Level         uint32                 `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	IsActive      bool                   `protobuf:"varint,4,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	Category      string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
+	Word          string                 `protobuf:"bytes,6,opt,name=word,proto3" json:"word,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSensitiveWordReq) Reset() {
+	*x = UpdateSensitiveWordReq{}
+	mi := &file_comment_v1_comment_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSensitiveWordReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSensitiveWordReq) ProtoMessage() {}
+
+func (x *UpdateSensitiveWordReq) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSensitiveWordReq.ProtoReflect.Descriptor instead.
+func (*UpdateSensitiveWordReq) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpdateSensitiveWordReq) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *UpdateSensitiveWordReq) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *UpdateSensitiveWordReq) GetLevel() uint32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *UpdateSensitiveWordReq) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *UpdateSensitiveWordReq) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+func (x *UpdateSensitiveWordReq) GetWord() string {
+	if x != nil {
+		return x.Word
+	}
+	return ""
+}
+
+type UpdateSensitiveWordReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSensitiveWordReply) Reset() {
+	*x = UpdateSensitiveWordReply{}
+	mi := &file_comment_v1_comment_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSensitiveWordReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSensitiveWordReply) ProtoMessage() {}
+
+func (x *UpdateSensitiveWordReply) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSensitiveWordReply.ProtoReflect.Descriptor instead.
+func (*UpdateSensitiveWordReply) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateSensitiveWordReply) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_comment_v1_comment_proto protoreflect.FileDescriptor
 
 const file_comment_v1_comment_proto_rawDesc = "" +
@@ -333,10 +549,26 @@ const file_comment_v1_comment_proto_rawDesc = "" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"T\n" +
 	"\x16GetSensitiveWordsReply\x12:\n" +
-	"\x05words\x18\x01 \x03(\v2$.admin.admincomment.v1.SensitiveWordR\x05words2\xcd\x02\n" +
+	"\x05words\x18\x01 \x03(\v2$.admin.admincomment.v1.SensitiveWordR\x05words\"(\n" +
+	"\x16DeleteSensitiveWordReq\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"4\n" +
+	"\x18DeleteSensitiveWordReply\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xaa\x01\n" +
+	"\x16UpdateSensitiveWordReq\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\rR\x02id\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x02 \x01(\tR\tcreatedBy\x12\x14\n" +
+	"\x05level\x18\x03 \x01(\rR\x05level\x12\x1b\n" +
+	"\tis_active\x18\x04 \x01(\bR\bisActive\x12\x1a\n" +
+	"\bcategory\x18\x05 \x01(\tR\bcategory\x12\x12\n" +
+	"\x04word\x18\x06 \x01(\tR\x04word\"4\n" +
+	"\x18UpdateSensitiveWordReply\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xa2\x05\n" +
 	"\fAdminComment\x12\x9e\x01\n" +
 	"\x11SetSensitiveWords\x12+.admin.admincomment.v1.SetSensitiveWordsReq\x1a-.admin.admincomment.v1.SetSensitiveWordsReply\"-\x82\xd3\xe4\x93\x02':\x01*\x1a\"/v1/admin/comments/sensitive-words\x12\x9b\x01\n" +
-	"\x11GetSensitiveWords\x12+.admin.admincomment.v1.GetSensitiveWordsReq\x1a-.admin.admincomment.v1.GetSensitiveWordsReply\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/admin/comments/sensitive-wordsB-Z+backend/api/admin/comment/v1;admincommentv1b\x06proto3"
+	"\x11GetSensitiveWords\x12+.admin.admincomment.v1.GetSensitiveWordsReq\x1a-.admin.admincomment.v1.GetSensitiveWordsReply\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/admin/comments/sensitive-words\x12\xa6\x01\n" +
+	"\x13DeleteSensitiveWord\x12-.admin.admincomment.v1.DeleteSensitiveWordReq\x1a/.admin.admincomment.v1.DeleteSensitiveWordReply\"/\x82\xd3\xe4\x93\x02)*'/v1/admin/comments/sensitive-words/{id}\x12\xa9\x01\n" +
+	"\x13UpdateSensitiveWord\x12-.admin.admincomment.v1.UpdateSensitiveWordReq\x1a/.admin.admincomment.v1.UpdateSensitiveWordReply\"2\x82\xd3\xe4\x93\x02,:\x01*2'/v1/admin/comments/sensitive-words/{id}B-Z+backend/api/admin/comment/v1;admincommentv1b\x06proto3"
 
 var (
 	file_comment_v1_comment_proto_rawDescOnce sync.Once
@@ -350,26 +582,34 @@ func file_comment_v1_comment_proto_rawDescGZIP() []byte {
 	return file_comment_v1_comment_proto_rawDescData
 }
 
-var file_comment_v1_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_comment_v1_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_comment_v1_comment_proto_goTypes = []any{
-	(*SensitiveWord)(nil),          // 0: admin.admincomment.v1.SensitiveWord
-	(*SetSensitiveWordsReq)(nil),   // 1: admin.admincomment.v1.SetSensitiveWordsReq
-	(*SetSensitiveWordsReply)(nil), // 2: admin.admincomment.v1.SetSensitiveWordsReply
-	(*GetSensitiveWordsReq)(nil),   // 3: admin.admincomment.v1.GetSensitiveWordsReq
-	(*GetSensitiveWordsReply)(nil), // 4: admin.admincomment.v1.GetSensitiveWordsReply
-	(*timestamppb.Timestamp)(nil),  // 5: google.protobuf.Timestamp
+	(*SensitiveWord)(nil),            // 0: admin.admincomment.v1.SensitiveWord
+	(*SetSensitiveWordsReq)(nil),     // 1: admin.admincomment.v1.SetSensitiveWordsReq
+	(*SetSensitiveWordsReply)(nil),   // 2: admin.admincomment.v1.SetSensitiveWordsReply
+	(*GetSensitiveWordsReq)(nil),     // 3: admin.admincomment.v1.GetSensitiveWordsReq
+	(*GetSensitiveWordsReply)(nil),   // 4: admin.admincomment.v1.GetSensitiveWordsReply
+	(*DeleteSensitiveWordReq)(nil),   // 5: admin.admincomment.v1.DeleteSensitiveWordReq
+	(*DeleteSensitiveWordReply)(nil), // 6: admin.admincomment.v1.DeleteSensitiveWordReply
+	(*UpdateSensitiveWordReq)(nil),   // 7: admin.admincomment.v1.UpdateSensitiveWordReq
+	(*UpdateSensitiveWordReply)(nil), // 8: admin.admincomment.v1.UpdateSensitiveWordReply
+	(*timestamppb.Timestamp)(nil),    // 9: google.protobuf.Timestamp
 }
 var file_comment_v1_comment_proto_depIdxs = []int32{
-	5, // 0: admin.admincomment.v1.SensitiveWord.created_at:type_name -> google.protobuf.Timestamp
-	5, // 1: admin.admincomment.v1.SensitiveWord.updated_at:type_name -> google.protobuf.Timestamp
+	9, // 0: admin.admincomment.v1.SensitiveWord.created_at:type_name -> google.protobuf.Timestamp
+	9, // 1: admin.admincomment.v1.SensitiveWord.updated_at:type_name -> google.protobuf.Timestamp
 	0, // 2: admin.admincomment.v1.SetSensitiveWordsReq.sensitive_words:type_name -> admin.admincomment.v1.SensitiveWord
 	0, // 3: admin.admincomment.v1.GetSensitiveWordsReply.words:type_name -> admin.admincomment.v1.SensitiveWord
 	1, // 4: admin.admincomment.v1.AdminComment.SetSensitiveWords:input_type -> admin.admincomment.v1.SetSensitiveWordsReq
 	3, // 5: admin.admincomment.v1.AdminComment.GetSensitiveWords:input_type -> admin.admincomment.v1.GetSensitiveWordsReq
-	2, // 6: admin.admincomment.v1.AdminComment.SetSensitiveWords:output_type -> admin.admincomment.v1.SetSensitiveWordsReply
-	4, // 7: admin.admincomment.v1.AdminComment.GetSensitiveWords:output_type -> admin.admincomment.v1.GetSensitiveWordsReply
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
+	5, // 6: admin.admincomment.v1.AdminComment.DeleteSensitiveWord:input_type -> admin.admincomment.v1.DeleteSensitiveWordReq
+	7, // 7: admin.admincomment.v1.AdminComment.UpdateSensitiveWord:input_type -> admin.admincomment.v1.UpdateSensitiveWordReq
+	2, // 8: admin.admincomment.v1.AdminComment.SetSensitiveWords:output_type -> admin.admincomment.v1.SetSensitiveWordsReply
+	4, // 9: admin.admincomment.v1.AdminComment.GetSensitiveWords:output_type -> admin.admincomment.v1.GetSensitiveWordsReply
+	6, // 10: admin.admincomment.v1.AdminComment.DeleteSensitiveWord:output_type -> admin.admincomment.v1.DeleteSensitiveWordReply
+	8, // 11: admin.admincomment.v1.AdminComment.UpdateSensitiveWord:output_type -> admin.admincomment.v1.UpdateSensitiveWordReply
+	8, // [8:12] is the sub-list for method output_type
+	4, // [4:8] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
 	4, // [4:4] is the sub-list for extension extendee
 	0, // [0:4] is the sub-list for field type_name
@@ -387,7 +627,7 @@ func file_comment_v1_comment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_comment_v1_comment_proto_rawDesc), len(file_comment_v1_comment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

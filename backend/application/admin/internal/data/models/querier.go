@@ -61,7 +61,7 @@ type Querier interface {
 	//  ORDER BY created_at DESC
 	//  LIMIT $2::INT OFFSET $1::INT
 	GetSensitiveWords(ctx context.Context, arg GetSensitiveWordsParams) ([]AdminSensitiveWords, error)
-	//UpdateSensitiveWords
+	//UpdateSensitiveWord
 	//
 	//  UPDATE admin.sensitive_words
 	//  SET category   = COALESCE($1, category),
@@ -70,7 +70,7 @@ type Querier interface {
 	//      level      = COALESCE($4, level),
 	//      is_active  = COALESCE($5, is_active)
 	//  WHERE id = $6
-	UpdateSensitiveWords(ctx context.Context, arg UpdateSensitiveWordsParams) (int64, error)
+	UpdateSensitiveWord(ctx context.Context, arg UpdateSensitiveWordParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

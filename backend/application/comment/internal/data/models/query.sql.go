@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateComment = `-- name: CreateComment :one
@@ -30,12 +29,12 @@ FROM check_sensitive_word
 `
 
 type CreateCommentParams struct {
-	Content    *string     `json:"content"`
-	ID         *int64      `json:"id"`
-	ProductID  pgtype.UUID `json:"productID"`
-	MerchantID pgtype.UUID `json:"merchantID"`
-	UserID     pgtype.UUID `json:"userID"`
-	Score      *int32      `json:"score"`
+	Content    string    `json:"content"`
+	ID         int64     `json:"id"`
+	ProductID  uuid.UUID `json:"productID"`
+	MerchantID uuid.UUID `json:"merchantID"`
+	UserID     uuid.UUID `json:"userID"`
+	Score      int32     `json:"score"`
 }
 
 // 返回最终结果：是否命中敏感词

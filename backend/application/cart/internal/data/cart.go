@@ -53,6 +53,9 @@ func (c *cartRepo) GetCart(ctx context.Context, req *biz.GetCartReq) (*biz.GetCa
 		CartName: "cart",
 	})
 	if err != nil {
+		if errors.As(err, &pgx.ErrNoRows) {
+			return &biz.GetCartRelpy{Items: nil}, nil
+		}
 		return nil, fmt.Errorf("failed to get cart: %v", err)
 	}
 
@@ -121,6 +124,11 @@ func (c *cartRepo) RemoveCartItem(ctx context.Context, req *biz.RemoveCartItemRe
 		CartName:   "cart",
 	})
 	if err != nil {
+		if errors.As(err, &pgx.ErrNoRows) {
+			return &biz.RemoveCartItemResp{
+				Success: true,
+			}, nil
+		}
 		return nil, err
 	}
 	return &biz.RemoveCartItemResp{

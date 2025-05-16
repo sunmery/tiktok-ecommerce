@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"backend/constants"
+
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/minio/minio-go/v7"
@@ -392,9 +394,10 @@ func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, 
 		Name:        pr.Name,
 		Description: &pr.Description,
 		Price:       price,
-		Status:      int16(pr.Status),
-		MerchantID:  pr.MerchantId,
-		CategoryID:  int64(pr.Category.CategoryId),
+		// Status:      int16(pr.Status),
+		Status:     int16(constants.ProductStatusApproved),
+		MerchantID: pr.MerchantId,
+		CategoryID: int64(pr.Category.CategoryId),
 	})
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("创建商品失败: %w", err)

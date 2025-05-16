@@ -44,7 +44,7 @@ func (r *sensitiveWordRepo) GetSensitiveWords(ctx context.Context, req *biz.GetS
 
 	// 获取敏感词列表
 	words, err := r.data.db.GetSensitiveWords(ctx, models.GetSensitiveWordsParams{
-		CreatedBy: req.CreatedBy,
+		CreatedBy: *req.CreatedBy,
 		PageSize:  int64(req.PageSize),
 		Page:      int64(page),
 	})
@@ -65,8 +65,8 @@ func (r *sensitiveWordRepo) GetSensitiveWords(ctx context.Context, req *biz.GetS
 			Word:      word.Word,
 			Level:     word.Level,
 			IsActive:  word.IsActive,
-			CreatedAt: word.CreatedAt.Time,
-			UpdatedAt: word.UpdatedAt.Time,
+			CreatedAt: word.CreatedAt,
+			UpdatedAt: word.UpdatedAt,
 		})
 	}
 
