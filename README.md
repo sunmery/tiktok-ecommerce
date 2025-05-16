@@ -1,4 +1,4 @@
-## 项目开发
+# 项目开发
 
 目前每个微服务都有自己的 HTTP 和 gRPC 端口, 根据Kubernetes NodePort Service的端口(默认范围：30000-32767)分配, 从 30000 端口开始, 分配如下:
 - auth: 30001,30002
@@ -13,6 +13,7 @@
 - merchants: 30019,30020
 - admin: 30021, 30022
 - balaner: 30025, 30026
+- consumer: 30027, 30028
 
 项目是前端后端分离,仓库地址是 https://github.com/sunmery/tiktok-e-commence 前端以 **submodule** 方式链接到单独的前端项目, 根据需要来决定是否也拉取前端项目仓库代码:
 
@@ -20,6 +21,30 @@
 ```bash
 git submodule update --init --recursive
 ```
+
+## 开发
+### 创建微服务
+```
+kratos new application/<微服务名称> --nomod -r https://github.com/sunmery/kratos-template-fast.git
+```
+根据项目需求修改模板内容
+
+### 设计 API
+编写 Protobuf, 并根据接口对外还是对内的需求, 只使用HTTP/gRPC或者同时使用
+
+### 设计数据模型
+根据业务需求设计数据库模型, 并使用数据库迁移工具来创建数据库表, 编写 SQLC 来生成数据库数据结构和方法
+
+### 定义数据结构
+根据Protobuf定义的数据结构, 定义应用数据结构
+
+### 编写业务代码
+
+### 编写配置文件
+在远程配置中心编写配置文件
+
+### 注册接口
+在网关的配置文件中注册接口
 
 ## 架构
 

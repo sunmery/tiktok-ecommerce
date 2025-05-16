@@ -27,6 +27,7 @@ type OrdersOrders struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
+// 物流表
 type OrdersShippingInfo struct {
 	ID              int64              `json:"id"`
 	SubOrderID      int64              `json:"subOrderID"`

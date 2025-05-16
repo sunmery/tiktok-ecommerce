@@ -9,12 +9,23 @@ import (
 )
 
 type Querier interface {
-	//CreateComment
+	// 返回最终结果：是否命中敏感词
 	//
-	//  INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
-	//  VALUES ($1, $2, $3, $4, $5, $6)
-	//  RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
-	CreateComment(ctx context.Context, arg CreateCommentParams) (CommentsComments, error)
+	//  WITH check_sensitive_word AS (
+	//      -- 检查 content 是否包含敏感词
+	//      SELECT EXISTS (SELECT 1
+	//                     FROM admin.sensitive_words sw
+	//                     WHERE $1::text ILIKE '%' || sw.word || '%'
+	//                       AND sw.is_active = TRUE) AS has_sensitive_word),
+	//       insert_comment AS (
+	//           -- 如果没有检测到敏感词，则执行插入操作
+	//           INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
+	//               SELECT $2::bigint, $3::uuid, $4::uuid, $5::uuid, $6, $1
+	//               WHERE NOT (SELECT has_sensitive_word FROM check_sensitive_word)
+	//               RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at)
+	//  SELECT has_sensitive_word AS is_sensitive
+	//  FROM check_sensitive_word
+	CreateComment(ctx context.Context, arg CreateCommentParams) (bool, error)
 	//DeleteComment
 	//
 	//  DELETE
@@ -22,6 +33,13 @@ type Querier interface {
 	//  WHERE id = $1
 	//    AND user_id = $2
 	DeleteComment(ctx context.Context, arg DeleteCommentParams) error
+	//DeleteSensitiveWord
+	//
+	//  DELETE
+	//  FROM admin.sensitive_words
+	//  WHERE id = $1
+	//    AND created_by = $2::uuid
+	DeleteSensitiveWord(ctx context.Context, arg DeleteSensitiveWordParams) error
 	//GetCommentCount
 	//
 	//  SELECT COUNT(*)
@@ -38,6 +56,30 @@ type Querier interface {
 	//  ORDER BY created_at DESC
 	//  LIMIT $4 OFFSET $3
 	GetCommentsByProduct(ctx context.Context, arg GetCommentsByProductParams) ([]CommentsComments, error)
+	//GetSensitiveWordByID
+	//
+	//  SELECT id, created_by, category, word, level, is_active, created_at, updated_at
+	//  FROM admin.sensitive_words
+	//  WHERE id = $1
+	GetSensitiveWordByID(ctx context.Context, id int32) (AdminSensitiveWords, error)
+	//GetSensitiveWords
+	//
+	//  SELECT id, created_by, category, word, level, is_active, created_at, updated_at
+	//  FROM admin.sensitive_words
+	//  WHERE ($1::uuid IS NULL OR created_by = $1::uuid)
+	//  ORDER BY created_at DESC
+	//  LIMIT $3 OFFSET $2
+	GetSensitiveWords(ctx context.Context, arg GetSensitiveWordsParams) ([]AdminSensitiveWords, error)
+	//SetSensitiveWords
+	//
+	//  INSERT INTO admin.sensitive_words (created_by, category, word, level, is_active)
+	//  VALUES ($1::uuid, $2, $3, $4, $5)
+	//  ON CONFLICT (word) DO UPDATE
+	//      SET category   = EXCLUDED.category,
+	//          level     = EXCLUDED.level,
+	//          is_active = EXCLUDED.is_active,
+	//          updated_at = NOW()
+	SetSensitiveWords(ctx context.Context, arg SetSensitiveWordsParams) (int64, error)
 	//UpdateComment
 	//
 	//  UPDATE comments.comments

@@ -609,7 +609,7 @@ type UpdateOrderShippingStatusReq struct {
 	SubOrderId      int64                  `protobuf:"varint,2,opt,name=sub_order_id,json=subOrderId,proto3" json:"sub_order_id,omitempty"`                                                  // 子订单 ID
 	TrackingNumber  string                 `protobuf:"bytes,5,opt,name=tracking_number,json=trackingNumber,proto3" json:"tracking_number,omitempty"`                                         // 物流单号
 	Carrier         string                 `protobuf:"bytes,3,opt,name=carrier,proto3" json:"carrier,omitempty"`                                                                             // 承运商
-	Delivery        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=delivery,proto3" json:"delivery,omitempty"`                                                                           // 送达时间
+	Delivery        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=delivery,proto3,oneof" json:"delivery,omitempty"`                                                                     // 送达时间
 	ShippingStatus  v12.ShippingStatus     `protobuf:"varint,7,opt,name=shipping_status,json=shippingStatus,proto3,enum=ecommerce.order.v1.ShippingStatus" json:"shipping_status,omitempty"` // 货运状态
 	ShippingFee     float64                `protobuf:"fixed64,9,opt,name=shipping_fee,json=shippingFee,proto3" json:"shipping_fee,omitempty"`                                                // 运费
 	ShippingAddress *structpb.Struct       `protobuf:"bytes,6,opt,name=shipping_address,json=shippingAddress,proto3" json:"shipping_address,omitempty"`                                      // 发货地址
@@ -809,18 +809,19 @@ const file_order_v1_order_proto_rawDesc = "" +
 	"\x14CreateOrderShipReply\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x129\n" +
 	"\n" +
-	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x90\x03\n" +
+	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xa2\x03\n" +
 	"\x1cUpdateOrderShippingStatusReq\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12 \n" +
 	"\fsub_order_id\x18\x02 \x01(\x03R\n" +
 	"subOrderId\x12'\n" +
 	"\x0ftracking_number\x18\x05 \x01(\tR\x0etrackingNumber\x12\x18\n" +
-	"\acarrier\x18\x03 \x01(\tR\acarrier\x126\n" +
-	"\bdelivery\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bdelivery\x12K\n" +
+	"\acarrier\x18\x03 \x01(\tR\acarrier\x12;\n" +
+	"\bdelivery\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampH\x00R\bdelivery\x88\x01\x01\x12K\n" +
 	"\x0fshipping_status\x18\a \x01(\x0e2\".ecommerce.order.v1.ShippingStatusR\x0eshippingStatus\x12!\n" +
 	"\fshipping_fee\x18\t \x01(\x01R\vshippingFee\x12B\n" +
-	"\x10shipping_address\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddress\"k\n" +
+	"\x10shipping_address\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddressB\v\n" +
+	"\t_delivery\"k\n" +
 	"\x1eUpdateOrderShippingStatusReply\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x129\n" +
 	"\n" +
@@ -900,6 +901,7 @@ func file_order_v1_order_proto_init() {
 	if File_order_v1_order_proto != nil {
 		return
 	}
+	file_order_v1_order_proto_msgTypes[9].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

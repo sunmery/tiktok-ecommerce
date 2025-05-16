@@ -1,0 +1,108 @@
+使用方式: make docker-deploy SERVICE=微服务名
+SERVICE=comment
+make docker-build SERVICE=comment
+构建的微服务: comment
+系统: linux | CPU架构: amd64
+镜像名: sumery/comment:f4cbec5
+docker build . \
+	  -f application/comment/Dockerfile \
+	  --progress=plain \
+	  -t ecommerce/comment:f4cbec5 \
+	  --build-arg SERVICE=comment \
+	  --build-arg CGOENABLED=0 \
+	  --build-arg GOIMAGE=golang:1.24.2-alpine3.21 \
+	  --build-arg GOOS=linux \
+	  --build-arg GOARCH=amd64 \
+	  --build-arg VERSION=f4cbec5 \
+	  --platform linux/amd64  \
+	  --cache-from type=registry,ref=ccr.ccs.tencentyun.com/sumery/comment:cache \
+	  --cache-to type=registry,ref=ccr.ccs.tencentyun.com/sumery/comment:cache,mode=max
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 932B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/golang:1.24.0-alpine3.21
+#2 DONE 0.0s
+
+#3 [internal] load metadata for gcr.io/distroless/static-debian12:latest
+#3 DONE 0.4s
+
+#4 [compile 1/6] FROM docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c
+#4 resolve docker.io/library/golang:1.24.0-alpine3.21@sha256:2d40d4fc278dad38be0777d5e2a88a2c6dee51b0b29c97a764fc6c6a11ca893c 0.9s done
+#4 DONE 0.9s
+
+#5 [final 1/2] FROM gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9
+#5 resolve gcr.io/distroless/static-debian12:latest@sha256:3d0f463de06b7ddff27684ec3bfd0b54a425149d0f8685308b1fdf297b0265e9 0.0s done
+#5 CACHED
+
+#6 [internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 DONE 0.0s
+
+#8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/comment:cache
+#8 ...
+
+#9 [auth] sumery/comment:pull token for ccr.ccs.tencentyun.com
+#9 DONE 0.0s
+
+#8 importing cache manifest from ccr.ccs.tencentyun.com/sumery/comment:cache
+#8 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
+#8 DONE 0.8s
+
+#10 [compile 2/6] WORKDIR /build
+#10 CACHED
+
+#11 [compile 3/6] COPY go.mod go.sum ./
+#11 CACHED
+
+#7 [internal] load build context
+#7 transferring context: 158.75kB 0.0s done
+#7 DONE 0.1s
+
+#12 [compile 3/6] COPY go.mod go.sum ./
+#12 CACHED
+
+#13 [compile 4/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     go mod download -x
+#13 CACHED
+
+#14 [compile 5/6] COPY . .
+#14 DONE 0.1s
+
+#15 [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=f4cbec5" -o /app/comment ./application/comment/cmd/comment
+#15 0.281 # backend/application/comment/internal/data
+#15 0.281 application/comment/internal/data/sensitive_words.go:20:34: r.data.db.SetSensitiveWords undefined (type *models.Queries has no field or method SetSensitiveWords)
+#15 0.281 application/comment/internal/data/sensitive_words.go:20:64: undefined: models.SetSensitiveWordsParams
+#15 0.281 application/comment/internal/data/sensitive_words.go:46:26: r.data.db.GetSensitiveWords undefined (type *models.Queries has no field or method GetSensitiveWords)
+#15 0.281 application/comment/internal/data/sensitive_words.go:46:56: undefined: models.GetSensitiveWordsParams
+#15 0.281 application/comment/internal/data/sensitive_words.go:77:19: r.data.db.DeleteSensitiveWord undefined (type *models.Queries has no field or method DeleteSensitiveWord)
+#15 0.281 application/comment/internal/data/sensitive_words.go:77:51: undefined: models.DeleteSensitiveWordParams
+#15 ERROR: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
+------
+ > [compile 6/6] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     GOOS=linux GOARCH=amd64 CGO_ENABLED=0     go build -ldflags="-s -w -X main.Version=f4cbec5" -o /app/comment ./application/comment/cmd/comment:
+0.281 # backend/application/comment/internal/data
+0.281 application/comment/internal/data/sensitive_words.go:20:34: r.data.db.SetSensitiveWords undefined (type *models.Queries has no field or method SetSensitiveWords)
+0.281 application/comment/internal/data/sensitive_words.go:20:64: undefined: models.SetSensitiveWordsParams
+0.281 application/comment/internal/data/sensitive_words.go:46:26: r.data.db.GetSensitiveWords undefined (type *models.Queries has no field or method GetSensitiveWords)
+0.281 application/comment/internal/data/sensitive_words.go:46:56: undefined: models.GetSensitiveWordsParams
+0.281 application/comment/internal/data/sensitive_words.go:77:19: r.data.db.DeleteSensitiveWord undefined (type *models.Queries has no field or method DeleteSensitiveWord)
+0.281 application/comment/internal/data/sensitive_words.go:77:51: undefined: models.DeleteSensitiveWordParams
+------
+Dockerfile:22
+--------------------
+  21 |     COPY . .
+  22 | >>> RUN --mount=type=cache,target=/go/pkg/mod \
+  23 | >>>     --mount=type=cache,target=/root/.cache/go-build \
+  24 | >>>     GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED \
+  25 | >>>     go build -ldflags="-s -w -X main.Version=$VERSION" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}
+  26 |     
+--------------------
+ERROR: failed to solve: process "/bin/sh -c GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=$CGOENABLED     go build -ldflags=\"-s -w -X main.Version=$VERSION\" -o /app/$SERVICE ./application/${SERVICE}/cmd/${SERVICE}" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/4r81wpbm13vy90y2yqtm32trf
+make[3]: *** [docker-build] Error 1
+make[2]: *** [docker-deploy] Error 2

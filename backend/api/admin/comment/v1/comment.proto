@@ -1,16 +1,17 @@
 syntax = "proto3";
 
-package ecommerce.admin.v1;
+package admin.admincomment.v1;
 
 option go_package = "backend/api/admin/comment/v1;admincommentv1";
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 
 service AdminComment {
   // 设置评论敏感词
   rpc SetSensitiveWords(SetSensitiveWordsReq) returns (SetSensitiveWordsReply) {
     option (google.api.http) = {
-      put: "/v1/admin/comments/sensitiveWords",
+      put: "/v1/admin/comments/sensitive-words",
       body: "*"
     };
   }
@@ -18,19 +19,69 @@ service AdminComment {
   // 查询评论敏感词
   rpc GetSensitiveWords(GetSensitiveWordsReq) returns (GetSensitiveWordsReply) {
     option (google.api.http) = {
-      get: "/v1/admin/comments/sensitiveWords"
+      get: "/v1/admin/comments/sensitive-words"
+    };
+  }
+
+  // 删除敏感词
+  rpc DeleteSensitiveWord(DeleteSensitiveWordReq) returns (DeleteSensitiveWordReply) {
+    option (google.api.http) = {
+      delete: "/v1/admin/comments/sensitive-words/{id}"
+    };
+  }
+  // 更新敏感词
+  rpc UpdateSensitiveWord(UpdateSensitiveWordReq) returns (UpdateSensitiveWordReply) {
+    option (google.api.http) = {
+      patch: "/v1/admin/comments/sensitive-words/{id}",
+      body: "*"
     };
   }
 }
-
-message SetSensitiveWordsReq {
-  repeated string words = 1;
+message SensitiveWord {
+  optional  int32 id = 8;
+  string created_by = 1;
+  string category = 2;
+  string word = 3;
+  int32 level = 4;
+  bool is_active = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
 }
 
-message SetSensitiveWordsReply {}
+message SetSensitiveWordsReq {
+  repeated SensitiveWord sensitive_words = 1;
+}
 
-message GetSensitiveWordsReq {}
+message SetSensitiveWordsReply {
+  uint32 rows = 1; // 插入的行数
+}
+
+message GetSensitiveWordsReq {
+  uint32 page = 1;
+  uint32 page_size = 2;
+}
 
 message GetSensitiveWordsReply {
-  repeated string words = 1;
+  repeated SensitiveWord words = 1;
+}
+
+message DeleteSensitiveWordReq {
+  int32 id = 1;
+}
+
+message DeleteSensitiveWordReply {
+  bool success = 1;
+}
+
+message UpdateSensitiveWordReq {
+  uint32 id = 1;
+  string created_by = 2;
+  uint32 level = 3;
+  bool is_active = 4;
+  string category = 5;
+  string word = 6;
+}
+
+message UpdateSensitiveWordReply {
+  bool success = 1;
 }

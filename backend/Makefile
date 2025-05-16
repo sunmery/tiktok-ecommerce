@@ -163,6 +163,65 @@ docker-deploy:
 	@echo "SERVICE=$(SERVICE)"
 	make docker-push SERVICE=$(SERVICE)
 
+SERVICES := auth user product cart order checkout payment category merchant admin comment balancer consumer
+CONCURRENT_JOBS := 5
+
+.PHONY: deploy-all clean-status
+
+deploy-all: clean-status
+	@echo "=== Starting parallel deployment (max ${CONCURRENT_JOBS} jobs) ==="
+	@mkdir -p .status
+	@# 使用并行任务控制
+	@for service in $(SERVICES); do \
+		echo "🚀 Scheduling: $$service"; \
+	done
+	@# 使用GNU parallel替代xargs
+	@parallel -j $(CONCURRENT_JOBS) --halt soon,fail=1 --joblog .status/jobs.log \
+		"$(MAKE) _deploy-single SERVICE={1} GOOS='$(GOOS)' GOARCH='$(GOARCH)'" ::: $(SERVICES)
+	@# 生成最终结果报告
+	@make show-results
+	@exit $$(cat .status/exitcode)
+
+# 实际部署任务（带错误处理）
+_deploy-single:
+	@echo "🔧 Starting deployment: $(SERVICE)"
+	@ts=$$(date +%s); \
+	if $(MAKE) docker-deploy SERVICE=$(SERVICE) 2>&1 | tee .status/$(SERVICE).log; then \
+		echo "✅ Success: $(SERVICE) ($$(($$(date +%s)-ts))s" > .status/$(SERVICE); \
+	else \
+		echo "❌ Failed: $(SERVICE) ($$(($$(date +%s)-ts))s" > .status/$(SERVICE); \
+		echo 1 > .status/exitcode; \
+		exit 1; \
+	fi
+
+# 改进的状态显示
+show-results:
+	@clear
+	@total=$$(echo $(SERVICES) | wc -w); \
+	while [ $$(ls .status | grep -v -e exitcode -e jobs.log | wc -l) -lt $$total ]; do \
+		clear; \
+		echo "=== Deployment Progress [$$(date +%T)] ==="; \
+		for service in $(SERVICES); do \
+			if [ -f ".status/$$service" ]; then \
+				status=$$(awk '{print $$1}' .status/$$service); \
+				time=$$(awk '{print $$3}' .status/$$service); \
+				echo "$$status | $$service | ⏱️ $${time}"; \
+			else \
+				echo "🕒 Pending | $$service | --"; \
+			fi; \
+		done; \
+		echo "Completed: $$(ls .status | grep -v -e exitcode -e jobs.log | wc -l)/$$total"; \
+		sleep 1; \
+	done
+	@echo "=== Final Results ==="
+	@cat .status/* | grep -v exitcode
+	@echo "Exit code: $$(cat .status/exitcode)"
+
+clean-status:
+	@rm -rf .status
+	@mkdir -p .status
+	@echo 0 > .status/exitcode
+
 .PHONY: generate
 # generate client code
 generate:

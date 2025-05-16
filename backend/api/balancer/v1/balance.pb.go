@@ -692,7 +692,7 @@ func (x *CreateTransactionReply) GetId() int64 {
 
 type GetTransactionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                       // 用户ID
+	UserId        *string                `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`                                                 // 用户ID
 	UserType      TransactionsUserType   `protobuf:"varint,6,opt,name=user_type,json=userType,proto3,enum=ecommerce.balance.v1.TransactionsUserType" json:"user_type,omitempty"` // 用户类型: 消费者|商家
 	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`                                                                 // 指定币种
 	Page          int64                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
@@ -733,8 +733,8 @@ func (*GetTransactionsRequest) Descriptor() ([]byte, []int) {
 }
 
 func (x *GetTransactionsRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
+	if x != nil && x.UserId != nil {
+		return *x.UserId
 	}
 	return ""
 }
@@ -1999,14 +1999,16 @@ const file_v1_balance_proto_rawDesc = "" +
 	"\x10consumer_version\x18\r \x01(\x03R\x0fconsumerVersion\x12)\n" +
 	"\x10merchant_version\x18\x0e \x01(\x03R\x0fmerchantVersion\"(\n" +
 	"\x16CreateTransactionReply\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"\xee\x01\n" +
-	"\x16GetTransactionsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12G\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"\xff\x01\n" +
+	"\x16GetTransactionsRequest\x12\x1c\n" +
+	"\auser_id\x18\x01 \x01(\tH\x00R\x06userId\x88\x01\x01\x12G\n" +
 	"\tuser_type\x18\x06 \x01(\x0e2*.ecommerce.balance.v1.TransactionsUserTypeR\buserType\x12\x1a\n" +
 	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12\x12\n" +
 	"\x04page\x18\x03 \x01(\x03R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x04 \x01(\x03R\bpageSize\x12%\n" +
-	"\x0epayment_status\x18\x05 \x01(\tR\rpaymentStatus\"\xd3\x03\n" +
+	"\x0epayment_status\x18\x05 \x01(\tR\rpaymentStatusB\n" +
+	"\n" +
+	"\b_user_id\"\xd3\x03\n" +
 	"\fTransactions\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
@@ -2222,6 +2224,7 @@ func file_v1_balance_proto_init() {
 	if File_v1_balance_proto != nil {
 		return
 	}
+	file_v1_balance_proto_msgTypes[9].OneofWrappers = []any{}
 	file_v1_balance_proto_msgTypes[20].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

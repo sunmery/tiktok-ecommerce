@@ -25,6 +25,14 @@ WHERE from_user_id = @user_id
   AND status = COALESCE(@status, status)
 LIMIT @page_size OFFSET @page;
 
+-- name: GetConsumerAllTransactions :many
+-- 根据 用户ID 获取交易流水记录
+SELECT *
+FROM balances.transactions
+WHERE from_user_id = @user_id
+  AND currency = COALESCE(@currency, currency)
+LIMIT @page_size OFFSET @page;
+
 -- name: GetMerchantTransactions :many
 -- 根据 商家ID 获取交易流水记录
 SELECT *
@@ -32,6 +40,14 @@ FROM balances.transactions
 WHERE to_merchant_id = @user_id
   AND currency = COALESCE(@currency, currency)
   AND status = COALESCE(@status, status)
+LIMIT @page_size OFFSET @page;
+
+-- name: GetMerchantAllTransactions :many
+-- 根据 商家ID 获取交易流水记录
+SELECT *
+FROM balances.transactions
+WHERE to_merchant_id = @user_id
+  AND currency = COALESCE(@currency, currency)
 LIMIT @page_size OFFSET @page;
 
 -- name: GetUserPaymentMethod :one

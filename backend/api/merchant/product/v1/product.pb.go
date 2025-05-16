@@ -28,6 +28,7 @@ type GetMerchantProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	MerchantId    *string                `protobuf:"bytes,3,opt,name=merchant_id,json=merchantId,proto3,oneof" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -74,6 +75,13 @@ func (x *GetMerchantProductRequest) GetPageSize() uint32 {
 		return x.PageSize
 	}
 	return 0
+}
+
+func (x *GetMerchantProductRequest) GetMerchantId() string {
+	if x != nil && x.MerchantId != nil {
+		return *x.MerchantId
+	}
+	return ""
 }
 
 // 更新商品请求
@@ -241,10 +249,13 @@ var File_product_v1_product_proto protoreflect.FileDescriptor
 
 const file_product_v1_product_proto_rawDesc = "" +
 	"\n" +
-	"\x18product/v1/product.proto\x12\x15ecommerce.merchant.v1\x1a\x1cgoogle/api/annotations.proto\x1a$backend/api/product/v1/product.proto\x1a\x1cgoogle/protobuf/struct.proto\"L\n" +
+	"\x18product/v1/product.proto\x12\x15ecommerce.merchant.v1\x1a\x1cgoogle/api/annotations.proto\x1a$backend/api/product/v1/product.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x82\x01\n" +
 	"\x19GetMerchantProductRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"\x8b\x02\n" +
+	"\tpage_size\x18\x02 \x01(\rR\bpageSize\x12$\n" +
+	"\vmerchant_id\x18\x03 \x01(\tH\x00R\n" +
+	"merchantId\x88\x01\x01B\x0e\n" +
+	"\f_merchant_id\"\x8b\x02\n" +
 	"\x14UpdateProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vmerchant_id\x18\x02 \x01(\tR\n" +
@@ -303,6 +314,7 @@ func file_product_v1_product_proto_init() {
 	if File_product_v1_product_proto != nil {
 		return
 	}
+	file_product_v1_product_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

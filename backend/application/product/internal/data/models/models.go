@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 商品库存表
 type ProductsInventory struct {
 	ProductID  uuid.UUID          `json:"productID"`
 	MerchantID uuid.UUID          `json:"merchantID"`
@@ -19,6 +20,7 @@ type ProductsInventory struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updatedAt"`
 }
 
+// 商品属性表
 type ProductsProductAttributes struct {
 	MerchantID uuid.UUID `json:"merchantID"`
 	ProductID  uuid.UUID `json:"productID"`
@@ -27,17 +29,7 @@ type ProductsProductAttributes struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
-type ProductsProductAudits struct {
-	ID         uuid.UUID `json:"id"`
-	MerchantID uuid.UUID `json:"merchantID"`
-	ProductID  uuid.UUID `json:"productID"`
-	OldStatus  int16     `json:"oldStatus"`
-	NewStatus  int16     `json:"newStatus"`
-	Reason     *string   `json:"reason"`
-	OperatorID uuid.UUID `json:"operatorID"`
-	CreatedAt  time.Time `json:"createdAt"`
-}
-
+// 商品图片表
 type ProductsProductImages struct {
 	ID         uuid.UUID `json:"id"`
 	MerchantID uuid.UUID `json:"merchantID"`
@@ -48,6 +40,7 @@ type ProductsProductImages struct {
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
+// 商品表
 type ProductsProducts struct {
 	ID             uuid.UUID          `json:"id"`
 	MerchantID     uuid.UUID          `json:"merchantID"`

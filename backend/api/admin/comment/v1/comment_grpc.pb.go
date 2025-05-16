@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminComment_SetSensitiveWords_FullMethodName = "/ecommerce.admin.v1.AdminComment/SetSensitiveWords"
-	AdminComment_GetSensitiveWords_FullMethodName = "/ecommerce.admin.v1.AdminComment/GetSensitiveWords"
+	AdminComment_SetSensitiveWords_FullMethodName   = "/admin.admincomment.v1.AdminComment/SetSensitiveWords"
+	AdminComment_GetSensitiveWords_FullMethodName   = "/admin.admincomment.v1.AdminComment/GetSensitiveWords"
+	AdminComment_DeleteSensitiveWord_FullMethodName = "/admin.admincomment.v1.AdminComment/DeleteSensitiveWord"
+	AdminComment_UpdateSensitiveWord_FullMethodName = "/admin.admincomment.v1.AdminComment/UpdateSensitiveWord"
 )
 
 // AdminCommentClient is the client API for AdminComment service.
@@ -31,6 +33,10 @@ type AdminCommentClient interface {
 	SetSensitiveWords(ctx context.Context, in *SetSensitiveWordsReq, opts ...grpc.CallOption) (*SetSensitiveWordsReply, error)
 	// 查询评论敏感词
 	GetSensitiveWords(ctx context.Context, in *GetSensitiveWordsReq, opts ...grpc.CallOption) (*GetSensitiveWordsReply, error)
+	// 删除敏感词
+	DeleteSensitiveWord(ctx context.Context, in *DeleteSensitiveWordReq, opts ...grpc.CallOption) (*DeleteSensitiveWordReply, error)
+	// 更新敏感词
+	UpdateSensitiveWord(ctx context.Context, in *UpdateSensitiveWordReq, opts ...grpc.CallOption) (*UpdateSensitiveWordReply, error)
 }
 
 type adminCommentClient struct {
@@ -61,6 +67,26 @@ func (c *adminCommentClient) GetSensitiveWords(ctx context.Context, in *GetSensi
 	return out, nil
 }
 
+func (c *adminCommentClient) DeleteSensitiveWord(ctx context.Context, in *DeleteSensitiveWordReq, opts ...grpc.CallOption) (*DeleteSensitiveWordReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSensitiveWordReply)
+	err := c.cc.Invoke(ctx, AdminComment_DeleteSensitiveWord_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminCommentClient) UpdateSensitiveWord(ctx context.Context, in *UpdateSensitiveWordReq, opts ...grpc.CallOption) (*UpdateSensitiveWordReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateSensitiveWordReply)
+	err := c.cc.Invoke(ctx, AdminComment_UpdateSensitiveWord_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminCommentServer is the server API for AdminComment service.
 // All implementations must embed UnimplementedAdminCommentServer
 // for forward compatibility.
@@ -69,6 +95,10 @@ type AdminCommentServer interface {
 	SetSensitiveWords(context.Context, *SetSensitiveWordsReq) (*SetSensitiveWordsReply, error)
 	// 查询评论敏感词
 	GetSensitiveWords(context.Context, *GetSensitiveWordsReq) (*GetSensitiveWordsReply, error)
+	// 删除敏感词
+	DeleteSensitiveWord(context.Context, *DeleteSensitiveWordReq) (*DeleteSensitiveWordReply, error)
+	// 更新敏感词
+	UpdateSensitiveWord(context.Context, *UpdateSensitiveWordReq) (*UpdateSensitiveWordReply, error)
 	mustEmbedUnimplementedAdminCommentServer()
 }
 
@@ -84,6 +114,12 @@ func (UnimplementedAdminCommentServer) SetSensitiveWords(context.Context, *SetSe
 }
 func (UnimplementedAdminCommentServer) GetSensitiveWords(context.Context, *GetSensitiveWordsReq) (*GetSensitiveWordsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSensitiveWords not implemented")
+}
+func (UnimplementedAdminCommentServer) DeleteSensitiveWord(context.Context, *DeleteSensitiveWordReq) (*DeleteSensitiveWordReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSensitiveWord not implemented")
+}
+func (UnimplementedAdminCommentServer) UpdateSensitiveWord(context.Context, *UpdateSensitiveWordReq) (*UpdateSensitiveWordReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSensitiveWord not implemented")
 }
 func (UnimplementedAdminCommentServer) mustEmbedUnimplementedAdminCommentServer() {}
 func (UnimplementedAdminCommentServer) testEmbeddedByValue()                      {}
@@ -142,11 +178,47 @@ func _AdminComment_GetSensitiveWords_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminComment_DeleteSensitiveWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSensitiveWordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminCommentServer).DeleteSensitiveWord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminComment_DeleteSensitiveWord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminCommentServer).DeleteSensitiveWord(ctx, req.(*DeleteSensitiveWordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminComment_UpdateSensitiveWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSensitiveWordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminCommentServer).UpdateSensitiveWord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminComment_UpdateSensitiveWord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminCommentServer).UpdateSensitiveWord(ctx, req.(*UpdateSensitiveWordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminComment_ServiceDesc is the grpc.ServiceDesc for AdminComment service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AdminComment_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ecommerce.admin.v1.AdminComment",
+	ServiceName: "admin.admincomment.v1.AdminComment",
 	HandlerType: (*AdminCommentServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -156,6 +228,14 @@ var AdminComment_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSensitiveWords",
 			Handler:    _AdminComment_GetSensitiveWords_Handler,
+		},
+		{
+			MethodName: "DeleteSensitiveWord",
+			Handler:    _AdminComment_DeleteSensitiveWord_Handler,
+		},
+		{
+			MethodName: "UpdateSensitiveWord",
+			Handler:    _AdminComment_UpdateSensitiveWord_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

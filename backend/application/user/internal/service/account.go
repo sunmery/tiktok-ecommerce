@@ -47,6 +47,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, _ *v1.GetProfileReques
 		CreatedTime:       profile.CreatedTime,
 		UpdatedTime:       profile.UpdatedTime,
 		SignupApplication: profile.SignupApplication,
+		Phone:             profile.Phone,
 	}, nil
 }
 

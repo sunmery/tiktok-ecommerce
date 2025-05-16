@@ -8,6 +8,8 @@ frontend/yarn-error.helper*
 frontend/pnpm-debug.helper*
 frontend/lerna-debug.helper*
 
+./backend/.status
+
 .env.prod
 backend/configs/production.yaml
 frontend/dist.tar.gz

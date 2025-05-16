@@ -41,6 +41,7 @@ func (u *userRepo) GetProfile(ctx context.Context, req *biz.GetProfileRequest) (
 	}
 
 	// 组装数据
+	log.Debugf("Phone%+v", user.Phone)
 	return &biz.GetProfileReply{
 		Id:                req.UserId,
 		Role:              user.Roles[0].Name,
@@ -54,6 +55,7 @@ func (u *userRepo) GetProfile(ctx context.Context, req *biz.GetProfileRequest) (
 		Avatar:            user.Avatar,
 		// DeletedTime:        user.DeletedTime,
 		DisplayName: user.DisplayName,
+		Phone:       user.Phone,
 	}, nil
 }
 
@@ -300,18 +302,18 @@ func convertUserToProfile(user *casdoorsdk.User) (*biz.GetProfileReply, error) {
 		role = "guest" // 访客角色
 		// return nil, errors.New("user has no role assigned")
 	}
-
 	return &biz.GetProfileReply{
 		Id:                userId,
 		Role:              role,
 		IsDeleted:         user.IsDeleted,
-		CreatedTime:       user.CreatedTime,
-		UpdatedTime:       user.UpdatedTime,
 		Owner:             user.Owner,
 		SignupApplication: user.SignupApplication,
 		Name:              user.Name,
 		Email:             user.Email,
 		Avatar:            user.Avatar,
+		CreatedTime:       user.CreatedTime,
+		UpdatedTime:       user.UpdatedTime,
 		DisplayName:       user.DisplayName,
+		Phone:             user.Phone,
 	}, nil
 }

@@ -30,7 +30,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommentClient interface {
 	// 创建评论
-	CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...grpc.CallOption) (*CommentType, error)
+	CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...grpc.CallOption) (*CreateCommentReply, error)
 	// 获取评论
 	GetComments(ctx context.Context, in *GetCommentsRequest, opts ...grpc.CallOption) (*GetCommentsResponse, error)
 	// 更新评论
@@ -47,9 +47,9 @@ func NewCommentClient(cc grpc.ClientConnInterface) CommentClient {
 	return &commentClient{cc}
 }
 
-func (c *commentClient) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...grpc.CallOption) (*CommentType, error) {
+func (c *commentClient) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...grpc.CallOption) (*CreateCommentReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommentType)
+	out := new(CreateCommentReply)
 	err := c.cc.Invoke(ctx, Comment_CreateComment_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (c *commentClient) DeleteComment(ctx context.Context, in *DeleteCommentRequ
 // for forward compatibility.
 type CommentServer interface {
 	// 创建评论
-	CreateComment(context.Context, *CreateCommentRequest) (*CommentType, error)
+	CreateComment(context.Context, *CreateCommentRequest) (*CreateCommentReply, error)
 	// 获取评论
 	GetComments(context.Context, *GetCommentsRequest) (*GetCommentsResponse, error)
 	// 更新评论
@@ -109,7 +109,7 @@ type CommentServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCommentServer struct{}
 
-func (UnimplementedCommentServer) CreateComment(context.Context, *CreateCommentRequest) (*CommentType, error) {
+func (UnimplementedCommentServer) CreateComment(context.Context, *CreateCommentRequest) (*CreateCommentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateComment not implemented")
 }
 func (UnimplementedCommentServer) GetComments(context.Context, *GetCommentsRequest) (*GetCommentsResponse, error) {

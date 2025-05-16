@@ -98,6 +98,10 @@
           "type": "string",
           "title": "用户的邮箱地址（必填），用于接收订单确认邮件等"
         },
+        "phone": {
+          "type": "string",
+          "title": "用户的电话号码（必填），用于联系用户"
+        },
         "creditCardId": {
           "type": "integer",
           "format": "int64",
@@ -107,6 +111,14 @@
           "type": "integer",
           "format": "int64",
           "title": "地址 ID（必填），用于选择配送地址"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码，例如 \"USD\"、\"EUR\" 等"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "title": "支付方式"
         }
       },
       "title": "结账请求的消息结构"

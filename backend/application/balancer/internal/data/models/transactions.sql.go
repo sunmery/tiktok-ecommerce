@@ -70,6 +70,70 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return id, err
 }
 
+const GetConsumerAllTransactions = `-- name: GetConsumerAllTransactions :many
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+FROM balances.transactions
+WHERE from_user_id = $1
+  AND currency = COALESCE($2, currency)
+LIMIT $4 OFFSET $3
+`
+
+type GetConsumerAllTransactionsParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Currency string    `json:"currency"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
+}
+
+// 根据 用户ID 获取交易流水记录
+//
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+//	FROM balances.transactions
+//	WHERE from_user_id = $1
+//	  AND currency = COALESCE($2, currency)
+//	LIMIT $4 OFFSET $3
+func (q *Queries) GetConsumerAllTransactions(ctx context.Context, arg GetConsumerAllTransactionsParams) ([]BalancesTransactions, error) {
+	rows, err := q.db.Query(ctx, GetConsumerAllTransactions,
+		arg.UserID,
+		arg.Currency,
+		arg.Page,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BalancesTransactions
+	for rows.Next() {
+		var i BalancesTransactions
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Amount,
+			&i.Currency,
+			&i.FromUserID,
+			&i.ToMerchantID,
+			&i.PaymentMethodType,
+			&i.PaymentAccount,
+			&i.PaymentExtra,
+			&i.Status,
+			&i.FreezeID,
+			&i.IdempotencyKey,
+			&i.ConsumerVersion,
+			&i.MerchantVersion,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetConsumerTransactions = `-- name: GetConsumerTransactions :many
 SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
 FROM balances.transactions
@@ -100,6 +164,70 @@ func (q *Queries) GetConsumerTransactions(ctx context.Context, arg GetConsumerTr
 		arg.UserID,
 		arg.Currency,
 		arg.Status,
+		arg.Page,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BalancesTransactions
+	for rows.Next() {
+		var i BalancesTransactions
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Amount,
+			&i.Currency,
+			&i.FromUserID,
+			&i.ToMerchantID,
+			&i.PaymentMethodType,
+			&i.PaymentAccount,
+			&i.PaymentExtra,
+			&i.Status,
+			&i.FreezeID,
+			&i.IdempotencyKey,
+			&i.ConsumerVersion,
+			&i.MerchantVersion,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const GetMerchantAllTransactions = `-- name: GetMerchantAllTransactions :many
+SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+FROM balances.transactions
+WHERE to_merchant_id = $1
+  AND currency = COALESCE($2, currency)
+LIMIT $4 OFFSET $3
+`
+
+type GetMerchantAllTransactionsParams struct {
+	UserID   uuid.UUID `json:"userID"`
+	Currency string    `json:"currency"`
+	Page     int64     `json:"page"`
+	PageSize int64     `json:"pageSize"`
+}
+
+// 根据 商家ID 获取交易流水记录
+//
+//	SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+//	FROM balances.transactions
+//	WHERE to_merchant_id = $1
+//	  AND currency = COALESCE($2, currency)
+//	LIMIT $4 OFFSET $3
+func (q *Queries) GetMerchantAllTransactions(ctx context.Context, arg GetMerchantAllTransactionsParams) ([]BalancesTransactions, error) {
+	rows, err := q.db.Query(ctx, GetMerchantAllTransactions,
+		arg.UserID,
+		arg.Currency,
 		arg.Page,
 		arg.PageSize,
 	)

@@ -1051,7 +1051,8 @@ type GetProfileResponse struct {
 	UpdatedTime       string                 `protobuf:"bytes,8,opt,name=updated_time,json=updatedTime,proto3" json:"updated_time,omitempty"`
 	DisplayName       string                 `protobuf:"bytes,9,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	IsDeleted         bool                   `protobuf:"varint,10,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"` // 用户是否注销
-	SignupApplication string                 `protobuf:"bytes,11,opt,name=signupApplication,proto3" json:"signupApplication,omitempty"`   //  repeated string roles = 6;
+	SignupApplication string                 `protobuf:"bytes,11,opt,name=signupApplication,proto3" json:"signupApplication,omitempty"`
+	Phone             string                 `protobuf:"bytes,12,opt,name=phone,proto3" json:"phone,omitempty"` //  repeated string roles = 6;
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1159,6 +1160,13 @@ func (x *GetProfileResponse) GetIsDeleted() bool {
 func (x *GetProfileResponse) GetSignupApplication() string {
 	if x != nil {
 		return x.SignupApplication
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetPhone() string {
+	if x != nil {
+		return x.Phone
 	}
 	return ""
 }
@@ -1572,7 +1580,7 @@ const file_v1_user_proto_rawDesc = "" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\rR\x02id\x12\x12\n" +
 	"\x04code\x18\x03 \x01(\rR\x04code\"\x13\n" +
-	"\x11GetProfileRequest\"\xc6\x02\n" +
+	"\x11GetProfileRequest\"\xdc\x02\n" +
 	"\x12GetProfileResponse\x12\x14\n" +
 	"\x05owner\x18\x01 \x01(\tR\x05owner\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -1586,7 +1594,8 @@ const file_v1_user_proto_rawDesc = "" +
 	"\n" +
 	"is_deleted\x18\n" +
 	" \x01(\bR\tisDeleted\x12,\n" +
-	"\x11signupApplication\x18\v \x01(\tR\x11signupApplication\"\x11\n" +
+	"\x11signupApplication\x18\v \x01(\tR\x11signupApplication\x12\x14\n" +
+	"\x05phone\x18\f \x01(\tR\x05phone\"\x11\n" +
 	"\x0fGetUsersRequest\"O\n" +
 	"\x10GetUsersResponse\x12;\n" +
 	"\x05users\x18\x01 \x03(\v2%.ecommerce.user.v1.GetProfileResponseR\x05users\"V\n" +

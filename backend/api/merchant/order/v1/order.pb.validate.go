@@ -1365,35 +1365,6 @@ func (m *UpdateOrderShippingStatusReq) validate(all bool) error {
 
 	// no validation rules for Carrier
 
-	if all {
-		switch v := interface{}(m.GetDelivery()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpdateOrderShippingStatusReqValidationError{
-					field:  "Delivery",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, UpdateOrderShippingStatusReqValidationError{
-					field:  "Delivery",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetDelivery()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpdateOrderShippingStatusReqValidationError{
-				field:  "Delivery",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	// no validation rules for ShippingStatus
 
 	// no validation rules for ShippingFee
@@ -1425,6 +1396,39 @@ func (m *UpdateOrderShippingStatusReq) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.Delivery != nil {
+
+		if all {
+			switch v := interface{}(m.GetDelivery()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateOrderShippingStatusReqValidationError{
+						field:  "Delivery",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateOrderShippingStatusReqValidationError{
+						field:  "Delivery",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetDelivery()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateOrderShippingStatusReqValidationError{
+					field:  "Delivery",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	}
 
 	if len(errors) > 0 {

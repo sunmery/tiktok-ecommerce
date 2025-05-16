@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 支付表
 type PaymentsPayments struct {
 	ID               int64          `json:"id"`
 	OrderID          int64          `json:"orderID"`

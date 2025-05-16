@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 商家地址表
 type MerchantAddresses struct {
 	ID            int64
 	MerchantID    uuid.UUID
@@ -26,6 +27,7 @@ type MerchantAddresses struct {
 	UpdatedAt     pgtype.Timestamptz
 }
 
+// 库存调整记录表
 type MerchantStockAdjustments struct {
 	ID         uuid.UUID
 	ProductID  uuid.UUID
@@ -36,6 +38,7 @@ type MerchantStockAdjustments struct {
 	CreatedAt  pgtype.Timestamptz
 }
 
+// 库存警报表
 type MerchantStockAlerts struct {
 	ID         uuid.UUID
 	ProductID  uuid.UUID

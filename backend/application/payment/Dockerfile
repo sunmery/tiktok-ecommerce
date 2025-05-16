@@ -31,8 +31,9 @@ COPY ./appPublicCert.crt /app/appPublicCert.crt
 # 最终镜像
 FROM gcr.io/distroless/static-debian12 AS final
 ARG SERVICE
+
+WORKDIR /app
+
 COPY --from=compile /app/$SERVICE /app/service
-COPY --from=compile /app/alipayPublicCert.crt /app/alipayPublicCert.crt
-COPY --from=compile /app/alipayRootCert.crt /app/alipayRootCert.crt
-COPY --from=compile /app/appPublicCert.crt /app/appPublicCert.crt
+COPY --from=compile /app/*.crt .
 ENTRYPOINT ["/app/service"]

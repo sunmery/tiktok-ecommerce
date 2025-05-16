@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	merchantorderv1 "backend/api/merchant/order/v1"
@@ -97,17 +98,7 @@ func (b balanceRepo) GetTransactions(ctx context.Context, req *biz.GetTransactio
 	page := (req.Page - 1) * req.PageSize
 	pageSize := req.PageSize
 
-	var transactions []*biz.Transaction
-	switch req.TransactionsUserType {
-	case constants.TransactionsUserTypeConsumer:
-		return b.getConsumerTransactions(ctx, req, page, pageSize)
-	case constants.TransactionsUserTypeMerchant:
-		return b.getMerchantTransactions(ctx, req, page, pageSize)
-	}
-
-	return &biz.GetTransactionsReply{
-		Transactions: transactions,
-	}, nil
+	return b.getTransactions(ctx, req, page, pageSize)
 }
 
 // FreezeBalance 冻结余额
@@ -361,6 +352,7 @@ func (b balanceRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalance
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			log.Warnf("getUserBalance balance record not found err:%+v", err)
 			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
 		}
 		return nil, err
@@ -372,7 +364,8 @@ func (b balanceRepo) GetUserBalance(ctx context.Context, req *biz.GetUserBalance
 	frozen, err := types.NumericToFloat(balance.Frozen)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, kerrors.New(404, "BALANCE_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
+			log.Warnf("frozen balance record not found err:%+v", err)
+			return nil, kerrors.New(404, "FROZEN_NOT_FOUND", fmt.Sprintf("getUserBalance balance record not found err:%+v", err))
 		}
 		return nil, kerrors.New(500, "CONVERT_FROZEN_FAILED", "convert available to float64 failed")
 	}
@@ -682,7 +675,7 @@ func (b balanceRepo) ConfirmTransfer(ctx context.Context, req *biz.ConfirmTransf
 		Currency:          freeze.Currency,
 		FromUserID:        freeze.UserID,
 		ToMerchantID:      merchantId,
-		PaymentMethodType: string(constants.PaymentMethodBalancer), // 使用余额支付
+		PaymentMethodType: string(constants.PaymentMethodBalance), // 使用余额支付
 		PaymentAccount:    req.PaymentAccount,
 		PaymentExtra:      paymentExtraJson,
 		Status:            string(constants.PaymentPaid), // 已支付状态
@@ -714,14 +707,58 @@ func (b balanceRepo) getMerchantIDFromOrder(ctx context.Context, subOrderId int6
 	return merchantId, nil
 }
 
-func (b balanceRepo) getConsumerTransactions(ctx context.Context, req *biz.GetTransactionsRequest, page int64, size int64) (*biz.GetTransactionsReply, error) {
-	transactions, err := b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
-		UserID:   req.UserId,
-		Currency: req.Currency,
-		Status:   string(req.PaymentStatus),
-		Page:     page,
-		PageSize: size,
-	})
+func (b balanceRepo) getTransactions(ctx context.Context, req *biz.GetTransactionsRequest, page int64, size int64) (*biz.GetTransactionsReply, error) {
+	var transactions []models.BalancesTransactions
+	var err error
+	var userType constants.RoleType
+	switch req.TransactionsUserType {
+	case constants.TransactionsUserType(strings.ToUpper(string(constants.Consumer))):
+		userType = constants.Consumer
+	case constants.TransactionsUserType(strings.ToUpper(string(constants.Merchant))):
+		userType = constants.Merchant
+	}
+	log.Debugf("req.PaymentStatus%+v %v", req.PaymentStatus, req.PaymentStatus == "all")
+	switch userType {
+	case constants.Consumer:
+		switch req.PaymentStatus {
+		case "all":
+			transactions, err = b.data.db.GetMerchantAllTransactions(ctx, models.GetMerchantAllTransactionsParams{
+				UserID:   req.UserId,
+				Currency: req.Currency,
+				Page:     page,
+				PageSize: size,
+			})
+		default:
+			transactions, err = b.data.db.GetConsumerTransactions(ctx, models.GetConsumerTransactionsParams{
+				UserID:   req.UserId,
+				Currency: req.Currency,
+				Status:   string(req.PaymentStatus),
+				Page:     page,
+				PageSize: size,
+			})
+		}
+	case constants.Merchant:
+		switch req.PaymentStatus {
+		case "all":
+			transactions, err = b.data.db.GetMerchantAllTransactions(ctx, models.GetMerchantAllTransactionsParams{
+				UserID:   req.UserId,
+				Currency: req.Currency,
+				Page:     page,
+				PageSize: size,
+			})
+		default:
+			transactions, err = b.data.db.GetMerchantTransactions(ctx, models.GetMerchantTransactionsParams{
+				UserID:   req.UserId,
+				Currency: req.Currency,
+				Status:   string(req.PaymentStatus),
+				Page:     page,
+				PageSize: size,
+			})
+		}
+	default:
+		return nil, errors.New("invalid user type")
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -5,10 +5,25 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 敏感词表
+type AdminSensitiveWords struct {
+	ID        int32     `json:"id"`
+	CreatedBy uuid.UUID `json:"createdBy"`
+	Category  string    `json:"category"`
+	Word      string    `json:"word"`
+	Level     int32     `json:"level"`
+	IsActive  bool      `json:"isActive"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// 评论表
 type CommentsComments struct {
 	ID         int64            `json:"id"`
 	ProductID  uuid.UUID        `json:"productID"`

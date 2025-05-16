@@ -180,7 +180,7 @@ enum TransactionsUserType {
 }
 
 message GetTransactionsRequest {
-  string user_id = 1;       // 用户ID
+  optional string user_id = 1;       // 用户ID
   TransactionsUserType user_type = 6;       // 用户类型: 消费者|商家
   string currency = 2;    // 指定币种
   int64 page = 3;

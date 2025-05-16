@@ -37,16 +37,14 @@ const (
 	TradeStatusFinished     TradeStatus = "TRADE_FINISHED" // （交易结束，不可退款）
 )
 
-// const (
-//
-//	ProductDraft    ProductStatus = "DRAFT"    // 草稿
-//	ProductPending  ProductStatus = "PENDING"  // 待审核
-//	ProductApproved ProductStatus = "APPROVED" // 已审核
-//	ProductRejected ProductStatus = "REJECTED" // 驳回
-//	ProductSold     ProductStatus = "SOLD"     // 已售罄
-//	ProductDeleted  ProductStatus = "DELETED"  // 已下架
-//
-// )
+const (
+	ProductStatusDraft    ProductStatus = iota // 商品草稿
+	ProductStatusPending                       // 商品待审核。
+	ProductStatusApproved                      // 商品审核通过。
+	ProductStatusRejected                      // 商品审核未通过。
+	ProductStatusSoldOut                       // 商品因某种原因不可购买。
+)
+
 const (
 	ProductDraft    ProductStatus = 0 // 草稿
 	ProductPending  ProductStatus = 1 // 待审核
@@ -73,10 +71,9 @@ const (
 )
 
 const (
-	PaymentMethodAlipay   PaymentMethod = "ALIPAY"
-	PaymentMethodWechat   PaymentMethod = "WECHAT"
-	PaymentMethodBalancer PaymentMethod = "BALANCER"
+	PaymentMethodBalance  PaymentMethod = "BALANCE"
 	PaymentMethodBankCard PaymentMethod = "BANK_CARD"
+	PaymentMethodAlipay   PaymentMethod = "ALIPAY"
 )
 
 const (

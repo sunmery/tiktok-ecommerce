@@ -34,7 +34,9 @@ func (s *CheckoutServiceService) Checkout(ctx context.Context, req *pb.CheckoutR
 		Email:         req.Email,
 		CreditCardId:  req.CreditCardId,
 		AddressId:     req.AddressId,
-		PaymentMethod: "alipay",
+		Currency:      req.Currency,
+		PaymentMethod: req.PaymentMethod,
+		Phone:         req.Phone,
 	})
 	if err != nil {
 		return nil, err

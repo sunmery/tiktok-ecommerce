@@ -3,6 +3,13 @@ package server
 import (
 	"context"
 
+	commentv1 "backend/api/admin/comment/v1"
+
+	"backend/application/admin/internal/service"
+
+	orderv1 "backend/api/admin/order/v1"
+	"backend/application/admin/internal/conf"
+	"backend/constants"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -10,8 +17,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"backend/application/admin/constants"
-	"backend/application/admin/internal/conf"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
@@ -21,6 +26,8 @@ func NewGRPCServer(
 	c *conf.Server,
 	obs *conf.Observability,
 	logger log.Logger,
+	orderService *service.AdminOrderService,
+	commentService *service.AdminCommentService,
 ) *grpc.Server {
 	// trace start
 	ctx := context.Background()
@@ -33,7 +40,7 @@ func NewGRPCServer(
 			// attribute.Float64("float", 312.23),
 
 			// The service name used to display traces in backends serviceName
-			semconv.ServiceNameKey.String(constants.ServiceNameV1),
+			semconv.ServiceNameKey.String(constants.AdminServiceV1),
 		),
 	)
 	if err != nil {
@@ -69,7 +76,9 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	// v1.RegisterUserServiceServer(srv, user)
+
+	orderv1.RegisterAdminOrderServer(srv, orderService)
+	commentv1.RegisterAdminCommentServer(srv, commentService)
 
 	return srv
 }

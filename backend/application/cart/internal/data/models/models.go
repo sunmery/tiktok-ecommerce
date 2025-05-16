@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// 购物车商品项表
 type CartsCart struct {
 	CartID    int32            `json:"cartID"`
 	UserID    uuid.UUID        `json:"userID"`

@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS merchant;
 SET search_path TO merchant;
 
--- 商家地址表设计
+-- 商家地址表
 -- CREATE TYPE merchant.address_type AS ENUM ('WAREHOUSE', 'RETURN', 'STORE', 'BILLING');
 CREATE TABLE merchant.addresses
 (
@@ -21,6 +21,7 @@ CREATE TABLE merchant.addresses
     created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+COMMENT ON TABLE merchant.addresses IS '商家地址表';
 
 -- 索引优化方案
 CREATE INDEX idx_merchant_addr_main ON merchant.addresses (merchant_id)

@@ -8,12 +8,13 @@ import (
 	"sync"
 	"time"
 
+	"backend/constants"
+
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/minio/minio-go/v7"
 
 	category "backend/api/category/v1"
-	v1 "backend/api/product/v1"
 	"backend/application/product/internal/biz"
 	"backend/application/product/internal/data/models"
 	"backend/pkg/types"
@@ -393,9 +394,10 @@ func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, 
 		Name:        pr.Name,
 		Description: &pr.Description,
 		Price:       price,
-		Status:      int16(pr.Status),
-		MerchantID:  pr.MerchantId,
-		CategoryID:  int64(pr.Category.CategoryId),
+		// Status:      int16(pr.Status),
+		Status:     int16(constants.ProductStatusApproved),
+		MerchantID: pr.MerchantId,
+		CategoryID: int64(pr.Category.CategoryId),
 	})
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("创建商品失败: %w", err)
@@ -406,6 +408,7 @@ func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, 
 
 	// 插入图片
 	eg.Go(func() error {
+		log.Debugf("插入图片: %v", pr.Images)
 		if len(pr.Images) > 0 {
 			return p.createProductImages(ctx, result.ID, pr.MerchantId, pr.Images)
 		}
@@ -441,115 +444,6 @@ func (p *productRepo) processProduct(ctx context.Context, pr *biz.ProductDraft, 
 	}
 
 	return result.ID, nil
-}
-
-func (p *productRepo) SubmitForAudit(ctx context.Context, req *biz.SubmitAuditRequest) (*biz.AuditRecord, error) {
-	db := p.data.DB(ctx)
-
-	// 获取当前产品状态
-	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         req.ProductID,
-		MerchantID: req.MerchantID,
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, v1.ErrorProductNotFound("查询不到该商品")
-		}
-	}
-
-	// 创建审核记录
-	auditRecord, err := db.GetLatestAudit(ctx, models.GetLatestAuditParams{
-		MerchantID: req.MerchantID,
-		ProductID:  req.ProductID,
-		OldStatus:  current.Status,
-		NewStatus:  int16(biz.ProductStatusPending),
-		Reason:     nil,
-		OperatorID: req.OperatorID, // 从上下文中获取实际操作人
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create audit record: %w", err)
-	}
-
-	// 更新产品状态
-	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
-		ID:             req.ProductID,
-		Status:         int16(biz.ProductStatusPending),
-		CurrentAuditID: types.ToPgUUID(auditRecord.ID),
-		MerchantID:     req.MerchantID,
-	}); err != nil {
-		return nil, fmt.Errorf("failed to update product status: %w", err)
-	}
-
-	return &biz.AuditRecord{
-		ID:         auditRecord.ID,
-		ProductID:  req.ProductID,
-		OldStatus:  biz.ProductStatus(current.Status),
-		NewStatus:  biz.ProductStatusPending,
-		OperatedAt: auditRecord.CreatedAt,
-	}, nil
-}
-
-// AuditProduct 审核商品
-func (p *productRepo) AuditProduct(ctx context.Context, req *biz.AuditProductRequest) (*biz.AuditRecord, error) {
-	db := p.data.DB(ctx)
-
-	// 获取当前产品状态
-	current, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         req.ProductID,
-		MerchantID: req.MerchantID,
-	})
-	if err != nil {
-		if errors.Is(pgx.ErrNoRows, err) {
-			return nil, v1.ErrorProductNotFound("查询不到该商品")
-		}
-		return nil, v1.ErrorInvalidStatus("data/product: AuditProduct: %+v", err)
-	}
-
-	// 确定新状态
-	var newStatus biz.ProductStatus
-	switch biz.AuditAction(req.Action) { // 添加类型转换
-	case biz.Approved:
-		newStatus = biz.ProductStatusApproved
-	case biz.Rejected:
-		newStatus = biz.ProductStatusRejected
-	default:
-		p.log.Warnf("非法的Action行为: %v", req.Action)
-		return nil, v1.ErrorInvalidAuditAction("AuditProduct: 非法的req.Action参数, 1为通过, 2为驳回")
-	}
-
-	// 创建审核记录
-	auditRecord, err := db.CreateAuditRecord(ctx, models.CreateAuditRecordParams{
-		MerchantID: req.MerchantID,
-		ProductID:  req.ProductID,
-		OldStatus:  current.Status,
-		NewStatus:  int16(newStatus),
-		Reason:     &req.Reason,
-		OperatorID: req.OperatorID,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create audit record: %w", err)
-	}
-
-	// 更新产品状态
-	currentAuditID := types.ToPgUUID(auditRecord.ID)
-	if err := db.UpdateProductStatus(ctx, models.UpdateProductStatusParams{
-		ID:             req.ProductID,
-		Status:         int16(newStatus),
-		CurrentAuditID: currentAuditID,
-		MerchantID:     req.MerchantID,
-	}); err != nil {
-		return nil, fmt.Errorf("failed to update product status: %w", err)
-	}
-
-	return &biz.AuditRecord{
-		ID:         auditRecord.ID,
-		ProductID:  req.ProductID,
-		OldStatus:  biz.ProductStatus(current.Status),
-		NewStatus:  newStatus,
-		Reason:     req.Reason,
-		OperatorID: req.OperatorID,
-		OperatedAt: auditRecord.CreatedAt,
-	}, nil
 }
 
 func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRandomProductsRequest) (*biz.Products, error) {
@@ -596,6 +490,7 @@ func (p *productRepo) ListRandomProducts(ctx context.Context, req *biz.ListRando
 			if err := json.Unmarshal(product.Images, &images); err != nil {
 				// 处理错误或记录日志
 				p.log.WithContext(ctx).Warnf("unmarshal images error: %v", err)
+				continue
 			}
 		}
 
@@ -742,9 +637,11 @@ func (p *productRepo) GetProduct(ctx context.Context, req *biz.GetProductRequest
 	db := p.data.DB(ctx)
 
 	// 获取基础信息
+	id := types.ToPgUUID(req.ID)
+	merchantId := types.ToPgUUID(req.MerchantID)
 	product, err := db.GetProduct(ctx, models.GetProductParams{
-		ID:         req.ID,
-		MerchantID: req.MerchantID,
+		ID:         id,
+		MerchantID: merchantId,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -831,7 +728,7 @@ func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsB
 			}
 		}
 
-		price, err := types.NumericToFloat(product.Price)
+		price, err := types.NumericToFloat(product.Price.(pgtype.Numeric))
 		if err != nil {
 			p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
 		}
@@ -862,8 +759,8 @@ func (p *productRepo) GetProductBatch(ctx context.Context, req *biz.GetProductsB
 			Images:      images,
 			Status:      biz.ProductStatus(product.Status),
 			Category:    categoryInfo,
-			CreatedAt:   product.CreatedAt,
-			UpdatedAt:   product.UpdatedAt,
+			CreatedAt:   product.CreatedAt.Time,
+			UpdatedAt:   product.UpdatedAt.Time,
 			Attributes:  attributes,
 			Inventory: biz.Inventory{
 				ProductId:  product.ID,
@@ -904,7 +801,7 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 	}
 
 	// 转换价格
-	price, err := types.NumericToFloat(product.Price)
+	price, err := types.NumericToFloat(product.Price.(pgtype.Numeric))
 	if err != nil {
 		p.log.WithContext(ctx).Warnf("unmarshal price error: %v", err)
 	}
@@ -932,8 +829,8 @@ func (p *productRepo) fullProductData(ctx context.Context, product models.GetPro
 		Category: biz.CategoryInfo{
 			CategoryId: uint64(product.CategoryID),
 		},
-		CreatedAt:  product.CreatedAt,
-		UpdatedAt:  product.UpdatedAt,
+		CreatedAt:  product.CreatedAt.Time,
+		UpdatedAt:  product.UpdatedAt.Time,
 		Attributes: attributes,
 		Inventory: biz.Inventory{
 			ProductId:  product.ID,
@@ -985,7 +882,7 @@ func (p *productRepo) createProductImages(ctx context.Context, productID uuid.UU
 		}
 	}
 
-	return p.data.DB(ctx).BulkCreateProductImages(ctx, bulkParams)
+	return p.data.db.BulkCreateProductImages(ctx, bulkParams)
 }
 
 func (p *productRepo) GetCategoryWithChildrenProducts(ctx context.Context, req *biz.GetCategoryWithChildrenProducts) (*biz.Products, error) {

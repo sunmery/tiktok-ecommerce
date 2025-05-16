@@ -1,0 +1,3 @@
+### GET request to example server
+GET {{gateway}}/v1/admin/orders?page=1&pageSize=10
+Authorization: Bearer {{admin_token}}

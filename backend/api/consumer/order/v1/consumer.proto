@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package ecommerce.consumerorder.v1;
+
+option go_package = "backend/api/consumer/order/v1;consumerorderv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+import "validate/validate.proto";
+
+import "backend/api/order/v1/order.proto";
+import "backend/api/cart/v1/cart.proto";
+import "backend/api/user/v1/user.proto";
+
+service ConsumerOrder {
+  // 用户下单
+  rpc PlaceOrder(PlaceOrderRequest ) returns (PlaceOrderReply) {
+    option (google.api.http) = {
+      post: "/v1/consumers/orders" // 定义 HTTP POST 请求路径
+      body: "*"          // 表示请求体包含所有字段
+    };
+  }
+
+  // 查询用户订单列表
+  rpc GetConsumerOrders(GetConsumerOrdersRequest ) returns (ConsumerOrders) {
+    option (google.api.http) = {
+      get: "/v1/consumers/orders"
+    };
+  }
+
+  // 根据用户主订单查询子订单
+  rpc GetConsumerOrdersWithSuborders(GetConsumerOrdersWithSubordersRequest ) returns (GetConsumerOrdersWithSubordersReply) {
+    option (google.api.http) = {
+      get: "/v1/consumers/orders/{order_id}/suborders"
+    };
+  }
+
+  // 根据用户id和子订单ID查询子订单详情
+  rpc GetConsumerSubOrderDetail(GetConsumerSubOrderDetailRequest) returns (Order) {
+    option (google.api.http) = {
+      get: "/v1/consumers/orders/{sub_order_id}"
+    };
+  }
+
+  // 用户确认收货
+  rpc ConfirmReceived(ConfirmReceivedRequest ) returns (ConfirmReceivedReply) {
+    option (google.api.http) = {
+      patch: "/v1/consumers/orders/{order_id}/receive" // 定义 HTTP PUT 请求路径，路径参数为 order_id
+      body: "*"                            // 表示请求体包含所有字段
+    };
+  }
+
+  // 查询订单货运状态
+  rpc GetShipOrderStatus(GetShipOrderStatusRequest ) returns (GetShipOrderStatusReply) {
+    option (google.api.http) = {
+      get: "/v1/consumers/orders/{sub_order_id}/ship/status"
+    };
+  }
+}
+
+message Order {
+  repeated OrderItem items = 1; // 订单项列表
+  optional int64 order_id = 2; // 订单 ID
+  optional int64 sub_order_id = 3; // 子订单 ID
+  string user_id = 4;
+  string currency = 5 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 6; // 用户地址信息
+  string email = 7; // 用户邮箱
+  google.protobuf.Timestamp created_at = 8; // 订单创建时间
+  order.v1.PaymentStatus payment_status = 9; // 支付状态
+  order.v1.ShippingStatus shipping_status = 10; // 冗余货运状态
+}
+
+// 订单项的消息结构
+message OrderItem {
+  cart.v1.CartItem item = 1; // 购物车中的商品项
+  double cost = 2; // 商品单价
+}
+
+// 订单的消息结构
+message ConsumerOrders {
+  repeated Order orders = 1; // 订单项列表
+}
+
+message GetConsumerSubOrderDetailRequest {
+  optional string user_id = 1; // 用户 ID
+  int64 sub_order_id = 2; // 订单 ID
+}
+
+message GetConsumerOrdersRequest {
+  string user_id = 1; // 用户 ID
+  uint32 page = 2; // 分页参数：当前页码，默认值为 0
+  uint32 page_size = 3; // 分页参数：每页大小，默认值为 20，最大值为 100
+}
+
+message GetConsumerOrdersWithSubordersRequest {
+  string user_id = 1; // 用户 ID
+  int64 order_id = 2; //  订单 ID
+}
+message GetConsumerOrdersWithSubordersReply {
+  message Suborders {
+    int64 id = 1;
+    int64 sub_order_id = 17;
+    string street_address = 2;
+    string city = 3;
+    string state = 4;
+    string country = 5;
+    string zip_code = 6;
+    string email = 7;
+    string merchant_id = 8;
+    string payment_status = 9;
+    string shipping_status = 10;
+    double total_amount = 11;
+    string currency = 12;
+    repeated OrderItem items = 14;
+    google.protobuf.Timestamp created_at = 15;
+    google.protobuf.Timestamp updated_at = 16;
+  }
+
+  repeated Suborders orders = 1; // 订单列表
+}
+
+message PlaceOrderRequest {
+  string currency = 2 [(validate.rules).string.len = 3]; // 货币代码（如 USD、CNY），长度固定为 3
+  user.v1.ConsumerAddress address = 3; // 用户地址信息
+  string email = 4; // 用户邮箱
+  repeated OrderItem order_items = 5; // 订单项列表
+}
+message PlaceOrderReply {
+  message OrderResult {
+    int64 order_id = 1; // 订单 ID
+    int64 freeze_id = 2; // 冻结 ID
+    int64 consumer_version = 3; // 消费者乐观锁版本
+    repeated int64 merchant_version = 4; // 商家乐观锁版本
+  }
+  OrderResult order = 1; // 订单结果
+}
+
+// 用户确认收货请求的消息结构
+message ConfirmReceivedRequest {
+  int64 order_id = 1; // 订单 ID
+}
+// 用户确认收货响应的消息结构
+message ConfirmReceivedReply {}
+
+message GetShipOrderStatusRequest {
+  int64 sub_order_id = 1; //  子订单 ID
+}
+// 查询订单状态响应的消息结构
+message GetShipOrderStatusReply {
+  int64 order_id = 1; // 主订单 ID
+  int64 sub_order_id = 2; // 子订单 ID
+  order.v1.ShippingStatus shipping_status = 4; // 货运状态
+  google.protobuf.Struct receiver_address = 5;  // 用户收货地址
+  google.protobuf.Struct shipping_address = 6;  // 商家发货地址
+  string tracking_number = 7;  // 物流单号
+  string carrier = 8;  // 承运商
+}

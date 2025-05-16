@@ -24,8 +24,11 @@ message CheckoutReq {
   string firstname = 2; // 用户的名字（必填），允许非注册用户直接填写信息下单
   string lastname = 3; // 用户的姓氏（必填）
   string email = 4; // 用户的邮箱地址（必填），用于接收订单确认邮件等
+  string phone = 5; // 用户的电话号码（必填），用于联系用户
   uint32 credit_card_id = 6; // 用户的信用卡id（必填），用于支付
   uint32 address_id = 7; // 地址 ID（必填），用于选择配送地址
+  string currency = 8; // 货币代码，例如 "USD"、"EUR" 等
+  string payment_method = 9; // 支付方式
 }
 
 // 结账响应的消息结构

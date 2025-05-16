@@ -61,6 +61,10 @@ func (m *GetMerchantProductRequest) validate(all bool) error {
 
 	// no validation rules for PageSize
 
+	if m.MerchantId != nil {
+		// no validation rules for MerchantId
+	}
+
 	if len(errors) > 0 {
 		return GetMerchantProductRequestMultiError(errors)
 	}

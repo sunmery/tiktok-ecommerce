@@ -3,17 +3,21 @@ package data
 import (
 	"context"
 	"fmt"
+
+	"backend/application/admin/internal/data/models"
+
+	"backend/application/admin/internal/conf"
+
 	"github.com/exaring/otelpgx"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	"backend/application/admin/internal/conf"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewCache)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewCache, NewAdminOrderRepo, NewAdminCommentRepo)
 
 type Data struct {
 	db     *models.Queries

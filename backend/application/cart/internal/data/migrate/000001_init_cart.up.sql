@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS carts.cart
     updated_at TIMESTAMP             DEFAULT now(),              -- 更新时间
     CONSTRAINT unique_user_cart_name UNIQUE (user_id, cart_name) -- 保证 user_id 和 cart_name 的组合唯一
 );
+COMMENT ON TABLE carts.cart IS '购物车表';
 
 -- 为 user_id 和 cart_name 字段创建联合索引
 CREATE INDEX idx_user_id_cart_name ON carts.cart (user_id, cart_name);
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS carts.cart_items
     updated_at   TIMESTAMP        DEFAULT now(),                                      -- 更新时间
     CONSTRAINT unique_cart_merchant_product UNIQUE (cart_id, merchant_id, product_id) -- 保证每个购物车商品的唯一性
 );
+COMMENT ON TABLE carts.cart IS '购物车商品项表';
 
 -- 为 cart_id、merchant_id 和 product_id 字段创建联合索引
 CREATE INDEX idx_cart_id_merchant_id_product_id ON carts.cart_items (cart_id, merchant_id, product_id);

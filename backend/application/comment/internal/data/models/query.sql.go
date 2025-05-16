@@ -12,46 +12,59 @@ import (
 )
 
 const CreateComment = `-- name: CreateComment :one
-INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
+WITH check_sensitive_word AS (
+    -- 检查 content 是否包含敏感词
+    SELECT EXISTS (SELECT 1
+                   FROM admin.sensitive_words sw
+                   WHERE $1::text ILIKE '%' || sw.word || '%'
+                     AND sw.is_active = TRUE) AS has_sensitive_word),
+     insert_comment AS (
+         -- 如果没有检测到敏感词，则执行插入操作
+         INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
+             SELECT $2::bigint, $3::uuid, $4::uuid, $5::uuid, $6, $1
+             WHERE NOT (SELECT has_sensitive_word FROM check_sensitive_word)
+             RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at)
+SELECT has_sensitive_word AS is_sensitive
+FROM check_sensitive_word
 `
 
 type CreateCommentParams struct {
+	Content    string    `json:"content"`
 	ID         int64     `json:"id"`
 	ProductID  uuid.UUID `json:"productID"`
 	MerchantID uuid.UUID `json:"merchantID"`
 	UserID     uuid.UUID `json:"userID"`
 	Score      int32     `json:"score"`
-	Content    string    `json:"content"`
 }
 
-// CreateComment
+// 返回最终结果：是否命中敏感词
 //
-//	INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
-//	VALUES ($1, $2, $3, $4, $5, $6)
-//	RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at
-func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (CommentsComments, error) {
+//	WITH check_sensitive_word AS (
+//	    -- 检查 content 是否包含敏感词
+//	    SELECT EXISTS (SELECT 1
+//	                   FROM admin.sensitive_words sw
+//	                   WHERE $1::text ILIKE '%' || sw.word || '%'
+//	                     AND sw.is_active = TRUE) AS has_sensitive_word),
+//	     insert_comment AS (
+//	         -- 如果没有检测到敏感词，则执行插入操作
+//	         INSERT INTO comments.comments (id, product_id, merchant_id, user_id, score, content)
+//	             SELECT $2::bigint, $3::uuid, $4::uuid, $5::uuid, $6, $1
+//	             WHERE NOT (SELECT has_sensitive_word FROM check_sensitive_word)
+//	             RETURNING id, product_id, merchant_id, user_id, score, content, created_at, updated_at)
+//	SELECT has_sensitive_word AS is_sensitive
+//	FROM check_sensitive_word
+func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (bool, error) {
 	row := q.db.QueryRow(ctx, CreateComment,
+		arg.Content,
 		arg.ID,
 		arg.ProductID,
 		arg.MerchantID,
 		arg.UserID,
 		arg.Score,
-		arg.Content,
 	)
-	var i CommentsComments
-	err := row.Scan(
-		&i.ID,
-		&i.ProductID,
-		&i.MerchantID,
-		&i.UserID,
-		&i.Score,
-		&i.Content,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var is_sensitive bool
+	err := row.Scan(&is_sensitive)
+	return is_sensitive, err
 }
 
 const DeleteComment = `-- name: DeleteComment :exec

@@ -1,0 +1,644 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "order/v1/consumer.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ConsumerOrder"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/consumers/orders": {
+      "get": {
+        "summary": "查询用户订单列表",
+        "operationId": "ConsumerOrder_GetConsumerOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConsumerOrders"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户 ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "分页参数：当前页码，默认值为 0",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "description": "分页参数：每页大小，默认值为 20，最大值为 100",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      },
+      "post": {
+        "summary": "用户下单",
+        "operationId": "ConsumerOrder_PlaceOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PlaceOrderReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PlaceOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      }
+    },
+    "/v1/consumers/orders/{orderId}/receive": {
+      "patch": {
+        "summary": "用户确认收货",
+        "operationId": "ConsumerOrder_ConfirmReceived",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConfirmReceivedReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsumerOrderConfirmReceivedBody"
+            }
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      }
+    },
+    "/v1/consumers/orders/{orderId}/suborders": {
+      "get": {
+        "summary": "根据用户主订单查询子订单",
+        "operationId": "ConsumerOrder_GetConsumerOrdersWithSuborders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetConsumerOrdersWithSubordersReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "userId",
+            "description": "用户 ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      }
+    },
+    "/v1/consumers/orders/{subOrderId}": {
+      "get": {
+        "summary": "根据用户id和子订单ID查询子订单详情",
+        "operationId": "ConsumerOrder_GetConsumerSubOrderDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Order"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "subOrderId",
+            "description": "订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "userId",
+            "description": "用户 ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      }
+    },
+    "/v1/consumers/orders/{subOrderId}/ship/status": {
+      "get": {
+        "summary": "查询订单货运状态",
+        "operationId": "ConsumerOrder_GetShipOrderStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetShipOrderStatusReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "subOrderId",
+            "description": "子订单 ID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ConsumerOrder"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ConsumerOrderConfirmReceivedBody": {
+      "type": "object",
+      "title": "用户确认收货请求的消息结构"
+    },
+    "GetConsumerOrdersWithSubordersReplySuborders": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "streetAddress": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "merchantId": {
+          "type": "string"
+        },
+        "paymentStatus": {
+          "type": "string"
+        },
+        "shippingStatus": {
+          "type": "string"
+        },
+        "totalAmount": {
+          "type": "number",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "PlaceOrderReplyOrderResult": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
+        },
+        "freezeId": {
+          "type": "string",
+          "format": "int64",
+          "title": "冻结 ID"
+        },
+        "consumerVersion": {
+          "type": "string",
+          "format": "int64",
+          "title": "消费者乐观锁版本"
+        },
+        "merchantVersion": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          },
+          "title": "商家乐观锁版本"
+        }
+      }
+    },
+    "googleprotobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/googleprotobufAny"
+          }
+        }
+      }
+    },
+    "v1CartItem": {
+      "type": "object",
+      "properties": {
+        "merchantId": {
+          "type": "string",
+          "title": "商家ID"
+        },
+        "productId": {
+          "type": "string",
+          "title": "商品ID"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "int64",
+          "title": "商品数量"
+        },
+        "name": {
+          "type": "string",
+          "title": "商品名称"
+        },
+        "picture": {
+          "type": "string",
+          "title": "商品主图"
+        }
+      },
+      "title": "购物车商品"
+    },
+    "v1ConfirmReceivedReply": {
+      "type": "object",
+      "title": "用户确认收货响应的消息结构"
+    },
+    "v1ConsumerAddress": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "地址 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string",
+          "title": "城市，必填字段"
+        },
+        "state": {
+          "type": "string",
+          "title": "州/省，必填字段"
+        },
+        "country": {
+          "type": "string",
+          "title": "国家，必填字段"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string"
+        }
+      },
+      "title": "定义地址信息的消息结构",
+      "required": [
+        "zipCode",
+        "streetAddress"
+      ]
+    },
+    "v1ConsumerOrders": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Order"
+          },
+          "title": "订单项列表"
+        }
+      },
+      "title": "订单的消息结构"
+    },
+    "v1GetConsumerOrdersWithSubordersReply": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/GetConsumerOrdersWithSubordersReplySuborders"
+          },
+          "title": "订单列表"
+        }
+      }
+    },
+    "v1GetShipOrderStatusReply": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "主订单 ID"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "货运状态"
+        },
+        "receiverAddress": {
+          "type": "object",
+          "title": "用户收货地址"
+        },
+        "shippingAddress": {
+          "type": "object",
+          "title": "商家发货地址"
+        },
+        "trackingNumber": {
+          "type": "string",
+          "title": "物流单号"
+        },
+        "carrier": {
+          "type": "string",
+          "title": "承运商"
+        }
+      },
+      "title": "查询订单状态响应的消息结构"
+    },
+    "v1Order": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          },
+          "title": "订单项列表"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "订单 ID"
+        },
+        "subOrderId": {
+          "type": "string",
+          "format": "int64",
+          "title": "子订单 ID"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "订单创建时间"
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "支付状态"
+        },
+        "shippingStatus": {
+          "$ref": "#/definitions/v1ShippingStatus",
+          "title": "冗余货运状态"
+        }
+      }
+    },
+    "v1OrderItem": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1CartItem",
+          "title": "购物车中的商品项"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double",
+          "title": "商品单价"
+        }
+      },
+      "title": "订单项的消息结构"
+    },
+    "v1PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "PAID",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "default": "PENDING",
+      "description": "- PENDING: 未支付\n - PAID: 已支付\n - FAILED: 支付失败\n - CANCELLED: 取消支付",
+      "title": "支付状态的枚举类型"
+    },
+    "v1PlaceOrderReply": {
+      "type": "object",
+      "properties": {
+        "order": {
+          "$ref": "#/definitions/PlaceOrderReplyOrderResult",
+          "title": "订单结果"
+        }
+      }
+    },
+    "v1PlaceOrderRequest": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "title": "货币代码（如 USD、CNY），长度固定为 3"
+        },
+        "address": {
+          "$ref": "#/definitions/v1ConsumerAddress",
+          "title": "用户地址信息"
+        },
+        "email": {
+          "type": "string",
+          "title": "用户邮箱"
+        },
+        "orderItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderItem"
+          },
+          "title": "订单项列表"
+        }
+      }
+    },
+    "v1ShippingStatus": {
+      "type": "string",
+      "enum": [
+        "WAIT_COMMAND",
+        "PENDING_SHIPMENT",
+        "SHIPPED",
+        "IN_TRANSIT",
+        "DELIVERED",
+        "CONFIRMED",
+        "CANCELLED_SHIPMENT"
+      ],
+      "default": "WAIT_COMMAND",
+      "description": "- WAIT_COMMAND: 等待操作\n - PENDING_SHIPMENT: 待发货\n - SHIPPED: 已发货\n - IN_TRANSIT: 运输中\n - DELIVERED: 已送达\n - CONFIRMED: 已收货\n - CANCELLED_SHIPMENT: 已取消发货",
+      "title": "货运状态的枚举类型"
+    }
+  }
+}

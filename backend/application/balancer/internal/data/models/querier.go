@@ -93,6 +93,14 @@ type Querier interface {
 	//  FROM balances.transactions
 	//  WHERE from_user_id = $1
 	//    AND currency = COALESCE($2, currency)
+	//  LIMIT $4 OFFSET $3
+	GetConsumerAllTransactions(ctx context.Context, arg GetConsumerAllTransactionsParams) ([]BalancesTransactions, error)
+	// 根据 用户ID 获取交易流水记录
+	//
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+	//  FROM balances.transactions
+	//  WHERE from_user_id = $1
+	//    AND currency = COALESCE($2, currency)
 	//    AND status = COALESCE($3, status)
 	//  LIMIT $5 OFFSET $4
 	GetConsumerTransactions(ctx context.Context, arg GetConsumerTransactionsParams) ([]BalancesTransactions, error)
@@ -118,6 +126,14 @@ type Querier interface {
 	//  WHERE user_id = $1
 	//    AND order_id = $2
 	GetFreezeByOrderForUser(ctx context.Context, arg GetFreezeByOrderForUserParams) (BalancesBalanceFreezes, error)
+	// 根据 商家ID 获取交易流水记录
+	//
+	//  SELECT id, type, amount, currency, from_user_id, to_merchant_id, payment_method_type, payment_account, payment_extra, status, freeze_id, idempotency_key, consumer_version, merchant_version, created_at, updated_at
+	//  FROM balances.transactions
+	//  WHERE to_merchant_id = $1
+	//    AND currency = COALESCE($2, currency)
+	//  LIMIT $4 OFFSET $3
+	GetMerchantAllTransactions(ctx context.Context, arg GetMerchantAllTransactionsParams) ([]BalancesTransactions, error)
 	// 获取指定商家和币种的余额信息
 	//
 	//  SELECT available, version, currency

@@ -12,12 +12,12 @@ import (
 
 	globalPkg "backend/pkg"
 
-	orderv1 "backend/api/merchant/order/v1"
+	v1 "backend/api/merchant/order/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
 
 	cartv1 "backend/api/cart/v1"
-	v1 "backend/api/order/v1"
+	orderv1 "backend/api/order/v1"
 	userv1 "backend/api/user/v1"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,7 +29,7 @@ import (
 )
 
 type OrderService struct {
-	orderv1.UnimplementedOrderServer
+	v1.UnimplementedOrderServer
 	oc *biz.OrderUsecase
 }
 
@@ -38,7 +38,7 @@ func NewOrderService(oc *biz.OrderUsecase) *OrderService {
 }
 
 // GetMerchantByOrderId 根据订单ID查找商家
-func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *orderv1.GetMerchantByOrderIdReq) (*orderv1.GetMerchantByOrderIdReply, error) {
+func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *v1.GetMerchantByOrderIdReq) (*v1.GetMerchantByOrderIdReply, error) {
 	// 调用业务层获取订单列表
 	resp, err := s.oc.GetMerchantByOrderId(ctx, &biz.GetMerchantByOrderIdReq{
 		OrderId: req.OrderId,
@@ -47,13 +47,13 @@ func (s *OrderService) GetMerchantByOrderId(ctx context.Context, req *orderv1.Ge
 		return nil, err
 	}
 
-	return &orderv1.GetMerchantByOrderIdReply{
+	return &v1.GetMerchantByOrderIdReply{
 		MerchantId: resp.MerchantId.String(),
 	}, nil
 }
 
 // GetMerchantOrders 获取商家订单列表
-func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMerchantOrdersReq) (*orderv1.GetMerchantOrdersReply, error) {
+func (s *OrderService) GetMerchantOrders(ctx context.Context, req *v1.GetMerchantOrdersReq) (*v1.GetMerchantOrdersReply, error) {
 	var userId uuid.UUID
 	var err error
 	if req.MerchantId == "" {
@@ -86,14 +86,14 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 	// 检查是否有订单
 	if len(resp.Orders) == 0 {
 		log.Infof("商家 %s 没有订单记录", userId)
-		return &orderv1.GetMerchantOrdersReply{Orders: nil}, nil
+		return &v1.GetMerchantOrdersReply{Orders: nil}, nil
 	}
 
 	// 将业务层返回的订单数据转换为proto消息格式
-	merchantOrders := make([]*orderv1.MerchantOrder, 0, len(resp.Orders))
+	merchantOrders := make([]*v1.MerchantOrder, 0, len(resp.Orders))
 	for _, order := range resp.Orders {
 		// 创建订单项
-		orderItems := make([]*orderv1.OrderItem, 0, len(order.Items))
+		orderItems := make([]*v1.OrderItem, 0, len(order.Items))
 		for _, item := range order.Items {
 			// 创建购物车商品
 			cartItem := &cartv1.CartItem{
@@ -103,7 +103,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 			}
 
 			// 创建订单项
-			orderItem := &orderv1.OrderItem{
+			orderItem := &v1.OrderItem{
 				SubOrderId:     item.SubOrderID,
 				Item:           cartItem,
 				Cost:           item.Cost,
@@ -131,7 +131,7 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		}
 
 		// 创建商家订单
-		merchantOrder := &orderv1.MerchantOrder{
+		merchantOrder := &v1.MerchantOrder{
 			Items:     orderItems,
 			OrderId:   order.OrderID,
 			CreatedAt: timestamppb.New(order.CreatedAt),
@@ -140,13 +140,13 @@ func (s *OrderService) GetMerchantOrders(ctx context.Context, req *orderv1.GetMe
 		merchantOrders = append(merchantOrders, merchantOrder)
 	}
 
-	return &orderv1.GetMerchantOrdersReply{
+	return &v1.GetMerchantOrdersReply{
 		Orders: merchantOrders,
 	}, nil
 }
 
 // CreateOrderShip 创建货运信息
-func (s *OrderService) CreateOrderShip(ctx context.Context, req *orderv1.CreateOrderShipReq) (*orderv1.CreateOrderShipReply, error) {
+func (s *OrderService) CreateOrderShip(ctx context.Context, req *v1.CreateOrderShipReq) (*v1.CreateOrderShipReply, error) {
 	// 从网关获取用户ID
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -174,13 +174,13 @@ func (s *OrderService) CreateOrderShip(ctx context.Context, req *orderv1.CreateO
 	if err != nil {
 		return nil, err
 	}
-	return &orderv1.CreateOrderShipReply{
+	return &v1.CreateOrderShipReply{
 		Id:        result.Id,
 		CreatedAt: timestamppb.New(result.CreatedAt),
 	}, nil
 }
 
-func (s *OrderService) UpdateOrderShippingStatus(ctx context.Context, req *orderv1.UpdateOrderShippingStatusReq) (*orderv1.UpdateOrderShippingStatusReply, error) {
+func (s *OrderService) UpdateOrderShippingStatus(ctx context.Context, req *v1.UpdateOrderShippingStatusReq) (*v1.UpdateOrderShippingStatusReply, error) {
 	// 从网关获取用户ID
 	userId, err := globalPkg.GetMetadataUesrID(ctx)
 	if err != nil {
@@ -209,65 +209,65 @@ func (s *OrderService) UpdateOrderShippingStatus(ctx context.Context, req *order
 	if err != nil {
 		return nil, err
 	}
-	return &orderv1.UpdateOrderShippingStatusReply{
+	return &v1.UpdateOrderShippingStatusReply{
 		Id:        orderStatus.ID,
 		UpdatedAt: timestamppb.New(orderStatus.UpdatedAt),
 	}, nil
 }
 
-func convertShippingStatusProtoToBiz(status v1.ShippingStatus) constants.ShippingStatus {
+func convertShippingStatusProtoToBiz(status orderv1.ShippingStatus) constants.ShippingStatus {
 	switch status {
-	case v1.ShippingStatus_WAIT_COMMAND:
+	case orderv1.ShippingStatus_WAIT_COMMAND:
 		return constants.ShippingWaitCommand
-	case v1.ShippingStatus_PENDING_SHIPMENT:
+	case orderv1.ShippingStatus_PENDING_SHIPMENT:
 		return constants.ShippingPending
-	case v1.ShippingStatus_SHIPPED:
+	case orderv1.ShippingStatus_SHIPPED:
 		return constants.ShippingShipped
-	case v1.ShippingStatus_IN_TRANSIT:
+	case orderv1.ShippingStatus_IN_TRANSIT:
 		return constants.ShippingInTransit
-	case v1.ShippingStatus_DELIVERED:
+	case orderv1.ShippingStatus_DELIVERED:
 		return constants.ShippingDelivered
-	case v1.ShippingStatus_CONFIRMED:
+	case orderv1.ShippingStatus_CONFIRMED:
 		return constants.ShippingConfirmed
-	case v1.ShippingStatus_CANCELLED_SHIPMENT:
+	case orderv1.ShippingStatus_CANCELLED_SHIPMENT:
 		return constants.ShippingCancelled
 	default:
 		return constants.ShippingWaitCommand
 	}
 }
 
-func convertToShippingStatus(status constants.ShippingStatus) v1.ShippingStatus {
+func convertToShippingStatus(status constants.ShippingStatus) orderv1.ShippingStatus {
 	switch status {
 	case constants.ShippingWaitCommand:
-		return v1.ShippingStatus_WAIT_COMMAND
+		return orderv1.ShippingStatus_WAIT_COMMAND
 	case constants.ShippingPending:
-		return v1.ShippingStatus_PENDING_SHIPMENT
+		return orderv1.ShippingStatus_PENDING_SHIPMENT
 	case constants.ShippingShipped:
-		return v1.ShippingStatus_SHIPPED
+		return orderv1.ShippingStatus_SHIPPED
 	case constants.ShippingInTransit:
-		return v1.ShippingStatus_IN_TRANSIT
+		return orderv1.ShippingStatus_IN_TRANSIT
 	case constants.ShippingDelivered:
-		return v1.ShippingStatus_DELIVERED
+		return orderv1.ShippingStatus_DELIVERED
 	case constants.ShippingConfirmed:
-		return v1.ShippingStatus_CONFIRMED
+		return orderv1.ShippingStatus_CONFIRMED
 	case constants.ShippingCancelled:
-		return v1.ShippingStatus_CANCELLED_SHIPMENT
+		return orderv1.ShippingStatus_CANCELLED_SHIPMENT
 	default:
-		return v1.ShippingStatus_WAIT_COMMAND
+		return orderv1.ShippingStatus_WAIT_COMMAND
 	}
 }
 
-func convertToPaymentStatus(status constants.PaymentStatus) v1.PaymentStatus {
+func convertToPaymentStatus(status constants.PaymentStatus) orderv1.PaymentStatus {
 	switch status {
 	case constants.PaymentPending:
-		return v1.PaymentStatus_PENDING
+		return orderv1.PaymentStatus_PENDING
 	case constants.PaymentPaid:
-		return v1.PaymentStatus_PAID
+		return orderv1.PaymentStatus_PAID
 	case constants.PaymentFailed:
-		return v1.PaymentStatus_FAILED
+		return orderv1.PaymentStatus_FAILED
 	case constants.PaymentCancelled:
-		return v1.PaymentStatus_CANCELLED
+		return orderv1.PaymentStatus_CANCELLED
 	default:
-		return v1.PaymentStatus_PENDING
+		return orderv1.PaymentStatus_PENDING
 	}
 }

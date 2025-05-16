@@ -9,7 +9,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	balancev1 "backend/api/balancer/v1"
+	consumerOrderv1 "backend/api/consumer/order/v1"
 
 	"backend/application/payment/internal/pkg/id"
 
@@ -31,6 +34,7 @@ import (
 	"backend/application/payment/internal/data/models"
 
 	"backend/application/payment/internal/biz"
+
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -50,29 +54,69 @@ func NewPaymentRepo(data *Data, logger log.Logger, conf *conf.Pay) biz.PaymentRe
 	}
 }
 
+// processBalanceTransfer 处理余额支付的资金转移
+func (r *paymentRepo) processBalanceTransfer(ctx context.Context, payment models.PaymentsPayments) {
+	// 查询订单的所有子订单信息
+	orderInfo, err := r.data.consumerOrderv1.GetConsumerOrdersWithSuborders(ctx, &consumerOrderv1.GetConsumerOrdersWithSubordersRequest{
+		UserId:  payment.ConsumerID.String(),
+		OrderId: payment.OrderID,
+	})
+	if err != nil {
+		r.log.Errorf("获取订单信息失败: %v", err)
+		return
+	}
+
+	// 记录已处理的商家ID，避免重复处理
+	processedMerchants := make(map[string]bool)
+
+	for _, subOrder := range orderInfo.Orders {
+		merchantId := subOrder.MerchantId
+
+		// 检查该商家是否已经处理过
+		if processedMerchants[merchantId] {
+			r.log.Infof("商家ID: %s 已经处理过，跳过重复处理", merchantId)
+			continue
+		}
+
+		// 根据商家ID和子订单金额，调用余额服务进行转账
+		for _, v := range payment.MerchantVersions {
+			// 调用余额服务确认转账
+			params := &balancev1.ConfirmTransferRequest{
+				FreezeId:                payment.FreezeID,
+				MerchantId:              merchantId,
+				IdempotencyKey:          strconv.FormatInt(payment.OrderID, 10),
+				ExpectedUserVersion:     int32(payment.ConsumerVersion),
+				ExpectedMerchantVersion: int32(v),
+				PaymentAccount:          "", // 余额支付不需要支付账号
+			}
+			r.log.Debugf("确认余额转账参数: %+v", params)
+
+			_, err = r.data.balancev1.ConfirmTransfer(ctx, params)
+			if err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) {
+					r.log.Debugf("ConfirmTransfer error: %+v", pgErr)
+				}
+				r.log.Infof("确认转账失败，可能已经处理过，商家ID: %s, 错误: %v",
+					merchantId, err)
+				// 继续处理其他商家
+				continue
+			}
+
+			r.log.Infof("确认余额转账成功，商家ID: %s", merchantId)
+			// 标记该商家已处理
+			processedMerchants[merchantId] = true
+			break
+		}
+	}
+}
+
 // CreatePayment 创建支付记录
 func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentReq) (*biz.CreatePaymentResp, error) {
 	// 生成支付ID
 	tradeNo := fmt.Sprintf("%d", xid.Next())
 
-	// totalAmount := strconv.FormatFloat(req.Amount, 'f', 2, 64)
-
-	pay := alipay.TradePagePay{ // 电脑网站支付
-		Trade: alipay.Trade{
-			NotifyURL: r.conf.Alipay.NotifyUrl, // 异步通知地址
-			ReturnURL: r.conf.Alipay.ReturnUrl, // 回调地址
-			Subject:   req.Subject,             // 订单主题
-			// OutTradeNo:  fmt.Sprintf("%d", time.Now().Unix()), // 商户订单号，必须唯一
-			// OutTradeNo: req.OrderId.String(), // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
-			OutTradeNo:  tradeNo,                  // 商户订单号，由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
-			TotalAmount: req.Amount,               // 直接使用字符串金额               // 订单金额
-			ProductCode: "FAST_INSTANT_TRADE_PAY", // 电脑网站支付，产品码为固定值
-		},
-	}
-	payUrl, err := r.data.alipay.TradePagePay(pay) // 生成支付链接
-	if err != nil {
-		return nil, fmt.Errorf("failed to create payment: %v", err)
-	}
+	// 转换金额为数值
 	numeric, err := strconv.ParseFloat(req.Amount, 64)
 	if err != nil {
 		return nil, errors.New("转换字符串为数值失败")
@@ -82,16 +126,46 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 		return nil, errors.New("转换数值为数据库类型失败")
 	}
 
+	// 确定支付方式和状态
+	paymentMethod := string(constants.PaymentMethodAlipay)
+	paymentStatus := string(biz.PaymentStatusPending)
+	var payUrl *url.URL
+
+	// 根据支付方式处理
+	if req.Subject == fmt.Sprintf("Balance Payment for Order %d", req.OrderID) {
+		// 余额支付
+		paymentMethod = string(constants.PaymentMethodBalance)
+		paymentStatus = string(biz.PaymentStatusSuccess) // 余额支付直接标记为成功
+
+		// 余额支付不需要支付链接
+		payUrl = &url.URL{}
+	} else {
+		// 支付宝支付
+		pay := alipay.TradePagePay{ // 电脑网站支付
+			Trade: alipay.Trade{
+				NotifyURL:   r.conf.Alipay.NotifyUrl,  // 异步通知地址
+				ReturnURL:   r.conf.Alipay.ReturnUrl,  // 回调地址
+				Subject:     req.Subject,              // 订单主题
+				OutTradeNo:  tradeNo,                  // 商户订单号
+				TotalAmount: req.Amount,               // 订单金额
+				ProductCode: "FAST_INSTANT_TRADE_PAY", // 电脑网站支付，产品码为固定值
+			},
+		}
+		payUrl, err = r.data.alipay.TradePagePay(pay) // 生成支付链接
+		if err != nil {
+			return nil, fmt.Errorf("failed to create payment: %v", err)
+		}
+	}
+
 	// 创建支付记录
-	log.Debugf("req.ConsumerID: %v", req.ConsumerID)
 	payments, paymentsErr := r.data.DB(ctx).CreatePaymentQuery(ctx, models.CreatePaymentQueryParams{
 		ID:               id.SnowflakeID(),
 		OrderID:          req.OrderID,
 		ConsumerID:       req.ConsumerID,
 		Amount:           amount,
 		Currency:         req.Currency,
-		Method:           string(constants.PaymentMethodAlipay),
-		Status:           string(biz.PaymentStatusPending),
+		Method:           paymentMethod,
+		Status:           paymentStatus,
 		Subject:          req.Subject,
 		TradeNo:          tradeNo,
 		FreezeID:         req.FreezeId,
@@ -101,11 +175,27 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 	if paymentsErr != nil {
 		return nil, fmt.Errorf("failed to create payment: %v", paymentsErr)
 	}
-	fmt.Printf("payments: %+v\n", payments)
+	r.log.Infof("Created payment: %+v", payments)
 
 	amountResp, err := types.NumericToFloat(payments.Amount)
 	if err != nil {
 		return nil, fmt.Errorf("转换金额失败: %w", err)
+	}
+
+	// 如果是余额支付，直接调用订单服务标记订单为已支付
+	if paymentMethod == string(constants.PaymentMethodBalance) {
+		// 传递用户 ID
+		metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, req.ConsumerID.String())
+		_, markOrderErr := r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
+			OrderId: req.OrderID,
+		})
+		if markOrderErr != nil {
+			r.log.Errorf("余额支付标记订单失败: %v", markOrderErr)
+			// 不返回错误，继续处理
+		}
+
+		// 处理余额转账
+		r.processBalanceTransfer(ctx, payments)
 	}
 
 	return &biz.CreatePaymentResp{
@@ -118,13 +208,12 @@ func (r *paymentRepo) CreatePayment(ctx context.Context, req *biz.CreatePaymentR
 			Subject:    req.Subject,
 			Status:     biz.PaymentStatus(payments.Status),
 			TradeNo:    tradeNo,
-			// PayURL:    payments.PayURL,
 			PayURL:     payUrl.String(),
 			NotifyTime: time.Time{},
 			CreatedAt:  payments.CreatedAt,
 			UpdatedAt:  payments.UpdatedAt,
 		},
-	}, err
+	}, nil
 }
 
 // GetPaymentStatus 查询支付状态
@@ -181,9 +270,6 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req url.Values) (
 		r.log.Warnf("签名验证失败，降级处理支付状态更新")
 	}
 
-	// r.log.Debugf("308 HandlePaymentNotify req.Params:%+v", req.Params)
-	r.log.Debugf("309 HandlePaymentNotify notification:%+v", notification)
-
 	if r.data.alipay == nil {
 		r.log.Error("支付宝客户端未初始化")
 		return &biz.PaymentNotifyResp{
@@ -201,9 +287,6 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req url.Values) (
 			Message: "订单号为空",
 		}, nil
 	}
-
-	r.log.Debugf("HandlePaymentNotify notification.OutTradeNo: %+v", notification.OutTradeNo)
-
 	// 查询支付记录
 	payment, getPayErr := r.data.db.GetPaymentByTradeNo(ctx, notification.OutTradeNo)
 	if getPayErr != nil {
@@ -213,9 +296,6 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req url.Values) (
 			Message: fmt.Sprintf("查询支付记录失败: %v", getPayErr),
 		}, nil
 	}
-
-	r.log.Debugf("data notification.TradeStatus: %+v", notification.TradeStatus)
-
 	// 更新支付记录
 	var status biz.PaymentStatus
 	switch notification.TradeStatus {
@@ -230,30 +310,25 @@ func (r *paymentRepo) HandlePaymentNotify(ctx context.Context, req url.Values) (
 	}
 
 	// 更新支付状态
-	updatePaymentStatusResult, err := r.data.db.UpdatePaymentStatus(ctx, models.UpdatePaymentStatusParams{
+	_, updatePaymentStatusErr := r.data.db.UpdatePaymentStatus(ctx, models.UpdatePaymentStatusParams{
 		ID:      payment.ID,
 		OrderID: payment.OrderID,
 		Status:  string(status),
 	})
-	if err != nil {
-		r.log.Errorf("更新支付状态失败: %v", err)
-		return nil, fmt.Errorf("更新支付状态失败: %w", err)
+	if updatePaymentStatusErr != nil {
+		r.log.Errorf("更新支付状态失败: %v", updatePaymentStatusErr)
+		return nil, fmt.Errorf("更新支付状态失败: %w", updatePaymentStatusErr)
 	}
 
-	log.Debugf("updatePaymentStatusResult: %+v", updatePaymentStatusResult)
-
 	// 传递用户 ID
-	r.log.Debugf("userId:%+v", payment.ConsumerID.String())
 	metadataCtx := metadata.AppendToClientContext(ctx, constants.UserId, payment.ConsumerID.String())
-	result, err := r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
+	_, err = r.data.orderv1.MarkOrderPaid(metadataCtx, &orderv1.MarkOrderPaidReq{
 		// UserId:  payment.ConsumerID.String(),
 		OrderId: payment.OrderID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("更新订单状态失败: %w", err)
 	}
-
-	r.log.Debugf("result: %+v", result)
 
 	// 如果通知消息没有问题，我们需要确认收到通知消息，不然支付宝后续会继续推送相同的消息
 	// 安全地获取HTTP上下文
@@ -312,8 +387,6 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 	if req.TradeStatus != "" {
 		values.Set("trade_status", req.TradeStatus)
 	}
-	r.log.Debugf("477 TradeNo:%v OutTradeNo:%v TotalAmount:%v Subject:%v TradeStatus:%v", req.TradeNo, req.OutTradeNo, req.TotalAmount, req.Subject, req.TradeStatus)
-	r.log.Debugf("478 支付回调参数: %v", values)
 
 	if r.data.alipay == nil {
 		r.log.Error("支付宝客户端未初始化")
@@ -402,7 +475,7 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 	}
 
 	// 查询订单的所有子订单信息
-	orderInfo, err := r.data.orderv1.GetUserOrdersWithSuborders(ctx, &orderv1.GetUserOrdersWithSubordersReq{
+	orderInfo, err := r.data.consumerOrderv1.GetConsumerOrdersWithSuborders(ctx, &consumerOrderv1.GetConsumerOrdersWithSubordersRequest{
 		UserId:  payment.ConsumerID.String(),
 		OrderId: payment.OrderID,
 	})
@@ -410,9 +483,18 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 		r.log.Errorf("获取订单信息失败: %v", err)
 		return nil, err
 	}
-	var transactionId int64
+
+	// 记录已处理的商家ID，避免重复处理
+	processedMerchants := make(map[string]bool)
+
 	for _, subOrder := range orderInfo.Orders {
 		merchantId := subOrder.MerchantId
+
+		// 检查该商家是否已经处理过
+		if processedMerchants[merchantId] {
+			r.log.Infof("商家ID: %s 已经处理过，跳过重复处理", merchantId)
+			continue
+		}
 
 		// 计算子订单金额
 		subOrderAmount := subOrder.TotalAmount
@@ -431,40 +513,40 @@ func (r *paymentRepo) HandlePaymentCallback(ctx context.Context, req *biz.Paymen
 			log.Debugf("params: %+v", params)
 			_, err = r.data.balancev1.ConfirmTransfer(ctx, params)
 			if err != nil {
-				r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
-					merchantId, subOrderAmount, err)
-				// 继续处理其他子订单，不要因为一个子订单失败而中断整个流程
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) {
+					log.Debugf("ConfirmTransfer error is pgErr: %+v %+v", err, pgErr)
+					log.Debugf("ConfirmTransfer Code: %v", pgErr.Code)
+					log.Debugf("ConfirmTransfer Message: %v", pgErr.Message)
+					log.Debugf("ConfirmTransfer pgErr: %v", pgErr)
+				}
+				// 如果错误是因为状态已经是CONFIRMED，则认为是成功的
+				log.Debugf("ConfirmTransfer error:%+v", err)
+				// if errors.Is(err) && (err.Error() == "rpc error: code = InvalidArgument desc = freeze is not in FROZEN status: CONFIRMED") {
+				r.log.Infof("冻结状态已经是CONFIRMED，视为转账成功，商家ID: %s, 金额: %f",
+					merchantId, subOrderAmount)
+				// 标记该商家已处理
+				processedMerchants[merchantId] = true
+				continue
+				// }
+
+				// r.log.Errorf("确认转账失败，商家ID: %s, 金额: %f, 错误: %v",
+				// 	merchantId, subOrderAmount, err)
+				// // 继续处理其他子订单，不要因为一个子订单失败而中断整个流程
+				// continue
 			} else {
 				r.log.Infof("确认转账成功，商家ID: %s, 金额: %f",
 					merchantId, subOrderAmount)
+				// 标记该商家已处理
+				processedMerchants[merchantId] = true
 			}
-
-			transaction, err := r.data.balancev1.CreateTransaction(ctx, &balancev1.CreateTransactionRequest{
-				Type:              string(constants.TransactionPayment),
-				Amount:            subOrderAmount,
-				Currency:          string(constants.CNY),
-				FromUserId:        payment.ConsumerID.String(),
-				ToMerchantId:      merchantId,
-				PaymentMethodType: string(constants.PaymentMethodAlipay),
-				PaymentAccount:    "",  // TODO PaymentAccount
-				PaymentExtra:      nil, // TODO PaymentExtra
-				Status:            string(constants.PaymentPaid),
-				IdempotencyKey:    strconv.FormatInt(payment.OrderID, 10),
-				FreezeId:          payment.FreezeID,
-				ConsumerVersion:   payment.ConsumerVersion,
-				MerchantVersion:   v,
-			})
-			if err != nil {
-				return nil, err
-			}
-			transactionId = transaction.Id
 		}
 	}
 
 	// 返回支付结果
 	return &biz.PaymentCallbackResp{
 		Success: true,
-		Message: fmt.Sprintf("支付成功, 交易记录ID:%v", transactionId),
+		Message: "支付成功",
 	}, nil
 }
 

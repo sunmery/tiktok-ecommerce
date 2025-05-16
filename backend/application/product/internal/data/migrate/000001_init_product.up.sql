@@ -30,6 +30,7 @@ CREATE TABLE products.products
     deleted_at       TIMESTAMPTZ,
     PRIMARY KEY (merchant_id, id)
 );
+COMMENT ON TABLE products.products IS '商品表';
 
 -----------------------------
 -- 库存表, 按商家区分的商品库存表
@@ -43,7 +44,7 @@ CREATE TABLE products.inventory
     updated_at  timestamptz DEFAULT now(),
     PRIMARY KEY (product_id, merchant_id)         -- 联合主键（商品+商家唯一）
 );
-
+COMMENT ON TABLE products.inventory IS '商品库存表';
 -- 配置分布式表
 -- SELECT create_distributed_table('products.products', 'merchant_id');
 
@@ -61,7 +62,7 @@ CREATE TABLE products.product_images
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     PRIMARY KEY (merchant_id, id)
 );
-
+COMMENT ON TABLE products.product_images IS '商品图片表';
 -- 创建共置分片表
 -- SELECT create_distributed_table('products.product_images', 'merchant_id',
 --     colocate_with => 'products');
@@ -83,32 +84,32 @@ CREATE TABLE products.product_attributes
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (merchant_id, product_id) -- 联合主键
 );
-
+COMMENT ON TABLE products.product_attributes IS '商品属性表';
 -- SELECT create_distributed_table('products.product_attributes', 'merchant_id',
 --     colocate_with => 'products');
 
 -----------------------------
 -- 商品审核记录表（共置分片表）
 -----------------------------
-CREATE TABLE products.product_audits
-(
-    id          UUID                 DEFAULT uuidv7_sub_ms(),
-    merchant_id UUID        NOT NULL, -- 分片键（必须）
-    product_id  UUID        NOT NULL,
-    old_status  SMALLINT    NOT NULL,
-    new_status  SMALLINT    NOT NULL,
-    reason      TEXT,
-    operator_id UUID        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (merchant_id, id)
-);
-
+-- CREATE TABLE products.product_audits
+-- (
+--     id          UUID                 DEFAULT uuidv7_sub_ms(),
+--     merchant_id UUID        NOT NULL, -- 分片键（必须）
+--     product_id  UUID        NOT NULL,
+--     old_status  SMALLINT    NOT NULL,
+--     new_status  SMALLINT    NOT NULL,
+--     reason      TEXT,
+--     operator_id UUID        NOT NULL,
+--     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+--     PRIMARY KEY (merchant_id, id)
+-- );
+-- COMMENT ON TABLE products.product_audits IS '商品审核记录表';
 -- SELECT create_distributed_table('products.product_audits', 'merchant_id',
 --     colocate_with => 'products');
 
 -- 创建分片兼容索引
-CREATE INDEX idx_audits_product ON products.product_audits
-    USING BTREE (merchant_id, product_id, created_at DESC);
+-- CREATE INDEX idx_audits_product ON products.product_audits
+--     USING BTREE (merchant_id, product_id, created_at DESC);
 
 -- 在数据库的name字段添加全文索引
 CREATE INDEX idx_products_name ON products USING gin (to_tsvector('simple', name));
